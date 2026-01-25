@@ -1,0 +1,10 @@
+{
+  "name": "@capacity-exchange/components",
+  "version": "1.0.0",
+  "description": "Capacity Exchange Frontend Components",
+  "main": "index.js",
+  "license": "ISC",
+  "dependencies": {
+    "@capacity-exchange/client": "1.0.0"
+  }
+}

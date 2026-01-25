@@ -1,0 +1,23 @@
+{
+  "name": "@capacity-exchange/client",
+  "version": "1.0.0",
+  "description": "Capacity Exchange Client",
+  "main": "generated/dist/index.js",
+  "types": "generated/dist/index.d.ts",
+  "scripts": {
+    "test": "jest --runInBand",
+    "build": "tsc -p generated/tsconfig.json",
+    "generate-client": "openapi-generator-cli generate -i openapi.json -g typescript -o generated"
+  },
+  "dependencies": {
+    "whatwg-fetch": "^3.0.0",
+    "es6-promise": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^4.0",
+    "@openapitools/openapi-generator-cli": "^2.28.0"
+  }
+}
