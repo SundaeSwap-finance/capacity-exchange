@@ -1,0 +1,11 @@
+{
+  "name": "@capacity-exchange/example-webapp",
+  "version": "1.0.0",
+  "description": "Example Capacity Exchange Webapp",
+  "main": "index.js",
+  "license": "ISC",
+  "dependencies": {
+    "@capacity-exchange/client": "1.0.0",
+    "@capacity-exchange/components": "1.0.0"
+  }
+}
