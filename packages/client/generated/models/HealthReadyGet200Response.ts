@@ -10,17 +10,14 @@
  * Do not edit the class manually.
  */
 
-import { HealthReadyGet200ResponseAnyOf } from '../models/HealthReadyGet200ResponseAnyOf';
-import { HealthReadyGet200ResponseAnyOf1 } from '../models/HealthReadyGet200ResponseAnyOf1';
-import { HealthReadyGet200ResponseAnyOf2 } from '../models/HealthReadyGet200ResponseAnyOf2';
-import { HealthReadyGet200ResponseAnyOfIndexer } from '../models/HealthReadyGet200ResponseAnyOfIndexer';
-import { HealthReadyGet200ResponseAnyOfWallet } from '../models/HealthReadyGet200ResponseAnyOfWallet';
+import { HealthReadyGet200ResponseIndexer } from '../models/HealthReadyGet200ResponseIndexer';
+import { HealthReadyGet200ResponseWallet } from '../models/HealthReadyGet200ResponseWallet';
 import { HttpFile } from '../http/http';
 
 export class HealthReadyGet200Response {
     'status': HealthReadyGet200ResponseStatusEnum;
-    'wallet': HealthReadyGet200ResponseAnyOfWallet;
-    'indexer': HealthReadyGet200ResponseAnyOfIndexer;
+    'wallet': HealthReadyGet200ResponseWallet;
+    'indexer': HealthReadyGet200ResponseIndexer;
 
     static readonly discriminator: string | undefined = undefined;
 
@@ -36,13 +33,13 @@ export class HealthReadyGet200Response {
         {
             "name": "wallet",
             "baseName": "wallet",
-            "type": "HealthReadyGet200ResponseAnyOfWallet",
+            "type": "HealthReadyGet200ResponseWallet",
             "format": ""
         },
         {
             "name": "indexer",
             "baseName": "indexer",
-            "type": "HealthReadyGet200ResponseAnyOfIndexer",
+            "type": "HealthReadyGet200ResponseIndexer",
             "format": ""
         }    ];
 
@@ -55,6 +52,8 @@ export class HealthReadyGet200Response {
 }
 
 export enum HealthReadyGet200ResponseStatusEnum {
-    Error = 'error'
+    Syncing = 'syncing',
+    Ok = 'ok',
+    Ko = 'ko'
 }
 

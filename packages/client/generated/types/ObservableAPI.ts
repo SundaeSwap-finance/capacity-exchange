@@ -12,16 +12,8 @@ import { Get200Response } from '../models/Get200Response';
 import { Get200ResponseEnv } from '../models/Get200ResponseEnv';
 import { HealthGet200Response } from '../models/HealthGet200Response';
 import { HealthReadyGet200Response } from '../models/HealthReadyGet200Response';
-import { HealthReadyGet200ResponseAnyOf } from '../models/HealthReadyGet200ResponseAnyOf';
-import { HealthReadyGet200ResponseAnyOf1 } from '../models/HealthReadyGet200ResponseAnyOf1';
-import { HealthReadyGet200ResponseAnyOf2 } from '../models/HealthReadyGet200ResponseAnyOf2';
-import { HealthReadyGet200ResponseAnyOfIndexer } from '../models/HealthReadyGet200ResponseAnyOfIndexer';
-import { HealthReadyGet200ResponseAnyOfIndexerAnyOf } from '../models/HealthReadyGet200ResponseAnyOfIndexerAnyOf';
-import { HealthReadyGet200ResponseAnyOfIndexerAnyOf1 } from '../models/HealthReadyGet200ResponseAnyOfIndexerAnyOf1';
-import { HealthReadyGet200ResponseAnyOfWallet } from '../models/HealthReadyGet200ResponseAnyOfWallet';
-import { HealthReadyGet200ResponseAnyOfWalletAnyOf } from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf';
-import { HealthReadyGet200ResponseAnyOfWalletAnyOf1 } from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf1';
-import { HealthReadyGet200ResponseAnyOfWalletAnyOf2 } from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf2';
+import { HealthReadyGet200ResponseIndexer } from '../models/HealthReadyGet200ResponseIndexer';
+import { HealthReadyGet200ResponseWallet } from '../models/HealthReadyGet200ResponseWallet';
 
 import { DefaultApiRequestFactory, DefaultApiResponseProcessor} from "../apis/DefaultApi";
 export class ObservableDefaultApi {

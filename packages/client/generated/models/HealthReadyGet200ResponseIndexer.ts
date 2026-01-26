@@ -10,14 +10,13 @@
  * Do not edit the class manually.
  */
 
-import { HealthReadyGet200ResponseAnyOfIndexer } from '../models/HealthReadyGet200ResponseAnyOfIndexer';
-import { HealthReadyGet200ResponseAnyOfWallet } from '../models/HealthReadyGet200ResponseAnyOfWallet';
 import { HttpFile } from '../http/http';
 
-export class HealthReadyGet200ResponseAnyOf {
-    'status': HealthReadyGet200ResponseAnyOfStatusEnum;
-    'wallet': HealthReadyGet200ResponseAnyOfWallet;
-    'indexer': HealthReadyGet200ResponseAnyOfIndexer;
+export class HealthReadyGet200ResponseIndexer {
+    'status': HealthReadyGet200ResponseIndexerStatusEnum;
+    'height'?: number;
+    'error'?: string;
+    'details'?: string;
 
     static readonly discriminator: string | undefined = undefined;
 
@@ -27,31 +26,38 @@ export class HealthReadyGet200ResponseAnyOf {
         {
             "name": "status",
             "baseName": "status",
-            "type": "HealthReadyGet200ResponseAnyOfStatusEnum",
+            "type": "HealthReadyGet200ResponseIndexerStatusEnum",
             "format": ""
         },
         {
-            "name": "wallet",
-            "baseName": "wallet",
-            "type": "HealthReadyGet200ResponseAnyOfWallet",
+            "name": "height",
+            "baseName": "height",
+            "type": "number",
             "format": ""
         },
         {
-            "name": "indexer",
-            "baseName": "indexer",
-            "type": "HealthReadyGet200ResponseAnyOfIndexer",
+            "name": "error",
+            "baseName": "error",
+            "type": "string",
+            "format": ""
+        },
+        {
+            "name": "details",
+            "baseName": "details",
+            "type": "string",
             "format": ""
         }    ];
 
     static getAttributeTypeMap() {
-        return HealthReadyGet200ResponseAnyOf.attributeTypeMap;
+        return HealthReadyGet200ResponseIndexer.attributeTypeMap;
     }
 
     public constructor() {
     }
 }
 
-export enum HealthReadyGet200ResponseAnyOfStatusEnum {
-    Syncing = 'syncing'
+export enum HealthReadyGet200ResponseIndexerStatusEnum {
+    Ok = 'ok',
+    Ko = 'ko'
 }
 

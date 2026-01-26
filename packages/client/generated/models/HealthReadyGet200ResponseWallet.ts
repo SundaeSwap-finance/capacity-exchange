@@ -12,9 +12,9 @@
 
 import { HttpFile } from '../http/http';
 
-export class HealthReadyGet200ResponseAnyOfIndexerAnyOf {
-    'status': HealthReadyGet200ResponseAnyOfIndexerAnyOfStatusEnum;
-    'height': number;
+export class HealthReadyGet200ResponseWallet {
+    'status': HealthReadyGet200ResponseWalletStatusEnum;
+    'error'?: string;
 
     static readonly discriminator: string | undefined = undefined;
 
@@ -24,25 +24,27 @@ export class HealthReadyGet200ResponseAnyOfIndexerAnyOf {
         {
             "name": "status",
             "baseName": "status",
-            "type": "HealthReadyGet200ResponseAnyOfIndexerAnyOfStatusEnum",
+            "type": "HealthReadyGet200ResponseWalletStatusEnum",
             "format": ""
         },
         {
-            "name": "height",
-            "baseName": "height",
-            "type": "number",
+            "name": "error",
+            "baseName": "error",
+            "type": "string",
             "format": ""
         }    ];
 
     static getAttributeTypeMap() {
-        return HealthReadyGet200ResponseAnyOfIndexerAnyOf.attributeTypeMap;
+        return HealthReadyGet200ResponseWallet.attributeTypeMap;
     }
 
     public constructor() {
     }
 }
 
-export enum HealthReadyGet200ResponseAnyOfIndexerAnyOfStatusEnum {
-    Ok = 'ok'
+export enum HealthReadyGet200ResponseWalletStatusEnum {
+    Syncing = 'syncing',
+    Ok = 'ok',
+    Ko = 'ko'
 }
 

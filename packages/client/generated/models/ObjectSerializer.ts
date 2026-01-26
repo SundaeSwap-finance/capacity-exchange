@@ -7,16 +7,8 @@ export * from '../models/Get200Response';
 export * from '../models/Get200ResponseEnv';
 export * from '../models/HealthGet200Response';
 export * from '../models/HealthReadyGet200Response';
-export * from '../models/HealthReadyGet200ResponseAnyOf';
-export * from '../models/HealthReadyGet200ResponseAnyOf1';
-export * from '../models/HealthReadyGet200ResponseAnyOf2';
-export * from '../models/HealthReadyGet200ResponseAnyOfIndexer';
-export * from '../models/HealthReadyGet200ResponseAnyOfIndexerAnyOf';
-export * from '../models/HealthReadyGet200ResponseAnyOfIndexerAnyOf1';
-export * from '../models/HealthReadyGet200ResponseAnyOfWallet';
-export * from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf';
-export * from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf1';
-export * from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf2';
+export * from '../models/HealthReadyGet200ResponseIndexer';
+export * from '../models/HealthReadyGet200ResponseWallet';
 
 import { ApiOffersPost201Response } from '../models/ApiOffersPost201Response';
 import { ApiOffersPostRequest } from '../models/ApiOffersPostRequest';
@@ -27,16 +19,8 @@ import { Get200Response } from '../models/Get200Response';
 import { Get200ResponseEnv } from '../models/Get200ResponseEnv';
 import { HealthGet200Response, HealthGet200ResponseStatusEnum    } from '../models/HealthGet200Response';
 import { HealthReadyGet200Response, HealthReadyGet200ResponseStatusEnum     } from '../models/HealthReadyGet200Response';
-import { HealthReadyGet200ResponseAnyOf, HealthReadyGet200ResponseAnyOfStatusEnum     } from '../models/HealthReadyGet200ResponseAnyOf';
-import { HealthReadyGet200ResponseAnyOf1, HealthReadyGet200ResponseAnyOf1StatusEnum     } from '../models/HealthReadyGet200ResponseAnyOf1';
-import { HealthReadyGet200ResponseAnyOf2, HealthReadyGet200ResponseAnyOf2StatusEnum     } from '../models/HealthReadyGet200ResponseAnyOf2';
-import { HealthReadyGet200ResponseAnyOfIndexer, HealthReadyGet200ResponseAnyOfIndexerStatusEnum      } from '../models/HealthReadyGet200ResponseAnyOfIndexer';
-import { HealthReadyGet200ResponseAnyOfIndexerAnyOf, HealthReadyGet200ResponseAnyOfIndexerAnyOfStatusEnum    } from '../models/HealthReadyGet200ResponseAnyOfIndexerAnyOf';
-import { HealthReadyGet200ResponseAnyOfIndexerAnyOf1, HealthReadyGet200ResponseAnyOfIndexerAnyOf1StatusEnum     } from '../models/HealthReadyGet200ResponseAnyOfIndexerAnyOf1';
-import { HealthReadyGet200ResponseAnyOfWallet, HealthReadyGet200ResponseAnyOfWalletStatusEnum    } from '../models/HealthReadyGet200ResponseAnyOfWallet';
-import { HealthReadyGet200ResponseAnyOfWalletAnyOf, HealthReadyGet200ResponseAnyOfWalletAnyOfStatusEnum   } from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf';
-import { HealthReadyGet200ResponseAnyOfWalletAnyOf1, HealthReadyGet200ResponseAnyOfWalletAnyOf1StatusEnum   } from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf1';
-import { HealthReadyGet200ResponseAnyOfWalletAnyOf2, HealthReadyGet200ResponseAnyOfWalletAnyOf2StatusEnum    } from '../models/HealthReadyGet200ResponseAnyOfWalletAnyOf2';
+import { HealthReadyGet200ResponseIndexer, HealthReadyGet200ResponseIndexerStatusEnum      } from '../models/HealthReadyGet200ResponseIndexer';
+import { HealthReadyGet200ResponseWallet, HealthReadyGet200ResponseWalletStatusEnum    } from '../models/HealthReadyGet200ResponseWallet';
 
 /* tslint:disable:no-unused-variable */
 let primitives = [
@@ -53,16 +37,8 @@ let primitives = [
 let enumsMap: Set<string> = new Set<string>([
     "HealthGet200ResponseStatusEnum",
     "HealthReadyGet200ResponseStatusEnum",
-    "HealthReadyGet200ResponseAnyOfStatusEnum",
-    "HealthReadyGet200ResponseAnyOf1StatusEnum",
-    "HealthReadyGet200ResponseAnyOf2StatusEnum",
-    "HealthReadyGet200ResponseAnyOfIndexerStatusEnum",
-    "HealthReadyGet200ResponseAnyOfIndexerAnyOfStatusEnum",
-    "HealthReadyGet200ResponseAnyOfIndexerAnyOf1StatusEnum",
-    "HealthReadyGet200ResponseAnyOfWalletStatusEnum",
-    "HealthReadyGet200ResponseAnyOfWalletAnyOfStatusEnum",
-    "HealthReadyGet200ResponseAnyOfWalletAnyOf1StatusEnum",
-    "HealthReadyGet200ResponseAnyOfWalletAnyOf2StatusEnum",
+    "HealthReadyGet200ResponseIndexerStatusEnum",
+    "HealthReadyGet200ResponseWalletStatusEnum",
 ]);
 
 let typeMap: {[index: string]: any} = {
@@ -75,16 +51,8 @@ let typeMap: {[index: string]: any} = {
     "Get200ResponseEnv": Get200ResponseEnv,
     "HealthGet200Response": HealthGet200Response,
     "HealthReadyGet200Response": HealthReadyGet200Response,
-    "HealthReadyGet200ResponseAnyOf": HealthReadyGet200ResponseAnyOf,
-    "HealthReadyGet200ResponseAnyOf1": HealthReadyGet200ResponseAnyOf1,
-    "HealthReadyGet200ResponseAnyOf2": HealthReadyGet200ResponseAnyOf2,
-    "HealthReadyGet200ResponseAnyOfIndexer": HealthReadyGet200ResponseAnyOfIndexer,
-    "HealthReadyGet200ResponseAnyOfIndexerAnyOf": HealthReadyGet200ResponseAnyOfIndexerAnyOf,
-    "HealthReadyGet200ResponseAnyOfIndexerAnyOf1": HealthReadyGet200ResponseAnyOfIndexerAnyOf1,
-    "HealthReadyGet200ResponseAnyOfWallet": HealthReadyGet200ResponseAnyOfWallet,
-    "HealthReadyGet200ResponseAnyOfWalletAnyOf": HealthReadyGet200ResponseAnyOfWalletAnyOf,
-    "HealthReadyGet200ResponseAnyOfWalletAnyOf1": HealthReadyGet200ResponseAnyOfWalletAnyOf1,
-    "HealthReadyGet200ResponseAnyOfWalletAnyOf2": HealthReadyGet200ResponseAnyOfWalletAnyOf2,
+    "HealthReadyGet200ResponseIndexer": HealthReadyGet200ResponseIndexer,
+    "HealthReadyGet200ResponseWallet": HealthReadyGet200ResponseWallet,
 }
 
 type MimeTypeDescriptor = {
