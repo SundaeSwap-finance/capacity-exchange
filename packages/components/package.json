@@ -1,0 +1,20 @@
+{
+  "name": "@capacity-exchange/components",
+  "version": "1.0.0",
+  "description": "React components for Capacity Exchange",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@capacity-exchange/client": "1.0.0",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,53 +1,63 @@
-# .DefaultApi
+# DefaultApi
 
 All URIs are relative to *http://localhost*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**apiOffersPost**](DefaultApi.md#apiOffersPost) | **POST** /api/offers | 
-[**apiPricesGet**](DefaultApi.md#apiPricesGet) | **GET** /api/prices | 
-[**healthGet**](DefaultApi.md#healthGet) | **GET** /health/ | 
-[**healthReadyGet**](DefaultApi.md#healthReadyGet) | **GET** /health/ready | 
-[**rootGet**](DefaultApi.md#rootGet) | **GET** / | 
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**apiOffersPost**](DefaultApi.md#apiofferspostoperation) | **POST** /api/offers |  |
+| [**apiPricesGet**](DefaultApi.md#apipricesget) | **GET** /api/prices |  |
+| [**healthGet**](DefaultApi.md#healthget) | **GET** /health/ |  |
+| [**healthReadyGet**](DefaultApi.md#healthreadyget) | **GET** /health/ready |  |
+| [**rootGet**](DefaultApi.md#rootget) | **GET** / |  |
 
 
-# **apiOffersPost**
+
+## apiOffersPost
+
 > ApiOffersPost201Response apiOffersPost(apiOffersPostRequest)
 
 
+
 ### Example
 
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiOffersPostOperationRequest } from '';
 
-```typescript
-import { createConfiguration, DefaultApi } from '';
-import type { DefaultApiApiOffersPostRequest } from '';
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
 
-const configuration = createConfiguration();
-const apiInstance = new DefaultApi(configuration);
+  const body = {
+    // ApiOffersPostRequest
+    apiOffersPostRequest: ...,
+  } satisfies ApiOffersPostOperationRequest;
 
-const request: DefaultApiApiOffersPostRequest = {
-  
-  apiOffersPostRequest: {
-    requestAmount: "requestAmount_example",
-    offerCurrency: "offerCurrency_example",
-  },
-};
+  try {
+    const data = await api.apiOffersPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-const data = await apiInstance.apiOffersPost(request);
-console.log('API called successfully. Returned data:', data);
+// Run the test
+example().catch(console.error);
 ```
-
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **apiOffersPostRequest** | **ApiOffersPostRequest**|  |
 
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **apiOffersPostRequest** | [ApiOffersPostRequest](ApiOffersPostRequest.md) |  | |
 
 ### Return type
 
-**ApiOffersPost201Response**
+[**ApiOffersPost201Response**](ApiOffersPost201Response.md)
 
 ### Authorization
 
@@ -55,54 +65,67 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
- - **Accept**: application/json
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**201** | Default Response |  -  |
-**409** | Default Response |  -  |
-**500** | Default Response |  -  |
-**503** | Default Response |  -  |
+| **201** | Default Response |  -  |
+| **409** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **503** | Default Response |  -  |
 
-[[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-# **apiPricesGet**
-> ApiPricesGet200Response apiPricesGet()
+
+## apiPricesGet
+
+> ApiPricesGet200Response apiPricesGet(dust)
+
 
 
 ### Example
 
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiPricesGetRequest } from '';
 
-```typescript
-import { createConfiguration, DefaultApi } from '';
-import type { DefaultApiApiPricesGetRequest } from '';
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
 
-const configuration = createConfiguration();
-const apiInstance = new DefaultApi(configuration);
+  const body = {
+    // string
+    dust: dust_example,
+  } satisfies ApiPricesGetRequest;
 
-const request: DefaultApiApiPricesGetRequest = {
-  
-  dust: "4",
-};
+  try {
+    const data = await api.apiPricesGet(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-const data = await apiInstance.apiPricesGet(request);
-console.log('API called successfully. Returned data:', data);
+// Run the test
+example().catch(console.error);
 ```
-
 
 ### Parameters
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **dust** | [**string**] |  | defaults to undefined
 
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **dust** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
-**ApiPricesGet200Response**
+[**ApiPricesGet200Response**](ApiPricesGet200Response.md)
 
 ### Authorization
 
@@ -110,46 +133,58 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
- - **Accept**: application/json
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | Default Response |  -  |
-**400** | Default Response |  -  |
-**500** | Default Response |  -  |
+| **200** | Default Response |  -  |
+| **400** | Default Response |  -  |
+| **500** | Default Response |  -  |
 
-[[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-# **healthGet**
+
+## healthGet
+
 > HealthGet200Response healthGet()
 
 
+
 ### Example
 
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { HealthGetRequest } from '';
 
-```typescript
-import { createConfiguration, DefaultApi } from '';
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
 
-const configuration = createConfiguration();
-const apiInstance = new DefaultApi(configuration);
+  try {
+    const data = await api.healthGet();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-const request = {};
-
-const data = await apiInstance.healthGet(request);
-console.log('API called successfully. Returned data:', data);
+// Run the test
+example().catch(console.error);
 ```
 
-
 ### Parameters
-This endpoint does not need any parameter.
 
+This endpoint does not need any parameter.
 
 ### Return type
 
-**HealthGet200Response**
+[**HealthGet200Response**](HealthGet200Response.md)
 
 ### Authorization
 
@@ -157,44 +192,56 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
- - **Accept**: application/json
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | Default Response |  -  |
+| **200** | Default Response |  -  |
 
-[[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-# **healthReadyGet**
+
+## healthReadyGet
+
 > HealthReadyGet200Response healthReadyGet()
 
 
+
 ### Example
 
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { HealthReadyGetRequest } from '';
 
-```typescript
-import { createConfiguration, DefaultApi } from '';
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
 
-const configuration = createConfiguration();
-const apiInstance = new DefaultApi(configuration);
+  try {
+    const data = await api.healthReadyGet();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-const request = {};
-
-const data = await apiInstance.healthReadyGet(request);
-console.log('API called successfully. Returned data:', data);
+// Run the test
+example().catch(console.error);
 ```
 
-
 ### Parameters
-This endpoint does not need any parameter.
 
+This endpoint does not need any parameter.
 
 ### Return type
 
-**HealthReadyGet200Response**
+[**HealthReadyGet200Response**](HealthReadyGet200Response.md)
 
 ### Authorization
 
@@ -202,46 +249,58 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
- - **Accept**: application/json
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | Default Response |  -  |
-**500** | Default Response |  -  |
-**503** | Default Response |  -  |
+| **200** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **503** | Default Response |  -  |
 
-[[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-# **rootGet**
+
+## rootGet
+
 > Get200Response rootGet()
 
 
+
 ### Example
 
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { RootGetRequest } from '';
 
-```typescript
-import { createConfiguration, DefaultApi } from '';
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
 
-const configuration = createConfiguration();
-const apiInstance = new DefaultApi(configuration);
+  try {
+    const data = await api.rootGet();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-const request = {};
-
-const data = await apiInstance.rootGet(request);
-console.log('API called successfully. Returned data:', data);
+// Run the test
+example().catch(console.error);
 ```
 
-
 ### Parameters
-This endpoint does not need any parameter.
 
+This endpoint does not need any parameter.
 
 ### Return type
 
-**Get200Response**
+[**Get200Response**](Get200Response.md)
 
 ### Authorization
 
@@ -249,15 +308,14 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
- - **Accept**: application/json
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | Default Response |  -  |
+| **200** | Default Response |  -  |
 
-[[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
-
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "npm run clean -ws --if-present",
+    "build": "npm run build -ws --if-present",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm:build:watch --workspace=@capacity-exchange/components\" \"npm:dev --workspace=@capacity-exchange/example-webapp\""
   },
   "keywords": [],
   "author": "",
@@ -14,7 +17,6 @@
     "packages/*"
   ],
   "devDependencies": {
-  },
-  "dependencies": {
+    "concurrently": "^9.2.1"
   }
 }
