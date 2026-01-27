@@ -1,10 +1,9 @@
-import { PromiseDefaultApi } from '@client/types/PromiseAPI';
-import { createConfiguration } from '@client/configuration';
-import { ServerConfiguration } from '@client/servers';
+import { DefaultApi } from '@client/apis/DefaultApi';
+import { Configuration } from '@client/runtime';
 
 export const getApi = () => {
-  const config = createConfiguration({
-    baseServer: new ServerConfiguration("http://localhost:3000", {})
+  const config = new Configuration({
+    basePath: "http://localhost:3000"
   });
-  return new PromiseDefaultApi(config);
+  return new DefaultApi(config);
 };

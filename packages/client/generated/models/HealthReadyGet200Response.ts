@@ -12,21 +12,21 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime.js';
-import type { HealthReadyGet200ResponseIndexer } from './HealthReadyGet200ResponseIndexer.js';
+import { mapValues } from '../runtime';
+import type { HealthReadyGet200ResponseIndexer } from './HealthReadyGet200ResponseIndexer';
 import {
     HealthReadyGet200ResponseIndexerFromJSON,
     HealthReadyGet200ResponseIndexerFromJSONTyped,
     HealthReadyGet200ResponseIndexerToJSON,
     HealthReadyGet200ResponseIndexerToJSONTyped,
-} from './HealthReadyGet200ResponseIndexer.js';
-import type { HealthReadyGet200ResponseWallet } from './HealthReadyGet200ResponseWallet.js';
+} from './HealthReadyGet200ResponseIndexer';
+import type { HealthReadyGet200ResponseWallet } from './HealthReadyGet200ResponseWallet';
 import {
     HealthReadyGet200ResponseWalletFromJSON,
     HealthReadyGet200ResponseWalletFromJSONTyped,
     HealthReadyGet200ResponseWalletToJSON,
     HealthReadyGet200ResponseWalletToJSONTyped,
-} from './HealthReadyGet200ResponseWallet.js';
+} from './HealthReadyGet200ResponseWallet';
 
 /**
  * 

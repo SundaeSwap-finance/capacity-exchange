@@ -13,7 +13,7 @@
  */
 
 
-import * as runtime from '../runtime.js';
+import * as runtime from '../runtime';
 import type {
   ApiOffersPost201Response,
   ApiOffersPostRequest,
@@ -22,7 +22,7 @@ import type {
   Get200Response,
   HealthGet200Response,
   HealthReadyGet200Response,
-} from '../models/index.js';
+} from '../models/index';
 import {
     ApiOffersPost201ResponseFromJSON,
     ApiOffersPost201ResponseToJSON,
@@ -38,7 +38,7 @@ import {
     HealthGet200ResponseToJSON,
     HealthReadyGet200ResponseFromJSON,
     HealthReadyGet200ResponseToJSON,
-} from '../models/index.js';
+} from '../models/index';
 
 export interface ApiOffersPostOperationRequest {
     apiOffersPostRequest: ApiOffersPostRequest;

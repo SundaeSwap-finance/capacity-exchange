@@ -10,7 +10,7 @@ describe('Offers API', () => {
       requestAmount: '10',
       offerCurrency: 'lovelace',
     };
-    const response: ApiOffersPost201Response = await api.apiOffersPost(offer);
+    const response: ApiOffersPost201Response = await api.apiOffersPost({ apiOffersPostRequest: offer });
 
     expect(response).toBeDefined();
     expect(response.offerId).toBeDefined();

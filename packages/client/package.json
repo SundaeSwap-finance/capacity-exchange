@@ -18,7 +18,7 @@
     "clean": "rm -rf generated",
     "build": "npm run generate-client && tsc -p tsconfig.json",
     "test": "jest --runInBand",
-    "generate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=importFileExtension=.js,supportsES6=true"
+    "generate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true"
   },
   "dependencies": {
     "es6-promise": "^4.2.4",
