@@ -1,20 +1,34 @@
 {
   "name": "@capacity-exchange/components",
   "version": "1.0.0",
-  "description": "React components for Capacity Exchange",
+  "description": "Capacity Exchange Components",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "clean": "rm -rf dist",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf dist"
+    "fix": "eslint src --fix && prettier --write src",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@capacity-exchange/client": "1.0.0",
-    "react": "^19.2.3"
+    "@capacity-exchange/client": "1.0.0"
+  },
+  "peerDependencies": {
+    "@midnight-ntwrk/dapp-connector-api": "4.0.0-beta.2",
+    "@midnight-ntwrk/ledger-v6": "6.1.0-alpha.6",
+    "@midnight-ntwrk/midnight-js-types": "3.0.0-alpha.11"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "typescript": "^5.3.3"
+    "@eslint/js": "^9.39.2",
+    "@midnight-ntwrk/dapp-connector-api": "4.0.0-beta.2",
+    "@midnight-ntwrk/ledger-v6": "6.1.0-alpha.6",
+    "@midnight-ntwrk/midnight-js-types": "3.0.0-alpha.11",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.54.0",
+    "vitest": "^4.0.18"
   }
 }
