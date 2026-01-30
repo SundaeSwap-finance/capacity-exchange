@@ -2,4 +2,5 @@
 .npmrc
 .vscode
 dist
+midnight-level-db
 node_modules

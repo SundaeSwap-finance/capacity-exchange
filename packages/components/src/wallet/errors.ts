@@ -41,6 +41,18 @@ export class CapacityExchangeOfferExpiredError extends CapacityExchangeError {
 }
 
 /**
+ * Thrown when no prices are available from any capacity exchange.
+ */
+export class CapacityExchangeNoPricesAvailableError extends CapacityExchangeError {
+  readonly type = 'no-prices-available' as const;
+
+  constructor() {
+    super('No prices available from any capacity exchange');
+    this.name = 'CapacityExchangeNoPricesAvailableError';
+  }
+}
+
+/**
  * Thrown when the Capacity Exchange server returns an error.
  */
 export class CapacityExchangeServerError extends CapacityExchangeError {

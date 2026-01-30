@@ -1,41 +1,17 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import {
-  ApiOffersPost201Response,
-  Configuration,
-  DefaultApi,
-  ResponseError,
-} from '@capacity-exchange/client';
-import {
-  Transaction,
-  type SignatureEnabled,
-  type Proof,
-  type PreBinding,
-  type Binding,
-  type UnprovenTransaction
-} from '@midnight-ntwrk/ledger-v6';
-
-import type { CapacityExchangeConfig, Offer, Price } from './types';
+import type { UnprovenTransaction, ShieldedCoinInfo } from '@midnight-ntwrk/ledger-v6';
+import type { CapacityExchangeConfig } from './types';
+import { DEFAULT_MARGIN } from './types';
+import { getLedgerParameters } from './utils';
+import { createExchangeApis } from './exchangeApi';
+import { fetchPricesFromExchanges } from './priceService';
+import { selectAndConfirmOffer } from './offerService';
+import { processTransactionWithOffer } from './transactionService';
 import {
   CapacityExchangeUserCancelledError,
   CapacityExchangeOfferExpiredError,
-  CapacityExchangeServerError
+  CapacityExchangeNoPricesAvailableError,
 } from './errors';
-import { isOfferExpired, getLedgerParameters, hexToUint8Array, uint8ArrayToHex } from './utils';
-
-/**
- * Wraps a CES API call to translate ResponseError into CapacityExchangeServerError.
- */
-async function wrapCesApi<T>(cesApi: () => Promise<T>): Promise<T> {
-  try {
-    return await cesApi();
-  } catch (e) {
-    if (!(e instanceof ResponseError)) throw e;
-
-    // Handle ResponseError
-    const errorText = await e.response.text().catch(() => 'Unknown error');
-    throw new CapacityExchangeServerError(e.response.status, errorText);
-  }
-}
 
 /**
  * Creates a WalletProvider with Capacity Exchange functionality.
@@ -47,128 +23,57 @@ async function wrapCesApi<T>(cesApi: () => Promise<T>): Promise<T> {
  * @param config - Configuration including the base provider and callbacks
  * @returns A new WalletProvider with Capacity Exchange integration
  */
-export function capacityExchangeWalletProvider(
-  config: CapacityExchangeConfig
-): WalletProvider {
+export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
   const {
     walletProvider,
     connectedAPI,
     proofProvider,
-    capacityExchangeUrl,
+    capacityExchangeUrls,
     indexerUrl,
+    margin,
     promptForCurrency,
     confirmOffer,
   } = config;
 
-  const apiConfig = new Configuration({ basePath: capacityExchangeUrl });
-  const api = new DefaultApi(apiConfig);
+  const exchangeApis = createExchangeApis(capacityExchangeUrls);
 
   return {
     getCoinPublicKey: () => walletProvider.getCoinPublicKey(),
     getEncryptionPublicKey: () => walletProvider.getEncryptionPublicKey(),
 
-    async balanceTx(tx: UnprovenTransaction, newCoins, ttl) {
+    async balanceTx(tx: UnprovenTransaction, _newCoins?: ShieldedCoinInfo[], _ttl?: Date) {
       console.debug('[CapacityExchange] balanceTx called');
+
+      // Calculate DUST required for transaction
       console.debug('[CapacityExchange] Fetching ledger parameters from:', indexerUrl);
       const ledgerParameters = await getLedgerParameters(indexerUrl);
-      // TODO: Determine the correct value for margin
-      const margin = 3;
-      const dustRequired: bigint = tx.feesWithMargin(ledgerParameters, margin);
+      const dustRequired: bigint = tx.feesWithMargin(ledgerParameters, margin ?? DEFAULT_MARGIN);
       console.debug('[CapacityExchange] DUST required:', dustRequired);
 
-      console.debug('[CapacityExchange] Fetching prices from:', capacityExchangeUrl);
-      const priceResponse = await wrapCesApi(() =>
-        api.apiPricesGet({ dust: dustRequired.toString() })
-      );
-      console.debug('[CapacityExchange] Prices received:', priceResponse.prices);
+      // Fetch prices from all exchanges
+      const allPrices = await fetchPricesFromExchanges(exchangeApis, dustRequired);
 
-      let confirmedOffer: Offer | null = null;
-      while (confirmedOffer === null) {
-        console.debug('[CapacityExchange] Prompting user for currency selection');
-        const currencyResult = await promptForCurrency(priceResponse.prices, dustRequired);
-        if (currencyResult.status === 'cancelled') {
-          console.debug('[CapacityExchange] User cancelled currency selection');
-          throw new CapacityExchangeUserCancelledError();
-        }
-        console.debug('[CapacityExchange] User selected currency:', currencyResult.currency);
-
-        console.debug('[CapacityExchange] Requesting offer from server');
-        const offerResponse = await wrapCesApi(() =>
-          api.apiOffersPost({
-            apiOffersPostRequest: {
-              requestAmount: dustRequired.toString(),
-              offerCurrency: currencyResult.currency,
-            }
-          })
-        );
-        console.debug('[CapacityExchange] Offer received:', offerResponse);
-
-        const offer: Offer = {
-          offerId: offerResponse.offerId,
-          offerAmount: offerResponse.offerAmount,
-          offerCurrency: offerResponse.offerCurrency,
-          serializedTx: offerResponse.serializedTx,
-          expiresAt: offerResponse.expiresAt.toISOString()
-        };
-
-        if (isOfferExpired(offer.expiresAt)) {
-          console.debug('[CapacityExchange] Offer already expired');
-          throw new CapacityExchangeOfferExpiredError(offer);
-        }
-
-        console.debug('[CapacityExchange] Prompting user to confirm offer');
-        const confirmResult = await confirmOffer(offer, dustRequired);
-        if (confirmResult.status === 'cancelled') {
-          console.debug('[CapacityExchange] User cancelled');
-          throw new CapacityExchangeUserCancelledError();
-        }
-        if (confirmResult.status === 'back') {
-          console.debug('[CapacityExchange] User went back to currency selection');
-          continue;
-        }
-        console.debug('[CapacityExchange] User confirmed offer');
-
-        if (isOfferExpired(offer.expiresAt)) {
-          console.debug('[CapacityExchange] Offer expired during confirmation');
-          throw new CapacityExchangeOfferExpiredError(offer);
-        }
-        confirmedOffer = offer;
+      // Check if we have any prices available
+      if (allPrices.length === 0) {
+        throw new CapacityExchangeNoPricesAvailableError();
       }
 
-      console.debug('[CapacityExchange] Deserializing DUST transaction from offer');
-      const txBytes = hexToUint8Array(confirmedOffer.serializedTx);
-      const dustTx = Transaction.deserialize<
-        SignatureEnabled,
-        Proof,
-        PreBinding
-      >("signature", "proof", "pre-binding", txBytes).bind();
-      console.debug('[CapacityExchange] DUST transaction deserialized');
+      // User selects currency and confirms offer
+      const result = await selectAndConfirmOffer(
+        allPrices,
+        dustRequired,
+        promptForCurrency,
+        confirmOffer
+      );
 
-      console.debug('[CapacityExchange] Proving user transaction');
-      const provenTx = (await proofProvider.proveTx(tx)).bind();
-      console.debug('[CapacityExchange] User transaction proven');
-
-      console.debug('[CapacityExchange] Merging transactions');
-      const mergedTx = provenTx.merge(dustTx);
-      const serialized = mergedTx.serialize();
-      const serializedStr = uint8ArrayToHex(serialized);
-      console.debug('[CapacityExchange] Transactions merged, calling wallet to balance and seal');
-
-      const result = await connectedAPI.balanceSealedTransaction(serializedStr);
-      console.debug('[CapacityExchange] Wallet balanced and sealed transaction');
-
-      const resultBytes = hexToUint8Array(result.tx);
-      const transaction = Transaction.deserialize<
-        SignatureEnabled,
-        Proof,
-        Binding
-      >("signature", "proof", "binding", resultBytes).bind();
-
-      console.debug('[CapacityExchange] balanceTx completed successfully');
-      return {
-        transaction,
-        type: 'NothingToProve' as const,
-      };
+      switch (result.status) {
+        case 'success':
+          return processTransactionWithOffer(tx, result.offer, proofProvider, connectedAPI);
+        case 'userCancelled':
+          throw new CapacityExchangeUserCancelledError();
+        case 'offerExpired':
+          throw new CapacityExchangeOfferExpiredError(result.offer);
+      }
     },
   };
 }

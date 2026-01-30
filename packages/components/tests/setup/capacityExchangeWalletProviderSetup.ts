@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import type {
   CapacityExchangeConfig,
-  Price,
+  ExchangePrice,
   Offer,
   CurrencySelectionResult,
   OfferConfirmationResult,
@@ -18,7 +18,10 @@ export interface TestContext {
   mockConnectedAPI: ReturnType<typeof createMockConnectedAPI>;
   mockProofProvider: ReturnType<typeof createMockProofProvider>;
   mockZKConfigProvider: ReturnType<typeof createMockZKConfigProvider>;
-  promptForCurrency: (prices: Price[], dustRequired: bigint) => Promise<CurrencySelectionResult>;
+  promptForCurrency: (
+    prices: ExchangePrice[],
+    dustRequired: bigint
+  ) => Promise<CurrencySelectionResult>;
   confirmOffer: (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 }
 
@@ -28,7 +31,10 @@ export function createTestContext(): TestContext {
     mockConnectedAPI: createMockConnectedAPI(),
     mockProofProvider: createMockProofProvider(),
     mockZKConfigProvider: createMockZKConfigProvider(),
-    promptForCurrency: vi.fn().mockResolvedValue({ status: 'selected', currency: 'ADA' }),
+    promptForCurrency: vi.fn().mockImplementation((exchangePrices: ExchangePrice[]) => {
+      const selectedPrice = exchangePrices.find((ep) => ep.price.currency === 'ADA') || exchangePrices[0];
+      return Promise.resolve({ status: 'selected', exchangePrice: selectedPrice });
+    }),
     confirmOffer: vi.fn().mockResolvedValue({ status: 'confirmed' }),
   };
 }
@@ -71,7 +77,7 @@ export function setupFetchMock(): void {
           offerAmount: '1000000',
           offerCurrency: 'ADA',
           serializedTx: '0102030405060708090a0b0c0d0e0f',
-          expiresAt: new Date(Date.now() + 60000).toISOString(),
+          expiresAt: new Date(Date.now() + 60000),
         }),
       } as Response);
     }
@@ -91,7 +97,7 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
     proofProvider: ctx.mockProofProvider,
     zkConfigProvider: ctx.mockZKConfigProvider,
     indexerUrl: 'http://localhost:8080/graphql',
-    capacityExchangeUrl: 'http://localhost:3000',
+    capacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
     confirmOffer: ctx.confirmOffer,
   };

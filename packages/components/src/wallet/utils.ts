@@ -1,17 +1,17 @@
-import { LedgerParameters } from "@midnight-ntwrk/ledger-v6";
+import { LedgerParameters } from '@midnight-ntwrk/ledger-v6';
 
-export function isOfferExpired(expiresAt: string): boolean {
-  return new Date(expiresAt) < new Date();
+export function isOfferExpired(expiresAt: Date): boolean {
+  return expiresAt < new Date();
 }
 
 export function uint8ArrayToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export function hexToUint8Array(hex: string): Uint8Array {
-  const cleaned = hex.replace(/^0x/, "");
+  const cleaned = hex.replace(/^0x/, '');
   const matches = cleaned.match(/.{1,2}/g);
   if (!matches) return new Uint8Array();
   return new Uint8Array(matches.map((byte) => parseInt(byte, 16)));
@@ -25,13 +25,11 @@ const query = `
     }
   `;
 
-export const getLedgerParameters = async (
-  graphQLEndpoint: string,
-): Promise<LedgerParameters> => {
+export const getLedgerParameters = async (graphQLEndpoint: string): Promise<LedgerParameters> => {
   const response = await fetch(graphQLEndpoint, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       query,
@@ -39,6 +37,6 @@ export const getLedgerParameters = async (
   });
 
   const result = await response.json();
-  const bytes = Buffer.from(result.data.block.ledgerParameters, "hex");
+  const bytes = Buffer.from(result.data.block.ledgerParameters, 'hex');
   return LedgerParameters.deserialize(bytes);
 };
