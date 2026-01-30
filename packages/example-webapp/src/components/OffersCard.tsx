@@ -11,15 +11,17 @@ export function OffersCard() {
       <Offers>
         {({ submit, submitting, data, error }) => (
           <div>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              await submit({
-                apiOffersPostRequest: {
-                  requestAmount: offerAmount,
-                  offerCurrency: offerCurrency,
-                }
-              });
-            }}>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await submit({
+                  apiOffersPostRequest: {
+                    requestAmount: offerAmount,
+                    offerCurrency: offerCurrency,
+                  },
+                });
+              }}
+            >
               <div>
                 <label>Amount:</label>
                 <input type="text" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} />

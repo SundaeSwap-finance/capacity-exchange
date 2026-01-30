@@ -16,10 +16,14 @@ const RootInfo: React.FC<RootInfoProps> = ({ children }) => {
   const api = useApiClient();
   const { data: info, error } = useApi(() => api.rootGet(), []);
 
-  return <>{children({
-    error,
-    info,
-  })}</>;
+  return (
+    <>
+      {children({
+        error,
+        info,
+      })}
+    </>
+  );
 };
 
 export default RootInfo;

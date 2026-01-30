@@ -10,7 +10,10 @@ export function HealthCheckCard() {
           if (error) return <div>Error: {error}</div>;
           return (
             <div>
-              <p>Status: <Badge className={`app-badge ${status === 'ok' ? 'app-badge-ok' : 'app-badge-fail'}`}>{status}</Badge></p>
+              <p>
+                Status:{' '}
+                <Badge className={`app-badge ${status === 'ok' ? 'app-badge-ok' : 'app-badge-fail'}`}>{status}</Badge>
+              </p>
               <p>Uptime: {uptime}</p>
             </div>
           );

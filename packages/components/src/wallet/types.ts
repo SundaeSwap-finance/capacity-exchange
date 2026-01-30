@@ -1,8 +1,4 @@
-import type {
-  WalletProvider,
-  ProofProvider,
-  ZKConfigProvider,
-} from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider, ProofProvider, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { ExchangeApi } from './exchangeApi';
 
@@ -24,19 +20,11 @@ export interface Offer {
   expiresAt: Date;
 }
 
-export type CurrencySelectionResult =
-  | { status: 'selected'; exchangePrice: ExchangePrice }
-  | { status: 'cancelled' };
+export type CurrencySelectionResult = { status: 'selected'; exchangePrice: ExchangePrice } | { status: 'cancelled' };
 
-export type OfferConfirmationResult =
-  | { status: 'confirmed' }
-  | { status: 'back' }
-  | { status: 'cancelled' };
+export type OfferConfirmationResult = { status: 'confirmed' } | { status: 'back' } | { status: 'cancelled' };
 
-export type PromptForCurrency = (
-  prices: ExchangePrice[],
-  dustRequired: bigint
-) => Promise<CurrencySelectionResult>;
+export type PromptForCurrency = (prices: ExchangePrice[], dustRequired: bigint) => Promise<CurrencySelectionResult>;
 
 export type ConfirmOffer = (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 

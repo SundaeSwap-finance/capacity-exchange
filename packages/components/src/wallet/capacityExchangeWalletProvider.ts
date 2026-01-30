@@ -59,12 +59,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
       }
 
       // User selects currency and confirms offer
-      const result = await selectAndConfirmOffer(
-        allPrices,
-        dustRequired,
-        promptForCurrency,
-        confirmOffer
-      );
+      const result = await selectAndConfirmOffer(allPrices, dustRequired, promptForCurrency, confirmOffer);
 
       switch (result.status) {
         case 'success':

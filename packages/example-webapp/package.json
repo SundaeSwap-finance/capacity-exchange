@@ -7,22 +7,39 @@
   "license": "ISC",
   "scripts": {
     "clean": "rm -rf dist",
+    "copy:zk-assets": "mkdir -p public/midnight/counter/keys public/midnight/counter/zkir && cp -r contracts/counter/out/keys/* public/midnight/counter/keys/ && cp -r contracts/counter/out/zkir/* public/midnight/counter/zkir/",
+    "prebuild": "npm run copy:zk-assets",
     "build": "tsc && vite build",
+    "predev": "npm run copy:zk-assets",
     "dev": "vite"
   },
   "dependencies": {
     "@capacity-exchange/client": "1.0.0",
     "@capacity-exchange/components": "1.0.0",
+    "@midnight-ntwrk/compact-runtime": "0.11.0-rc.1",
+    "@midnight-ntwrk/dapp-connector-api": "^4.0.0-beta.1",
+    "@midnight-ntwrk/ledger-v6": "6.1.0-alpha.6",
+    "@midnight-ntwrk/midnight-js-contracts": "3.0.0-alpha.11",
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "3.0.0-alpha.11",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.0.0-alpha.11",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.0.0-alpha.11",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "3.0.0-alpha.11",
+    "@midnight-ntwrk/midnight-js-network-id": "3.0.0-alpha.11",
+    "@midnight-ntwrk/midnight-js-types": "3.0.0-alpha.11",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0-beta.9",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "rxjs": "^7.8.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "vite-plugin-wasm": "^3.5.0"
   }
 }

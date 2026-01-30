@@ -31,6 +31,6 @@ export function runCli<T>(main: () => Promise<T>, options: RunCliOptions = {}): 
       const message = err instanceof Error ? err.message : String(err);
       console.error(JSON.stringify({ error: message }));
       process.exit(1);
-    },
+    }
   );
 }

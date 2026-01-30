@@ -8,7 +8,7 @@
     "moduleResolution": "node",
     "declaration": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

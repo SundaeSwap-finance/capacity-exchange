@@ -14,8 +14,8 @@ export function useSubmit<T, TArgs>(submitter: Submitter<T, TArgs>) {
       setData(response);
       setError(null);
       return response;
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       throw e;
     } finally {
       setSubmitting(false);

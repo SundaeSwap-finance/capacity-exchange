@@ -32,7 +32,7 @@ export class DustWalletProvider implements WalletProvider {
   async balanceTx(
     tx: UnprovenTransaction,
     newCoins?: ShieldedCoinInfo[],
-    ttl?: Date,
+    ttl?: Date
   ): Promise<ProvingRecipe<UnprovenTransaction | FinalizedTransaction>> {
     const now = new Date();
     const realTtl = ttl ?? new Date(now.getTime() + 5 * 1000 * 60);

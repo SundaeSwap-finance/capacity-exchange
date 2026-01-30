@@ -18,7 +18,7 @@
     "clean": "rm -rf generated",
     "generate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true",
     "build": "npm run generate-client && tsc -p tsconfig.json",
-    "test": "jest --runInBand"
+    "test": "vitest run"
   },
   "dependencies": {
     "es6-promise": "^4.2.4",
@@ -26,9 +26,7 @@
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.28.0",
-    "@types/jest": "^30.0.0",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

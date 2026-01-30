@@ -47,11 +47,7 @@ describe('capacityExchangeWalletProvider', () => {
     const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
     const mockTx = createMockUnprovenTransaction(50000n);
 
-    const result = await provider.balanceTx(
-      mockTx,
-      [],
-      new Date(Date.now() + 60000)
-    );
+    const result = await provider.balanceTx(mockTx, [], new Date(Date.now() + 60000));
 
     expect(result).toBeDefined();
     expect(result.type).toBe('NothingToProve');

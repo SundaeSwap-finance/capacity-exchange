@@ -16,14 +16,20 @@ interface OffersProps {
 
 const Offers: React.FC<OffersProps> = ({ children }) => {
   const api = useApiClient();
-  const { submit, submitting, data, error } = useSubmit((args: ApiOffersPostOperationRequest) => api.apiOffersPost(args));
+  const { submit, submitting, data, error } = useSubmit((args: ApiOffersPostOperationRequest) =>
+    api.apiOffersPost(args)
+  );
 
-  return <>{children({
-    submit,
-    submitting,
-    data,
-    error,
-  })}</>;
+  return (
+    <>
+      {children({
+        submit,
+        submitting,
+        data,
+        error,
+      })}
+    </>
+  );
 };
 
 export default Offers;

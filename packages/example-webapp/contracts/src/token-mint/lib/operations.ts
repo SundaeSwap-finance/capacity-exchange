@@ -55,7 +55,7 @@ export async function mint(
   ctx: AppContext,
   contractAddress: string,
   privateStateId: string,
-  amount: bigint,
+  amount: bigint
 ): Promise<MintOutput> {
   console.error(`Minting ${amount} tokens at ${contractAddress}...`);
   const providers = getContractProviders<TokenMintContract>(ctx);

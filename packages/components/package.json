@@ -8,7 +8,6 @@
     "clean": "rm -rf dist",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "fix": "eslint src --fix && prettier --write src",
     "test": "vitest run"
   },
   "dependencies": {
@@ -24,6 +23,7 @@
     "@midnight-ntwrk/dapp-connector-api": "4.0.0-beta.2",
     "@midnight-ntwrk/ledger-v6": "6.1.0-alpha.6",
     "@midnight-ntwrk/midnight-js-types": "3.0.0-alpha.11",
+    "@types/node": "^25.1.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",

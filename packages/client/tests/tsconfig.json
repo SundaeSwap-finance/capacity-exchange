@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2021",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -10,7 +10,8 @@
     "baseUrl": "..",
     "paths": {
       "@client/*": ["generated/*"]
-    }
+    },
+    "types": ["vitest/globals"]
   },
   "include": ["./**/*.ts"]
 }

@@ -16,10 +16,14 @@ const ReadyCheck: React.FC<ReadyCheckProps> = ({ children }) => {
   const api = useApiClient();
   const { data: readiness, error } = useApi(() => api.healthReadyGet(), [], { pollInterval: 2000 });
 
-  return <>{children({
-    error,
-    readiness,
-  })}</>;
+  return (
+    <>
+      {children({
+        error,
+        readiness,
+      })}
+    </>
+  );
 };
 
 export default ReadyCheck;

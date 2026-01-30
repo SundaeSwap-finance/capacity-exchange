@@ -1,11 +1,5 @@
 import type { ApiOffersPost201Response } from '@capacity-exchange/client';
-import type {
-  Offer,
-  PromptForCurrency,
-  ConfirmOffer,
-  SelectAndConfirmOfferResult,
-  ExchangePrice,
-} from './types';
+import type { Offer, PromptForCurrency, ConfirmOffer, SelectAndConfirmOfferResult, ExchangePrice } from './types';
 import { isOfferExpired } from './utils';
 
 export function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {
@@ -42,10 +36,7 @@ export async function selectAndConfirmOffer(
     console.debug('[CapacityExchange] User selected currency:', exchangePrice.price.currency);
 
     // Request offer from the selected exchange
-    console.debug(
-      '[CapacityExchange] Requesting offer from exchange:',
-      exchangePrice.exchangeApi.url
-    );
+    console.debug('[CapacityExchange] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
     const offerResponse = await exchangePrice.exchangeApi.api.apiOffersPost({
       apiOffersPostRequest: {
         requestAmount: dustRequired.toString(),

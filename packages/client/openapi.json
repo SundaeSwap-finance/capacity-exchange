@@ -1,1 +1,378 @@
-{"openapi":"3.0.3","info":{"title":"capacity-exchange-server","version":"1.0.0"},"components":{"schemas":{}},"paths":{"/":{"get":{"responses":{"200":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["name","version","env"],"properties":{"name":{"type":"string"},"version":{"type":"string"},"env":{"type":"object","required":["network","node_url","node_ws_url","indexer_url","indexer_ws_url","proof_server_url"],"properties":{"network":{"type":"string"},"node_url":{"type":"string"},"node_ws_url":{"type":"string"},"indexer_url":{"type":"string"},"indexer_ws_url":{"type":"string"},"proof_server_url":{"type":"string"}}}}}}}}}}},"/health/":{"get":{"responses":{"200":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["status","uptime"],"properties":{"status":{"type":"string","enum":["ok"]},"uptime":{"type":"number"}}}}}}}}},"/health/ready":{"get":{"responses":{"200":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["status","wallet","indexer"],"properties":{"status":{"anyOf":[{"type":"string","enum":["syncing"]},{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"wallet":{"type":"object","required":["status"],"properties":{"status":{"anyOf":[{"type":"string","enum":["syncing"]},{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"error":{"type":"string"}}},"indexer":{"type":"object","required":["status"],"properties":{"status":{"anyOf":[{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"height":{"type":"number"},"error":{"type":"string"},"details":{"type":"string"}}}}}}}},"500":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["status","wallet","indexer"],"properties":{"status":{"anyOf":[{"type":"string","enum":["syncing"]},{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"wallet":{"type":"object","required":["status"],"properties":{"status":{"anyOf":[{"type":"string","enum":["syncing"]},{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"error":{"type":"string"}}},"indexer":{"type":"object","required":["status"],"properties":{"status":{"anyOf":[{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"height":{"type":"number"},"error":{"type":"string"},"details":{"type":"string"}}}}}}}},"503":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["status","wallet","indexer"],"properties":{"status":{"anyOf":[{"type":"string","enum":["syncing"]},{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"wallet":{"type":"object","required":["status"],"properties":{"status":{"anyOf":[{"type":"string","enum":["syncing"]},{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"error":{"type":"string"}}},"indexer":{"type":"object","required":["status"],"properties":{"status":{"anyOf":[{"type":"string","enum":["ok"]},{"type":"string","enum":["ko"]}]},"height":{"type":"number"},"error":{"type":"string"},"details":{"type":"string"}}}}}}}}}}},"/api/prices":{"get":{"parameters":[{"schema":{"pattern":"^\\d+$","type":"string"},"in":"query","name":"dust","required":true}],"responses":{"200":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["prices"],"properties":{"prices":{"type":"array","items":{"type":"object","required":["amount","currency"],"properties":{"amount":{"type":"string"},"currency":{"type":"string"}}}}}}}}},"400":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string"},"message":{"type":"string"},"details":{"type":"string"}}}}}},"500":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string"},"message":{"type":"string"},"details":{"type":"string"}}}}}}}}},"/api/offers":{"post":{"requestBody":{"content":{"application/json":{"schema":{"type":"object","required":["requestAmount","offerCurrency"],"properties":{"requestAmount":{"type":"string"},"offerCurrency":{"type":"string"}}}}},"required":true},"responses":{"201":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["offerId","offerAmount","offerCurrency","serializedTx","expiresAt"],"properties":{"offerId":{"type":"string"},"offerAmount":{"type":"string"},"offerCurrency":{"type":"string"},"serializedTx":{"type":"string"},"expiresAt":{"format":"date-time","type":"string"}}}}}},"409":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string"},"message":{"type":"string"},"details":{"type":"string"}}}}}},"500":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string"},"message":{"type":"string"},"details":{"type":"string"}}}}}},"503":{"description":"Default Response","content":{"application/json":{"schema":{"type":"object","required":["error","message"],"properties":{"error":{"type":"string"},"message":{"type":"string"},"details":{"type":"string"}}}}}}}}}}}
+{
+  "openapi": "3.0.3",
+  "info": { "title": "capacity-exchange-server", "version": "1.0.0" },
+  "components": { "schemas": {} },
+  "paths": {
+    "/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["name", "version", "env"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "version": { "type": "string" },
+                    "env": {
+                      "type": "object",
+                      "required": [
+                        "network",
+                        "node_url",
+                        "node_ws_url",
+                        "indexer_url",
+                        "indexer_ws_url",
+                        "proof_server_url"
+                      ],
+                      "properties": {
+                        "network": { "type": "string" },
+                        "node_url": { "type": "string" },
+                        "node_ws_url": { "type": "string" },
+                        "indexer_url": { "type": "string" },
+                        "indexer_ws_url": { "type": "string" },
+                        "proof_server_url": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "uptime"],
+                  "properties": {
+                    "status": { "type": "string", "enum": ["ok"] },
+                    "uptime": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "wallet", "indexer"],
+                  "properties": {
+                    "status": {
+                      "anyOf": [
+                        { "type": "string", "enum": ["syncing"] },
+                        { "type": "string", "enum": ["ok"] },
+                        { "type": "string", "enum": ["ko"] }
+                      ]
+                    },
+                    "wallet": {
+                      "type": "object",
+                      "required": ["status"],
+                      "properties": {
+                        "status": {
+                          "anyOf": [
+                            { "type": "string", "enum": ["syncing"] },
+                            { "type": "string", "enum": ["ok"] },
+                            { "type": "string", "enum": ["ko"] }
+                          ]
+                        },
+                        "error": { "type": "string" }
+                      }
+                    },
+                    "indexer": {
+                      "type": "object",
+                      "required": ["status"],
+                      "properties": {
+                        "status": {
+                          "anyOf": [
+                            { "type": "string", "enum": ["ok"] },
+                            { "type": "string", "enum": ["ko"] }
+                          ]
+                        },
+                        "height": { "type": "number" },
+                        "error": { "type": "string" },
+                        "details": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "wallet", "indexer"],
+                  "properties": {
+                    "status": {
+                      "anyOf": [
+                        { "type": "string", "enum": ["syncing"] },
+                        { "type": "string", "enum": ["ok"] },
+                        { "type": "string", "enum": ["ko"] }
+                      ]
+                    },
+                    "wallet": {
+                      "type": "object",
+                      "required": ["status"],
+                      "properties": {
+                        "status": {
+                          "anyOf": [
+                            { "type": "string", "enum": ["syncing"] },
+                            { "type": "string", "enum": ["ok"] },
+                            { "type": "string", "enum": ["ko"] }
+                          ]
+                        },
+                        "error": { "type": "string" }
+                      }
+                    },
+                    "indexer": {
+                      "type": "object",
+                      "required": ["status"],
+                      "properties": {
+                        "status": {
+                          "anyOf": [
+                            { "type": "string", "enum": ["ok"] },
+                            { "type": "string", "enum": ["ko"] }
+                          ]
+                        },
+                        "height": { "type": "number" },
+                        "error": { "type": "string" },
+                        "details": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "wallet", "indexer"],
+                  "properties": {
+                    "status": {
+                      "anyOf": [
+                        { "type": "string", "enum": ["syncing"] },
+                        { "type": "string", "enum": ["ok"] },
+                        { "type": "string", "enum": ["ko"] }
+                      ]
+                    },
+                    "wallet": {
+                      "type": "object",
+                      "required": ["status"],
+                      "properties": {
+                        "status": {
+                          "anyOf": [
+                            { "type": "string", "enum": ["syncing"] },
+                            { "type": "string", "enum": ["ok"] },
+                            { "type": "string", "enum": ["ko"] }
+                          ]
+                        },
+                        "error": { "type": "string" }
+                      }
+                    },
+                    "indexer": {
+                      "type": "object",
+                      "required": ["status"],
+                      "properties": {
+                        "status": {
+                          "anyOf": [
+                            { "type": "string", "enum": ["ok"] },
+                            { "type": "string", "enum": ["ko"] }
+                          ]
+                        },
+                        "height": { "type": "number" },
+                        "error": { "type": "string" },
+                        "details": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/prices": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "pattern": "^\\d+$", "type": "string" },
+            "in": "query",
+            "name": "dust",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["prices"],
+                  "properties": {
+                    "prices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["amount", "currency"],
+                        "properties": {
+                          "amount": { "type": "string" },
+                          "currency": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error", "message"],
+                  "properties": {
+                    "error": { "type": "string" },
+                    "message": { "type": "string" },
+                    "details": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error", "message"],
+                  "properties": {
+                    "error": { "type": "string" },
+                    "message": { "type": "string" },
+                    "details": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["requestAmount", "offerCurrency"],
+                "properties": {
+                  "requestAmount": { "type": "string" },
+                  "offerCurrency": { "type": "string" }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["offerId", "offerAmount", "offerCurrency", "serializedTx", "expiresAt"],
+                  "properties": {
+                    "offerId": { "type": "string" },
+                    "offerAmount": { "type": "string" },
+                    "offerCurrency": { "type": "string" },
+                    "serializedTx": { "type": "string" },
+                    "expiresAt": { "format": "date-time", "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error", "message"],
+                  "properties": {
+                    "error": { "type": "string" },
+                    "message": { "type": "string" },
+                    "details": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error", "message"],
+                  "properties": {
+                    "error": { "type": "string" },
+                    "message": { "type": "string" },
+                    "details": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error", "message"],
+                  "properties": {
+                    "error": { "type": "string" },
+                    "message": { "type": "string" },
+                    "details": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

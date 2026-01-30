@@ -17,7 +17,9 @@ export function RootInfoCard() {
                   <h3>Environment:</h3>
                   <ul>
                     {Object.entries(info.env).map(([key, value]) => (
-                      <li key={key}><strong>{key}:</strong> {value as any}</li>
+                      <li key={key}>
+                        <strong>{key}:</strong> {String(value)}
+                      </li>
                     ))}
                   </ul>
                 </div>

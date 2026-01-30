@@ -16,11 +16,15 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ children }) => {
   const api = useApiClient();
   const { data: health, error } = useApi(() => api.healthGet(), [], { pollInterval: 2000 });
 
-  return <>{children({
-    error,
-    status: health?.status,
-    uptime: health?.uptime,
-  })}</>;
+  return (
+    <>
+      {children({
+        error,
+        status: health?.status,
+        uptime: health?.uptime,
+      })}
+    </>
+  );
 };
 
 export default HealthCheck;

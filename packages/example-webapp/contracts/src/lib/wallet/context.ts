@@ -37,7 +37,7 @@ export class WalletContextStarter implements Startable<WalletContext> {
     this.#walletProvider = new DustWalletProvider(
       this.#walletFacade.dust,
       this.#keys.shieldedSecretKeys,
-      this.#keys.dustSecretKey,
+      this.#keys.dustSecretKey
     );
   }
 

@@ -7,7 +7,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   prettier,
   {
-    ignores: ['dist/**', 'node_modules/**'],
+    ignores: ['**/dist/**', '**/out/**', '**/node_modules/**', '**/generated/**', 'vendor/**', '**/jest.config.js'],
   },
   {
     rules: {
@@ -18,6 +18,14 @@ export default tseslint.config(
           varsIgnorePattern: '^_',
         },
       ],
+    },
+  },
+  // Relaxed rules for test files
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/tests/**', '**/mocks/**'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   }
 );

@@ -13,9 +13,7 @@ export async function fetchPricesFromExchanges(
 
   const priceResponses = await Promise.allSettled(
     exchangeApis.map(({ url, api }) =>
-      api
-        .apiPricesGet({ dust: dustRequired.toString() })
-        .then((response) => ({ url, prices: response.prices }))
+      api.apiPricesGet({ dust: dustRequired.toString() }).then((response) => ({ url, prices: response.prices }))
     )
   );
 

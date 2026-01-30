@@ -18,10 +18,7 @@ export interface TestContext {
   mockConnectedAPI: ReturnType<typeof createMockConnectedAPI>;
   mockProofProvider: ReturnType<typeof createMockProofProvider>;
   mockZKConfigProvider: ReturnType<typeof createMockZKConfigProvider>;
-  promptForCurrency: (
-    prices: ExchangePrice[],
-    dustRequired: bigint
-  ) => Promise<CurrencySelectionResult>;
+  promptForCurrency: (prices: ExchangePrice[], dustRequired: bigint) => Promise<CurrencySelectionResult>;
   confirmOffer: (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 }
 

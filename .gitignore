@@ -1,8 +1,11 @@
 *.hex
 *.log
+*.tsbuildinfo
+.env
 .npmrc
 .vscode
 dist
 midnight-level-db
 node_modules
 out
+vendor

@@ -18,7 +18,9 @@ export function PricesCard() {
           return (
             <ul>
               {prices.prices?.map((price, i) => (
-                <li key={i}>{price.amount} @ {price.currency}</li>
+                <li key={i}>
+                  {price.amount} @ {price.currency}
+                </li>
               ))}
             </ul>
           );

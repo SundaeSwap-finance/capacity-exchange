@@ -15,12 +15,18 @@ interface PricesProps {
 
 const Prices: React.FC<PricesProps> = ({ children, dust }) => {
   const api = useApiClient();
-  const { data: prices, error } = useApi(() => api.apiPricesGet({ dust }), [dust], { pollInterval: 5000 });
+  const { data: prices, error } = useApi(() => api.apiPricesGet({ dust }), [dust], {
+    pollInterval: 5000,
+  });
 
-  return <>{children({
-    error,
-    prices,
-  })}</>;
+  return (
+    <>
+      {children({
+        error,
+        prices,
+      })}
+    </>
+  );
 };
 
 export default Prices;
