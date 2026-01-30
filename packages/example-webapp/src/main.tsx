@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ApiProvider } from '@capacity-exchange/components'
+import { ApiProvider } from './lib/components'
 import App from './App'
 import './index.css'
 

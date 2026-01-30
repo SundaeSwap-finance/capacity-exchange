@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Offers } from '@capacity-exchange/components';
+import { Card, Offers } from '../lib/components';
 
 export function OffersCard() {
   const [offerAmount, setOfferAmount] = useState('100');
