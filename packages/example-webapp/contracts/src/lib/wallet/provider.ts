@@ -39,5 +39,4 @@ export class DustWalletProvider implements WalletProvider {
     const balanced = await this.#wallet.addFeePayment(this.#dustSecretKey, tx, realTtl, now);
     return balanced;
   }
-
 }

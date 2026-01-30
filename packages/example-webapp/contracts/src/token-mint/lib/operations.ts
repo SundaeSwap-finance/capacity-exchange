@@ -4,7 +4,7 @@ import { AppContext } from '../../lib/app-context.js';
 import { getContractProviders } from '../../lib/providers/contract.js';
 import { createTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor } from './token-color.js';
-import { createPrivateState } from '../../../token-mint/index.js';
+import { createPrivateState } from './witnesses.js';
 
 export interface DeployOutput {
   contractAddress: string;

@@ -1,4 +1,4 @@
-import { witnesses, CircuitPrivateState } from '../../../token-mint/index.js';
+import { witnesses, CircuitPrivateState } from './witnesses.js';
 import { Contract, Witnesses } from '../../../token-mint/out/contract/index.js';
 
 export type TokenMintContract = Contract<CircuitPrivateState, Witnesses<CircuitPrivateState>>;

@@ -11,7 +11,6 @@ import { Startable } from '../startable.js';
 import { DustWalletProvider } from './provider.js';
 import { deriveWalletKeys, WalletKeys } from './keys.js';
 import { createWalletConfiguration } from './config.js';
-import { WalletProvider } from "@midnight-ntwrk/midnight-js-types";
 
 export interface WalletContext {
   walletFacade: WalletFacade;
