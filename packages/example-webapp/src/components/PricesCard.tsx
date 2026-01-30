@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Prices } from '@capacity-exchange/components';
+import { Card, Prices } from '../lib/components';
 
 export function PricesCard() {
   const [dust, setDust] = useState('1000');

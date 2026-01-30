@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, Card, HealthCheck } from '@capacity-exchange/components';
+import { Badge, Card, HealthCheck } from '../lib/components';
 
 export function HealthCheckCard() {
   return (

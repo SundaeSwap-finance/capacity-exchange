@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, RootInfo } from '@capacity-exchange/components';
+import { Card, RootInfo } from '../lib/components';
 
 export function RootInfoCard() {
   return (
