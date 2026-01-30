@@ -1,0 +1,178 @@
+pragma language_version 0.18;
+
+import CompactStandardLibrary;
+
+// Simple shielded vault to test deposit/withdraw balancing pattern
+// Users deposit shielded tokens, contract tracks internal balances,
+// Users withdraw by creating an imbalanced intent that their wallet balances
+
+// Token color (set at construction)
+export ledger token_color: Bytes<32>;
+
+// Total tokens held by contract (as a single shielded coin)
+export ledger tokens_held: Uint<128>;
+
+// Internal balances per user (keyed by persistent hash of their secret)
+export ledger balances: Map<Bytes<32>, Uint<128>>;
+
+// Nonce management for unique coins
+ledger counter: Counter;
+ledger nonce: Bytes<32>;
+
+// The contract's current coin (updated after each operation)
+ledger contract_coin: ShieldedCoinInfo;
+
+// Witness for user's secret key
+witness local_secret_key(): Bytes<32>;
+
+constructor(color: Bytes<32>, initial_nonce: Bytes<32>) {
+    token_color = disclose(color);
+    tokens_held = 0;
+    nonce = disclose(initial_nonce);
+    contract_coin = default<ShieldedCoinInfo>;
+}
+
+// Get user's identity key (hidden via persistent hash, but disclosed for ledger ops)
+circuit owner_key(): Bytes<32> {
+    return disclose(persistentHash<Bytes<32>>(local_secret_key()));
+}
+
+// Increment nonce for unique coins
+circuit incr_nonce(): [] {
+    counter.increment(1);
+    nonce = evolveNonce(counter as Uint<128>, nonce);
+}
+
+// Query own balance
+export circuit own_balance(): Uint<128> {
+    return balances.lookup(owner_key());
+}
+
+// Query total held
+export circuit total_held(): Uint<128> {
+    return tokens_held;
+}
+
+// Query token color
+export circuit get_token_color(): Bytes<32> {
+    return token_color;
+}
+
+// First deposit when contract has no tokens yet
+// User provides tokens, contract receives them
+export circuit first_deposit(amount: Uint<64>): [] {
+    assert(tokens_held == 0, "not first deposit");
+
+    const key = owner_key();
+
+    incr_nonce();
+
+    // Update internal balance
+    const amt = disclose(amount) as Uint<128>;
+    balances.insert(key, amt);
+
+    // Update contract's held amount
+    tokens_held = amt;
+
+    // Create the coin info for what we're receiving
+    const new_coin = ShieldedCoinInfo {
+        nonce: nonce,
+        color: token_color,
+        value: tokens_held
+    };
+
+    // Receive the coin - user's wallet must provide the tokens
+    receiveShielded(new_coin);
+
+    // Store the coin info for future operations
+    contract_coin = new_coin;
+}
+
+// Deposit: User provides tokens via zswap balancing
+// Contract receives more than it currently has
+export circuit deposit(
+    reserves: QualifiedShieldedCoinInfo,
+    amount: Uint<64>
+): [] {
+    const key = owner_key();
+    const current_balance = balances.lookup(key);
+
+    incr_nonce();
+
+    // Update internal balance
+    const amt = disclose(amount) as Uint<128>;
+    balances.insert(key, (current_balance + amt) as Uint<128>);
+
+    // Update contract's held amount
+    tokens_held = (tokens_held + amt) as Uint<128>;
+
+    // Consume the old coin
+    createZswapInput(reserves);
+
+    // Create new coin with MORE tokens
+    const new_coin = ShieldedCoinInfo {
+        nonce: nonce,
+        color: token_color,
+        value: tokens_held
+    };
+
+    // Receive the new (larger) coin
+    // The difference must come from user's wallet via balancing
+    receiveShielded(new_coin);
+
+    // Store the updated coin info
+    contract_coin = new_coin;
+}
+
+// Withdraw: Contract releases tokens via zswap balancing
+// Contract holds LESS than before, difference goes to user
+export circuit withdraw(
+    reserves: QualifiedShieldedCoinInfo,
+    amount: Uint<64>
+): [] {
+    const key = owner_key();
+    const current_balance = balances.lookup(key);
+    const amt = disclose(amount) as Uint<128>;
+
+    // Verify user has enough
+    assert(current_balance >= amt, "insufficient balance");
+
+    incr_nonce();
+
+    // Update internal balance
+    balances.insert(key, current_balance - amt);
+
+    // Update contract's held amount
+    tokens_held = tokens_held - amt;
+
+    // Consume the old coin
+    createZswapInput(reserves);
+
+    // Create new coin with LESS tokens
+    const new_coin = ShieldedCoinInfo {
+        nonce: nonce,
+        color: token_color,
+        value: tokens_held
+    };
+
+    // Receive the new (smaller) coin
+    // The difference (released tokens) goes to user's wallet via balancing
+    receiveShielded(new_coin);
+
+    // Store the updated coin info
+    contract_coin = new_coin;
+}
+
+// TEST ONLY: Mint tokens of token_color to the caller's wallet
+// This creates tokens out of thin air for testing
+export circuit mint_test_tokens(amount: Uint<64>): ShieldedCoinInfo {
+    incr_nonce();
+
+    // Mint new shielded tokens directly to the caller
+    return mintShieldedToken(
+        token_color,
+        disclose(amount),
+        nonce,
+        left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey())
+    );
+}
