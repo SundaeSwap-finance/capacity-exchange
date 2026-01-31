@@ -13,7 +13,9 @@ async function wrapCesApi<T>(cesApi: () => Promise<T>): Promise<T> {
   try {
     return await cesApi();
   } catch (e) {
-    if (!(e instanceof ResponseError)) throw e;
+    if (!(e instanceof ResponseError)) {
+      throw e;
+    }
 
     // Handle ResponseError
     const errorText = await e.response.text().catch(() => 'Unknown error');

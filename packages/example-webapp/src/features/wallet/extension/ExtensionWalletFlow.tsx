@@ -1,0 +1,35 @@
+import React from 'react';
+import type { EndpointConfig } from '../../endpoint';
+import { Card } from '../../../shared/ui';
+import { useExtensionWallet } from './useExtensionWallet';
+import { ExtensionWalletConnection } from './ExtensionWalletConnection';
+
+interface ExtensionWalletFlowProps {
+  networkId: string;
+  endpoints: EndpointConfig[];
+  onBack: () => void;
+}
+
+export function ExtensionWalletFlow({ networkId, endpoints, onBack }: ExtensionWalletFlowProps) {
+  const wallet = useExtensionWallet(networkId);
+
+  return (
+    <div className="space-y-4">
+      <button onClick={onBack} className="text-dark-400 hover:text-white text-sm transition-colors">
+        &larr; Back to wallet selection
+      </button>
+
+      {wallet.status === 'unavailable' ? (
+        <Card title="Wallet Connection">
+          <div className="bg-red-900/20 border border-red-700/50 rounded p-3">
+            <p className="text-red-400 text-sm">
+              Lace wallet extension not found. Please install the extension and refresh the page.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <ExtensionWalletConnection wallet={wallet} endpoints={endpoints} />
+      )}
+    </div>
+  );
+}
