@@ -1,6 +1,5 @@
 import React from 'react';
 import type { ExtensionWalletState } from './useExtensionWallet';
-import type { EndpointConfig } from '../../endpoint';
 import { Card } from '../../../shared/ui';
 import { ExtensionWalletActions } from './ExtensionWalletActions';
 import { ExtensionWalletStatusBadge } from './ExtensionWalletStatusBadge';
@@ -8,10 +7,9 @@ import { ConnectedWalletInfo } from './ConnectedWalletInfo';
 
 export interface ExtensionWalletConnectionProps {
   wallet: ExtensionWalletState;
-  endpoints: EndpointConfig[];
 }
 
-export function ExtensionWalletConnection({ wallet, endpoints }: ExtensionWalletConnectionProps) {
+export function ExtensionWalletConnection({ wallet }: ExtensionWalletConnectionProps) {
   const { status, connect, disconnect } = wallet;
 
   return (
@@ -26,9 +24,7 @@ export function ExtensionWalletConnection({ wallet, endpoints }: ExtensionWallet
           <p className="text-sm text-dark-400">Please unlock your Lace wallet and approve the connection...</p>
         )}
 
-        {status === 'connected' && wallet.wallet && (
-          <ConnectedWalletInfo wallet={wallet.wallet} endpoints={endpoints} />
-        )}
+        {status === 'connected' && wallet.wallet && <ConnectedWalletInfo wallet={wallet.wallet} />}
       </div>
     </Card>
   );

@@ -1,16 +1,19 @@
 import React from 'react';
-import type { EndpointConfig } from '../../endpoint';
 import { Card } from '../../../shared/ui';
 import { useExtensionWallet } from './useExtensionWallet';
 import { ExtensionWalletConnection } from './ExtensionWalletConnection';
 
 interface ExtensionWalletFlowProps {
   networkId: string;
-  endpoints: EndpointConfig[];
   onBack: () => void;
 }
 
-export function ExtensionWalletFlow({ networkId, endpoints, onBack }: ExtensionWalletFlowProps) {
+/**
+ * Extension wallet flow component.
+ *
+ * Only renders when the user has selected the browser extension wallet mode.
+ */
+export function ExtensionWalletFlow({ networkId, onBack }: ExtensionWalletFlowProps) {
   const wallet = useExtensionWallet(networkId);
 
   return (
@@ -28,7 +31,7 @@ export function ExtensionWalletFlow({ networkId, endpoints, onBack }: ExtensionW
           </div>
         </Card>
       ) : (
-        <ExtensionWalletConnection wallet={wallet} endpoints={endpoints} />
+        <ExtensionWalletConnection wallet={wallet} />
       )}
     </div>
   );

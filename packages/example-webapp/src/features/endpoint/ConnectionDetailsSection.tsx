@@ -18,6 +18,7 @@ export function ConnectionDetailsSection({ endpoints }: ConnectionDetailsSection
             url={endpoint.url}
             healthPath={endpoint.healthPath}
             readyPath={endpoint.readyPath}
+            graphql={endpoint.graphql}
           />
         ))}
       </div>

@@ -4,3 +4,4 @@ export { WalletModeSelector } from './WalletModeSelector';
 export type { WalletMode } from './WalletModeSelector';
 export * from './common';
 export * from './extension';
+export * from './seed';

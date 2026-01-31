@@ -9,10 +9,11 @@ interface EndpointHealthRowProps {
   url: string;
   healthPath: string;
   readyPath?: string;
+  graphql?: boolean;
 }
 
-export function EndpointHealthRow({ label, url, healthPath, readyPath }: EndpointHealthRowProps) {
-  const config = useMemo<HealthCheckConfig>(() => ({ healthPath, readyPath }), [healthPath, readyPath]);
+export function EndpointHealthRow({ label, url, healthPath, readyPath, graphql }: EndpointHealthRowProps) {
+  const config = useMemo<HealthCheckConfig>(() => ({ healthPath, readyPath, graphql }), [healthPath, readyPath, graphql]);
   const status = useEndpointHealth(url, config);
 
   return (
