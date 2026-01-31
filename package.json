@@ -3,16 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "scripts": {
-    "clean": "npm run clean -ws --if-present && npm run clean --prefix packages/example-webapp/contracts",
-    "contracts:install": "npm install --prefix packages/example-webapp/contracts",
-    "contracts:compile": "npm run compile --prefix packages/example-webapp/contracts",
-    "build": "npm run contracts:install && npm run contracts:compile && npm run build -ws --if-present",
-    "check": "eslint . && prettier --check .",
-    "fix": "eslint . --fix && prettier --write .",
-    "test": "npm run test -ws --if-present",
-    "dev": "concurrently \"npm:build:watch --workspace=@capacity-exchange/components\" \"npm:dev --workspace=@capacity-exchange/example-webapp\""
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",

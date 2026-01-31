@@ -1,19 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
-import { checkEndpointHealth, type HealthCheckConfig } from './checkEndpointHealth';
-import type { EndpointStatus } from './types';
+import { checkEndpointHealth } from './checkEndpointHealth';
+import type { EndpointConfig, EndpointStatus } from './types';
 
-export function useEndpointHealth(url: string, config: HealthCheckConfig): EndpointStatus {
-  const [status, setStatus] = useState<EndpointStatus>('loading');
+const LOADING_STATUS: EndpointStatus = { status: 'loading' };
+
+export function useEndpointHealth(endpoint: EndpointConfig, refreshInterval?: number): EndpointStatus {
+  const [status, setStatus] = useState<EndpointStatus>(LOADING_STATUS);
 
   const fetchHealth = useCallback(async () => {
-    setStatus('loading');
-    const endpointStatus = await checkEndpointHealth(url, config);
+    const endpointStatus = await checkEndpointHealth(endpoint);
     setStatus(endpointStatus);
-  }, [url, config]);
+  }, [endpoint]);
 
   useEffect(() => {
     fetchHealth();
-  }, [fetchHealth]);
+
+    if (refreshInterval && refreshInterval > 0) {
+      const intervalId = setInterval(fetchHealth, refreshInterval);
+      return () => clearInterval(intervalId);
+    }
+  }, [fetchHealth, refreshInterval]);
 
   return status;
 }

@@ -9,12 +9,12 @@
   },
   "scripts": {
     "clean": "rm -rf counter/out token-mint/out",
-    "compile:counter": "$COMPACTC counter/counter.compact counter/out",
-    "compile:token-mint": "$COMPACTC token-mint/vault.compact token-mint/out",
+    "compile:counter": "\"$COMPACTC\" counter/counter.compact counter/out",
+    "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
     "compile": "npm run compile:counter && npm run compile:token-mint",
     "build": "tsc --noEmit",
-    "token-mint:e2e": "tsx src/token-mint/cli/e2e.ts",
-    "counter:e2e": "tsx src/counter/cli/e2e.ts"
+    "counter:e2e": "tsx src/counter/cli/e2e.ts",
+    "token-mint:e2e": "tsx src/token-mint/cli/e2e.ts"
   },
   "keywords": [
     "midnight",
