@@ -1,8 +1,9 @@
 import React from 'react';
-import { useSeedWallet } from './useSeedWallet';
+import type { SeedWalletState } from './types';
 import { SeedWalletConnection } from './SeedWalletConnection';
 
 interface SeedWalletFlowProps {
+  wallet: SeedWalletState;
   onBack: () => void;
 }
 
@@ -11,9 +12,7 @@ interface SeedWalletFlowProps {
  *
  * Only renders when the user has selected the seed wallet mode.
  */
-export function SeedWalletFlow({ onBack }: SeedWalletFlowProps) {
-  const wallet = useSeedWallet();
-
+export function SeedWalletFlow({ wallet, onBack }: SeedWalletFlowProps) {
   return (
     <div className="space-y-4">
       <button onClick={onBack} className="text-dark-400 hover:text-white text-sm transition-colors">

@@ -43,4 +43,6 @@ export interface CapacityExchangeConfig {
   margin?: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
+  /** Circuit ID for fetching ZK config. Required for proving transactions. */
+  circuitId?: string;
 }

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card } from '../../../shared/ui';
-import { useExtensionWallet } from './useExtensionWallet';
+import type { ExtensionWalletState } from './useExtensionWallet';
 import { ExtensionWalletConnection } from './ExtensionWalletConnection';
 
 interface ExtensionWalletFlowProps {
-  networkId: string;
+  wallet: ExtensionWalletState;
   onBack: () => void;
 }
 
@@ -13,9 +13,7 @@ interface ExtensionWalletFlowProps {
  *
  * Only renders when the user has selected the browser extension wallet mode.
  */
-export function ExtensionWalletFlow({ networkId, onBack }: ExtensionWalletFlowProps) {
-  const wallet = useExtensionWallet(networkId);
-
+export function ExtensionWalletFlow({ wallet, onBack }: ExtensionWalletFlowProps) {
   return (
     <div className="space-y-4">
       <button onClick={onBack} className="text-dark-400 hover:text-white text-sm transition-colors">

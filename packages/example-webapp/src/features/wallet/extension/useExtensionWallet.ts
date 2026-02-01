@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { WalletCapabilities } from '../types';
 import { connectWallet } from './walletService';
 import { useExtensionAvailability } from './useExtensionAvailability';
@@ -16,6 +17,7 @@ export type ExtensionWalletStatus = 'unavailable' | 'disconnected' | 'connecting
 export interface ExtensionWalletState {
   status: ExtensionWalletStatus;
   wallet: WalletCapabilities | null;
+  connectedAPI: ConnectedAPI | null;
   connect: () => Promise<void>;
   disconnect: () => void;
 }
@@ -27,6 +29,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
   const availability = useExtensionAvailability();
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
   const [wallet, setWallet] = useState<WalletCapabilities | null>(null);
+  const [connectedAPI, setConnectedAPI] = useState<ConnectedAPI | null>(null);
 
   const connect = useCallback(async () => {
     if (availability.status !== 'available' || connectionStatus === 'connecting' || connectionStatus === 'connected') {
@@ -37,11 +40,13 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
 
     const connection = await connectWallet(availability.connector, networkId);
     setWallet(connection.wallet);
+    setConnectedAPI(connection.wallet);
     setConnectionStatus('connected');
   }, [availability, connectionStatus, networkId]);
 
   const disconnect = useCallback(() => {
     setWallet(null);
+    setConnectedAPI(null);
     setConnectionStatus('disconnected');
   }, []);
 
@@ -49,6 +54,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     return {
       status: 'unavailable',
       wallet: null,
+      connectedAPI: null,
       connect: async () => {},
       disconnect: () => {},
     };
@@ -57,6 +63,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
   return {
     status: connectionStatus,
     wallet,
+    connectedAPI,
     connect,
     disconnect,
   };
