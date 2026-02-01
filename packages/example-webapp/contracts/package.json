@@ -14,7 +14,13 @@
     "compile": "npm run compile:counter && npm run compile:token-mint",
     "build": "tsc --noEmit",
     "token-mint:e2e": "tsx src/token-mint/cli/e2e.ts",
-    "counter:e2e": "tsx src/counter/cli/e2e.ts"
+    "token-mint:deploy": "tsx src/token-mint/cli/deploy.ts",
+    "token-mint:mint": "tsx src/token-mint/cli/mint.ts",
+    "token-mint:verify": "tsx src/token-mint/cli/verify.ts",
+    "counter:e2e": "tsx src/counter/cli/e2e.ts",
+    "counter:deploy": "tsx src/counter/cli/deploy.ts",
+    "counter:increment": "tsx src/counter/cli/increment.ts",
+    "counter:query": "tsx src/counter/cli/query.ts"
   },
   "keywords": [
     "midnight",

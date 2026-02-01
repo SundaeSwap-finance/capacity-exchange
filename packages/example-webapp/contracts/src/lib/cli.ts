@@ -4,13 +4,15 @@ import { getMidnightConfig } from './config/env.js';
 import { readSeed } from './config/seed.js';
 
 export async function withAppContext<T>(privateDataDir: string, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
-  console.error('Reading seed...');
+  console.error(`[CLI] Process ID: ${process.pid}`);
+  console.error('[CLI] Reading seed...');
   const seed = readSeed();
   const config = getMidnightConfig(privateDataDir);
-  console.error('Starting app context...');
+  console.error('[CLI] Starting app context...');
+  console.error(`[CLI] Private data dir: ${privateDataDir}`);
   const setup = new AppSetup(seed, config);
   const ctx = await setup.start();
-  console.error('App context ready');
+  console.error('[CLI] App context ready');
   return fn(ctx);
 }
 

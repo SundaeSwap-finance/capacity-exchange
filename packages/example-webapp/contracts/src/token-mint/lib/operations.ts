@@ -19,15 +19,18 @@ export function generateTokenColor(): string {
 
 export async function deploy(ctx: AppContext, tokenColor?: string): Promise<DeployOutput> {
   const resolvedTokenColor = tokenColor ?? generateTokenColor();
-  console.error(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
+  console.error(`[deploy] Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
 
   const providers = getContractProviders<TokenMintContract>(ctx);
   const contract = createTokenMintContract();
   const initialNonce = crypto.randomBytes(32);
 
   const privateStateId = crypto.randomBytes(32).toString('hex');
+  console.error(`[deploy] Generated private state ID: ${privateStateId}`);
   const initialPrivateState = createPrivateState(crypto.randomBytes(32));
+  console.error('[deploy] Created initial private state');
 
+  console.error('[deploy] Calling deployContract...');
   const deployed = await deployContract(providers, {
     contract,
     args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce],
@@ -35,7 +38,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
     initialPrivateState,
   });
 
-  console.error(`Token-mint deployed at ${deployed.deployTxData.public.contractAddress}`);
+  console.error(`[deploy] Token-mint deployed at ${deployed.deployTxData.public.contractAddress}`);
   return {
     contractAddress: deployed.deployTxData.public.contractAddress,
     txHash: deployed.deployTxData.public.txHash,
@@ -57,15 +60,18 @@ export async function mint(
   privateStateId: string,
   amount: bigint
 ): Promise<MintOutput> {
-  console.error(`Minting ${amount} tokens at ${contractAddress}...`);
+  console.error(`[mint] Minting ${amount} tokens at ${contractAddress}...`);
+  console.error(`[mint] Private state ID: ${privateStateId}`);
   const providers = getContractProviders<TokenMintContract>(ctx);
   const contract = createTokenMintContract();
 
+  console.error('[mint] Looking up deployed contract...');
   await findDeployedContract(providers, {
     contract,
     contractAddress,
     privateStateId,
   });
+  console.error('[mint] Found deployed contract');
 
   console.error('Submitting mint transaction...');
   const result = await submitCallTx(providers, {

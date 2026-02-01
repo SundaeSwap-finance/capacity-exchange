@@ -6,6 +6,8 @@
 .vscode
 dist
 midnight-level-db
+.midnight-private-state
+.midnight-wallet-state
 node_modules
 out
 vendor
