@@ -11,6 +11,7 @@ export interface WalletCapabilities {
   }>;
   getUnshieldedAddress(): Promise<{ unshieldedAddress: string }>;
   getUnshieldedBalances(): Promise<Record<string, bigint>>;
+  getShieldedBalances(): Promise<Record<string, bigint>>;
 }
 
 export interface WalletData {
@@ -20,6 +21,7 @@ export interface WalletData {
   dustBalance: bigint;
   dustCap: bigint;
   nightBalances: Record<string, bigint>;
+  shieldedBalances: Record<string, bigint>;
 }
 
 export type WalletInfoState =

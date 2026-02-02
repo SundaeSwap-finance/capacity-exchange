@@ -1,10 +1,18 @@
 import * as crypto from 'crypto';
 import { deployContract, findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import {
+  MidnightBech32m,
+  ShieldedAddress,
+  ShieldedCoinPublicKey,
+  ShieldedEncryptionPublicKey,
+} from '@midnight-ntwrk/wallet-sdk-address-format';
 import { AppContext } from '../../lib/app-context.js';
 import { getContractProviders } from '../../lib/providers/contract.js';
 import { createTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor } from './token-color.js';
 import { createPrivateState } from './witnesses.js';
+import { deriveWalletKeys } from '../../lib/wallet/keys.js';
+import { getNetworkConfig } from '../../lib/config/env.js';
 
 export interface DeployOutput {
   contractAddress: string;
@@ -119,5 +127,80 @@ export async function verify(ctx: AppContext, contractAddress: string, tokenColo
     tokenColor,
     derivedTokenColor,
     balance: balance.toString(),
+  };
+}
+
+export interface SendOutput {
+  txHash: string;
+  derivedTokenColor: string;
+  amount: string;
+  recipientAddress: string;
+}
+
+export async function send(
+  ctx: AppContext,
+  derivedTokenColor: string,
+  amount: bigint,
+  recipientSeedHex: string
+): Promise<SendOutput> {
+  console.error(`[send] Sending ${amount} tokens of color ${derivedTokenColor.slice(0, 8)}...`);
+
+  // Derive recipient's keys from their seed
+  const networkConfig = getNetworkConfig();
+  const recipientKeys = deriveWalletKeys(recipientSeedHex, networkConfig.networkId);
+
+  // The ledger types CoinPublicKey and EncPublicKey are already strings
+  const coinPubKeyHex = recipientKeys.shieldedSecretKeys.coinPublicKey;
+  const encPubKeyHex = recipientKeys.shieldedSecretKeys.encryptionPublicKey;
+
+  const shieldedCoinPublicKey = ShieldedCoinPublicKey.fromHexString(coinPubKeyHex);
+  const shieldedEncryptionPublicKey = ShieldedEncryptionPublicKey.fromHexString(encPubKeyHex);
+
+  // Create the shielded address and encode it
+  const recipientShieldedAddress = new ShieldedAddress(shieldedCoinPublicKey, shieldedEncryptionPublicKey);
+  const recipientAddress = MidnightBech32m.encode(networkConfig.networkId, recipientShieldedAddress).asString();
+
+  console.error(`[send] Recipient address: ${recipientAddress.slice(0, 20)}...`);
+
+  // Check sender's balance first
+  const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
+  const balance = shieldedState.balances[derivedTokenColor] || 0n;
+  console.error(`[send] Current balance: ${balance}`);
+
+  if (balance < amount) {
+    throw new Error(`Insufficient balance: have ${balance}, need ${amount}`);
+  }
+
+  // Build the transfer transaction using walletFacade (handles both shielded + dust)
+  console.error('[send] Building transfer transaction...');
+  const ttl = new Date(Date.now() + 5 * 60 * 1000); // 5 minute TTL
+  const recipe = await ctx.walletContext.walletFacade.transferTransaction(
+    ctx.walletContext.keys.shieldedSecretKeys,
+    ctx.walletContext.keys.dustSecretKey,
+    [{
+      type: 'shielded',
+      outputs: [{ amount, type: derivedTokenColor, receiverAddress: recipientAddress }],
+    }],
+    ttl
+  );
+
+  // Finalize the transaction (proves it)
+  console.error('[send] Finalizing transaction...');
+  const finalizedTx = await ctx.walletContext.walletFacade.finalizeTransaction({
+    type: 'TransactionToProve',
+    transaction: recipe.transaction,
+  });
+
+  // Submit the transaction
+  console.error('[send] Submitting transaction...');
+  const txId = await ctx.walletContext.walletFacade.submitTransaction(finalizedTx);
+
+  console.error(`[send] Transfer complete, tx id: ${txId}`);
+
+  return {
+    txHash: txId,
+    derivedTokenColor,
+    amount: amount.toString(),
+    recipientAddress,
   };
 }

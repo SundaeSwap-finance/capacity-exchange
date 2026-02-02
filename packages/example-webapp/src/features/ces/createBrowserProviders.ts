@@ -96,6 +96,7 @@ function createSeedWalletConnectedAPIAdapter(
 
     async balanceSealedTransaction(txHex: string) {
       console.log('[SeedWalletAdapter] ========== balanceSealedTransaction called ==========');
+      console.log('[SeedWalletAdapter] Using coin public key:', shieldedSecretKeys.coinPublicKey.slice(0, 16) + '...');
       console.log('[SeedWalletAdapter] Input tx hex length:', txHex.length);
 
       // Deserialize the transaction
@@ -112,22 +113,77 @@ function createSeedWalletConnectedAPIAdapter(
       console.log('[SeedWalletAdapter] Tx hash:', tx.transactionHash());
 
       // Check imbalances before balancing
+      const requiredTokenTypes: string[] = [];
       try {
         const imbalances0 = tx.imbalances(0);
         console.log('[SeedWalletAdapter] Imbalances BEFORE balancing (segment 0):');
         imbalances0.forEach((value, key) => {
-          console.log(`  ${JSON.stringify(key)}: ${value.toString()}`);
+          const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+          console.log(`  ${keyStr}: ${value.toString()}`);
+          if (value < 0n) {
+            requiredTokenTypes.push(keyStr);
+            console.log(`  ^ This token type needs to be covered (negative = deficit)`);
+          }
         });
       } catch (e) {
         console.log('[SeedWalletAdapter] Could not get imbalances for segment 0:', e);
       }
+      try {
+        const imbalances1 = tx.imbalances(1);
+        console.log('[SeedWalletAdapter] Imbalances BEFORE balancing (segment 1):');
+        imbalances1.forEach((value, key) => {
+          const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
+          console.log(`  ${keyStr}: ${value.toString()}`);
+          if (value < 0n) {
+            requiredTokenTypes.push(keyStr);
+            console.log(`  ^ This token type needs to be covered (negative = deficit)`);
+          }
+        });
+      } catch (e) {
+        console.log('[SeedWalletAdapter] Could not get imbalances for segment 1:', e);
+      }
 
-      // Log the wallet's current shielded token balances
+      // Log the wallet's current shielded token balances and coin details
       const shieldedState = await walletFacade.shielded.waitForSyncedState();
+      console.log('[SeedWalletAdapter] Shielded address:', shieldedState.address?.coinPublicKeyString?.() ?? 'N/A');
       console.log('[SeedWalletAdapter] Current shielded token balances:');
+      const availableTokenTypes: string[] = [];
       for (const [tokenType, balance] of Object.entries(shieldedState.balances)) {
         console.log(`  ${tokenType}: ${balance}`);
+        if (BigInt(balance) > 0n) {
+          availableTokenTypes.push(tokenType);
+        }
       }
+
+      // Compare required vs available
+      console.log('[SeedWalletAdapter] === Token Type Comparison ===');
+      console.log('[SeedWalletAdapter] Required token types (from tx imbalances):', requiredTokenTypes);
+      console.log('[SeedWalletAdapter] Available token types (wallet has balance):', availableTokenTypes);
+      for (const required of requiredTokenTypes) {
+        const hasMatch = availableTokenTypes.some(avail => avail === required || avail.includes(required) || required.includes(avail));
+        if (!hasMatch) {
+          console.log(`[SeedWalletAdapter] *** MISSING: Wallet does NOT have token type: ${required}`);
+        } else {
+          console.log(`[SeedWalletAdapter] OK: Wallet has token type: ${required}`);
+        }
+      }
+
+      console.log('[SeedWalletAdapter] Available coins:', shieldedState.availableCoins?.length ?? 'N/A');
+      console.log('[SeedWalletAdapter] Pending coins:', shieldedState.pendingCoins?.length ?? 'N/A');
+      console.log('[SeedWalletAdapter] Total coins:', shieldedState.totalCoins?.length ?? 'N/A');
+      if (shieldedState.availableCoins && shieldedState.availableCoins.length > 0) {
+        console.log('[SeedWalletAdapter] Available coin details:');
+        shieldedState.availableCoins.forEach((coin, i) => {
+          console.log(`  [${i}]`, coin);
+        });
+      }
+      if (shieldedState.pendingCoins && shieldedState.pendingCoins.length > 0) {
+        console.log('[SeedWalletAdapter] Pending coin details:');
+        shieldedState.pendingCoins.forEach((coin, i) => {
+          console.log(`  [${i}]`, coin);
+        });
+      }
+      console.log('[SeedWalletAdapter] Wallet sync progress:', shieldedState.progress);
 
       // Use the shielded wallet to balance the transaction
       // This will add the user's shielded token inputs to cover any deficit

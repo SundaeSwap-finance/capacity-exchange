@@ -2,6 +2,7 @@ import React from 'react';
 import type { WalletData } from '../types';
 import { Collapsible, InfoRow } from '../../../shared/ui';
 import { BalanceBox } from './BalanceBox';
+import { TokenBalanceLookup } from './TokenBalanceLookup';
 import { formatDust, formatNight } from '../../../utils/format';
 
 interface WalletInfoSectionProps {
@@ -32,9 +33,7 @@ export function WalletInfoSection({ data, onRefresh }: WalletInfoSectionProps) {
           />
         </div>
 
-        <button onClick={onRefresh} className="text-sm text-blue-400 hover:text-blue-300">
-          Refresh
-        </button>
+        <TokenBalanceLookup shieldedBalances={data.shieldedBalances} onRefresh={onRefresh} />
       </div>
     </Collapsible>
   );

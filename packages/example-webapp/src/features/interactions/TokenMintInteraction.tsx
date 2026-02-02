@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { LoadingSpinner } from '../../shared/ui';
+import { LoadingSpinner, EditableField } from '../../shared/ui';
 import { useContractContextOptional } from '../contract/ContractContext';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities } from '../wallet/types';
@@ -14,7 +14,7 @@ import { config } from '../../config';
 import { formatDust } from '../../utils/format';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 
-const DEFAULT_MINT_AMOUNT = 1000n;
+const DEFAULT_MINT_AMOUNT = '1000';
 
 interface SeedWalletConnection {
   type: 'seed';
@@ -50,8 +50,19 @@ export function TokenMintInteraction({ wallet, walletConnection }: TokenMintInte
   const contractContext = useContractContextOptional();
   const walletInfo = useWalletInfo(wallet);
   const tokenMintContract = contractContext?.tokenMintContract ?? null;
-  const contractAddress = tokenMintContract?.contractAddress ?? null;
+  const defaultContractAddress = tokenMintContract?.contractAddress ?? '';
   const [shieldedAddressInfo, setShieldedAddressInfo] = useState<ShieldedAddressInfo | null>(null);
+
+  // Editable fields with auto-populated defaults
+  const [contractAddress, setContractAddress] = useState(defaultContractAddress);
+  const [mintAmount, setMintAmount] = useState(DEFAULT_MINT_AMOUNT);
+
+  // Update contract address when deployment changes
+  useEffect(() => {
+    if (defaultContractAddress) {
+      setContractAddress(defaultContractAddress);
+    }
+  }, [defaultContractAddress]);
 
   useEffect(() => {
     if (walletConnection.type === 'extension') {
@@ -93,10 +104,14 @@ export function TokenMintInteraction({ wallet, walletConnection }: TokenMintInte
     }
   }, [walletInfo, walletConnection, shieldedAddressInfo]);
 
-  const mint = useTokenMintTransaction(providers, contractAddress);
+  const effectiveContractAddress = contractAddress || null;
+  const mint = useTokenMintTransaction(providers, effectiveContractAddress);
 
   const handleMint = () => {
-    mint.mintTokens(DEFAULT_MINT_AMOUNT);
+    const amount = BigInt(mintAmount || '0');
+    if (amount > 0n) {
+      mint.mintTokens(amount);
+    }
   };
 
   if (walletInfo.status === 'loading') {
@@ -117,7 +132,12 @@ export function TokenMintInteraction({ wallet, walletConnection }: TokenMintInte
     );
   }
 
-  const canMint = contractAddress !== null && providers !== null && mint.status === 'idle';
+  const canMint =
+    effectiveContractAddress !== null &&
+    providers !== null &&
+    mint.status === 'idle' &&
+    mintAmount &&
+    BigInt(mintAmount) > 0n;
   const isProcessing = mint.status === 'building' || mint.status === 'submitting';
 
   return (
@@ -137,27 +157,31 @@ export function TokenMintInteraction({ wallet, walletConnection }: TokenMintInte
         </div>
       </div>
 
-      {!tokenMintContract && (
-        <div className="p-2 bg-yellow-900/20 border border-yellow-700/50 rounded">
-          <p className="text-yellow-400 text-xs">Deploy a token mint contract first.</p>
-        </div>
-      )}
+      <EditableField
+        label="Token Contract Address"
+        value={contractAddress}
+        defaultValue={defaultContractAddress}
+        onChange={setContractAddress}
+        placeholder="Deploy a token mint contract or enter address"
+        disabled={isProcessing}
+      />
 
-      {tokenMintContract && (
-        <div className="p-2 bg-dark-800 rounded border border-dark-600">
-          <div className="text-xs text-dark-400">Token Contract</div>
-          <div className="text-xs text-white font-mono break-all truncate">
-            {tokenMintContract.contractAddress}
-          </div>
-        </div>
-      )}
+      <EditableField
+        label="Mint Amount"
+        value={mintAmount}
+        defaultValue={DEFAULT_MINT_AMOUNT}
+        onChange={setMintAmount}
+        placeholder="Enter amount to mint"
+        type="number"
+        disabled={isProcessing}
+      />
 
       <button
         onClick={handleMint}
         disabled={!canMint || isProcessing}
         className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {isProcessing ? 'Processing...' : `Mint ${DEFAULT_MINT_AMOUNT.toString()} Tokens`}
+        {isProcessing ? 'Processing...' : `Mint ${mintAmount || '0'} Tokens`}
       </button>
 
       {isProcessing && (

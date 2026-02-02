@@ -57,7 +57,7 @@ export function OfferConfirmationModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-dark-900 border border-dark-700 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+      <div className="bg-dark-900 border border-dark-700 rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl">
         <h3 className="text-lg font-semibold text-white mb-4">Confirm Offer</h3>
 
         <div className="space-y-3 mb-6">
@@ -68,9 +68,12 @@ export function OfferConfirmationModal({
 
           <div className="p-3 bg-dark-800 rounded border border-dark-600">
             <div className="text-xs text-dark-400 mb-1">Payment Amount</div>
-            <div className="text-white font-mono">
-              {offer.offerAmount} {offer.offerCurrency}
-            </div>
+            <div className="text-white font-mono">{offer.offerAmount}</div>
+          </div>
+
+          <div className="p-3 bg-dark-800 rounded border border-dark-600">
+            <div className="text-xs text-dark-400 mb-1">Payment Currency</div>
+            <div className="text-white font-mono text-sm break-all">{offer.offerCurrency}</div>
           </div>
 
           <div className="p-3 bg-dark-800 rounded border border-dark-600">

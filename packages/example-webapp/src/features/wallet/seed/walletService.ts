@@ -71,8 +71,11 @@ export interface SeedWalletConnection {
  * Creates and syncs a wallet from a seed.
  */
 export async function connectSeedWallet(seedHex: string, config: Config): Promise<SeedWalletConnection> {
+  console.log('[WalletService] Connecting with seed:', seedHex.slice(0, 8) + '...' + seedHex.slice(-8));
+  console.log('[WalletService] Full seed length:', seedHex.length);
   const networkId = config.networkId as NetworkId.NetworkId;
   const keys = deriveWalletKeys(seedHex, networkId);
+  console.log('[WalletService] Derived coin public key:', keys.shieldedSecretKeys.coinPublicKey.slice(0, 16) + '...');
 
   const walletConfig = {
     networkId,
@@ -96,10 +99,17 @@ export async function connectSeedWallet(seedHex: string, config: Config): Promis
   const walletFacade = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
 
   await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
-  await Promise.all([
+  console.log('[WalletService] Wallet started, waiting for sync...');
+
+  const [shieldedState, dustState] = await Promise.all([
     walletFacade.shielded.waitForSyncedState(),
     walletFacade.dust.waitForSyncedState(),
   ]);
+
+  console.log('[WalletService] Wallet synced');
+  console.log('[WalletService] Shielded balances:', shieldedState.balances);
+  console.log('[WalletService] Shielded address coin public key:', shieldedState.coinPublicKey?.toHexString?.() ?? 'N/A');
+  console.log('[WalletService] Dust balance:', dustState.walletBalance(new Date()));
 
   return { walletFacade, keys, networkId: config.networkId };
 }

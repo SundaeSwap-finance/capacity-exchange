@@ -93,24 +93,42 @@ export function useCESTransaction(
         prices: ExchangePrice[],
         dustRequired: bigint
       ): Promise<CurrencySelectionResult> => {
+        console.debug('[CESTransaction] Currency selection prompt with', prices.length, 'options');
+        console.debug('[CESTransaction] DUST required:', dustRequired.toString());
+        prices.forEach((p, i) => {
+          console.debug(`[CESTransaction]   Option ${i}: ${p.price.currency} = ${p.price.amount}`);
+        });
         setStatus('selecting-currency');
         setCurrencySelection({ prices, dustRequired });
 
-        return new Promise((resolve, reject) => {
+        const result = await new Promise<CurrencySelectionResult>((resolve, reject) => {
           currencyResolverRef.current = { resolve, reject };
         });
+        console.debug('[CESTransaction] Currency selection result:', result);
+        if (result.status === 'selected') {
+          console.debug('[CESTransaction] Selected currency:', result.exchangePrice.price.currency);
+          console.debug('[CESTransaction] *** This token type must exist in wallet balances ***');
+        }
+        return result;
       };
 
       const confirmOffer: ConfirmOffer = async (
         offer: Offer,
         dustRequired: bigint
       ): Promise<OfferConfirmationResult> => {
+        console.debug('[CESTransaction] Offer confirmation prompt');
+        console.debug('[CESTransaction] Offer ID:', offer.offerId);
+        console.debug('[CESTransaction] Offer currency (TOKEN TYPE TO PAY):', offer.offerCurrency);
+        console.debug('[CESTransaction] Offer amount:', offer.offerAmount);
+        console.debug('[CESTransaction] DUST required:', dustRequired.toString());
         setStatus('confirming');
         setOfferConfirmation({ offer, dustRequired });
 
-        return new Promise((resolve, reject) => {
+        const result = await new Promise<OfferConfirmationResult>((resolve, reject) => {
           offerResolverRef.current = { resolve, reject };
         });
+        console.debug('[CESTransaction] Offer confirmation result:', result);
+        return result;
       };
 
       // Create ZK config provider for browser

@@ -59,4 +59,9 @@ export class SeedWalletAdapter implements WalletCapabilities {
     const state = await this.#walletFacade.unshielded.waitForSyncedState();
     return state.balances;
   }
+
+  async getShieldedBalances(): Promise<Record<string, bigint>> {
+    const state = await this.#walletFacade.shielded.waitForSyncedState();
+    return state.balances;
+  }
 }

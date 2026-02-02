@@ -16,6 +16,7 @@ import { loadWalletState, saveWalletState } from './storage.js';
 export interface WalletContext {
   walletFacade: WalletFacade;
   walletProvider: DustWalletProvider;
+  keys: WalletKeys;
 }
 
 export class WalletContextStarter implements Startable<WalletContext> {
@@ -100,6 +101,7 @@ export class WalletContextStarter implements Startable<WalletContext> {
     return {
       walletFacade,
       walletProvider,
+      keys: this.#keys,
     };
   }
 }

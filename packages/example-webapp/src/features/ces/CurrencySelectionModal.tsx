@@ -30,7 +30,7 @@ export function CurrencySelectionModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-dark-900 border border-dark-700 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+      <div className="bg-dark-900 border border-dark-700 rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl">
         <h3 className="text-lg font-semibold text-white mb-2">Select Payment Currency</h3>
         <p className="text-sm text-dark-400 mb-4">
           This transaction requires <span className="text-white font-mono">{formatDust(dustRequired)}</span> DUST.
@@ -44,9 +44,14 @@ export function CurrencySelectionModal({
               onClick={() => handleSelect(exchangePrice)}
               className="w-full p-3 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-left transition-colors"
             >
-              <div className="flex justify-between items-center">
-                <span className="text-white font-medium">{exchangePrice.price.currency}</span>
-                <span className="text-dark-300 font-mono">{exchangePrice.price.amount}</span>
+              <div className="flex justify-between items-center gap-4">
+                <span
+                  className="text-white font-mono text-sm break-all"
+                  title={exchangePrice.price.currency}
+                >
+                  {exchangePrice.price.currency}
+                </span>
+                <span className="text-dark-300 font-mono whitespace-nowrap">{exchangePrice.price.amount}</span>
               </div>
             </button>
           ))}

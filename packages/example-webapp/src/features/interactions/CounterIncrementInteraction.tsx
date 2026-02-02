@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { LoadingSpinner } from '../../shared/ui';
+import { LoadingSpinner, EditableField } from '../../shared/ui';
 import { useContractContextOptional } from '../contract/ContractContext';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities } from '../wallet/types';
@@ -52,8 +52,18 @@ export function CounterIncrementInteraction({
 }: CounterIncrementInteractionProps) {
   const contractContext = useContractContextOptional();
   const walletInfo = useWalletInfo(wallet);
-  const contractAddress = contractContext?.counterContractAddress ?? null;
+  const defaultContractAddress = contractContext?.counterContractAddress ?? '';
   const [shieldedAddressInfo, setShieldedAddressInfo] = useState<ShieldedAddressInfo | null>(null);
+
+  // Editable field with auto-populated default
+  const [contractAddress, setContractAddress] = useState(defaultContractAddress);
+
+  // Update contract address when deployment changes
+  useEffect(() => {
+    if (defaultContractAddress) {
+      setContractAddress(defaultContractAddress);
+    }
+  }, [defaultContractAddress]);
 
   useEffect(() => {
     if (walletConnection.type === 'extension') {
@@ -95,7 +105,8 @@ export function CounterIncrementInteraction({
     }
   }, [walletInfo, walletConnection, shieldedAddressInfo]);
 
-  const ces = useCESTransaction(providers, contractAddress);
+  const effectiveContractAddress = contractAddress || null;
+  const ces = useCESTransaction(providers, effectiveContractAddress);
 
   if (walletInfo.status === 'loading') {
     return (
@@ -115,7 +126,8 @@ export function CounterIncrementInteraction({
     );
   }
 
-  const canIncrement = contractAddress !== null && providers !== null && ces.status === 'idle';
+  const canIncrement =
+    effectiveContractAddress !== null && providers !== null && ces.status === 'idle';
   const isProcessing =
     ces.status !== 'idle' && ces.status !== 'success' && ces.status !== 'error';
 
@@ -136,18 +148,14 @@ export function CounterIncrementInteraction({
         </div>
       </div>
 
-      {!contractAddress && (
-        <div className="p-2 bg-yellow-900/20 border border-yellow-700/50 rounded">
-          <p className="text-yellow-400 text-xs">Deploy a counter contract first.</p>
-        </div>
-      )}
-
-      {contractAddress && (
-        <div className="p-2 bg-dark-800 rounded border border-dark-600">
-          <div className="text-xs text-dark-400">Counter Contract</div>
-          <div className="text-xs text-white font-mono break-all truncate">{contractAddress}</div>
-        </div>
-      )}
+      <EditableField
+        label="Counter Contract Address"
+        value={contractAddress}
+        defaultValue={defaultContractAddress}
+        onChange={setContractAddress}
+        placeholder="Deploy a counter contract or enter address"
+        disabled={isProcessing}
+      />
 
       <button
         onClick={ces.incrementCounter}
