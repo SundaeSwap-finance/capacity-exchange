@@ -1,5 +1,6 @@
 *.hex
 *.log
+mnemonic.txt
 *.tsbuildinfo
 .env
 .midnight*
