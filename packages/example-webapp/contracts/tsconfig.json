@@ -14,6 +14,6 @@
     "outDir": "./dist",
     "rootDir": "."
   },
-  "include": ["src/**/*", "token-mint/**/*", "counter/**/*", "shared/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "token-mint/**/*", "counter/**/*", "shared/**/*"],
   "exclude": ["node_modules", "dist", "**/compiled", "**/zkir", "**/keys"]
 }

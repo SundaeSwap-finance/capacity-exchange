@@ -10,6 +10,7 @@ const statusStyles: Record<ExtensionWalletStatus, string> = {
   disconnected: 'bg-dark-800 text-dark-400 border border-dark-700',
   connecting: 'bg-yellow-900/50 text-yellow-400 border border-yellow-700',
   connected: 'bg-green-900/50 text-green-400 border border-green-700',
+  error: 'bg-red-900/50 text-red-400 border border-red-700',
 };
 
 export function ExtensionWalletStatusBadge({ status }: ExtensionWalletStatusBadgeProps) {

@@ -1,7 +1,7 @@
-export type { EndpointStatus, EndpointConfig } from './types';
-export type { HealthCheckConfig } from './checkEndpointHealth';
+export type { EndpointStatus, EndpointConfig, GraphQLEndpoint, RESTEndpoint } from './types';
 export { checkEndpointHealth } from './checkEndpointHealth';
 export { useEndpointHealth } from './useEndpointHealth';
-export { EndpointStatusIndicator } from './EndpointStatusIndicator';
 export { EndpointHealthRow } from './EndpointHealthRow';
+export { NetworkIdSelector } from './NetworkIdSelector';
+export { EndpointsList } from './EndpointsList';
 export { ConnectionDetailsSection } from './ConnectionDetailsSection';

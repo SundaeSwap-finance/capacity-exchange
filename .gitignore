@@ -2,10 +2,12 @@
 *.log
 *.tsbuildinfo
 .env
+.midnight*
 .npmrc
 .vscode
 dist
 midnight-level-db
 node_modules
 out
+tools/compactc/*/
 vendor
