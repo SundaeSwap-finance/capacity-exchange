@@ -11,7 +11,7 @@
     "test": "vitest run",
     "generate-wallet": "tsx src/cli/generate-wallet.ts",
     "utxos": "tsx src/cli/utxos.ts",
-    "send": "tsx src/cli/send.ts"
+    "deposit": "tsx src/cli/deposit.ts"
   },
   "dependencies": {
     "@blaze-cardano/sdk": "^0.2.31",

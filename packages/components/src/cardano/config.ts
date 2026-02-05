@@ -6,6 +6,7 @@ export interface CardanoConfig {
   blockfrostNetwork: BlockfrostNetworkName;
   blockfrostProjectId: string;
   walletSeedFile: string;
+  depositAddress: string;
 }
 
 export function requireEnv(name: string): string {
@@ -41,5 +42,6 @@ export function getCardanoConfig(): CardanoConfig {
     blockfrostNetwork: toBlockfrostNetworkName(network),
     blockfrostProjectId: requireEnv('BLOCKFROST_PROJECT_ID'),
     walletSeedFile: requireEnv('WALLET_SEED_FILE'),
+    depositAddress: requireEnv('DEPOSIT_ADDRESS'),
   };
 }
