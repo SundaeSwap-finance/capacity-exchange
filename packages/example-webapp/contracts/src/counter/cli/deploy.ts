@@ -6,9 +6,11 @@ function main(): Promise<DeployOutput> {
   program
     .name('counter:deploy')
     .description('Deploys a new counter contract and outputs JSON with the contract address.')
+    .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
     .parse();
 
-  return withAppContext('./counter/out', (ctx) => deploy(ctx));
+  const [networkId] = program.args;
+  return withAppContext(networkId, './counter/out', (ctx) => deploy(ctx));
 }
 
 runCli(main);

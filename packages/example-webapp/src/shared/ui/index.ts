@@ -1,3 +1,4 @@
+export { Button } from './Button';
 export { Card } from './Card';
 export { CharacterCounter } from './CharacterCounter';
 export { Collapsible } from './Collapsible';
@@ -5,5 +6,6 @@ export { InfoIcon } from './InfoIcon';
 export { InfoRow } from './InfoRow';
 export { LoadingSpinner } from './LoadingSpinner';
 export { ErrorMessage } from './ErrorMessage';
+export { Message } from './Message';
 export { SecretInput } from './SecretInput';
 export { Tooltip } from './Tooltip';

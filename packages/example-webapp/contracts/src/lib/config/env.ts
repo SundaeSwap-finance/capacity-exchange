@@ -1,5 +1,8 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { DustParameters } from '@midnight-ntwrk/ledger-v6';
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
+import { parse as parseDotenv } from 'dotenv';
 
 export interface NetworkConfig {
   networkId: NetworkId.NetworkId;
@@ -11,44 +14,54 @@ export interface NetworkConfig {
 
 export interface MidnightConfig extends NetworkConfig {
   privateDataDir: string;
+  walletSeedFile: string;
 }
 
-export function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
-const VALID_NETWORK_IDS = Object.values(NetworkId.NetworkId);
-
-function isValidNetworkId(value: string): value is NetworkId.NetworkId {
-  return (VALID_NETWORK_IDS as string[]).includes(value);
-}
-
-function requireNetworkId(name: string): NetworkId.NetworkId {
-  const value = requireEnv(name);
-  if (!isValidNetworkId(value)) {
-    throw new Error(`Invalid network ID: ${value}. Must be one of: ${VALID_NETWORK_IDS.join(', ')}`);
-  }
-  return value;
-}
-
-export function getNetworkConfig(): NetworkConfig {
-  return {
-    networkId: requireNetworkId('MIDNIGHT_NETWORK'),
-    nodeUrl: requireEnv('NODE_WS_URL'),
-    proofServerUrl: requireEnv('PROOF_SERVER_URL'),
-    indexerHttpUrl: requireEnv('INDEXER_URL'),
-    indexerWsUrl: requireEnv('INDEXER_WS_URL'),
+function toNetworkIdEnum(networkId: string): NetworkId.NetworkId {
+  const mapping: Record<string, NetworkId.NetworkId> = {
+    undeployed: NetworkId.NetworkId.Undeployed,
+    preview: NetworkId.NetworkId.Preview,
+    testnet: NetworkId.NetworkId.TestNet,
+    mainnet: NetworkId.NetworkId.MainNet,
   };
+  const enumValue = mapping[networkId];
+  if (!enumValue) {
+    throw new Error(`Unknown network ID: ${networkId}. Known networks: ${Object.keys(mapping).join(', ')}`);
+  }
+  return enumValue;
 }
 
-export function getMidnightConfig(privateDataDir: string): MidnightConfig {
+function getEnvFilePath(networkId: string): string {
+  return path.resolve(import.meta.dirname, '../../../', `.env.${networkId}`);
+}
+
+function loadEnvFile(networkId: string): Record<string, string> {
+  const envPath = getEnvFilePath(networkId);
+  if (!fs.existsSync(envPath)) {
+    throw new Error(`Missing .env file for network "${networkId}": ${envPath}`);
+  }
+  const content = fs.readFileSync(envPath, 'utf-8');
+  return parseDotenv(content);
+}
+
+function requireFromEnv(env: Record<string, string>, key: string, networkId: string): string {
+  const value = env[key];
+  if (!value) {
+    throw new Error(`Missing ${key} in .env.${networkId}`);
+  }
+  return value;
+}
+
+export function getMidnightConfigById(networkId: string, privateDataDir: string): MidnightConfig {
+  const env = loadEnvFile(networkId);
   return {
-    ...getNetworkConfig(),
+    networkId: toNetworkIdEnum(networkId),
+    nodeUrl: requireFromEnv(env, 'NODE_WS_URL', networkId),
+    proofServerUrl: requireFromEnv(env, 'PROOF_SERVER_URL', networkId),
+    indexerHttpUrl: requireFromEnv(env, 'INDEXER_URL', networkId),
+    indexerWsUrl: requireFromEnv(env, 'INDEXER_WS_URL', networkId),
     privateDataDir,
+    walletSeedFile: requireFromEnv(env, 'WALLET_SEED_FILE', networkId),
   };
 }
 

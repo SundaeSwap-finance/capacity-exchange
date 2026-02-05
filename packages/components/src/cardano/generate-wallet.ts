@@ -16,7 +16,7 @@ export interface GenerateWalletResult {
 
 export async function generateWallet(
   blaze: Blaze<Provider, Wallet>,
-  args: GenerateWalletArgs,
+  args: GenerateWalletArgs
 ): Promise<GenerateWalletResult> {
   const mnemonic = args.mnemonic || generateMnemonic(wordlist);
   const entropy = mnemonicToEntropy(mnemonic, wordlist);

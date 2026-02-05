@@ -1,16 +1,25 @@
-import 'dotenv/config';
 import { AppContext, AppSetup } from './app-context.js';
-import { getMidnightConfig } from './config/env.js';
+import { getMidnightConfigById } from './config/env.js';
 import { readSeed } from './config/seed.js';
+import { createLogger } from './logger.js';
 
-export async function withAppContext<T>(privateDataDir: string, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
-  console.error('Reading seed...');
-  const seed = readSeed();
-  const config = getMidnightConfig(privateDataDir);
-  console.error('Starting app context...');
+const logger = createLogger(import.meta);
+
+export async function withAppContext<T>(
+  networkId: string,
+  privateDataDir: string,
+  fn: (ctx: AppContext) => T | Promise<T>
+): Promise<T> {
+  logger.log(`Process ID: ${process.pid}`);
+  logger.log(`Network ID: ${networkId}`);
+  const config = getMidnightConfigById(networkId, privateDataDir);
+  logger.log('Reading seed...');
+  const seed = readSeed(config.walletSeedFile);
+  logger.log('Starting app context...');
+  logger.log(`Private data dir: ${privateDataDir}`);
   const setup = new AppSetup(seed, config);
   const ctx = await setup.start();
-  console.error('App context ready');
+  logger.log('App context ready');
   return fn(ctx);
 }
 
