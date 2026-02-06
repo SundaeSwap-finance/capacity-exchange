@@ -6,12 +6,13 @@ function main(): Promise<VerifyOutput> {
   program
     .name('token-mint:verify')
     .description('Verifies token balance for a deployed token mint contract')
+    .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
     .argument('<contractAddress>', 'The deployed contract address')
     .argument('<tokenColor>', 'The token color used during deployment')
     .parse();
 
-  const [contractAddress, tokenColor] = program.args;
-  return withAppContext('./token-mint/out', (ctx) => verify(ctx, contractAddress, tokenColor));
+  const [networkId, contractAddress, tokenColor] = program.args;
+  return withAppContext(networkId, './token-mint/out', (ctx) => verify(ctx, contractAddress, tokenColor));
 }
 
 runCli(main);

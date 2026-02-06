@@ -1,6 +1,5 @@
-import React from 'react';
 import type { EndpointConfig } from './types';
-import { Collapsible } from '../../shared/ui';
+import { Card } from '../../shared/ui';
 import { NetworkIdSelector } from './NetworkIdSelector';
 import { EndpointsList } from './EndpointsList';
 
@@ -20,11 +19,9 @@ export function ConnectionDetailsSection({
   refreshInterval = DEFAULT_REFRESH_INTERVAL,
 }: ConnectionDetailsSectionProps) {
   return (
-    <Collapsible title="Connection Details" defaultOpen>
-      <div className="space-y-4">
-        <NetworkIdSelector networkId={networkId} onChange={onNetworkIdChange} />
-        <EndpointsList endpoints={endpoints} refreshInterval={refreshInterval} />
-      </div>
-    </Collapsible>
+    <Card title="Connection Details">
+      <NetworkIdSelector networkId={networkId} onChange={onNetworkIdChange} />
+      <EndpointsList endpoints={endpoints} refreshInterval={refreshInterval} />
+    </Card>
   );
 }

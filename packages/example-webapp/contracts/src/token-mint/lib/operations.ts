@@ -5,6 +5,9 @@ import { getContractProviders } from '../../lib/providers/contract.js';
 import { createTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor } from './token-color.js';
 import { createPrivateState } from './witnesses.js';
+import { createLogger } from '../../lib/logger.js';
+
+const logger = createLogger(import.meta);
 
 export interface DeployOutput {
   contractAddress: string;
@@ -19,15 +22,18 @@ export function generateTokenColor(): string {
 
 export async function deploy(ctx: AppContext, tokenColor?: string): Promise<DeployOutput> {
   const resolvedTokenColor = tokenColor ?? generateTokenColor();
-  console.error(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
+  logger.log(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
 
   const providers = getContractProviders<TokenMintContract>(ctx);
   const contract = createTokenMintContract();
   const initialNonce = crypto.randomBytes(32);
 
   const privateStateId = crypto.randomBytes(32).toString('hex');
+  logger.log(`Generated private state ID: ${privateStateId}`);
   const initialPrivateState = createPrivateState(crypto.randomBytes(32));
+  logger.log('Created initial private state');
 
+  logger.log('Calling deployContract...');
   const deployed = await deployContract(providers, {
     contract,
     args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce],
@@ -35,7 +41,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
     initialPrivateState,
   });
 
-  console.error(`Token-mint deployed at ${deployed.deployTxData.public.contractAddress}`);
+  logger.log(`Token-mint deployed at ${deployed.deployTxData.public.contractAddress}`);
   return {
     contractAddress: deployed.deployTxData.public.contractAddress,
     txHash: deployed.deployTxData.public.txHash,
@@ -49,6 +55,8 @@ export interface MintOutput {
   contractAddress: string;
   amount: string;
   derivedTokenColor: string;
+  blockHeight: string;
+  blockHash: string;
 }
 
 export async function mint(
@@ -57,17 +65,20 @@ export async function mint(
   privateStateId: string,
   amount: bigint
 ): Promise<MintOutput> {
-  console.error(`Minting ${amount} tokens at ${contractAddress}...`);
+  logger.log(`Minting ${amount} tokens at ${contractAddress}...`);
+  logger.log(`Private state ID: ${privateStateId}`);
   const providers = getContractProviders<TokenMintContract>(ctx);
   const contract = createTokenMintContract();
 
+  logger.log('Looking up deployed contract...');
   await findDeployedContract(providers, {
     contract,
     contractAddress,
     privateStateId,
   });
+  logger.log('Found deployed contract');
 
-  console.error('Submitting mint transaction...');
+  logger.log('Submitting mint transaction...');
   const result = await submitCallTx(providers, {
     contract,
     contractAddress,
@@ -81,13 +92,15 @@ export async function mint(
   }
 
   const derivedTokenColor = Buffer.from(result.private.result.color).toString('hex');
-  console.error(`Mint confirmed, derived color: ${derivedTokenColor.slice(0, 8)}...`);
+  logger.log(`Mint confirmed, derived color: ${derivedTokenColor.slice(0, 8)}...`);
 
   return {
     txHash: result.public.txHash,
     contractAddress,
     amount: amount.toString(),
     derivedTokenColor,
+    blockHeight: result.public.blockHeight.toString(),
+    blockHash: result.public.blockHash,
   };
 }
 
@@ -100,12 +113,12 @@ export interface VerifyOutput {
 }
 
 export async function verify(ctx: AppContext, contractAddress: string, tokenColor: string): Promise<VerifyOutput> {
-  console.error(`Verifying token balance for ${contractAddress}...`);
+  logger.log(`Verifying token balance for ${contractAddress}...`);
   const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
-  console.error('Syncing shielded wallet...');
+  logger.log('Syncing shielded wallet...');
   const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
   const balance = shieldedState.balances[derivedTokenColor] || 0n;
-  console.error(`Token balance: ${balance}`);
+  logger.log(`Token balance: ${balance}`);
 
   return {
     verified: balance > 0n,

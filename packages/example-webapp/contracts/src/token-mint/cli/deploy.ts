@@ -6,11 +6,12 @@ function main(): Promise<DeployOutput> {
   program
     .name('token-mint:deploy')
     .description('Deploys a new token mint contract')
+    .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
     .argument('[tokenColor]', '32-byte hex string for the token color (random if not provided)')
     .parse();
 
-  const tokenColor = program.args[0];
-  return withAppContext('./token-mint/out', (ctx) => deploy(ctx, tokenColor));
+  const [networkId, tokenColor] = program.args;
+  return withAppContext(networkId, './token-mint/out', (ctx) => deploy(ctx, tokenColor));
 }
 
 runCli(main);

@@ -37,13 +37,9 @@ dev: _check-setup
 test:
     npm run test -ws --if-present
 
-# Run counter contract e2e test
-counter-e2e:
-    npm run counter:e2e --prefix {{contracts_dir}}
-
-# Run token-mint contract e2e test
-token-mint-e2e:
-    npm run token-mint:e2e --prefix {{contracts_dir}}
+# Deploy all contracts for a network
+deploy-all networkId:
+    npm run deploy-all --prefix {{contracts_dir}} -- {{networkId}}
 
 # Lint and format check
 check:
@@ -58,3 +54,6 @@ clean:
     npm run clean -ws --if-present
     npm run clean --prefix {{contracts_dir}}
     rm -rf {{webapp_dir}}/public/midnight
+    rm -rf {{contracts_dir}}/.midnight-private-state
+    rm -rf {{contracts_dir}}/.midnight-wallet-state
+    rm -f .contracts*.json

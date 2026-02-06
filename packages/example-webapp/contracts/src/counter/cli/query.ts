@@ -6,11 +6,12 @@ function main(): Promise<QueryOutput> {
   program
     .name('counter:query')
     .description('Queries the current value of a deployed counter contract')
+    .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
     .argument('<contractAddress>', 'The address of the deployed counter contract')
     .parse();
 
-  const contractAddress = program.args[0];
-  return withAppContext('./counter/out', (ctx) => query(ctx, contractAddress));
+  const [networkId, contractAddress] = program.args;
+  return withAppContext(networkId, './counter/out', (ctx) => query(ctx, contractAddress));
 }
 
 runCli(main);

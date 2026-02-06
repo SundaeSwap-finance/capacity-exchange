@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSeedWallet } from './useSeedWallet';
 import type { SeedWalletState, SeedWalletStatus } from './types';
-import { Card, LoadingSpinner } from '../../../shared/ui';
+import { Card, LoadingSpinner, Message } from '../../../shared/ui';
 import { SeedInput } from './SeedInput';
 import { SeedWalletStatusBadge } from './SeedWalletStatusBadge';
 import { ConnectedWalletInfo } from '../extension/ConnectedWalletInfo';
@@ -42,11 +42,7 @@ function SeedWalletConnection({ wallet }: SeedWalletConnectionProps) {
           <SeedWalletActions status={status} onDisconnect={disconnect} />
         </div>
 
-        {error && (
-          <div className="bg-red-900/20 border border-red-700/50 rounded p-3">
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
-        )}
+        {error && <Message variant="error">{error}</Message>}
 
         {status === 'disconnected' && <SeedInput onSubmit={connect} />}
 

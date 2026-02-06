@@ -1,4 +1,4 @@
-import React from 'react';
+import { Message } from './Message';
 
 interface ErrorMessageProps {
   message: string;
@@ -7,13 +7,13 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
-    <div className="bg-red-900/20 border border-red-700/50 rounded p-3">
-      <p className="text-red-400 text-sm">{message}</p>
+    <Message variant="error">
+      <p>{message}</p>
       {onRetry && (
-        <button onClick={onRetry} className="text-sm text-blue-400 hover:text-blue-300 mt-2">
+        <button onClick={onRetry} className="text-blue-400 hover:text-blue-300 mt-2">
           Retry
         </button>
       )}
-    </div>
+    </Message>
   );
 }

@@ -12,16 +12,18 @@ function main(): Promise<E2EOutput> {
   program
     .name('counter:e2e')
     .description('Deploys a counter contract, increments it, and queries the final value')
+    .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
     .argument('[incrementCount]', 'Number of times to increment the counter', '1')
     .parse();
 
-  const incrementCount = program.args[0] ? parseInt(program.args[0], 10) : 1;
+  const [networkId, incrementCountArg] = program.args;
+  const incrementCount = incrementCountArg ? parseInt(incrementCountArg, 10) : 1;
 
   if (isNaN(incrementCount) || incrementCount < 1) {
     throw new Error('incrementCount must be a positive integer');
   }
 
-  return withAppContext('./counter/out', async (ctx) => {
+  return withAppContext(networkId, './counter/out', async (ctx) => {
     const deployResult = await deploy(ctx);
 
     const incrementResults: IncrementOutput[] = [];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card } from '../../../shared/ui';
+import { Card, Message } from '../../../shared/ui';
 import { useExtensionWallet } from './useExtensionWallet';
 import type { ExtensionWalletState } from './useExtensionWallet';
 import { ExtensionWalletActions } from './ExtensionWalletActions';
@@ -25,11 +25,7 @@ function ExtensionWalletConnection({ wallet }: ExtensionWalletConnectionProps) {
           <p className="text-sm text-dark-400">Please unlock your Lace wallet and approve the connection...</p>
         )}
 
-        {status === 'error' && wallet.error && (
-          <div className="bg-red-900/20 border border-red-700/50 rounded p-3">
-            <p className="text-red-400 text-sm">{wallet.error}</p>
-          </div>
-        )}
+        {status === 'error' && wallet.error && <Message variant="error">{wallet.error}</Message>}
 
         {status === 'connected' && wallet.wallet && <ConnectedWalletInfo wallet={wallet.wallet} />}
       </div>
@@ -53,11 +49,9 @@ export function ExtensionWalletFlow({ networkId, onBack }: ExtensionWalletFlowPr
 
       {wallet.status === 'unavailable' ? (
         <Card title="Wallet Connection">
-          <div className="bg-red-900/20 border border-red-700/50 rounded p-3">
-            <p className="text-red-400 text-sm">
-              Lace wallet extension not found. Please install the extension and refresh the page.
-            </p>
-          </div>
+          <Message variant="error">
+            Lace wallet extension not found. Please install the extension and refresh the page.
+          </Message>
         </Card>
       ) : (
         <ExtensionWalletConnection wallet={wallet} />

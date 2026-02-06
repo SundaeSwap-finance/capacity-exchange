@@ -1,2 +1,9 @@
-# Generated ZK assets (copied from contracts build output)
 public/midnight/
+contracts/.env.undeployed
+contracts/.contracts.*.json
+contracts/.midnight-private-state/
+contracts/.midnight-wallet-state/
+contracts/*.hex
+contracts/mnemonic.txt
+contracts/counter/out/
+contracts/token-mint/out/

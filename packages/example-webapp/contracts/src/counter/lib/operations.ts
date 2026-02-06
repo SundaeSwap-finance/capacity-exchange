@@ -2,6 +2,9 @@ import { deployContract, findDeployedContract, submitCallTx } from '@midnight-nt
 import { AppContext } from '../../lib/app-context.js';
 import { getContractProviders } from '../../lib/providers/contract.js';
 import { createCounterContract, Counter, CounterContract } from './contract.js';
+import { createLogger } from '../../lib/logger.js';
+
+const logger = createLogger(import.meta);
 
 export interface DeployOutput {
   contractAddress: string;
@@ -9,7 +12,7 @@ export interface DeployOutput {
 }
 
 export async function deploy(ctx: AppContext): Promise<DeployOutput> {
-  console.error('Deploying counter contract...');
+  logger.log('Deploying counter contract...');
   const providers = getContractProviders<CounterContract>(ctx);
   const contract = createCounterContract();
 
@@ -17,7 +20,7 @@ export async function deploy(ctx: AppContext): Promise<DeployOutput> {
     contract,
   });
 
-  console.error(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
+  logger.log(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
   return {
     contractAddress: deployed.deployTxData.public.contractAddress,
     txHash: deployed.deployTxData.public.txHash,
@@ -32,7 +35,7 @@ export interface IncrementOutput {
 }
 
 export async function increment(ctx: AppContext, contractAddress: string): Promise<IncrementOutput> {
-  console.error(`Incrementing counter at ${contractAddress}...`);
+  logger.log(`Incrementing counter at ${contractAddress}...`);
   const providers = getContractProviders<CounterContract>(ctx);
   const contract = createCounterContract();
 
@@ -47,7 +50,7 @@ export async function increment(ctx: AppContext, contractAddress: string): Promi
     circuitId: 'increment',
   });
 
-  console.error(`Increment tx confirmed at block ${result.public.blockHeight}`);
+  logger.log(`Increment tx confirmed at block ${result.public.blockHeight}`);
   return {
     txHash: result.public.txHash,
     contractAddress,
@@ -62,7 +65,7 @@ export interface QueryOutput {
 }
 
 export async function query(ctx: AppContext, contractAddress: string): Promise<QueryOutput> {
-  console.error(`Querying counter at ${contractAddress}...`);
+  logger.log(`Querying counter at ${contractAddress}...`);
   const contractState = await ctx.publicDataProvider.queryContractState(contractAddress);
 
   if (!contractState) {
@@ -70,7 +73,7 @@ export async function query(ctx: AppContext, contractAddress: string): Promise<Q
   }
 
   const ledgerState = Counter.ledger(contractState.data);
-  console.error(`Counter value: ${ledgerState.round}`);
+  logger.log(`Counter value: ${ledgerState.round}`);
 
   return {
     contractAddress,
