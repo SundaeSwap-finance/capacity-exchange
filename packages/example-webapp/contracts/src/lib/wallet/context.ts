@@ -12,45 +12,57 @@ import type { NetworkConfig } from '../config/env.js';
 import { DUST_PARAMS } from '../config/env.js';
 import type { Startable } from '../startable.js';
 import { DustWalletProvider } from './provider.js';
-import { deriveWalletKeys } from './keys.js';
-import { createWalletConfiguration } from './config.js';
-import { loadWalletState, saveWalletState } from './storage.js';
+import { type WalletKeys, deriveWalletKeys } from './keys.js';
+import { type WalletConfiguration, createWalletConfiguration } from './config.js';
+import { clearWalletState, loadWalletState, saveWalletState } from './storage.js';
 import { createLogger } from '../logger.js';
 
 const logger = createLogger(import.meta);
 
-type WalletConfig = ReturnType<typeof createWalletConfiguration>;
+export class WalletSyncTimeoutError extends Error {
+  readonly _tag = 'WalletSyncTimeoutError' as const;
+  constructor(timeoutMs: number) {
+    super(
+      `Wallet sync timed out after ${timeoutMs / 1000}s. ` +
+        `Try running 'just clean', re-deploying contracts, and restarting the server.`
+    );
+    this.name = 'WalletSyncTimeoutError';
+  }
+}
 
 export interface WalletContext {
   walletFacade: WalletFacade;
   walletProvider: DustWalletProvider;
+  keys: WalletKeys;
 }
 
-function createShieldedWallet(config: WalletConfig, secretKeys: ZswapSecretKeys) {
+function createShieldedWallet(config: WalletConfiguration, secretKeys: ZswapSecretKeys) {
   const savedState = loadWalletState('shielded');
   if (savedState) {
     try {
       return ShieldedWallet(config).restore(savedState);
     } catch {
-      logger.log('Failed to restore shielded wallet, starting fresh');
+      logger.log('Failed to restore shielded wallet, clearing saved state and starting fresh');
+      clearWalletState('shielded');
     }
   }
   return ShieldedWallet(config).startWithSecretKeys(secretKeys);
 }
 
-function createDustWallet(config: WalletConfig, secretKey: DustSecretKey) {
+function createDustWallet(config: WalletConfiguration, secretKey: DustSecretKey) {
   const savedState = loadWalletState('dust');
   if (savedState) {
     try {
       return DustWallet(config).restore(savedState);
     } catch {
-      logger.log('Failed to restore dust wallet, starting fresh');
+      logger.log('Failed to restore dust wallet, clearing saved state and starting fresh');
+      clearWalletState('dust');
     }
   }
   return DustWallet(config).startWithSecretKey(secretKey, DUST_PARAMS);
 }
 
-function createUnshieldedWallet(config: WalletConfig, keystore: UnshieldedKeystore) {
+function createUnshieldedWallet(config: WalletConfiguration, keystore: UnshieldedKeystore) {
   return UnshieldedWallet({
     ...config,
     txHistoryStorage: new InMemoryTransactionHistoryStorage(),
@@ -71,8 +83,8 @@ async function saveWalletStates(facade: WalletFacade): Promise<void> {
 }
 
 export class WalletContextStarter implements Startable<WalletContext> {
-  #keys: ReturnType<typeof deriveWalletKeys>;
-  #walletConfig: WalletConfig;
+  #keys: WalletKeys;
+  #walletConfig: WalletConfiguration;
 
   constructor(config: NetworkConfig, seedHex: string) {
     this.#keys = deriveWalletKeys(seedHex, config.networkId);
@@ -96,11 +108,18 @@ export class WalletContextStarter implements Startable<WalletContext> {
     await walletFacade.start(this.#keys.shieldedSecretKeys, this.#keys.dustSecretKey);
 
     logger.log('Syncing wallets...');
-    await Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]);
+    const SYNC_TIMEOUT_MS = 120_000;
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new WalletSyncTimeoutError(SYNC_TIMEOUT_MS)), SYNC_TIMEOUT_MS)
+    );
+    await Promise.race([
+      Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]),
+      timeout,
+    ]);
     logger.log('Wallets synced');
 
     await saveWalletStates(walletFacade);
 
-    return { walletFacade, walletProvider };
+    return { walletFacade, walletProvider, keys: this.#keys };
   }
 }

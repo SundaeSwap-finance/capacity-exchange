@@ -1,5 +1,5 @@
 import React from 'react';
-import { InfoRow } from '../../../shared/ui';
+import { LabelValue } from '../../../shared/ui';
 
 interface AddressListProps {
   unshieldedAddress: string;
@@ -10,9 +10,15 @@ interface AddressListProps {
 export function AddressList({ unshieldedAddress, shieldedAddress, dustAddress }: AddressListProps) {
   return (
     <div className="space-y-2 text-sm">
-      <InfoRow label="Unshielded Address" value={unshieldedAddress} />
-      <InfoRow label="Shielded Address" value={shieldedAddress} />
-      <InfoRow label="Dust Address" value={dustAddress} />
+      <LabelValue layout="inline" label="Unshielded Address">
+        {unshieldedAddress}
+      </LabelValue>
+      <LabelValue layout="inline" label="Shielded Address">
+        {shieldedAddress}
+      </LabelValue>
+      <LabelValue layout="inline" label="Dust Address">
+        {dustAddress}
+      </LabelValue>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { WalletCapabilities } from '../types';
 import { connectWallet } from './walletService';
 import { useExtensionAvailability } from './useExtensionAvailability';
@@ -18,6 +19,7 @@ export type ExtensionWalletStatus = 'unavailable' | 'disconnected' | 'connecting
 export interface ExtensionWalletState {
   status: ExtensionWalletStatus;
   wallet: WalletCapabilities | null;
+  connectedAPI: ConnectedAPI | null;
   error: string | null;
   connect: () => Promise<void>;
   disconnect: () => void;
@@ -32,11 +34,13 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     'disconnected'
   );
   const [wallet, setWallet] = useState<WalletCapabilities | null>(null);
+  const [connectedAPI, setConnectedAPI] = useState<ConnectedAPI | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Reset connection state when networkId changes
   useEffect(() => {
     setWallet(null);
+    setConnectedAPI(null);
     setError(null);
     setConnectionStatus('disconnected');
   }, [networkId]);
@@ -52,6 +56,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     try {
       const connection = await connectWallet(availability.connector, networkId);
       setWallet(new ExtensionWalletAdapter(connection.wallet));
+      setConnectedAPI(connection.wallet);
       setConnectionStatus('connected');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -71,6 +76,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
 
   const disconnect = useCallback(() => {
     setWallet(null);
+    setConnectedAPI(null);
     setError(null);
     setConnectionStatus('disconnected');
   }, []);
@@ -79,6 +85,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     return {
       status: 'unavailable',
       wallet: null,
+      connectedAPI: null,
       error: null,
       connect: async () => {},
       disconnect: () => {},
@@ -88,6 +95,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
   return {
     status: connectionStatus,
     wallet,
+    connectedAPI,
     error,
     connect,
     disconnect,

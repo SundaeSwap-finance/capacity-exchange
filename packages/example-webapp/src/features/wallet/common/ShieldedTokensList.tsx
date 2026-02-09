@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatNight, truncateMiddle } from '../../../utils/format';
+import { truncateMiddle } from '../../../utils/format';
 
 interface ShieldedTokensListProps {
   balances: Record<string, bigint>;
@@ -21,7 +21,7 @@ export function ShieldedTokensList({ balances }: ShieldedTokensListProps) {
             <span className="font-mono text-xs text-dark-400" title={tokenType}>
               {tokenType ? truncateMiddle(tokenType) : 'NIGHT'}
             </span>
-            <span className="text-dark-200 text-sm">{formatNight(balance)}</span>
+            <span className="text-dark-200 text-sm">{balance.toLocaleString()}</span>
           </div>
         ))}
       </div>

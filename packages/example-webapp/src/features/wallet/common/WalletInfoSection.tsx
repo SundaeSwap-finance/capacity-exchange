@@ -11,16 +11,16 @@ interface WalletInfoSectionProps {
 
 export function WalletInfoSection({ data }: WalletInfoSectionProps) {
   return (
-    <Collapsible title="Wallet Info" defaultOpen>
-      <div className="space-y-4">
+    <div className="space-y-4">
+      <BalanceGrid dustBalance={data.dustBalance} nightBalances={data.nightBalances} />
+      <ShieldedTokensList balances={data.shieldedBalances} />
+      <Collapsible title="Addresses" defaultOpen={false}>
         <AddressList
           unshieldedAddress={data.unshieldedAddress}
           shieldedAddress={data.shieldedAddress}
           dustAddress={data.dustAddress}
         />
-        <BalanceGrid dustBalance={data.dustBalance} nightBalances={data.nightBalances} />
-        <ShieldedTokensList balances={data.shieldedBalances} />
-      </div>
-    </Collapsible>
+      </Collapsible>
+    </div>
   );
 }

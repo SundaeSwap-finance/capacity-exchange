@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ApiResult, StreamCallbacks } from '../api';
 
-type OperationStatus = 'idle' | 'running' | 'success' | 'error';
+export type OperationStatus = 'idle' | 'running' | 'success' | 'error';
 
 export interface ContractOperationState {
   status: OperationStatus;

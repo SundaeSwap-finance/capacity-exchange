@@ -5,6 +5,7 @@ export interface TokenMintConfig {
   contractAddress: string;
   txHash: string;
   tokenColor: string;
+  derivedTokenColor: string;
   privateStateId: string;
 }
 

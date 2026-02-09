@@ -1,4 +1,6 @@
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { WalletCapabilities } from '../types';
+import type { WalletKeys } from './walletService';
 
 /**
  * States for seed wallet connection.
@@ -9,9 +11,16 @@ import type { WalletCapabilities } from '../types';
  */
 export type SeedWalletStatus = 'disconnected' | 'connecting' | 'connected';
 
+export interface SeedWalletInternals {
+  walletFacade: WalletFacade;
+  keys: WalletKeys;
+  networkId: string;
+}
+
 export interface SeedWalletState {
   status: SeedWalletStatus;
   wallet: WalletCapabilities | null;
+  internals: SeedWalletInternals | null;
   error: string | null;
   connect: (seed: string) => Promise<void>;
   disconnect: () => void;

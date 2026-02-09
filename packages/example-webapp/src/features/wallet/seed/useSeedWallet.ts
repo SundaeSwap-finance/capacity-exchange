@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { WalletCapabilities } from '../types';
-import type { SeedWalletStatus, SeedWalletState } from './types';
+import type { SeedWalletStatus, SeedWalletState, SeedWalletInternals } from './types';
 import { connectSeedWallet } from './walletService';
 import { SeedWalletAdapter } from './SeedWalletAdapter';
 import type { Config } from '../../../config';
@@ -11,11 +11,13 @@ import type { Config } from '../../../config';
 export function useSeedWallet(config: Config): SeedWalletState {
   const [status, setStatus] = useState<SeedWalletStatus>('disconnected');
   const [wallet, setWallet] = useState<WalletCapabilities | null>(null);
+  const [internals, setInternals] = useState<SeedWalletInternals | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Reset connection when config changes
   useEffect(() => {
     setWallet(null);
+    setInternals(null);
     setError(null);
     setStatus('disconnected');
   }, [config]);
@@ -33,6 +35,11 @@ export function useSeedWallet(config: Config): SeedWalletState {
         const connection = await connectSeedWallet(seed, config);
         const adapter = new SeedWalletAdapter(connection.walletFacade, connection.networkId);
         setWallet(adapter);
+        setInternals({
+          walletFacade: connection.walletFacade,
+          keys: connection.keys,
+          networkId: connection.networkId,
+        });
         setStatus('connected');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to connect wallet');
@@ -44,6 +51,7 @@ export function useSeedWallet(config: Config): SeedWalletState {
 
   const disconnect = useCallback(() => {
     setWallet(null);
+    setInternals(null);
     setStatus('disconnected');
     setError(null);
   }, []);
@@ -51,6 +59,7 @@ export function useSeedWallet(config: Config): SeedWalletState {
   return {
     status,
     wallet,
+    internals,
     error,
     connect,
     disconnect,

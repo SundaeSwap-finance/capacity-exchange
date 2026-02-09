@@ -39,15 +39,15 @@ export function CounterContractPanel({ networkId, config }: CounterContractPanel
       logs={state.logs}
       fields={[{ label: 'Contract Address', value: config.contractAddress }]}
       result={queryResult ? { label: 'Counter Value', value: queryResult.round } : null}
-      actions={
-        <>
-          <Button onClick={handleIncrement} disabled={state.isRunning} variant="blue">
-            Increment
-          </Button>
-          <Button onClick={handleQuery} disabled={state.isRunning} variant="purple">
-            Query
-          </Button>
-        </>
+      queryRow={
+        <Button onClick={handleQuery} disabled={state.isRunning} variant="purple" size="sm">
+          Query
+        </Button>
+      }
+      modifyRow={
+        <Button onClick={handleIncrement} disabled={state.isRunning} variant="blue" size="sm">
+          Increment
+        </Button>
       }
     />
   );

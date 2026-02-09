@@ -36,13 +36,23 @@ interface TokenMintVerifyBody {
   tokenColor: string;
 }
 
+interface TokenMintSendBody {
+  route: 'token-mint/send';
+  networkId: string;
+  contractAddress: string;
+  tokenColor: string;
+  recipientAddress: string;
+  amount: number;
+}
+
 export type RequestBody =
   | CounterDeployBody
   | CounterIncrementBody
   | CounterQueryBody
   | TokenMintDeployBody
   | TokenMintMintBody
-  | TokenMintVerifyBody;
+  | TokenMintVerifyBody
+  | TokenMintSendBody;
 
 export interface ScriptConfig {
   script: string;

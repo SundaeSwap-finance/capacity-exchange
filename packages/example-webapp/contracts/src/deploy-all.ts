@@ -34,6 +34,7 @@ async function main(): Promise<ContractsConfig> {
       contractAddress: tokenMintResult.contractAddress,
       txHash: tokenMintResult.txHash,
       tokenColor: tokenMintResult.tokenColor,
+      derivedTokenColor: tokenMintResult.derivedTokenColor,
       privateStateId: tokenMintResult.privateStateId,
     },
     counter: {

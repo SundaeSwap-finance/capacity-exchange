@@ -25,6 +25,7 @@ const VALID_ROUTES = [
   'token-mint/deploy',
   'token-mint/mint',
   'token-mint/verify',
+  'token-mint/send',
 ] as const;
 
 /**

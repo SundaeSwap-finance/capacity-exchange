@@ -3,6 +3,8 @@ import * as path from 'path';
 import { createLogger } from '../logger.js';
 
 const logger = createLogger(import.meta);
+type WalletStateName = 'shielded' | 'dust';
+
 const STORAGE_DIR = '.midnight-wallet-state';
 
 function ensureStorageDir(): void {
@@ -11,18 +13,18 @@ function ensureStorageDir(): void {
   }
 }
 
-function getFilePath(name: string): string {
+function getFilePath(name: WalletStateName): string {
   return path.join(STORAGE_DIR, `${name}.json`);
 }
 
-export function saveWalletState(name: string, serializedState: string): void {
+export function saveWalletState(name: WalletStateName, serializedState: string): void {
   ensureStorageDir();
   const filePath = getFilePath(name);
   fs.writeFileSync(filePath, serializedState, 'utf-8');
   logger.log(`Saved ${name} state to ${filePath}`);
 }
 
-export function loadWalletState(name: string): string | null {
+export function loadWalletState(name: WalletStateName): string | null {
   const filePath = getFilePath(name);
   if (!fs.existsSync(filePath)) {
     logger.log(`No saved state for ${name}`);
@@ -38,7 +40,7 @@ export function loadWalletState(name: string): string | null {
   }
 }
 
-export function clearWalletState(name: string): void {
+export function clearWalletState(name: WalletStateName): void {
   const filePath = getFilePath(name);
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);

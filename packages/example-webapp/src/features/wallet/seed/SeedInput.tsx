@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { SecretInput, CharacterCounter } from '../../../shared/ui';
+import { Button, SecretInput, CharacterCounter } from '../../../shared/ui';
 import { validateSeed } from './validateSeed';
 
 const SEED_LENGTH = 64;
@@ -47,22 +47,24 @@ export function SeedInput({ onSubmit, disabled }: SeedInputProps) {
         <SecretInput
           value={seed}
           onChange={handleChange}
-          placeholder={`Enter your ${SEED_LENGTH}-character hex seed...`}
+          placeholder={`Enter or generate a ${SEED_LENGTH}-char hex seed...`}
           disabled={disabled}
           maxLength={SEED_LENGTH}
+          onRandom={() => {
+            const bytes = crypto.getRandomValues(new Uint8Array(32));
+            const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+            setSeed(hex);
+            setValidationError(null);
+          }}
         />
         <CharacterCounter current={seed.length} max={SEED_LENGTH} />
       </div>
 
       {validationError && <div className="text-red-400 text-sm">{validationError}</div>}
 
-      <button
-        type="submit"
-        disabled={disabled || seed.length === 0}
-        className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
+      <Button type="submit" variant="blue" fullWidth disabled={disabled || seed.length === 0}>
         Connect Wallet
-      </button>
+      </Button>
     </form>
   );
 }

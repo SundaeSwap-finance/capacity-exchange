@@ -2,55 +2,38 @@ import { Card, Message } from '../../../shared/ui';
 import { CounterContractPanel } from './CounterContractPanel';
 import { TokenMintContractPanel } from './TokenMintContractPanel';
 import { useContractsConfig } from '../hooks/useContractsConfig';
+import { useSyncContractContext } from './useSyncContractContext';
+import { ContractConfigPlaceholder } from './ContractConfigPlaceholder';
+import type { WalletCapabilities } from '../../wallet/types';
 
 interface ContractConfigSectionProps {
   networkId: string;
+  wallet: WalletCapabilities | null;
 }
 
-export function ContractConfigSection({ networkId }: ContractConfigSectionProps) {
+export function ContractConfigSection({ networkId, wallet }: ContractConfigSectionProps) {
   const result = useContractsConfig(networkId);
+  const loadedConfig = result.status === 'loaded' ? result.config : null;
+  useSyncContractContext(loadedConfig);
 
-  if (result.status === 'loading') {
+  if (result.status !== 'loaded') {
     return (
-      <Card title="Contract Operations">
-        <div className="p-4 text-gray-400">Loading contracts configuration...</div>
-      </Card>
-    );
-  }
-
-  if (result.status === 'error') {
-    return (
-      <Card title="Contract Operations">
-        <Message variant="error">
-          <strong>Error:</strong> {result.error}
-        </Message>
-      </Card>
-    );
-  }
-
-  if (result.status === 'not-deployed') {
-    return (
-      <Card title="Contract Operations">
-        <Message variant="warn" className="p-4">
-          <p className="font-medium mb-2">Contracts not deployed for network &quot;{networkId}&quot;</p>
-          <p className="text-sm text-amber-300">
-            Run the following command in <code className="bg-black/30 px-1 rounded">contracts/</code> to deploy:
-          </p>
-          <pre className="mt-2 p-2 bg-black/30 rounded text-sm font-mono">npm run deploy-all {networkId}</pre>
-        </Message>
-      </Card>
+      <ContractConfigPlaceholder
+        status={result.status}
+        networkId={networkId}
+        error={result.status === 'error' ? result.error : undefined}
+      />
     );
   }
 
   return (
     <Card title="Contract Operations">
-      <Message variant="warn" className="mb-4">
-        <strong>Note:</strong> These operations use the <strong>server&apos;s wallet</strong>, not your connected
-        wallet. The server wallet is configured via environment variables.
+      <Message variant="info" className="mb-4">
+        These operations use the <strong>server&apos;s wallet</strong>, not your connected wallet.
       </Message>
 
       <div className="space-y-6">
-        <TokenMintContractPanel networkId={networkId} config={result.config.tokenMint} />
+        <TokenMintContractPanel networkId={networkId} config={result.config.tokenMint} wallet={wallet} />
 
         <div className="border-t border-dark-700" />
 
