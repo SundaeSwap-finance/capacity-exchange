@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Button } from './Button';
+import { Input } from './Input';
 
 interface SecretInputProps {
   value: string;
@@ -7,31 +9,47 @@ interface SecretInputProps {
   disabled?: boolean;
   maxLength?: number;
   className?: string;
+  onRandom?: () => void;
 }
 
-export function SecretInput({ value, onChange, placeholder, disabled, maxLength, className = '' }: SecretInputProps) {
+export function SecretInput({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  maxLength,
+  className = '',
+  onRandom,
+}: SecretInputProps) {
   const [visible, setVisible] = useState(false);
 
   return (
     <div className="flex gap-2">
-      <input
+      <Input
         type={visible ? 'text' : 'password'}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
         maxLength={maxLength}
-        className={`flex-1 px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white placeholder-dark-500 focus:outline-none focus:border-blue-500 font-mono text-sm ${className}`}
+        className={`flex-1 font-mono ${className}`}
         autoComplete="off"
         spellCheck={false}
       />
-      <button
-        type="button"
-        onClick={() => setVisible(!visible)}
-        className="px-3 py-2 bg-dark-800 border border-dark-600 rounded text-dark-400 hover:text-white text-sm transition-colors"
-      >
+      {onRandom && (
+        <Button
+          variant="ghost"
+          onClick={onRandom}
+          disabled={disabled}
+          className="bg-dark-800 border border-dark-600"
+          title="Generate random seed"
+        >
+          🎲
+        </Button>
+      )}
+      <Button variant="ghost" onClick={() => setVisible(!visible)} className="bg-dark-800 border border-dark-600">
         {visible ? 'Hide' : 'Show'}
-      </button>
+      </Button>
     </div>
   );
 }
