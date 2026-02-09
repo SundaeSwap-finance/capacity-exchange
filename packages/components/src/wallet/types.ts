@@ -43,4 +43,5 @@ export interface CapacityExchangeConfig {
   margin?: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
+  circuitId: string;
 }

@@ -1,4 +1,4 @@
-import type { ProofProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { ProofProvider, ZKConfig } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import {
   Transaction,
@@ -19,9 +19,10 @@ export async function processTransactionWithOffer(
   tx: UnprovenTransaction,
   offer: Offer,
   proofProvider: ProofProvider<string>,
-  connectedAPI: ConnectedAPI
+  connectedAPI: ConnectedAPI,
+  zkConfig: ZKConfig<string>
 ) {
-  console.debug('[CapacityExchange] Deserializing DUST transaction from offer');
+  console.debug('[CapacityExchange] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToUint8Array(offer.serializedTx);
   const dustTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
     'signature',
@@ -32,13 +33,12 @@ export async function processTransactionWithOffer(
   console.debug('[CapacityExchange] DUST transaction deserialized');
 
   console.debug('[CapacityExchange] Proving user transaction');
-  const provenTx = (await proofProvider.proveTx(tx)).bind();
+  const provenTx = (await proofProvider.proveTx(tx, { zkConfig })).bind();
   console.debug('[CapacityExchange] User transaction proven');
 
   console.debug('[CapacityExchange] Merging transactions');
   const mergedTx = provenTx.merge(dustTx);
-  const serialized = mergedTx.serialize();
-  const serializedStr = uint8ArrayToHex(serialized);
+  const serializedStr = uint8ArrayToHex(mergedTx.serialize());
   console.debug('[CapacityExchange] Transactions merged, calling wallet to balance and seal');
 
   const result = await connectedAPI.balanceSealedTransaction(serializedStr);
@@ -52,7 +52,7 @@ export async function processTransactionWithOffer(
     resultBytes
   ).bind();
 
-  console.debug('[CapacityExchange] Transaction processing completed successfully');
+  console.debug('[CapacityExchange] Transaction processing complete');
   return {
     transaction,
     type: 'NothingToProve' as const,
