@@ -1,7 +1,7 @@
-import { deployContract, findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext } from '../../lib/app-context.js';
-import { getContractProviders } from '../../lib/providers/contract.js';
-import { createCounterContract, Counter, CounterContract } from './contract.js';
+import { buildProviders, submitCallTxDirect } from '../../lib/providers/contract.js';
+import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
 import { createLogger } from '../../lib/logger.js';
 
 const logger = createLogger(import.meta);
@@ -13,11 +13,10 @@ export interface DeployOutput {
 
 export async function deploy(ctx: AppContext): Promise<DeployOutput> {
   logger.log('Deploying counter contract...');
-  const providers = getContractProviders<CounterContract>(ctx);
-  const contract = createCounterContract();
+  const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
   const deployed = await deployContract(providers, {
-    contract,
+    compiledContract: CompiledCounterContract,
   });
 
   logger.log(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
@@ -36,17 +35,11 @@ export interface IncrementOutput {
 
 export async function increment(ctx: AppContext, contractAddress: string): Promise<IncrementOutput> {
   logger.log(`Incrementing counter at ${contractAddress}...`);
-  const providers = getContractProviders<CounterContract>(ctx);
-  const contract = createCounterContract();
+  const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
-  await findDeployedContract(providers, {
-    contract,
+  const result = await submitCallTxDirect<CounterContract, 'increment'>(providers, {
     contractAddress,
-  });
-
-  const result = await submitCallTx(providers, {
-    contract,
-    contractAddress,
+    compiledContract: CompiledCounterContract,
     circuitId: 'increment',
   });
 

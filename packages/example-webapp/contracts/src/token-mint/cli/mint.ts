@@ -14,7 +14,7 @@ function main(): Promise<MintOutput> {
 
   const [networkId, contractAddress, privateStateId, amountStr] = program.args;
   const amount = BigInt(amountStr);
-  return withAppContext(networkId, './token-mint/out', (ctx) => mint(ctx, contractAddress, privateStateId, amount));
+  return withAppContext(networkId, (ctx) => mint(ctx, contractAddress, privateStateId, amount));
 }
 
 runCli(main);

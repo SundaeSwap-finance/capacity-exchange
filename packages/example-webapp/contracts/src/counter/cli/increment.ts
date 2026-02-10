@@ -11,7 +11,7 @@ function main(): Promise<IncrementOutput> {
     .parse();
 
   const [networkId, contractAddress] = program.args;
-  return withAppContext(networkId, './counter/out', (ctx) => increment(ctx, contractAddress));
+  return withAppContext(networkId, (ctx) => increment(ctx, contractAddress));
 }
 
 runCli(main);

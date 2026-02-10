@@ -15,7 +15,7 @@ function main(): Promise<SendOutput> {
 
   const [networkId, contractAddress, tokenColor, recipientAddress, amountStr] = program.args;
   const amount = BigInt(amountStr);
-  return withAppContext(networkId, './token-mint/out', (ctx) =>
+  return withAppContext(networkId, (ctx) =>
     send(ctx, contractAddress, tokenColor, recipientAddress, amount)
   );
 }

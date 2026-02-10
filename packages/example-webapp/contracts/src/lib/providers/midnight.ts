@@ -1,4 +1,4 @@
-import { FinalizedTransaction, TransactionId } from '@midnight-ntwrk/ledger-v6';
+import { FinalizedTransaction } from '@midnight-ntwrk/ledger-v7';
 import { MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import { DEFAULT_CONFIG, PolkadotNodeClient } from '@midnight-ntwrk/wallet-sdk-node-client';
 import { Startable } from '../startable.js';
@@ -10,7 +10,7 @@ export class PolkadotMidnightProvider implements MidnightProvider {
     this.#api = api;
   }
 
-  async submitTx(tx: FinalizedTransaction): Promise<TransactionId> {
+  async submitTx(tx: FinalizedTransaction): Promise<string> {
     const serializedTx = tx.serialize();
     await this.#api.sendMidnightTransactionAndWait(serializedTx, 'Finalized');
     const id = tx.identifiers().at(-1);

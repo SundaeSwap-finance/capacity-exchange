@@ -1,4 +1,4 @@
-import { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v6';
+import { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v7';
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk-hd';
 import { createKeystore, UnshieldedKeystore } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';

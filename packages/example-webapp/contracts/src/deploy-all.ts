@@ -17,13 +17,13 @@ async function main(): Promise<ContractsConfig> {
   const [networkId] = program.args;
 
   logger.log('=== Deploying Token Mint Contract ===');
-  const tokenMintResult = await withAppContext(networkId, './token-mint/out', async (ctx) => {
+  const tokenMintResult = await withAppContext(networkId, async (ctx) => {
     return deployTokenMint(ctx);
   });
   logger.log(`Token mint deployed at ${tokenMintResult.contractAddress}`);
 
   logger.log('=== Deploying Counter Contract ===');
-  const counterResult = await withAppContext(networkId, './counter/out', async (ctx) => {
+  const counterResult = await withAppContext(networkId, async (ctx) => {
     return deployCounter(ctx);
   });
   logger.log(`Counter deployed at ${counterResult.contractAddress}`);

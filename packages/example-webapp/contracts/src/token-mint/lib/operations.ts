@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
-import { deployContract, findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext } from '../../lib/app-context.js';
-import { getContractProviders } from '../../lib/providers/contract.js';
-import { createTokenMintContract, TokenMintContract } from './contract.js';
+import { buildProviders, submitStatefulCallTxDirect } from '../../lib/providers/contract.js';
+import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor } from './token-color.js';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '../../lib/logger.js';
@@ -25,8 +25,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
   const resolvedTokenColor = tokenColor ?? generateTokenColor();
   logger.log(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
 
-  const providers = getContractProviders<TokenMintContract>(ctx);
-  const contract = createTokenMintContract();
+  const providers = buildProviders<TokenMintContract>(ctx, './token-mint/out');
   const initialNonce = crypto.randomBytes(32);
 
   const privateStateId = crypto.randomBytes(32).toString('hex');
@@ -36,7 +35,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
 
   logger.log('Calling deployContract...');
   const deployed = await deployContract(providers, {
-    contract,
+    compiledContract: CompiledTokenMintContract,
     args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce],
     privateStateId,
     initialPrivateState,
@@ -72,24 +71,15 @@ export async function mint(
 ): Promise<MintOutput> {
   logger.log(`Minting ${amount} tokens at ${contractAddress}...`);
   logger.log(`Private state ID: ${privateStateId}`);
-  const providers = getContractProviders<TokenMintContract>(ctx);
-  const contract = createTokenMintContract();
-
-  logger.log('Looking up deployed contract...');
-  await findDeployedContract(providers, {
-    contract,
-    contractAddress,
-    privateStateId,
-  });
-  logger.log('Found deployed contract');
+  const providers = buildProviders<TokenMintContract>(ctx, './token-mint/out');
 
   logger.log('Submitting mint transaction...');
-  const result = await submitCallTx(providers, {
-    contract,
+  const result = await submitStatefulCallTxDirect<TokenMintContract, 'mint_test_tokens'>(providers, {
+    compiledContract: CompiledTokenMintContract,
     contractAddress,
     circuitId: 'mint_test_tokens',
-    args: [amount],
     privateStateId,
+    args: [amount],
   });
 
   if (!result.private.result) {
@@ -168,8 +158,6 @@ export async function send(
   logger.log('Creating transfer transaction...');
   const { shieldedSecretKeys, dustSecretKey } = ctx.walletContext.keys;
   const transferRecipe = await ctx.walletContext.walletFacade.transferTransaction(
-    shieldedSecretKeys,
-    dustSecretKey,
     [
       {
         type: 'shielded',
@@ -182,11 +170,12 @@ export async function send(
         ],
       },
     ],
-    ttl
+    { shieldedSecretKeys, dustSecretKey },
+    { ttl }
   );
 
   logger.log('Finalizing transaction...');
-  const finalizedTx = await ctx.walletContext.walletFacade.finalizeTransaction(transferRecipe);
+  const finalizedTx = await ctx.walletContext.walletFacade.finalizeRecipe(transferRecipe);
   logger.log('Submitting transaction...');
   const txHash = await ctx.walletContext.walletFacade.submitTransaction(finalizedTx);
 

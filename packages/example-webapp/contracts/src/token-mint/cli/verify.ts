@@ -12,7 +12,7 @@ function main(): Promise<VerifyOutput> {
     .parse();
 
   const [networkId, contractAddress, tokenColor] = program.args;
-  return withAppContext(networkId, './token-mint/out', (ctx) => verify(ctx, contractAddress, tokenColor));
+  return withAppContext(networkId, (ctx) => verify(ctx, contractAddress, tokenColor));
 }
 
 runCli(main);

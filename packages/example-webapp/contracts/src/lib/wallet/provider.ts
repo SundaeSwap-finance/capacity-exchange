@@ -3,19 +3,17 @@ import {
   DustSecretKey,
   EncPublicKey,
   FinalizedTransaction,
-  ShieldedCoinInfo,
-  UnprovenTransaction,
   ZswapSecretKeys,
-} from '@midnight-ntwrk/ledger-v6';
-import { ProvingRecipe, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+} from '@midnight-ntwrk/ledger-v7';
+import { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 
 export class DustWalletProvider implements WalletProvider {
-  #wallet: DustWallet;
+  #wallet: WalletFacade;
   #zswapSecretKeys: ZswapSecretKeys;
   #dustSecretKey: DustSecretKey;
 
-  constructor(wallet: DustWallet, zswap: ZswapSecretKeys, dust: DustSecretKey) {
+  constructor(wallet: WalletFacade, zswap: ZswapSecretKeys, dust: DustSecretKey) {
     this.#wallet = wallet;
     this.#zswapSecretKeys = zswap;
     this.#dustSecretKey = dust;
@@ -29,14 +27,14 @@ export class DustWalletProvider implements WalletProvider {
     return this.#zswapSecretKeys.encryptionPublicKey;
   }
 
-  async balanceTx(
-    tx: UnprovenTransaction,
-    newCoins?: ShieldedCoinInfo[],
-    ttl?: Date
-  ): Promise<ProvingRecipe<UnprovenTransaction | FinalizedTransaction>> {
+  async balanceTx(tx: UnboundTransaction, ttl?: Date): Promise<FinalizedTransaction> {
     const now = new Date();
     const realTtl = ttl ?? new Date(now.getTime() + 5 * 1000 * 60);
-    const balanced = await this.#wallet.addFeePayment(this.#dustSecretKey, tx, realTtl, now);
-    return balanced;
+    const recipe = await this.#wallet.balanceUnboundTransaction(
+      tx,
+      { shieldedSecretKeys: this.#zswapSecretKeys, dustSecretKey: this.#dustSecretKey },
+      { ttl: realTtl }
+    );
+    return await this.#wallet.finalizeRecipe(recipe);
   }
 }

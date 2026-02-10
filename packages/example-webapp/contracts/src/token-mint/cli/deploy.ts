@@ -11,7 +11,7 @@ function main(): Promise<DeployOutput> {
     .parse();
 
   const [networkId, tokenColor] = program.args;
-  return withAppContext(networkId, './token-mint/out', (ctx) => deploy(ctx, tokenColor));
+  return withAppContext(networkId, (ctx) => deploy(ctx, tokenColor));
 }
 
 runCli(main);
