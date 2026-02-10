@@ -28,11 +28,13 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     walletProvider,
     connectedAPI,
     proofProvider,
+    zkConfigProvider,
     capacityExchangeUrls,
     indexerUrl,
     margin,
     promptForCurrency,
     confirmOffer,
+    circuitId,
   } = config;
 
   const exchangeApis = createExchangeApis(capacityExchangeUrls);
@@ -43,12 +45,14 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
 
     async balanceTx(tx: UnprovenTransaction, _newCoins?: ShieldedCoinInfo[], _ttl?: Date) {
       console.debug('[CapacityExchange] balanceTx called');
+      console.debug('[CapacityExchange] Tx identifiers:', tx.identifiers());
 
       // Calculate DUST required for transaction
       console.debug('[CapacityExchange] Fetching ledger parameters from:', indexerUrl);
       const ledgerParameters = await getLedgerParameters(indexerUrl);
+      console.debug('[CapacityExchange] Ledger parameters received', ledgerParameters);
       const dustRequired: bigint = tx.feesWithMargin(ledgerParameters, margin ?? DEFAULT_MARGIN);
-      console.debug('[CapacityExchange] DUST required:', dustRequired);
+      console.debug('[CapacityExchange] DUST required (with margin):', dustRequired.toString());
 
       // Fetch prices from all exchanges
       const allPrices = await fetchPricesFromExchanges(exchangeApis, dustRequired);
@@ -62,8 +66,18 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
       const result = await selectAndConfirmOffer(allPrices, dustRequired, promptForCurrency, confirmOffer);
 
       switch (result.status) {
-        case 'success':
-          return processTransactionWithOffer(tx, result.offer, proofProvider, connectedAPI);
+        case 'success': {
+          console.debug('[CapacityExchange] User confirmed offer, processing transaction');
+          console.debug('[CapacityExchange] Offer details:', {
+            offerId: result.offer.offerId,
+            amount: result.offer.offerAmount,
+            currency: result.offer.offerCurrency,
+            expiresAt: result.offer.expiresAt.toISOString(),
+          });
+          const zkConfig = await zkConfigProvider.get(circuitId);
+          console.debug('[CapacityExchange] zkConfig fetched, zkConfig.circuitId:', zkConfig.circuitId);
+          return processTransactionWithOffer(tx, result.offer, proofProvider, connectedAPI, zkConfig);
+        }
         case 'userCancelled':
           throw new CapacityExchangeUserCancelledError();
         case 'offerExpired':
