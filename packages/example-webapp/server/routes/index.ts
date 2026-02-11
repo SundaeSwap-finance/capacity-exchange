@@ -32,5 +32,10 @@ export function getScriptConfig(body: RequestBody): ScriptConfig {
         script: 'src/token-mint/cli/verify.ts',
         args: [body.networkId, body.contractAddress, body.tokenColor],
       };
+    case 'token-mint/send':
+      return {
+        script: 'src/token-mint/cli/send.ts',
+        args: [body.networkId, body.contractAddress, body.tokenColor, body.recipientAddress, String(body.amount)],
+      };
   }
 }

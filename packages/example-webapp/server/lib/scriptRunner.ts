@@ -34,7 +34,7 @@ function findJsonLine(output: string): string | null {
 
 /**
  * Parses script output into a result object.
- * - If script failed and no JSON found: returns error with stderr/stdout
+ * - If script failed and no JSON found: returns stderr as the error
  * - If JSON found: parses it as the result data
  * - If no JSON but script succeeded: returns success with no data
  */
@@ -44,7 +44,7 @@ function parseScriptResult<T>(stdout: string, stderr: string, exitCode: number):
   if (exitCode !== 0 && !jsonLine) {
     return {
       success: false,
-      error: stderr || stdout || `Script exited with code ${exitCode}`,
+      error: stderr.trim() || `Script exited with code ${exitCode}`,
       exitCode,
     };
   }
@@ -68,6 +68,9 @@ function spawnScript(config: ScriptConfig): ChildProcess {
   });
 }
 
+/** Maximum time a script can run before being killed (30 seconds) */
+const SCRIPT_TIMEOUT_MS = 120_000;
+
 /**
  * Runs a CLI script and streams its output via SSE.
  *
@@ -76,6 +79,7 @@ function spawnScript(config: ScriptConfig): ChildProcess {
  * - 'done': ScriptResult - final result when script exits
  *
  * If the client disconnects, the script is killed.
+ * Scripts are killed after SCRIPT_TIMEOUT_MS to prevent hanging processes.
  */
 export function runScript(req: IncomingMessage, res: ServerResponse, config: ScriptConfig): void {
   setupSSE(res);
@@ -83,6 +87,25 @@ export function runScript(req: IncomingMessage, res: ServerResponse, config: Scr
   const child = spawnScript(config);
   let stdout = '';
   let stderr = '';
+  let done = false;
+
+  const finish = (result: ScriptResult<unknown>) => {
+    if (done) {
+      return;
+    }
+    done = true;
+    clearTimeout(timer);
+    sendEvent(res, 'done', result);
+    res.end();
+  };
+
+  // Kill the script if it runs too long
+  const timer = setTimeout(() => {
+    if (!done) {
+      child.kill();
+      finish({ success: false, error: 'Script timed out', exitCode: -1 });
+    }
+  }, SCRIPT_TIMEOUT_MS);
 
   // Stream stdout to client and accumulate for result parsing
   child.stdout?.on('data', (data: Buffer) => {
@@ -100,19 +123,19 @@ export function runScript(req: IncomingMessage, res: ServerResponse, config: Scr
 
   // Parse result and send 'done' event when script exits
   child.on('close', (code) => {
-    const result = parseScriptResult(stdout, stderr, code ?? -1);
-    sendEvent(res, 'done', result);
-    res.end();
+    finish(parseScriptResult(stdout, stderr, code ?? -1));
   });
 
   // Handle spawn errors (e.g., script not found)
   child.on('error', (err: Error) => {
-    sendEvent(res, 'done', { success: false, error: err.message, exitCode: -1 });
-    res.end();
+    finish({ success: false, error: err.message, exitCode: -1 });
   });
 
   // Kill script if client disconnects
   req.on('close', () => {
-    child.kill();
+    if (!done) {
+      child.kill();
+      clearTimeout(timer);
+    }
   });
 }

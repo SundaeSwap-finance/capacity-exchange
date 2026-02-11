@@ -10,9 +10,7 @@ export function useExtensionAvailability(): ExtensionAvailabilityResult {
     return { status: 'unavailable' };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const w = window as any;
-  const connector = w.midnight?.mnLace;
+  const connector = (window as Window & { midnight?: { mnLace?: InitialAPI } }).midnight?.mnLace;
 
   if (!connector) {
     return { status: 'unavailable' };

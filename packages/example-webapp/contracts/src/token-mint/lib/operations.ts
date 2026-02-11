@@ -13,6 +13,7 @@ export interface DeployOutput {
   contractAddress: string;
   txHash: string;
   tokenColor: string;
+  derivedTokenColor: string;
   privateStateId: string;
 }
 
@@ -41,11 +42,15 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
     initialPrivateState,
   });
 
-  logger.log(`Token-mint deployed at ${deployed.deployTxData.public.contractAddress}`);
+  const contractAddress = deployed.deployTxData.public.contractAddress;
+  const derivedColor = deriveTokenColor(resolvedTokenColor, contractAddress);
+  logger.log(`Token-mint deployed at ${contractAddress}`);
+  logger.log(`Derived token color: ${derivedColor}`);
   return {
-    contractAddress: deployed.deployTxData.public.contractAddress,
+    contractAddress,
     txHash: deployed.deployTxData.public.txHash,
     tokenColor: resolvedTokenColor,
+    derivedTokenColor: derivedColor,
     privateStateId,
   };
 }
@@ -126,5 +131,72 @@ export async function verify(ctx: AppContext, contractAddress: string, tokenColo
     tokenColor,
     derivedTokenColor,
     balance: balance.toString(),
+  };
+}
+
+export interface SendOutput {
+  txHash: string;
+  contractAddress: string;
+  tokenColor: string;
+  derivedTokenColor: string;
+  amount: string;
+  recipientAddress: string;
+}
+
+export async function send(
+  ctx: AppContext,
+  contractAddress: string,
+  tokenColor: string,
+  recipientAddress: string,
+  amount: bigint
+): Promise<SendOutput> {
+  const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
+  logger.log(`Sending ${amount} tokens (color: ${derivedTokenColor.slice(0, 8)}...) to ${recipientAddress}...`);
+
+  logger.log('Syncing shielded wallet...');
+  const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
+  const balance = shieldedState.balances[derivedTokenColor] || 0n;
+  logger.log(`Current balance: ${balance}`);
+
+  if (balance < amount) {
+    throw new Error(`Insufficient balance: have ${balance}, need ${amount}`);
+  }
+
+  // Create a TTL 5 minutes from now
+  const ttl = new Date(Date.now() + 5 * 60 * 1000);
+
+  logger.log('Creating transfer transaction...');
+  const { shieldedSecretKeys, dustSecretKey } = ctx.walletContext.keys;
+  const transferRecipe = await ctx.walletContext.walletFacade.transferTransaction(
+    shieldedSecretKeys,
+    dustSecretKey,
+    [
+      {
+        type: 'shielded',
+        outputs: [
+          {
+            type: derivedTokenColor,
+            receiverAddress: recipientAddress,
+            amount,
+          },
+        ],
+      },
+    ],
+    ttl
+  );
+
+  logger.log('Finalizing transaction...');
+  const finalizedTx = await ctx.walletContext.walletFacade.finalizeTransaction(transferRecipe);
+  logger.log('Submitting transaction...');
+  const txHash = await ctx.walletContext.walletFacade.submitTransaction(finalizedTx);
+
+  logger.log(`Transfer complete, tx hash: ${txHash}`);
+  return {
+    txHash,
+    contractAddress,
+    tokenColor,
+    derivedTokenColor,
+    amount: amount.toString(),
+    recipientAddress,
   };
 }

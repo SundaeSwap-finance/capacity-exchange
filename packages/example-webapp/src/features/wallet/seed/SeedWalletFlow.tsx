@@ -1,7 +1,6 @@
 import React from 'react';
-import { useSeedWallet } from './useSeedWallet';
 import type { SeedWalletState, SeedWalletStatus } from './types';
-import { Card, LoadingSpinner, Message } from '../../../shared/ui';
+import { Button, Card, LoadingSpinner, Message } from '../../../shared/ui';
 import { SeedInput } from './SeedInput';
 import { SeedWalletStatusBadge } from './SeedWalletStatusBadge';
 import { ConnectedWalletInfo } from '../extension/ConnectedWalletInfo';
@@ -18,12 +17,9 @@ function SeedWalletActions({ status, onDisconnect }: SeedWalletActionsProps) {
   }
 
   return (
-    <button
-      onClick={onDisconnect}
-      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-    >
+    <Button variant="red" onClick={onDisconnect}>
       Disconnect
-    </button>
+    </Button>
   );
 }
 
@@ -61,17 +57,16 @@ function SeedWalletConnection({ wallet }: SeedWalletConnectionProps) {
 
 interface SeedWalletFlowProps {
   config: Config;
+  wallet: SeedWalletState;
   onBack: () => void;
 }
 
-export function SeedWalletFlow({ config, onBack }: SeedWalletFlowProps) {
-  const wallet = useSeedWallet(config);
-
+export function SeedWalletFlow({ wallet, onBack }: SeedWalletFlowProps) {
   return (
     <div className="space-y-4">
-      <button onClick={onBack} className="text-dark-400 hover:text-white text-sm transition-colors">
+      <Button variant="ghost" size="sm" onClick={onBack}>
         &larr; Back to wallet selection
-      </button>
+      </Button>
 
       <SeedWalletConnection wallet={wallet} />
     </div>

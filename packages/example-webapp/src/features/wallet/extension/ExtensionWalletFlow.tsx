@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card, Message } from '../../../shared/ui';
-import { useExtensionWallet } from './useExtensionWallet';
+import { Button, Card, Message } from '../../../shared/ui';
 import type { ExtensionWalletState } from './useExtensionWallet';
 import { ExtensionWalletActions } from './ExtensionWalletActions';
 import { ExtensionWalletStatusBadge } from './ExtensionWalletStatusBadge';
@@ -34,18 +33,16 @@ function ExtensionWalletConnection({ wallet }: ExtensionWalletConnectionProps) {
 }
 
 interface ExtensionWalletFlowProps {
-  networkId: string;
+  wallet: ExtensionWalletState;
   onBack: () => void;
 }
 
-export function ExtensionWalletFlow({ networkId, onBack }: ExtensionWalletFlowProps) {
-  const wallet = useExtensionWallet(networkId);
-
+export function ExtensionWalletFlow({ wallet, onBack }: ExtensionWalletFlowProps) {
   return (
     <div className="space-y-4">
-      <button onClick={onBack} className="text-dark-400 hover:text-white text-sm transition-colors">
+      <Button variant="ghost" size="sm" onClick={onBack}>
         &larr; Back to wallet selection
-      </button>
+      </Button>
 
       {wallet.status === 'unavailable' ? (
         <Card title="Wallet Connection">

@@ -9,6 +9,11 @@ export interface StreamCallbacks {
 }
 
 // Counter contract types
+export interface CounterDeployResult {
+  contractAddress: string;
+  txHash: string;
+}
+
 export interface CounterIncrementResult {
   txHash: string;
   contractAddress: string;
@@ -22,6 +27,14 @@ export interface CounterQueryResult {
 }
 
 // Token mint contract types
+export interface TokenMintDeployResult {
+  contractAddress: string;
+  txHash: string;
+  tokenColor: string;
+  derivedTokenColor: string;
+  privateStateId: string;
+}
+
 export interface TokenMintMintResult {
   txHash: string;
   contractAddress: string;
@@ -37,4 +50,13 @@ export interface TokenMintVerifyResult {
   tokenColor: string;
   derivedTokenColor: string;
   balance: string;
+}
+
+export interface TokenMintSendResult {
+  txHash: string;
+  contractAddress: string;
+  tokenColor: string;
+  derivedTokenColor: string;
+  amount: string;
+  recipientAddress: string;
 }

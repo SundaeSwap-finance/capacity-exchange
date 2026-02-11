@@ -1,68 +1,57 @@
-import { useState, useCallback } from 'react';
-import { tokenMintApi, type TokenMintVerifyResult } from '../api';
-import { useContractOperation } from '../hooks/useContractOperation';
-import { Button } from '../../../shared/ui';
+import { Button, Message } from '../../../shared/ui';
 import type { TokenMintConfig } from '../hooks/useContractsConfig';
+import type { WalletCapabilities } from '../../wallet/types';
 import { ContractPanel } from './ContractPanelUI';
+import { useTokenMintOperations } from './useTokenMintOperations';
+import { TokenMintModifyRow } from './TokenMintModifyRow';
 
 interface TokenMintContractPanelProps {
   networkId: string;
   config: TokenMintConfig;
+  wallet: WalletCapabilities | null;
 }
 
-export function TokenMintContractPanel({ networkId, config }: TokenMintContractPanelProps) {
-  const [verifyResult, setVerifyResult] = useState<TokenMintVerifyResult | null>(null);
-  const [mintAmount, setMintAmount] = useState(1000);
-  const [state, { runOperation }] = useContractOperation();
-
-  const handleMint = useCallback(async () => {
-    if (mintAmount <= 0) {
-      return;
-    }
-
-    await runOperation(
-      'Minting',
-      (callbacks) => tokenMintApi.mint(networkId, config.contractAddress, config.privateStateId, mintAmount, callbacks),
-      () => {}
-    );
-  }, [networkId, config, mintAmount, runOperation]);
-
-  const handleVerify = useCallback(async () => {
-    await runOperation(
-      'Verifying',
-      (callbacks) => tokenMintApi.verify(networkId, config.contractAddress, config.tokenColor, callbacks),
-      setVerifyResult
-    );
-  }, [networkId, config, runOperation]);
+export function TokenMintContractPanel({ networkId, config, wallet }: TokenMintContractPanelProps) {
+  const ops = useTokenMintOperations(networkId, config, wallet);
+  const canSend = wallet !== null && ops.sendAmount > 0;
 
   return (
     <ContractPanel
       title="Token Mint Contract"
-      isRunning={state.isRunning}
-      currentOperation={state.currentOperation}
-      error={state.error}
-      logs={state.logs}
+      isRunning={ops.state.isRunning}
+      currentOperation={ops.state.currentOperation}
+      error={ops.state.error}
+      logs={ops.state.logs}
       fields={[
         { label: 'Contract Address', value: config.contractAddress },
-        { label: 'Token Color', value: config.tokenColor },
+        { label: 'Token Color', value: config.derivedTokenColor },
       ]}
-      result={verifyResult ? { label: 'Server Wallet Balance', value: verifyResult.balance } : null}
-      actions={
+      result={ops.verifyResult ? { label: 'Server Wallet Balance', value: ops.verifyResult.balance } : null}
+      queryRow={
+        <Button onClick={ops.handleVerify} disabled={ops.state.isRunning} variant="purple" size="sm">
+          Get Balance
+        </Button>
+      }
+      modifyRow={
+        <TokenMintModifyRow
+          mintAmount={ops.mintAmount}
+          onMintAmountChange={ops.setMintAmount}
+          onMint={ops.handleMint}
+          sendAmount={ops.sendAmount}
+          onSendAmountChange={ops.setSendAmount}
+          onSend={ops.handleSend}
+          isRunning={ops.state.isRunning}
+          canSend={canSend}
+        />
+      }
+      messages={
         <>
-          <input
-            type="number"
-            value={mintAmount}
-            onChange={(e) => setMintAmount(Math.max(1, parseInt(e.target.value) || 1))}
-            min={1}
-            disabled={state.isRunning}
-            className="w-24 px-2 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm disabled:opacity-50"
-          />
-          <Button onClick={handleMint} disabled={state.isRunning || mintAmount <= 0} variant="blue">
-            Mint
-          </Button>
-          <Button onClick={handleVerify} disabled={state.isRunning} variant="purple">
-            Verify Balance
-          </Button>
+          {!wallet && <Message variant="warn">Connect a wallet to send tokens.</Message>}
+          {ops.sendResult && (
+            <Message variant="success">
+              Sent {ops.sendResult.amount} tokens (tx: {ops.sendResult.txHash.slice(0, 8)}...)
+            </Message>
+          )}
         </>
       }
     />

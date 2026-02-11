@@ -1,5 +1,5 @@
 import React from 'react';
-import { BalanceBox } from './BalanceBox';
+import { LabelValue } from '../../../shared/ui';
 import { formatDust, formatNight } from '../../../utils/format';
 
 interface BalanceGridProps {
@@ -15,8 +15,12 @@ export function BalanceGrid({ dustBalance, nightBalances }: BalanceGridProps) {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <BalanceBox label="DUST" value={formatDust(dustBalance)} />
-      <BalanceBox label="NIGHT" value={nightDisplay} />
+      <div className="bg-dark-800 px-3 py-2 rounded">
+        <LabelValue label="DUST">{formatDust(dustBalance)}</LabelValue>
+      </div>
+      <div className="bg-dark-800 px-3 py-2 rounded">
+        <LabelValue label="NIGHT">{nightDisplay}</LabelValue>
+      </div>
     </div>
   );
 }
