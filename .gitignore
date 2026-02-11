@@ -1,5 +1,7 @@
 *.log
 *.tsbuildinfo
+*.bak
+.env
 .npmrc
 .vscode
 dist

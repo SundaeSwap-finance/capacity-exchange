@@ -1,10 +1,10 @@
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { MidnightProvider, PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
-import { MidnightConfig } from './config/env.js';
-import { MidnightProviderStarter } from './providers/midnight.js';
+import type { AppConfig } from './config/types.js';
+import { checkWebSocket, checkIndexerFreshness, checkProofServer } from './connectivity.js';
+import { createMidnightProvider } from './providers/midnight.js';
 import { createPrivateStateProvider } from './providers/private-state.js';
-import { Startable } from './startable.js';
-import { WalletContext, WalletContextStarter } from './wallet/context.js';
+import { WalletContext, createWalletContext } from './wallet/context.js';
 
 export interface AppContext {
   privateStateProvider: PrivateStateProvider;
@@ -14,35 +14,25 @@ export interface AppContext {
   proofServerUrl: string;
 }
 
-export class AppSetup implements Startable<AppContext> {
-  #privateStateProvider: PrivateStateProvider;
-  #publicDataProvider: PublicDataProvider;
-  #midnightProvider: MidnightProviderStarter;
-  #walletContext: WalletContextStarter;
-  #proofServerUrl: string;
+export async function createAppContext(config: AppConfig): Promise<AppContext> {
+  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config;
 
-  constructor(seed: Buffer, config: MidnightConfig) {
-    const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config;
+  await Promise.all([
+    checkWebSocket(nodeUrl),
+    checkProofServer(proofServerUrl),
+    checkIndexerFreshness(indexerHttpUrl),
+  ]);
 
-    this.#privateStateProvider = createPrivateStateProvider();
-    this.#publicDataProvider = indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl);
-    this.#midnightProvider = new MidnightProviderStarter(nodeUrl);
-    this.#walletContext = new WalletContextStarter(config, seed.toString('hex'));
-    this.#proofServerUrl = proofServerUrl;
-  }
+  const [midnightProvider, walletContext] = await Promise.all([
+    createMidnightProvider(nodeUrl),
+    createWalletContext(config),
+  ]);
 
-  async start(): Promise<AppContext> {
-    const [midnightProvider, walletContext] = await Promise.all([
-      this.#midnightProvider.start(),
-      this.#walletContext.start(),
-    ]);
-
-    return {
-      privateStateProvider: this.#privateStateProvider,
-      publicDataProvider: this.#publicDataProvider,
-      midnightProvider,
-      walletContext,
-      proofServerUrl: this.#proofServerUrl,
-    };
-  }
+  return {
+    privateStateProvider: createPrivateStateProvider(),
+    publicDataProvider: indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl),
+    midnightProvider,
+    walletContext,
+    proofServerUrl,
+  };
 }

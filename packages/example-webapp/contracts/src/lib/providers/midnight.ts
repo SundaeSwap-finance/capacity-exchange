@@ -1,9 +1,11 @@
 import { FinalizedTransaction } from '@midnight-ntwrk/ledger-v7';
 import { MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import { DEFAULT_CONFIG, PolkadotNodeClient } from '@midnight-ntwrk/wallet-sdk-node-client';
-import { Startable } from '../startable.js';
+import { createLogger } from '../logger.js';
 
-export class PolkadotMidnightProvider implements MidnightProvider {
+const logger = createLogger(import.meta);
+
+class PolkadotMidnightProvider implements MidnightProvider {
   #api: PolkadotNodeClient;
 
   constructor(api: PolkadotNodeClient) {
@@ -12,6 +14,8 @@ export class PolkadotMidnightProvider implements MidnightProvider {
 
   async submitTx(tx: FinalizedTransaction): Promise<string> {
     const serializedTx = tx.serialize();
+    logger.log(`Submitting tx (${serializedTx.byteLength} bytes)...`);
+
     await this.#api.sendMidnightTransactionAndWait(serializedTx, 'Finalized');
     const id = tx.identifiers().at(-1);
     if (!id) {
@@ -21,18 +25,10 @@ export class PolkadotMidnightProvider implements MidnightProvider {
   }
 }
 
-export class MidnightProviderStarter implements Startable<PolkadotMidnightProvider> {
-  #url: string;
-
-  constructor(url: string) {
-    this.#url = url;
-  }
-
-  async start(): Promise<PolkadotMidnightProvider> {
-    const api = await PolkadotNodeClient.init({
-      nodeURL: new URL(this.#url),
-      ...DEFAULT_CONFIG,
-    });
-    return new PolkadotMidnightProvider(api);
-  }
+export async function createMidnightProvider(nodeUrl: string): Promise<MidnightProvider> {
+  const api = await PolkadotNodeClient.init({
+    nodeURL: new URL(nodeUrl),
+    ...DEFAULT_CONFIG,
+  });
+  return new PolkadotMidnightProvider(api);
 }

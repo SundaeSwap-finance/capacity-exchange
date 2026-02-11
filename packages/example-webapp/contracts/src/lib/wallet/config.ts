@@ -1,5 +1,6 @@
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { NetworkConfig, COST_PARAMS } from '../config/env.js';
+import type { AppConfig } from '../config/types.js';
+import { COST_PARAMS } from '../config/params.js';
 
 export interface WalletConfiguration {
   networkId: NetworkId.NetworkId;
@@ -13,7 +14,7 @@ export interface WalletConfiguration {
   indexerUrl: string;
 }
 
-export function createWalletConfiguration(config: NetworkConfig): WalletConfiguration {
+export function createWalletConfiguration(config: AppConfig): WalletConfiguration {
   return {
     networkId: config.networkId,
     costParameters: COST_PARAMS,

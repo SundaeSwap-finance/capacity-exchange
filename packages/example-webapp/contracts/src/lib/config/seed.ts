@@ -1,10 +1,15 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as bip39 from '@scure/bip39';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
-export function readSeedHex(seedFile: string): string {
-  return fs.readFileSync(path.resolve(process.cwd(), seedFile), 'utf-8').trim();
+export function parseSeedHex(hex: string): Buffer {
+  return Buffer.from(hex.trim(), 'hex');
 }
 
-export function readSeed(seedFile: string): Buffer {
-  return Buffer.from(readSeedHex(seedFile), 'hex');
+export function parseMnemonic(mnemonic: string): Buffer {
+  const words = mnemonic.trim().split(/\s+/).join(' ');
+  if (!bip39.validateMnemonic(words, wordlist)) {
+    throw new Error('Invalid mnemonic phrase');
+  }
+  const seed = bip39.mnemonicToSeedSync(words);
+  return Buffer.from(seed);
 }

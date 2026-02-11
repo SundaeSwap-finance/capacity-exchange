@@ -9,9 +9,8 @@ import {
   type UnshieldedKeystore,
 } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { NetworkConfig } from '../config/env.js';
-import { DUST_PARAMS } from '../config/env.js';
-import type { Startable } from '../startable.js';
+import type { AppConfig } from '../config/types.js';
+import { DUST_PARAMS } from '../config/params.js';
 import { DustWalletProvider } from './provider.js';
 import { type WalletKeys, deriveWalletKeys } from './keys.js';
 import { type WalletConfiguration, createWalletConfiguration } from './config.js';
@@ -83,46 +82,38 @@ async function saveWalletStates(facade: WalletFacade, suffix: string): Promise<v
   }
 }
 
-export class WalletContextStarter implements Startable<WalletContext> {
-  #keys: WalletKeys;
-  #walletConfig: WalletConfiguration;
-  #suffix: string;
+export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
+  const seedHex = config.seed.toString('hex');
+  const keys = deriveWalletKeys(seedHex, config.networkId);
+  const walletConfig = createWalletConfiguration(config);
+  const suffix = createHash('sha256')
+    .update(config.networkId + seedHex)
+    .digest('hex')
+    .slice(0, 12);
 
-  constructor(config: NetworkConfig, seedHex: string) {
-    this.#keys = deriveWalletKeys(seedHex, config.networkId);
-    this.#walletConfig = createWalletConfiguration(config);
-    this.#suffix = createHash('sha256').update(config.networkId + seedHex).digest('hex').slice(0, 12);
-  }
+  logger.log('Creating wallets...');
+  const shieldedWallet = createShieldedWallet(walletConfig, keys.shieldedSecretKeys, suffix);
+  const dustWallet = createDustWallet(walletConfig, keys.dustSecretKey, suffix);
+  const unshieldedWallet = createUnshieldedWallet(walletConfig, keys.unshieldedKeystore);
 
-  async start(): Promise<WalletContext> {
-    logger.log('Creating wallets...');
-    const shieldedWallet = createShieldedWallet(this.#walletConfig, this.#keys.shieldedSecretKeys, this.#suffix);
-    const dustWallet = createDustWallet(this.#walletConfig, this.#keys.dustSecretKey, this.#suffix);
-    const unshieldedWallet = createUnshieldedWallet(this.#walletConfig, this.#keys.unshieldedKeystore);
+  const walletFacade = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
+  const walletProvider = new DustWalletProvider(walletFacade, keys.shieldedSecretKeys, keys.dustSecretKey);
 
-    const walletFacade = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
-    const walletProvider = new DustWalletProvider(
-      walletFacade,
-      this.#keys.shieldedSecretKeys,
-      this.#keys.dustSecretKey
-    );
+  logger.log('Starting wallet facade...');
+  await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
 
-    logger.log('Starting wallet facade...');
-    await walletFacade.start(this.#keys.shieldedSecretKeys, this.#keys.dustSecretKey);
+  logger.log('Syncing wallets...');
+  const SYNC_TIMEOUT_MS = 120_000;
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new WalletSyncTimeoutError(SYNC_TIMEOUT_MS)), SYNC_TIMEOUT_MS)
+  );
+  await Promise.race([
+    Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]),
+    timeout,
+  ]);
+  logger.log('Wallets synced');
 
-    logger.log('Syncing wallets...');
-    const SYNC_TIMEOUT_MS = 120_000;
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new WalletSyncTimeoutError(SYNC_TIMEOUT_MS)), SYNC_TIMEOUT_MS)
-    );
-    await Promise.race([
-      Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]),
-      timeout,
-    ]);
-    logger.log('Wallets synced');
+  await saveWalletStates(walletFacade, suffix);
 
-    await saveWalletStates(walletFacade, this.#suffix);
-
-    return { walletFacade, walletProvider, keys: this.#keys };
-  }
+  return { walletFacade, walletProvider, keys };
 }
