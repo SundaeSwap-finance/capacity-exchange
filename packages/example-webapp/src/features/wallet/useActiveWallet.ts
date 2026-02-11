@@ -3,7 +3,7 @@ import type { WalletCapabilities } from './types';
 import type { SeedWalletState } from './seed/types';
 import type { ExtensionWalletState } from './extension/useExtensionWallet';
 import type { WalletMode } from './WalletModeSelector';
-import type { WalletConnection } from '../interactions/CounterIncrementInteraction';
+import type { WalletConnection } from './types';
 
 interface ActiveWallet {
   wallet: WalletCapabilities | null;
