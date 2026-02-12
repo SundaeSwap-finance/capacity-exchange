@@ -1,7 +1,7 @@
 const NIGHT_DECIMALS = 1_000_000n;
 
-// TODO: verify correct decimal count for DUST token
-const DUST_DECIMALS = 9;
+// https://github.com/midnightntwrk/midnight-ledger/blob/main/spec/dust.md#initial-dust-parameters
+const DUST_DECIMALS = 15;
 
 export function formatDust(amount: bigint): string {
   const str = amount.toString().padStart(DUST_DECIMALS + 1, '0');
