@@ -10,6 +10,7 @@ export type CESReadiness =
 
 const POLL_INTERVAL = 1_000;
 
+// TODO: Use this for a list of CE services, to prove it works against multiple
 export function useCESReadiness(tokenColor: string | null): CESReadiness {
   const api = useApiClient();
   const [state, setState] = useState<CESReadiness>({ status: 'loading' });
