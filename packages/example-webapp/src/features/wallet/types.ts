@@ -1,3 +1,7 @@
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v6';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+
 export interface BalanceData {
   dustBalance: bigint;
   nightBalances: Record<string, bigint>;
@@ -36,3 +40,17 @@ export type WalletInfoState =
   | { status: 'loading' }
   | { status: 'error'; error: string; retry: () => void }
   | { status: 'ready'; data: WalletData };
+
+export interface SeedWalletConnection {
+  type: 'seed';
+  walletFacade: WalletFacade;
+  shieldedSecretKeys: ZswapSecretKeys;
+  dustSecretKey: DustSecretKey;
+}
+
+export interface ExtensionWalletConnection {
+  type: 'extension';
+  connectedAPI: ConnectedAPI;
+}
+
+export type WalletConnection = SeedWalletConnection | ExtensionWalletConnection;
