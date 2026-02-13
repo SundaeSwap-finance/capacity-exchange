@@ -28,11 +28,6 @@ export type PromptForCurrency = (prices: ExchangePrice[], dustRequired: bigint) 
 
 export type ConfirmOffer = (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 
-export type SelectAndConfirmOfferResult =
-  | { status: 'success'; offer: Offer }
-  | { status: 'userCancelled' }
-  | { status: 'offerExpired'; offer: Offer };
-
 export interface CapacityExchangeConfig {
   walletProvider: WalletProvider;
   connectedAPI: ConnectedAPI;
@@ -40,7 +35,7 @@ export interface CapacityExchangeConfig {
   zkConfigProvider: ZKConfigProvider<string>;
   indexerUrl: string;
   capacityExchangeUrls: string[];
-  margin?: number;
+  margin: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
   circuitId: string;

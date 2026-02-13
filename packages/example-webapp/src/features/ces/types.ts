@@ -5,7 +5,7 @@ import type {
   OfferConfirmationResult,
 } from '@capacity-exchange/components';
 
-export type CESFlowStatus =
+export type CesFlowStatus =
   | 'idle'
   | 'building'
   | 'selecting-currency'
@@ -17,16 +17,16 @@ export type CESFlowStatus =
 
 export interface CurrencySelectionState {
   prices: ExchangePrice[];
-  dustRequired: bigint;
+  specksRequired: bigint;
 }
 
 export interface OfferConfirmationState {
   offer: Offer;
-  dustRequired: bigint;
+  specksRequired: bigint;
 }
 
-export interface CESTransactionState {
-  status: CESFlowStatus;
+export interface CesTransactionState {
+  status: CesFlowStatus;
   error: string | null;
   currencySelection: CurrencySelectionState | null;
   offerConfirmation: OfferConfirmationState | null;

@@ -97,5 +97,7 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
     capacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
     confirmOffer: ctx.confirmOffer,
+    margin: 3,
+    circuitId: 'increment',
   };
 }

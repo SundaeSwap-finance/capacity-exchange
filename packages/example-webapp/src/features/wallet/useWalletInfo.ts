@@ -7,12 +7,15 @@ interface Addresses {
   dustAddress: string;
 }
 
-export function useWalletInfo(wallet: WalletCapabilities): WalletInfoState {
+export function useWalletInfo(wallet: WalletCapabilities | null): WalletInfoState {
   const [addresses, setAddresses] = useState<Addresses | null>(null);
   const [balances, setBalances] = useState<BalanceData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const retry = useCallback(async () => {
+    if (!wallet) {
+      return;
+    }
     setError(null);
 
     try {
@@ -39,6 +42,9 @@ export function useWalletInfo(wallet: WalletCapabilities): WalletInfoState {
 
   // Subscribe to balance updates
   useEffect(() => {
+    if (!wallet) {
+      return;
+    }
     return wallet.subscribeToBalances((update) => {
       if (update.status === 'success') {
         setBalances(update.data);
@@ -48,6 +54,10 @@ export function useWalletInfo(wallet: WalletCapabilities): WalletInfoState {
       }
     });
   }, [wallet]);
+
+  if (!wallet) {
+    return { status: 'loading' };
+  }
 
   if (error) {
     return { status: 'error', error, retry };

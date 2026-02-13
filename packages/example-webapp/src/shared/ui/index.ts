@@ -1,5 +1,6 @@
 export { Button } from './Button';
 export { Card } from './Card';
+export { Copyable } from './Copyable';
 export { CharacterCounter } from './CharacterCounter';
 export { Collapsible } from './Collapsible';
 export { Input } from './Input';
