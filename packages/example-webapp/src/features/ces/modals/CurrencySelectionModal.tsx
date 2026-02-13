@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Modal } from '../../../shared/ui';
+import { formatDust } from '../../../utils/format';
 import type { ExchangePrice, CurrencySelectionResult } from '../types';
 
 function CurrencyOption({ exchangePrice, onSelect }: { exchangePrice: ExchangePrice; onSelect: () => void }) {
@@ -26,8 +27,8 @@ export function CurrencySelectionModal({ prices, specksRequired, onSelect }: Cur
   return (
     <Modal title="Select Payment Currency">
       <p className="text-sm text-dark-400 mb-4">
-        This transaction requires <span className="text-white font-mono">{specksRequired.toLocaleString()}</span>{' '}
-        specks. Select a currency to acquire capacity:
+        This transaction requires <span className="text-white font-mono">{formatDust(specksRequired)}</span> DUST.
+        Select a currency to acquire capacity:
       </p>
       <div className="space-y-2 mb-6">
         {prices.map((exchangePrice, index) => (

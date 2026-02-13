@@ -1,5 +1,6 @@
 import React from 'react';
 import { LabelValue } from '../../../shared/ui';
+import { formatDust } from '../../../utils/format';
 import type { Offer } from '../types';
 
 export function BoxedLabelValue({ label, children }: { label: string; children: React.ReactNode }) {
@@ -18,7 +19,7 @@ export interface OfferSummaryProps {
 export function OfferSummary({ offer, specksRequired }: OfferSummaryProps) {
   return (
     <>
-      <BoxedLabelValue label="specks required">{specksRequired.toLocaleString()}</BoxedLabelValue>
+      <BoxedLabelValue label="DUST required">{formatDust(specksRequired)}</BoxedLabelValue>
       <BoxedLabelValue label="Payment Amount">
         <div className="text-lg">{offer.offerAmount}</div>
         <div className="text-dark-400 text-xs mt-1">{offer.offerCurrency}</div>
