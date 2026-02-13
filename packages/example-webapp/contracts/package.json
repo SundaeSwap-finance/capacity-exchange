@@ -13,7 +13,7 @@
     "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
     "compile": "npm run compile:counter && npm run compile:token-mint",
     "build": "tsc --noEmit",
-    "wallet:balances": "tsx src/wallet/cli/balances.ts",
+    "balances": "tsx src/wallet/cli/balances.ts",
     "counter:e2e": "tsx src/counter/cli/e2e.ts",
     "counter:deploy": "tsx src/counter/cli/deploy.ts",
     "counter:increment": "tsx src/counter/cli/increment.ts",
@@ -33,6 +33,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@capacity-exchange/core": "1.0.0",
     "@midnight-ntwrk/compact-js": "2.4.0",
     "@midnight-ntwrk/compact-runtime": "^0.14.0",
     "@midnight-ntwrk/ledger-v7": "7.0.0",
@@ -66,9 +67,5 @@
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
-  },
-  "overrides": {
-    "whatwg-url": "14.1.1",
-    "tr46": "5.1.1"
   }
 }

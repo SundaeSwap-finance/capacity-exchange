@@ -1,63 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { parse as parseDotenv } from 'dotenv';
-import { parseMnemonic, parseSeedHex } from './seed.js';
-import type { AppConfig } from './types.js';
+import { NETWORK_ENDPOINTS, toNetworkIdEnum, parseMnemonic, parseSeedHex, type NetworkEndpoints } from '@capacity-exchange/core';
+import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
-interface NetworkDefaults {
-  nodeUrl: string;
-  proofServerUrl: string;
-  indexerHttpUrl: string;
-  indexerWsUrl: string;
-}
-
-const NETWORK_DEFAULTS: Record<string, NetworkDefaults> = {
-  undeployed: {
-    nodeUrl: 'ws://localhost:9944',
-    proofServerUrl: 'http://127.0.0.1:6300',
-    indexerHttpUrl: 'http://localhost:8088/api/v3/graphql',
-    indexerWsUrl: 'ws://localhost:8088/api/v3/graphql/ws',
-  },
-  preview: {
-    nodeUrl: 'wss://rpc.preview.midnight.network/ws',
-    proofServerUrl: 'http://127.0.0.1:6300',
-    indexerHttpUrl: 'https://indexer.preview.midnight.network/api/v3/graphql',
-    indexerWsUrl: 'wss://indexer.preview.midnight.network/api/v3/graphql/ws',
-  },
-  preprod: {
-    nodeUrl: 'wss://rpc.preprod.midnight.network/ws',
-    proofServerUrl: 'http://127.0.0.1:6300',
-    indexerHttpUrl: 'https://indexer.preprod.midnight.network/api/v3/graphql',
-    indexerWsUrl: 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
-  },
-  testnet: {
-    nodeUrl: 'wss://rpc.testnet.midnight.network/ws',
-    proofServerUrl: 'http://127.0.0.1:6300',
-    indexerHttpUrl: 'https://indexer.testnet.midnight.network/api/v3/graphql',
-    indexerWsUrl: 'wss://indexer.testnet.midnight.network/api/v3/graphql/ws',
-  },
-  mainnet: {
-    nodeUrl: 'wss://rpc.mainnet.midnight.network/ws',
-    proofServerUrl: 'http://127.0.0.1:6300',
-    indexerHttpUrl: 'https://indexer.mainnet.midnight.network/api/v3/graphql',
-    indexerWsUrl: 'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
-  },
-};
-
-function toNetworkIdEnum(networkId: string): NetworkId.NetworkId {
-  const mapping: Record<string, NetworkId.NetworkId> = {
-    undeployed: NetworkId.NetworkId.Undeployed,
-    preview: NetworkId.NetworkId.Preview,
-    preprod: NetworkId.NetworkId.PreProd,
-    testnet: NetworkId.NetworkId.TestNet,
-    mainnet: NetworkId.NetworkId.MainNet,
-  };
-  const enumValue = mapping[networkId];
-  if (!enumValue) {
-    throw new Error(`Unknown network ID: ${networkId}. Known networks: ${Object.keys(mapping).join(', ')}`);
-  }
-  return enumValue;
+export interface AppConfig extends NetworkEndpoints {
+  networkId: NetworkId.NetworkId;
+  seed: Uint8Array;
 }
 
 function findPackageRoot(from: string): string {
@@ -83,7 +32,7 @@ function loadDotEnv(): Record<string, string> {
   return parseDotenv(content);
 }
 
-function resolveWalletSeed(dotEnv: Record<string, string>, networkId: string): Buffer {
+function resolveWalletSeed(dotEnv: Record<string, string>, networkId: string): Uint8Array {
   const prefix = networkId.toUpperCase();
   const seedHex = dotEnv[`${prefix}_SEED_HEX`];
   const mnemonic = dotEnv[`${prefix}_MNEMONIC`];
@@ -101,9 +50,9 @@ function resolveWalletSeed(dotEnv: Record<string, string>, networkId: string): B
 }
 
 export function getAppConfigById(networkId: string): AppConfig {
-  const defaults = NETWORK_DEFAULTS[networkId];
+  const defaults = NETWORK_ENDPOINTS[networkId];
   if (!defaults) {
-    throw new Error(`Unknown network ID: ${networkId}. Known networks: ${Object.keys(NETWORK_DEFAULTS).join(', ')}`);
+    throw new Error(`Unknown network ID: ${networkId}. Known networks: ${Object.keys(NETWORK_ENDPOINTS).join(', ')}`);
   }
 
   const dotEnv = loadDotEnv();

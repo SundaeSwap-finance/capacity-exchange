@@ -1,8 +1,15 @@
 import { program } from 'commander';
 import { runCli, withAppContext } from '../../lib/cli.js';
 import { createLogger } from '../../lib/logger.js';
-import { bigintBalances } from '../lib/format.js';
 import { registerForDust } from '../lib/dust-registration.js';
+
+function bigintBalances(record: Record<string, bigint>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [type, amount] of Object.entries(record)) {
+    out[type] = amount.toString();
+  }
+  return out;
+}
 
 const logger = createLogger(import.meta);
 
@@ -15,7 +22,7 @@ interface BalancesOutput {
 
 function main(): Promise<BalancesOutput> {
   program
-    .name('wallet:balances')
+    .name('balances')
     .description('Syncs the wallet and prints all balances. Use --register-dust to register for dust generation.')
     .argument('<networkId>', 'Network ID (e.g., undeployed, preview, preprod)')
     .option('--register-dust', 'Register unshielded NIGHT UTXOs for dust generation')
