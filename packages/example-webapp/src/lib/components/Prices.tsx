@@ -10,12 +10,12 @@ interface PricesRenderProps {
 
 interface PricesProps {
   children: (props: PricesRenderProps) => React.ReactNode;
-  dust: string;
+  specks: string;
 }
 
-const Prices: React.FC<PricesProps> = ({ children, dust }) => {
+const Prices: React.FC<PricesProps> = ({ children, specks }) => {
   const api = useApiClient();
-  const { data: prices, error } = useApi(() => api.apiPricesGet({ dust }), [dust], {
+  const { data: prices, error } = useApi(() => api.apiPricesGet({ specks }), [specks], {
     pollInterval: 5000,
   });
 

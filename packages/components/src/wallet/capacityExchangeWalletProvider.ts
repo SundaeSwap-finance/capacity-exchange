@@ -1,17 +1,51 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { UnprovenTransaction, ShieldedCoinInfo } from '@midnight-ntwrk/ledger-v6';
-import type { CapacityExchangeConfig } from './types';
-import { DEFAULT_MARGIN } from './types';
-import { getLedgerParameters } from './utils';
-import { createExchangeApis } from './exchangeApi';
-import { fetchPricesFromExchanges } from './priceService';
-import { selectAndConfirmOffer } from './offerService';
-import { processTransactionWithOffer } from './transactionService';
-import {
-  CapacityExchangeUserCancelledError,
-  CapacityExchangeOfferExpiredError,
-  CapacityExchangeNoPricesAvailableError,
-} from './errors';
+import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types';
+import { isOfferExpired } from './utils';
+import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps';
+import { CapacityExchangeUserCancelledError, CapacityExchangeOfferExpiredError } from './errors';
+
+async function selectCurrency(
+  prices: ExchangePrice[],
+  specksRequired: bigint,
+  promptForCurrency: PromptForCurrency
+): Promise<ExchangePrice> {
+  console.debug('[CapacityExchange] Prompting user for currency selection');
+  const result = await promptForCurrency(prices, specksRequired);
+
+  if (result.status === 'cancelled') {
+    throw new CapacityExchangeUserCancelledError();
+  }
+
+  console.debug('[CapacityExchange] User selected currency:', result.exchangePrice.price.currency);
+  return result.exchangePrice;
+}
+
+async function confirmOfferWithUser(
+  offer: Offer,
+  specksRequired: bigint,
+  confirmOffer: ConfirmOffer
+): Promise<'confirmed' | 'back'> {
+  console.debug('[CapacityExchange] Prompting user to confirm offer');
+  const result = await confirmOffer(offer, specksRequired);
+
+  if (result.status === 'cancelled') {
+    throw new CapacityExchangeUserCancelledError();
+  }
+
+  if (result.status === 'back') {
+    console.debug('[CapacityExchange] User went back to currency selection');
+    return 'back';
+  }
+
+  console.debug('[CapacityExchange] User confirmed offer');
+
+  if (isOfferExpired(offer.expiresAt)) {
+    throw new CapacityExchangeOfferExpiredError(offer);
+  }
+
+  return 'confirmed';
+}
 
 /**
  * Creates a WalletProvider with Capacity Exchange functionality.
@@ -37,51 +71,24 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     circuitId,
   } = config;
 
-  const exchangeApis = createExchangeApis(capacityExchangeUrls);
-
   return {
     getCoinPublicKey: () => walletProvider.getCoinPublicKey(),
     getEncryptionPublicKey: () => walletProvider.getEncryptionPublicKey(),
 
     async balanceTx(tx: UnprovenTransaction, _newCoins?: ShieldedCoinInfo[], _ttl?: Date) {
       console.debug('[CapacityExchange] balanceTx called');
-      console.debug('[CapacityExchange] Tx identifiers:', tx.identifiers());
 
-      // Calculate DUST required for transaction
-      console.debug('[CapacityExchange] Fetching ledger parameters from:', indexerUrl);
-      const ledgerParameters = await getLedgerParameters(indexerUrl);
-      console.debug('[CapacityExchange] Ledger parameters received', ledgerParameters);
-      const dustRequired: bigint = tx.feesWithMargin(ledgerParameters, margin ?? DEFAULT_MARGIN);
-      console.debug('[CapacityExchange] DUST required (with margin):', dustRequired.toString());
+      const { prices, specksRequired } = await fetchCesPrices(tx, indexerUrl, capacityExchangeUrls, margin);
 
-      // Fetch prices from all exchanges
-      const allPrices = await fetchPricesFromExchanges(exchangeApis, dustRequired);
+      while (true) {
+        const exchangePrice = await selectCurrency(prices, specksRequired, promptForCurrency);
+        const offer = await requestCesOffer(exchangePrice, specksRequired);
+        const result = await confirmOfferWithUser(offer, specksRequired, confirmOffer);
 
-      // Check if we have any prices available
-      if (allPrices.length === 0) {
-        throw new CapacityExchangeNoPricesAvailableError();
-      }
-
-      // User selects currency and confirms offer
-      const result = await selectAndConfirmOffer(allPrices, dustRequired, promptForCurrency, confirmOffer);
-
-      switch (result.status) {
-        case 'success': {
-          console.debug('[CapacityExchange] User confirmed offer, processing transaction');
-          console.debug('[CapacityExchange] Offer details:', {
-            offerId: result.offer.offerId,
-            amount: result.offer.offerAmount,
-            currency: result.offer.offerCurrency,
-            expiresAt: result.offer.expiresAt.toISOString(),
-          });
+        if (result === 'confirmed') {
           const zkConfig = await zkConfigProvider.get(circuitId);
-          console.debug('[CapacityExchange] zkConfig fetched, zkConfig.circuitId:', zkConfig.circuitId);
-          return processTransactionWithOffer(tx, result.offer, proofProvider, connectedAPI, zkConfig);
+          return processTransactionWithOffer(tx, offer, proofProvider, connectedAPI, zkConfig);
         }
-        case 'userCancelled':
-          throw new CapacityExchangeUserCancelledError();
-        case 'offerExpired':
-          throw new CapacityExchangeOfferExpiredError(result.offer);
       }
     },
   };

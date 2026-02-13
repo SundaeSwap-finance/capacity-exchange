@@ -1,15 +1,5 @@
 const NIGHT_DECIMALS = 1_000_000n;
 
-// https://github.com/midnightntwrk/midnight-ledger/blob/main/spec/dust.md#initial-dust-parameters
-const DUST_DECIMALS = 15;
-
-export function formatDust(amount: bigint): string {
-  const str = amount.toString().padStart(DUST_DECIMALS + 1, '0');
-  const intPart = str.slice(0, -DUST_DECIMALS) || '0';
-  const decPart = str.slice(-DUST_DECIMALS).replace(/0+$/, '');
-  return decPart ? `${intPart}.${decPart}` : intPart;
-}
-
 export function formatNight(value: bigint): string {
   return (value / NIGHT_DECIMALS).toLocaleString();
 }

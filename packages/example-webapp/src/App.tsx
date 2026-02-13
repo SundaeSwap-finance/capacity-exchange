@@ -12,7 +12,7 @@ import {
 import type { WalletMode } from './features/wallet';
 import { ConnectionDetailsSection } from './features/endpoint';
 import { ContractConfigSection, ContractContextProvider } from './features/contract';
-import { CESReadinessSection } from './features/interactions/CESReadinessSection';
+import { CounterIncrementInteraction } from './features/interactions';
 
 function App() {
   const [walletMode, setWalletMode] = useState<WalletMode | null>(null);
@@ -47,10 +47,7 @@ function App() {
                 networkId={currentConfig.networkId}
                 onNetworkIdChange={(id) => setNetworkId(id as NetworkId)}
               />
-              <ContractConfigSection
-                networkId={networkId}
-                wallet={seedWallet.wallet ?? extensionWallet.wallet ?? null}
-              />
+              <ContractConfigSection networkId={networkId} wallet={wallet} />
             </div>
 
             <div className="space-y-4">
@@ -64,9 +61,7 @@ function App() {
                 <SeedWalletFlow config={currentConfig} wallet={seedWallet} onBack={handleWalletModeBack} />
               )}
 
-              {wallet && walletConnection && (
-                <CESReadinessSection wallet={wallet} walletConnection={walletConnection} />
-              )}
+              <CounterIncrementInteraction wallet={wallet} walletConnection={walletConnection} />
             </div>
           </div>
         </ContractContextProvider>
