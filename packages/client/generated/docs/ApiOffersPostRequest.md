@@ -6,7 +6,7 @@
 
 Name | Type
 ------------ | -------------
-`requestAmount` | string
+`specks` | string
 `offerCurrency` | string
 
 ## Example
@@ -16,7 +16,7 @@ import type { ApiOffersPostRequest } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "requestAmount": null,
+  "specks": null,
   "offerCurrency": null,
 } satisfies ApiOffersPostRequest
 

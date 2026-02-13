@@ -82,7 +82,7 @@ No authorization required
 
 ## apiPricesGet
 
-> ApiPricesGet200Response apiPricesGet(dust)
+> ApiPricesGet200Response apiPricesGet(specks)
 
 
 
@@ -101,7 +101,7 @@ async function example() {
 
   const body = {
     // string
-    dust: dust_example,
+    specks: specks_example,
   } satisfies ApiPricesGetRequest;
 
   try {
@@ -121,7 +121,7 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **dust** | `string` |  | [Defaults to `undefined`] |
+| **specks** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 

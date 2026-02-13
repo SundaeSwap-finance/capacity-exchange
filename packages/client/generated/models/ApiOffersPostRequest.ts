@@ -24,7 +24,7 @@ export interface ApiOffersPostRequest {
      * @type {string}
      * @memberof ApiOffersPostRequest
      */
-    requestAmount: string;
+    specks: string;
     /**
      * 
      * @type {string}
@@ -37,7 +37,7 @@ export interface ApiOffersPostRequest {
  * Check if a given object implements the ApiOffersPostRequest interface.
  */
 export function instanceOfApiOffersPostRequest(value: object): value is ApiOffersPostRequest {
-    if (!('requestAmount' in value) || value['requestAmount'] === undefined) return false;
+    if (!('specks' in value) || value['specks'] === undefined) return false;
     if (!('offerCurrency' in value) || value['offerCurrency'] === undefined) return false;
     return true;
 }
@@ -52,7 +52,7 @@ export function ApiOffersPostRequestFromJSONTyped(json: any, ignoreDiscriminator
     }
     return {
         
-        'requestAmount': json['requestAmount'],
+        'specks': json['specks'],
         'offerCurrency': json['offerCurrency'],
     };
 }
@@ -68,7 +68,7 @@ export function ApiOffersPostRequestToJSONTyped(value?: ApiOffersPostRequest | n
 
     return {
         
-        'requestAmount': value['requestAmount'],
+        'specks': value['specks'],
         'offerCurrency': value['offerCurrency'],
     };
 }

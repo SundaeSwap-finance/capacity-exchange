@@ -53,10 +53,7 @@
                 "schema": {
                   "type": "object",
                   "required": ["status", "uptime"],
-                  "properties": {
-                    "status": { "type": "string", "enum": ["ok"] },
-                    "uptime": { "type": "number" }
-                  }
+                  "properties": { "status": { "type": "string", "enum": ["ok"] }, "uptime": { "type": "number" } }
                 }
               }
             }
@@ -220,12 +217,7 @@
     "/api/prices": {
       "get": {
         "parameters": [
-          {
-            "schema": { "pattern": "^\\d+$", "type": "string" },
-            "in": "query",
-            "name": "dust",
-            "required": true
-          }
+          { "schema": { "pattern": "^\\d+$", "type": "string" }, "in": "query", "name": "specks", "required": true }
         ],
         "responses": {
           "200": {
@@ -241,10 +233,7 @@
                       "items": {
                         "type": "object",
                         "required": ["amount", "currency"],
-                        "properties": {
-                          "amount": { "type": "string" },
-                          "currency": { "type": "string" }
-                        }
+                        "properties": { "amount": { "type": "string" }, "currency": { "type": "string" } }
                       }
                     }
                   }
@@ -294,11 +283,8 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["requestAmount", "offerCurrency"],
-                "properties": {
-                  "requestAmount": { "type": "string" },
-                  "offerCurrency": { "type": "string" }
-                }
+                "required": ["specks", "offerCurrency"],
+                "properties": { "specks": { "type": "string" }, "offerCurrency": { "type": "string" } }
               }
             }
           },

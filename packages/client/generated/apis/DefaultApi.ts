@@ -45,7 +45,7 @@ export interface ApiOffersPostOperationRequest {
 }
 
 export interface ApiPricesGetRequest {
-    dust: string;
+    specks: string;
 }
 
 /**
@@ -93,17 +93,17 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      */
     async apiPricesGetRaw(requestParameters: ApiPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiPricesGet200Response>> {
-        if (requestParameters['dust'] == null) {
+        if (requestParameters['specks'] == null) {
             throw new runtime.RequiredError(
-                'dust',
-                'Required parameter "dust" was null or undefined when calling apiPricesGet().'
+                'specks',
+                'Required parameter "specks" was null or undefined when calling apiPricesGet().'
             );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['dust'] != null) {
-            queryParameters['dust'] = requestParameters['dust'];
+        if (requestParameters['specks'] != null) {
+            queryParameters['specks'] = requestParameters['specks'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

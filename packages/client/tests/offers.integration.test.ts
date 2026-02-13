@@ -7,7 +7,7 @@ describe('Offers API', () => {
 
   it('should be able to post an offer and get a valid response from apiOffersPost', async () => {
     const offer: ApiOffersPostRequest = {
-      requestAmount: '10',
+      specks: '10',
       offerCurrency: 'lovelace',
     };
     const response: ApiOffersPost201Response = await api.apiOffersPost({
