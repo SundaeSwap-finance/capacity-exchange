@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { DustParameters } from '@midnight-ntwrk/ledger-v6';
+import { DustParameters } from '@midnight-ntwrk/ledger-v7';
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { parse as parseDotenv } from 'dotenv';
 
@@ -13,7 +13,6 @@ export interface NetworkConfig {
 }
 
 export interface MidnightConfig extends NetworkConfig {
-  privateDataDir: string;
   walletSeedFile: string;
 }
 
@@ -52,7 +51,7 @@ function requireFromEnv(env: Record<string, string>, key: string, networkId: str
   return value;
 }
 
-export function getMidnightConfigById(networkId: string, privateDataDir: string): MidnightConfig {
+export function getMidnightConfigById(networkId: string): MidnightConfig {
   const env = loadEnvFile(networkId);
   return {
     networkId: toNetworkIdEnum(networkId),
@@ -60,7 +59,6 @@ export function getMidnightConfigById(networkId: string, privateDataDir: string)
     proofServerUrl: requireFromEnv(env, 'PROOF_SERVER_URL', networkId),
     indexerHttpUrl: requireFromEnv(env, 'INDEXER_URL', networkId),
     indexerWsUrl: requireFromEnv(env, 'INDEXER_WS_URL', networkId),
-    privateDataDir,
     walletSeedFile: requireFromEnv(env, 'WALLET_SEED_FILE', networkId),
   };
 }

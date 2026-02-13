@@ -11,7 +11,7 @@ function main(): Promise<QueryOutput> {
     .parse();
 
   const [networkId, contractAddress] = program.args;
-  return withAppContext(networkId, './counter/out', (ctx) => query(ctx, contractAddress));
+  return withAppContext(networkId, (ctx) => query(ctx, contractAddress));
 }
 
 runCli(main);

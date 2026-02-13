@@ -1,4 +1,5 @@
-import type { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v6';
+import { createHash } from 'crypto';
+import type { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v7';
 import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { ShieldedWallet } from '@midnight-ntwrk/wallet-sdk-shielded';
 import {
@@ -36,27 +37,27 @@ export interface WalletContext {
   keys: WalletKeys;
 }
 
-function createShieldedWallet(config: WalletConfiguration, secretKeys: ZswapSecretKeys) {
-  const savedState = loadWalletState('shielded');
+function createShieldedWallet(config: WalletConfiguration, secretKeys: ZswapSecretKeys, suffix: string) {
+  const savedState = loadWalletState('shielded', suffix);
   if (savedState) {
     try {
       return ShieldedWallet(config).restore(savedState);
     } catch {
       logger.log('Failed to restore shielded wallet, clearing saved state and starting fresh');
-      clearWalletState('shielded');
+      clearWalletState('shielded', suffix);
     }
   }
   return ShieldedWallet(config).startWithSecretKeys(secretKeys);
 }
 
-function createDustWallet(config: WalletConfiguration, secretKey: DustSecretKey) {
-  const savedState = loadWalletState('dust');
+function createDustWallet(config: WalletConfiguration, secretKey: DustSecretKey, suffix: string) {
+  const savedState = loadWalletState('dust', suffix);
   if (savedState) {
     try {
       return DustWallet(config).restore(savedState);
     } catch {
       logger.log('Failed to restore dust wallet, clearing saved state and starting fresh');
-      clearWalletState('dust');
+      clearWalletState('dust', suffix);
     }
   }
   return DustWallet(config).startWithSecretKey(secretKey, DUST_PARAMS);
@@ -69,14 +70,14 @@ function createUnshieldedWallet(config: WalletConfiguration, keystore: Unshielde
   }).startWithPublicKey(PublicKey.fromKeyStore(keystore));
 }
 
-async function saveWalletStates(facade: WalletFacade): Promise<void> {
+async function saveWalletStates(facade: WalletFacade, suffix: string): Promise<void> {
   try {
     const [shieldedState, dustState] = await Promise.all([
       facade.shielded.serializeState(),
       facade.dust.serializeState(),
     ]);
-    saveWalletState('shielded', shieldedState);
-    saveWalletState('dust', dustState);
+    saveWalletState('shielded', suffix, shieldedState);
+    saveWalletState('dust', suffix, dustState);
   } catch {
     logger.log('Failed to save wallet state');
   }
@@ -85,21 +86,23 @@ async function saveWalletStates(facade: WalletFacade): Promise<void> {
 export class WalletContextStarter implements Startable<WalletContext> {
   #keys: WalletKeys;
   #walletConfig: WalletConfiguration;
+  #suffix: string;
 
   constructor(config: NetworkConfig, seedHex: string) {
     this.#keys = deriveWalletKeys(seedHex, config.networkId);
     this.#walletConfig = createWalletConfiguration(config);
+    this.#suffix = createHash('sha256').update(config.networkId + seedHex).digest('hex').slice(0, 12);
   }
 
   async start(): Promise<WalletContext> {
     logger.log('Creating wallets...');
-    const shieldedWallet = createShieldedWallet(this.#walletConfig, this.#keys.shieldedSecretKeys);
-    const dustWallet = createDustWallet(this.#walletConfig, this.#keys.dustSecretKey);
+    const shieldedWallet = createShieldedWallet(this.#walletConfig, this.#keys.shieldedSecretKeys, this.#suffix);
+    const dustWallet = createDustWallet(this.#walletConfig, this.#keys.dustSecretKey, this.#suffix);
     const unshieldedWallet = createUnshieldedWallet(this.#walletConfig, this.#keys.unshieldedKeystore);
 
     const walletFacade = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
     const walletProvider = new DustWalletProvider(
-      walletFacade.dust,
+      walletFacade,
       this.#keys.shieldedSecretKeys,
       this.#keys.dustSecretKey
     );
@@ -118,7 +121,7 @@ export class WalletContextStarter implements Startable<WalletContext> {
     ]);
     logger.log('Wallets synced');
 
-    await saveWalletStates(walletFacade);
+    await saveWalletStates(walletFacade, this.#suffix);
 
     return { walletFacade, walletProvider, keys: this.#keys };
   }

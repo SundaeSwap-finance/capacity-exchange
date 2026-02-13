@@ -10,7 +10,7 @@ function main(): Promise<DeployOutput> {
     .parse();
 
   const [networkId] = program.args;
-  return withAppContext(networkId, './counter/out', (ctx) => deploy(ctx));
+  return withAppContext(networkId, (ctx) => deploy(ctx));
 }
 
 runCli(main);

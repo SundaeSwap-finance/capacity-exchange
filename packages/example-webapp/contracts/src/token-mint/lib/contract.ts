@@ -1,8 +1,10 @@
+import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { witnesses, CircuitPrivateState } from './witnesses.js';
-import { Contract, Witnesses } from '../../../token-mint/out/contract/index.js';
+import { Contract } from '../../../token-mint/out/contract/index.js';
 
-export type TokenMintContract = Contract<CircuitPrivateState, Witnesses<CircuitPrivateState>>;
+export type TokenMintContract = Contract<CircuitPrivateState>;
 
-export function createTokenMintContract(): TokenMintContract {
-  return new Contract(witnesses);
-}
+export const CompiledTokenMintContract = CompiledContract.make<TokenMintContract>('TokenMint', Contract).pipe(
+  CompiledContract.withWitnesses(witnesses),
+  CompiledContract.withCompiledFileAssets('./token-mint/out')
+);

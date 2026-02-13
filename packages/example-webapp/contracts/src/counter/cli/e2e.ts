@@ -23,7 +23,7 @@ function main(): Promise<E2EOutput> {
     throw new Error('incrementCount must be a positive integer');
   }
 
-  return withAppContext(networkId, './counter/out', async (ctx) => {
+  return withAppContext(networkId, async (ctx) => {
     const deployResult = await deploy(ctx);
 
     const incrementResults: IncrementOutput[] = [];
