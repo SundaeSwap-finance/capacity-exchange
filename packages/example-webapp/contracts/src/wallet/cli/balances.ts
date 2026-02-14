@@ -1,53 +1,56 @@
 import { program } from 'commander';
 import { runCli, withAppContext } from '../../lib/cli.js';
+import { createLogger } from '../../lib/logger.js';
+import { registerForDust } from '../lib/dust-registration.js';
+
+function bigintBalances(record: Record<string, bigint>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [type, amount] of Object.entries(record)) {
+    out[type] = amount.toString();
+  }
+  return out;
+}
+
+const logger = createLogger(import.meta);
 
 interface BalancesOutput {
-  dustBalance: string;
-  dustAddress: string;
-  shieldedBalances: Record<string, string>;
-  shieldedAddress: string;
-  unshieldedAddress: string;
-  unshieldedBalances: Record<string, string>;
+  dust: string;
+  shielded: Record<string, string>;
+  unshielded: Record<string, string>;
+  dustRegistered: boolean;
 }
 
 function main(): Promise<BalancesOutput> {
   program
     .name('balances')
-    .description('Syncs wallet and prints balances')
-    .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
+    .description('Syncs the wallet and prints all balances. Use --register-dust to register for dust generation.')
+    .argument('<networkId>', 'Network ID (e.g., undeployed, preview, preprod)')
+    .option('--register-dust', 'Register unshielded NIGHT UTXOs for dust generation')
     .parse();
 
   const [networkId] = program.args;
+  const opts = program.opts<{ registerDust?: boolean }>();
 
   return withAppContext(networkId, async (ctx) => {
-    const { walletFacade } = ctx.walletContext;
+    const { walletFacade, keys } = ctx.walletContext;
 
-    const [dustState, shieldedState, unshieldedState] = await Promise.all([
-      walletFacade.dust.waitForSyncedState(),
-      walletFacade.shielded.waitForSyncedState(),
-      walletFacade.unshielded.waitForSyncedState(),
-    ]);
+    logger.log('Waiting for synced state...');
+    let state = await walletFacade.waitForSyncedState();
+    const dustRegistered = state.dust.availableCoins.length > 0;
+    logger.log(`Dust registered: ${dustRegistered}`);
 
-    const dustBalance = dustState.walletBalance(new Date());
-
-    const shieldedBalances: Record<string, string> = {};
-    for (const [token, amount] of Object.entries(shieldedState.balances)) {
-      shieldedBalances[token] = amount.toString();
+    if (opts.registerDust && !dustRegistered) {
+      logger.log('Registering for dust...');
+      state = await registerForDust(state, walletFacade, keys);
     }
 
-    const unshieldedBalances: Record<string, string> = {};
-    for (const [token, amount] of Object.entries(unshieldedState.balances)) {
-      unshieldedBalances[token] = amount.toString();
-    }
-
-    return {
-      dustBalance: dustBalance.toString(),
-      dustAddress: dustState.dustAddress,
-      shieldedBalances,
-      shieldedAddress: String(shieldedState.address),
-      unshieldedAddress: String(unshieldedState.address),
-      unshieldedBalances,
+    const result = {
+      dust: state.dust.walletBalance(new Date()).toString(),
+      shielded: bigintBalances(state.shielded.balances),
+      unshielded: bigintBalances(state.unshielded.balances),
+      dustRegistered: state.dust.availableCoins.length > 0,
     };
+    return result;
   });
 }
 

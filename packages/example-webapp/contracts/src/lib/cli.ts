@@ -1,21 +1,18 @@
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { AppContext, AppSetup } from './app-context.js';
-import { getMidnightConfigById } from './config/env.js';
-import { readSeed } from './config/seed.js';
+import { AppContext, createAppContext } from './app-context.js';
+import { getAppConfigById } from './config/networks.js';
 import { createLogger } from './logger.js';
 
 const logger = createLogger(import.meta);
 
 export async function withAppContext<T>(networkId: string, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
   logger.log(`Process ID: ${process.pid}`);
-  logger.log(`Network ID: ${networkId}`);
-  const config = getMidnightConfigById(networkId);
+  const config = getAppConfigById(networkId);
+  const { seed: _, ...loggableConfig } = config;
+  logger.log('Config:', loggableConfig);
   setNetworkId(config.networkId);
-  logger.log('Reading seed...');
-  const seed = readSeed(config.walletSeedFile);
   logger.log('Starting app context...');
-  const setup = new AppSetup(seed, config);
-  const ctx = await setup.start();
+  const ctx = await createAppContext(config);
   logger.log('App context ready');
   return fn(ctx);
 }

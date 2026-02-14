@@ -1,6 +1,6 @@
 import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js-types';
 
-export function noopPrivateStateProvider(): PrivateStateProvider {
+export function inMemoryPrivateStateProvider(): PrivateStateProvider {
   const states = new Map<string, unknown>();
   const signingKeys = new Map<string, string>();
 

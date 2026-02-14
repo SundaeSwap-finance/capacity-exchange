@@ -2,6 +2,7 @@ import { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v7';
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk-hd';
 import { createKeystore, UnshieldedKeystore } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+import { hexToBytes } from './hex';
 
 export interface WalletKeys {
   shieldedSecretKeys: ZswapSecretKeys;
@@ -10,7 +11,7 @@ export interface WalletKeys {
 }
 
 export function deriveWalletKeys(seedHex: string, networkId: NetworkId.NetworkId): WalletKeys {
-  const hdWallet = HDWallet.fromSeed(Buffer.from(seedHex, 'hex'));
+  const hdWallet = HDWallet.fromSeed(hexToBytes(seedHex));
 
   if (hdWallet.type !== 'seedOk') {
     throw new Error('Failed to initialize HDWallet');

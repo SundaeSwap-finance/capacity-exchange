@@ -5,7 +5,7 @@ webapp_dir := "packages/example-webapp"
 _check-compactc:
     @test -n "${COMPACTC:-}" || (echo "Error: COMPACTC environment variable not set." && echo "Set it to the path of the compactc binary, e.g.:" && echo "  export COMPACTC=$(pwd)/tools/compactc/compactc_v0.26.108-rc.0-UT-L6" && exit 1)
     @test -f "$COMPACTC" || (echo "Error: COMPACTC path does not exist: $COMPACTC" && exit 1)
-    @"$COMPACTC" --version | grep -q "0.26.108" || (echo "Error: COMPACTC version mismatch. Required: 0.26.108" && exit 1)
+    @"$COMPACTC" --version | grep -q "0.28.0" || (echo "Error: COMPACTC version mismatch. Required: 0.28.0" && exit 1)
 
 # Check that setup has been run
 _check-setup:
