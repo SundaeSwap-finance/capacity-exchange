@@ -10,9 +10,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "test": "vitest run",
-    "generate-wallet": "tsx src/cli/generate-wallet.ts",
-    "utxos": "tsx src/cli/utxos.ts",
-    "deposit": "tsx src/cli/deposit.ts"
+    "cardano-wallet": "tsx src/cli/wallet.ts"
   },
   "dependencies": {
     "@blaze-cardano/sdk": "^0.2.31",
