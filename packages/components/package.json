@@ -20,7 +20,8 @@
   "peerDependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.0",
     "@midnight-ntwrk/ledger-v7": "7.0.0",
-    "@midnight-ntwrk/midnight-js-types": "3.0.0"
+    "@midnight-ntwrk/midnight-js-types": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0"
   },
   "devDependencies": {
     "commander": "^14.0.2",
@@ -30,6 +31,7 @@
     "@midnight-ntwrk/dapp-connector-api": "4.0.0",
     "@midnight-ntwrk/ledger-v7": "7.0.0",
     "@midnight-ntwrk/midnight-js-types": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
     "@types/node": "^25.1.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
