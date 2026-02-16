@@ -1,12 +1,10 @@
 export type CardanoNetwork = 'mainnet' | 'preprod' | 'preview';
 export type BlockfrostNetworkName = 'cardano-mainnet' | 'cardano-preprod' | 'cardano-preview';
 
-export interface CardanoConfig {
+export interface NetworkConfig {
   network: CardanoNetwork;
   blockfrostNetwork: BlockfrostNetworkName;
   blockfrostProjectId: string;
-  walletSeedFile: string;
-  depositAddress: string;
 }
 
 export function requireEnv(name: string): string {
@@ -35,13 +33,11 @@ export function toBlockfrostNetworkName(network: CardanoNetwork): BlockfrostNetw
   return `cardano-${network}`;
 }
 
-export function getCardanoConfig(): CardanoConfig {
+export function getNetworkConfig(): NetworkConfig {
   const network = requireNetwork('CARDANO_NETWORK');
   return {
     network,
     blockfrostNetwork: toBlockfrostNetworkName(network),
     blockfrostProjectId: requireEnv('BLOCKFROST_PROJECT_ID'),
-    walletSeedFile: requireEnv('WALLET_SEED_FILE'),
-    depositAddress: requireEnv('DEPOSIT_ADDRESS'),
   };
 }

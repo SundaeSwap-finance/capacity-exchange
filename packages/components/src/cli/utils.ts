@@ -1,15 +1,12 @@
-import { CardanoConfig, getCardanoConfig } from '../cardano';
-
 export interface CliResult<T> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-export async function runCli<T>(fn: (config: CardanoConfig) => Promise<T>): Promise<void> {
+export async function runCli<T>(fn: () => Promise<T>): Promise<void> {
   try {
-    const config = getCardanoConfig();
-    const result = await fn(config);
+    const result = await fn();
     const output: CliResult<T> = {
       success: true,
       data: result,

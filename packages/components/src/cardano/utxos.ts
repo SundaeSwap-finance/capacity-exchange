@@ -1,5 +1,5 @@
 import { Address } from '@blaze-cardano/core';
-import { Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
+import { Provider } from '@blaze-cardano/sdk';
 import { lovelaceToAda } from './constants';
 import { decodeDepositDatum, DecodedDepositDatum } from './datum';
 
@@ -26,9 +26,9 @@ export interface UtxosResult {
   utxos: Utxo[];
 }
 
-export async function getUtxos(blaze: Blaze<Provider, Wallet>, args: UtxosArgs): Promise<UtxosResult> {
+export async function getUtxos(provider: Provider, args: UtxosArgs): Promise<UtxosResult> {
   const address = Address.fromBech32(args.address);
-  const utxos = await blaze.provider.getUnspentOutputs(address);
+  const utxos = await provider.getUnspentOutputs(address);
 
   let totalLovelace = 0n;
   const utxoList: Utxo[] = utxos.map((utxo) => {
