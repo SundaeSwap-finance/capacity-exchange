@@ -10,6 +10,7 @@ import {
 import type { BrowserProviders } from './createBrowserProviders';
 import type { CesFlowStatus, CurrencySelectionState, OfferConfirmationState } from './types';
 import { findAndIncrementCounter } from './counterContract';
+import { useNetworkConfig } from '../../config';
 
 function toUserErrorMessage(err: unknown): string {
   if (err instanceof CapacityExchangeUserCancelledError) {
@@ -82,6 +83,7 @@ export function useCesTransaction(
   providers: BrowserProviders | null,
   contractAddress: string | null
 ): UseCesTransactionResult {
+  const config = useNetworkConfig();
   const [status, setStatus] = useState<CesFlowStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [currencySelection, setCurrencySelection] = useState<CurrencySelectionState | null>(null);
@@ -137,7 +139,7 @@ export function useCesTransaction(
     const confirmOffer = createConfirmOffer(setStatus, setCurrencySelection, setOfferConfirmation, offerResolverRef);
 
     try {
-      await findAndIncrementCounter(providers, contractAddress, promptForCurrency, confirmOffer);
+      await findAndIncrementCounter(providers, contractAddress, promptForCurrency, confirmOffer, config);
       setStatus('success');
     } catch (err) {
       console.error('[CESTransaction] Error:', err);
@@ -145,7 +147,7 @@ export function useCesTransaction(
       setStatus('error');
       setCurrencySelection(null);
     }
-  }, [providers, contractAddress]);
+  }, [providers, contractAddress, config]);
 
   return {
     status,

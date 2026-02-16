@@ -3,7 +3,6 @@ import * as path from 'path';
 import { createLogger } from '../logger.js';
 
 const logger = createLogger(import.meta);
-type WalletStateName = 'shielded' | 'dust';
 
 const STORAGE_DIR = '.midnight-wallet-state';
 

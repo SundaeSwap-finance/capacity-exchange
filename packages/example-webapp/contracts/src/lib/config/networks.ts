@@ -1,7 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseDotenv } from 'dotenv';
-import { NETWORK_ENDPOINTS, toNetworkIdEnum, parseMnemonic, parseSeedHex, type NetworkEndpoints } from '@capacity-exchange/core';
+import {
+  NETWORK_ENDPOINTS,
+  toNetworkIdEnum,
+  parseMnemonic,
+  parseSeedHex,
+  type NetworkEndpoints,
+} from '@capacity-exchange/core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
 export interface AppConfig extends NetworkEndpoints {

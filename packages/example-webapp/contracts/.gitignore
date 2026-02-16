@@ -3,3 +3,4 @@
 .midnight-wallet-state/
 counter/out/
 token-mint/out/
+*.hex

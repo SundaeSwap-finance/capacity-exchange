@@ -4,4 +4,5 @@ node_modules
 generated
 vendor
 package-lock.json
+packages/client/openapi.json
 *.md

@@ -19,10 +19,4 @@ export {
 } from './modals';
 export { useCesTransaction, type UseCesTransactionResult } from './useCesTransaction';
 export { useTokenMintTransaction } from './useTokenMintTransaction';
-export {
-  createProvidersFromSeedWallet,
-  createProvidersFromExtensionWallet,
-  type BrowserProviders,
-  type SeedWalletInfo,
-  type ShieldedAddressInfo,
-} from './createBrowserProviders';
+export { createBrowserProviders, type BrowserProviders, type ShieldedAddressInfo } from './createBrowserProviders';

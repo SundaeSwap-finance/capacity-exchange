@@ -47,6 +47,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ['@midnight-ntwrk/ledger-v6'],
+    exclude: ['@midnight-ntwrk/ledger-v7'],
   },
 });
