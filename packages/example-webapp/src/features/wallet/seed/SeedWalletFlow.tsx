@@ -4,7 +4,7 @@ import { Button, Card, LoadingSpinner, Message } from '../../../shared/ui';
 import { SeedInput } from './SeedInput';
 import { SeedWalletStatusBadge } from './SeedWalletStatusBadge';
 import { ConnectedWalletInfo } from '../extension/ConnectedWalletInfo';
-import type { Config } from '../../../config';
+import type { NetworkConfig } from '../../../config';
 
 interface SeedWalletActionsProps {
   status: SeedWalletStatus;
@@ -56,7 +56,7 @@ function SeedWalletConnection({ wallet }: SeedWalletConnectionProps) {
 }
 
 interface SeedWalletFlowProps {
-  config: Config;
+  config: NetworkConfig;
   wallet: SeedWalletState;
   onBack: () => void;
 }

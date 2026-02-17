@@ -1,6 +1,7 @@
 import React from 'react';
+import { NETWORK_CONFIGS } from '../../config/networks';
 
-const VALID_NETWORK_IDS = ['undeployed', 'preview'];
+const VALID_NETWORK_IDS = Object.keys(NETWORK_CONFIGS);
 
 interface NetworkIdSelectorProps {
   networkId: string;

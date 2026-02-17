@@ -1,5 +1,4 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { UnprovenTransaction, ShieldedCoinInfo } from '@midnight-ntwrk/ledger-v6';
 import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types';
 import { isOfferExpired } from './utils';
 import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps';
@@ -58,24 +57,14 @@ async function confirmOfferWithUser(
  * @returns A new WalletProvider with Capacity Exchange integration
  */
 export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
-  const {
-    walletProvider,
-    connectedAPI,
-    proofProvider,
-    zkConfigProvider,
-    capacityExchangeUrls,
-    indexerUrl,
-    margin,
-    promptForCurrency,
-    confirmOffer,
-    circuitId,
-  } = config;
+  const { walletProvider, connectedAPI, capacityExchangeUrls, indexerUrl, margin, promptForCurrency, confirmOffer } =
+    config;
 
   return {
     getCoinPublicKey: () => walletProvider.getCoinPublicKey(),
     getEncryptionPublicKey: () => walletProvider.getEncryptionPublicKey(),
 
-    async balanceTx(tx: UnprovenTransaction, _newCoins?: ShieldedCoinInfo[], _ttl?: Date) {
+    async balanceTx(tx, _ttl?) {
       console.debug('[CapacityExchange] balanceTx called');
 
       const { prices, specksRequired } = await fetchCesPrices(tx, indexerUrl, capacityExchangeUrls, margin);
@@ -86,8 +75,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
         const result = await confirmOfferWithUser(offer, specksRequired, confirmOffer);
 
         if (result === 'confirmed') {
-          const zkConfig = await zkConfigProvider.get(circuitId);
-          return processTransactionWithOffer(tx, offer, proofProvider, connectedAPI, zkConfig);
+          return processTransactionWithOffer(tx, offer, connectedAPI);
         }
       }
     },

@@ -6,18 +6,11 @@ import type {
   CurrencySelectionResult,
   OfferConfirmationResult,
 } from '../../src/wallet/types';
-import {
-  createMockWalletProvider,
-  createMockProofProvider,
-  createMockZKConfigProvider,
-  createMockConnectedAPI,
-} from '../mocks/mockProviders';
+import { createMockWalletProvider, createMockConnectedAPI } from '../mocks/mockProviders';
 
 export interface TestContext {
   mockWalletProvider: ReturnType<typeof createMockWalletProvider>;
   mockConnectedAPI: ReturnType<typeof createMockConnectedAPI>;
-  mockProofProvider: ReturnType<typeof createMockProofProvider>;
-  mockZKConfigProvider: ReturnType<typeof createMockZKConfigProvider>;
   promptForCurrency: (prices: ExchangePrice[], dustRequired: bigint) => Promise<CurrencySelectionResult>;
   confirmOffer: (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 }
@@ -26,8 +19,6 @@ export function createTestContext(): TestContext {
   return {
     mockWalletProvider: createMockWalletProvider(),
     mockConnectedAPI: createMockConnectedAPI(),
-    mockProofProvider: createMockProofProvider(),
-    mockZKConfigProvider: createMockZKConfigProvider(),
     promptForCurrency: vi.fn().mockImplementation((exchangePrices: ExchangePrice[]) => {
       const selectedPrice = exchangePrices.find((ep) => ep.price.currency === 'ADA') || exchangePrices[0];
       return Promise.resolve({ status: 'selected', exchangePrice: selectedPrice });
@@ -91,13 +82,10 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
   return {
     walletProvider: ctx.mockWalletProvider,
     connectedAPI: ctx.mockConnectedAPI,
-    proofProvider: ctx.mockProofProvider,
-    zkConfigProvider: ctx.mockZKConfigProvider,
     indexerUrl: 'http://localhost:8080/graphql',
     capacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
     confirmOffer: ctx.confirmOffer,
     margin: 3,
-    circuitId: 'increment',
   };
 }

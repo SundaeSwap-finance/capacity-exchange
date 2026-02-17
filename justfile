@@ -11,6 +11,7 @@ _check-compactc:
 _check-setup:
     @test -d {{webapp_dir}}/public/midnight/counter/keys || (echo "Error: counter ZK assets not found. Run 'just setup <networkId>' first." && exit 1)
     @test -d {{webapp_dir}}/public/midnight/token-mint/keys || (echo "Error: token-mint ZK assets not found. Run 'just setup <networkId>' first." && exit 1)
+    @test -f {{webapp_dir}}/.env || (echo "Error: {{webapp_dir}}/.env not found. Copy from .env.example:" && echo "  cp {{webapp_dir}}/.env.example {{webapp_dir}}/.env" && exit 1)
 
 # Copy compiled ZK assets to webapp public directory
 _copy-zk-assets:
@@ -24,14 +25,17 @@ _copy-zk-assets:
 # Install dependencies
 install:
     npm install
-    npm install --prefix {{contracts_dir}}
 
 # Compile Compact contracts
 compile-contracts: _check-compactc
     npm run compile --prefix {{contracts_dir}}
 
+# Build workspace packages (client, components) needed by contracts at runtime
+_build-ws:
+    npm run build -ws --if-present --workspace=packages/client --workspace=packages/components
+
 # One-time setup: install deps, compile contracts, copy assets, and deploy
-setup networkId: install compile-contracts _copy-zk-assets (deploy-all networkId)
+setup networkId: install compile-contracts _copy-zk-assets _build-ws (deploy-all networkId)
     @echo "Setup complete. Run 'just dev' to start the dev server."
 
 # Build all packages

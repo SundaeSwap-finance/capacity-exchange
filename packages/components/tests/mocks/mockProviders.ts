@@ -1,8 +1,8 @@
 import { vi } from 'vitest';
-import type { WalletProvider, ProofProvider } from '@midnight-ntwrk/midnight-js-types';
-import { ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { UnprovenTransaction, LedgerParameters } from '@midnight-ntwrk/ledger-v6';
+import type { LedgerParameters } from '@midnight-ntwrk/ledger-v7';
 
 export function createMockWalletProvider(): WalletProvider {
   return {
@@ -12,40 +12,6 @@ export function createMockWalletProvider(): WalletProvider {
       throw new Error('balanceTx should be replaced by withCapacityExchange');
     },
   };
-}
-
-export function createMockProofProvider(): ProofProvider<string> {
-  return {
-    proveTx: async (tx: UnprovenTransaction) => {
-      // Return a mock proven transaction
-      const mockProvenTx = {
-        bind: () => ({
-          merge: (dustTx: any) => ({
-            serialize: () => new Uint8Array([1, 2, 3, 4, 5]),
-          }),
-        }),
-      };
-      return mockProvenTx as any;
-    },
-  } as ProofProvider<string>;
-}
-
-class MockZKConfigProvider extends ZKConfigProvider<string> {
-  async getZKIR(): Promise<any> {
-    return 'mock-zkir';
-  }
-
-  async getProverKey(): Promise<any> {
-    return 'mock-prover-key';
-  }
-
-  async getVerifierKey(): Promise<any> {
-    return 'mock-verifier-key';
-  }
-}
-
-export function createMockZKConfigProvider(): ZKConfigProvider<string> {
-  return new MockZKConfigProvider();
 }
 
 export function createMockConnectedAPI(): ConnectedAPI {
@@ -68,9 +34,15 @@ export function createMockConnectedAPI(): ConnectedAPI {
   } as any;
 }
 
-export function createMockUnprovenTransaction(dustRequired: bigint = 50000n): UnprovenTransaction {
+export function createMockUnboundTransaction(dustRequired: bigint = 50000n): UnboundTransaction {
   return {
     feesWithMargin: (ledgerParams: LedgerParameters, multiplier: number) => dustRequired,
+    identifiers: () => ['mock-tx-id'],
+    bind: () => ({
+      merge: (dustTx: any) => ({
+        serialize: () => new Uint8Array([1, 2, 3, 4, 5]),
+      }),
+    }),
     serialize: () => new Uint8Array([1, 2, 3]),
-  } as unknown as UnprovenTransaction;
+  } as unknown as UnboundTransaction;
 }

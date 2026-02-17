@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { NETWORK_CONFIGS, getEndpoints } from './config';
+import { NETWORK_CONFIGS, getEndpoints, NetworkConfigProvider } from './config';
 import type { NetworkId } from './config';
 import {
   WalletModeSelector,
@@ -39,32 +39,34 @@ function App() {
           <p className="mt-2 text-gray-400">Connect your wallet to view wallet info</p>
         </div>
 
-        <ContractContextProvider>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <ConnectionDetailsSection
-                endpoints={endpoints}
-                networkId={currentConfig.networkId}
-                onNetworkIdChange={(id) => setNetworkId(id as NetworkId)}
-              />
-              <ContractConfigSection networkId={networkId} wallet={wallet} />
+        <NetworkConfigProvider config={currentConfig}>
+          <ContractContextProvider>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <ConnectionDetailsSection
+                  endpoints={endpoints}
+                  networkId={currentConfig.networkId}
+                  onNetworkIdChange={(id) => setNetworkId(id as NetworkId)}
+                />
+                <ContractConfigSection networkId={networkId} wallet={wallet} />
+              </div>
+
+              <div className="space-y-4">
+                {walletMode === null && <WalletModeSelector onSelect={setWalletMode} />}
+
+                {walletMode === 'extension' && (
+                  <ExtensionWalletFlow wallet={extensionWallet} onBack={handleWalletModeBack} />
+                )}
+
+                {walletMode === 'seed' && (
+                  <SeedWalletFlow config={currentConfig} wallet={seedWallet} onBack={handleWalletModeBack} />
+                )}
+
+                <CounterIncrementInteraction wallet={wallet} walletConnection={walletConnection} />
+              </div>
             </div>
-
-            <div className="space-y-4">
-              {walletMode === null && <WalletModeSelector onSelect={setWalletMode} />}
-
-              {walletMode === 'extension' && (
-                <ExtensionWalletFlow wallet={extensionWallet} onBack={handleWalletModeBack} />
-              )}
-
-              {walletMode === 'seed' && (
-                <SeedWalletFlow config={currentConfig} wallet={seedWallet} onBack={handleWalletModeBack} />
-              )}
-
-              <CounterIncrementInteraction wallet={wallet} walletConnection={walletConnection} />
-            </div>
-          </div>
-        </ContractContextProvider>
+          </ContractContextProvider>
+        </NetworkConfigProvider>
       </div>
     </div>
   );

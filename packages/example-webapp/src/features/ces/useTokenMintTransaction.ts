@@ -1,45 +1,10 @@
+// TODO: Wire this into the UI once we migrate off the SSE/CLI backend.
+// This hook replaces useTokenMintOperations + the server/scriptRunner flow
+// by calling the contract directly from the browser.
 import { useState, useCallback } from 'react';
-import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import type { BrowserProviders } from './createBrowserProviders';
-import { buildContractProviders } from './contractProviders';
-
-import * as TokenMint from '../../../contracts/token-mint/out/contract/index.js';
-
-type TokenMintCircuitId =
-  | 'mint_test_tokens'
-  | 'own_balance'
-  | 'total_held'
-  | 'get_token_color'
-  | 'first_deposit'
-  | 'deposit'
-  | 'withdraw';
-
-interface CircuitPrivateState {
-  secret_key: Uint8Array;
-}
-
-type TokenMintContract = TokenMint.Contract<CircuitPrivateState, TokenMint.Witnesses<CircuitPrivateState>>;
-
-function createTokenMintContract(): TokenMintContract {
-  const witnesses: TokenMint.Witnesses<CircuitPrivateState> = {
-    local_secret_key: ({ privateState }) => [privateState, privateState.secret_key],
-  };
-  return new TokenMint.Contract(witnesses);
-}
-
-function createPrivateState(): CircuitPrivateState {
-  const secretKey = new Uint8Array(32);
-  crypto.getRandomValues(secretKey);
-  return { secret_key: secretKey };
-}
-
-function generatePrivateStateId(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
+import { findAndMintTokens } from './tokenMintContract';
+import { useNetworkConfig } from '../../config';
 
 export type TokenMintStatus = 'idle' | 'building' | 'submitting' | 'success' | 'error';
 
@@ -49,37 +14,11 @@ export interface UseTokenMintTransactionResult {
   mintTokens: (amount: bigint) => Promise<void>;
 }
 
-async function findAndMintTokens(providers: BrowserProviders, contractAddress: string, amount: bigint): Promise<void> {
-  const { contractProviders } = buildContractProviders<TokenMintCircuitId>(
-    providers,
-    providers.walletProvider,
-    '/midnight/token-mint'
-  );
-
-  const contract = createTokenMintContract();
-  const privateStateId = generatePrivateStateId();
-  const initialPrivateState = createPrivateState();
-
-  await findDeployedContract(contractProviders, {
-    contract,
-    contractAddress,
-    privateStateId,
-    initialPrivateState,
-  });
-
-  await submitCallTx(contractProviders, {
-    contract,
-    contractAddress,
-    circuitId: 'mint_test_tokens',
-    args: [amount],
-    privateStateId,
-  });
-}
-
 export function useTokenMintTransaction(
   providers: BrowserProviders | null,
   contractAddress: string | null
 ): UseTokenMintTransactionResult {
+  const config = useNetworkConfig();
   const [status, setStatus] = useState<TokenMintStatus>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -94,7 +33,7 @@ export function useTokenMintTransaction(
       setError(null);
 
       try {
-        await findAndMintTokens(providers, contractAddress, amount);
+        await findAndMintTokens(providers, contractAddress, amount, config);
         setStatus('success');
       } catch (err) {
         console.error('[TokenMintTransaction] Error:', err);
@@ -102,7 +41,7 @@ export function useTokenMintTransaction(
         setStatus('error');
       }
     },
-    [providers, contractAddress]
+    [providers, contractAddress, config]
   );
 
   return {

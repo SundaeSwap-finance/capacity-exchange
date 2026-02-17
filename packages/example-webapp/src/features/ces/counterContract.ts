@@ -1,4 +1,5 @@
 import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import {
   capacityExchangeWalletProvider,
   DEFAULT_MARGIN,
@@ -7,45 +8,50 @@ import {
 } from '@capacity-exchange/components';
 import type { BrowserProviders } from './createBrowserProviders';
 import { buildContractProviders } from './contractProviders';
-import { config } from '../../config';
+import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';
 
-type CounterContract = Counter.Contract<undefined, Counter.Witnesses<undefined>>;
+type CounterContract = Counter.Contract;
 type CounterCircuitId = 'increment';
 
-function createCounterContract(): CounterContract {
-  const witnesses: Counter.Witnesses<undefined> = {};
-  return new Counter.Contract(witnesses);
-}
+const compiledCounterContract = CompiledContract.make<CounterContract>('Counter', Counter.Contract).pipe(
+  CompiledContract.withVacantWitnesses,
+  CompiledContract.withCompiledFileAssets('/midnight/counter')
+);
 
 export async function findAndIncrementCounter(
   providers: BrowserProviders,
   contractAddress: string,
   promptForCurrency: PromptForCurrency,
-  confirmOffer: ConfirmOffer
+  confirmOffer: ConfirmOffer,
+  config: NetworkConfig
 ) {
-  const { contractProviders, zkConfigProvider } = buildContractProviders<CounterCircuitId>(
+  const { contractProviders } = buildContractProviders<CounterCircuitId>(
     providers,
     providers.walletProvider,
-    '/midnight/counter'
+    '/midnight/counter',
+    config
   );
 
   const cesWalletProvider = capacityExchangeWalletProvider({
     walletProvider: providers.walletProvider,
     connectedAPI: providers.connectedAPI,
-    proofProvider: providers.proofProvider,
-    zkConfigProvider,
     indexerUrl: config.indexerUrl,
     capacityExchangeUrls: [config.capacityExchangeUrl],
     margin: DEFAULT_MARGIN,
     promptForCurrency,
     confirmOffer,
-    circuitId: 'increment',
   });
 
   contractProviders.walletProvider = cesWalletProvider;
 
-  const contract = createCounterContract();
-  await findDeployedContract(contractProviders, { contract, contractAddress });
-  await submitCallTx(contractProviders, { contract, contractAddress, circuitId: 'increment' });
+  await findDeployedContract(contractProviders, {
+    compiledContract: compiledCounterContract,
+    contractAddress,
+  });
+  await submitCallTx(contractProviders, {
+    compiledContract: compiledCounterContract,
+    contractAddress,
+    circuitId: 'increment' as CounterCircuitId,
+  });
 }

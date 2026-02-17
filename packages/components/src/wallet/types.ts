@@ -1,4 +1,4 @@
-import type { WalletProvider, ProofProvider, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { ExchangeApi } from './exchangeApi';
 
@@ -31,12 +31,9 @@ export type ConfirmOffer = (offer: Offer, dustRequired: bigint) => Promise<Offer
 export interface CapacityExchangeConfig {
   walletProvider: WalletProvider;
   connectedAPI: ConnectedAPI;
-  proofProvider: ProofProvider<string>;
-  zkConfigProvider: ZKConfigProvider<string>;
   indexerUrl: string;
   capacityExchangeUrls: string[];
   margin: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
-  circuitId: string;
 }

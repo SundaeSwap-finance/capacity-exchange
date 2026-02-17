@@ -1,18 +1,12 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type {
-  ZswapSecretKeys,
-  DustSecretKey,
-  SignatureEnabled,
-  Proof,
-  Binding,
-  FinalizedTransaction,
-} from '@midnight-ntwrk/ledger-v6';
-import { Transaction } from '@midnight-ntwrk/ledger-v6';
+import type { ZswapSecretKeys, DustSecretKey, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v7';
+import { Transaction } from '@midnight-ntwrk/ledger-v7';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
-import type { Config } from '../../config';
+import type { NetworkConfig } from '../../config';
 import type { ShieldedAddressInfo } from './createBrowserProviders';
-import { hexToUint8Array, uint8ArrayToHex } from '../../utils/hex';
+import { hexToBytes, uint8ArrayToHex } from '@capacity-exchange/core';
+
+const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Creates a ConnectedAPI adapter for seed wallets.
@@ -25,7 +19,8 @@ export function createSeedWalletConnectedAPIAdapter(
   shieldedAddress: ShieldedAddressInfo,
   unshieldedAddress: string,
   dustAddress: string,
-  config: Config
+  config: NetworkConfig,
+  balanceTtlMs: number = DEFAULT_BALANCE_TTL_MS
 ): ConnectedAPI {
   return {
     async getShieldedBalances() {
@@ -65,7 +60,7 @@ export function createSeedWalletConnectedAPIAdapter(
     },
 
     async balanceSealedTransaction(txHex: string) {
-      const txBytes = hexToUint8Array(txHex);
+      const txBytes = hexToBytes(txHex);
       const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
         'signature',
         'proof',
@@ -73,11 +68,9 @@ export function createSeedWalletConnectedAPIAdapter(
         txBytes
       ).bind();
 
-      const shieldedWallet = walletFacade.shielded;
-      const recipe = await shieldedWallet.balanceTransaction(shieldedSecretKeys, tx, []);
-
-      const dustWallet = walletFacade.dust as DustWallet;
-      const finalized = await dustWallet.finalizeTransaction(recipe);
+      const ttl = new Date(Date.now() + balanceTtlMs);
+      const recipe = await walletFacade.balanceFinalizedTransaction(tx, { shieldedSecretKeys, dustSecretKey }, { ttl });
+      const finalized = await walletFacade.finalizeRecipe(recipe);
 
       const serialized = finalized.serialize();
       return { tx: uint8ArrayToHex(serialized) };
@@ -96,7 +89,7 @@ export function createSeedWalletConnectedAPIAdapter(
     },
 
     async submitTransaction(txHex: string) {
-      const txBytes = hexToUint8Array(txHex);
+      const txBytes = hexToBytes(txHex);
       const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
         'signature',
         'proof',
@@ -104,7 +97,7 @@ export function createSeedWalletConnectedAPIAdapter(
         txBytes
       ).bind();
 
-      await walletFacade.submitTransaction(tx as unknown as FinalizedTransaction);
+      await walletFacade.submitTransaction(tx);
     },
 
     async getProvingProvider() {

@@ -1,16 +1,16 @@
-import type { ProofProvider, ZKConfig, NothingToProve } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import {
   Transaction,
   type SignatureEnabled,
   type Proof,
   type PreBinding,
   type Binding,
-  type UnprovenTransaction,
   type FinalizedTransaction,
-} from '@midnight-ntwrk/ledger-v6';
+} from '@midnight-ntwrk/ledger-v7';
 import type { ExchangePrice, Offer } from './types';
-import { getLedgerParameters, hexToUint8Array, uint8ArrayToHex, isOfferExpired } from './utils';
+import { getLedgerParameters, isOfferExpired } from './utils';
+import { hexToBytes, uint8ArrayToHex } from '@capacity-exchange/core';
 import { createExchangeApis } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@capacity-exchange/client';
@@ -32,13 +32,13 @@ export interface FetchCesPricesResult {
 }
 
 /**
- * Fetches CES prices for an unproven transaction.
+ * Fetches CES prices for a transaction.
  * Calculates the DUST required (with margin) and queries all exchanges for prices.
  *
  * @throws {CapacityExchangeNoPricesAvailableError} if no prices are returned
  */
 export async function fetchCesPrices(
-  tx: UnprovenTransaction,
+  tx: UnboundTransaction,
   indexerUrl: string,
   capacityExchangeUrls: string[],
   margin: number
@@ -84,17 +84,15 @@ export async function requestCesOffer(exchangePrice: ExchangePrice, specksRequir
 
 /**
  * Processes the user transaction with the confirmed offer.
- * Deserializes, proves, merges, and balances the transactions.
+ * Binds the tx, merges with the dust tx from the offer, then has the wallet balance and seal.
  */
 export async function processTransactionWithOffer(
-  tx: UnprovenTransaction,
+  tx: UnboundTransaction,
   offer: Offer,
-  proofProvider: ProofProvider<string>,
-  connectedAPI: ConnectedAPI,
-  zkConfig: ZKConfig<string>
-): Promise<NothingToProve<FinalizedTransaction>> {
+  connectedAPI: ConnectedAPI
+): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
-  const txBytes = hexToUint8Array(offer.serializedTx);
+  const txBytes = hexToBytes(offer.serializedTx);
   const dustTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
     'signature',
     'proof',
@@ -103,19 +101,16 @@ export async function processTransactionWithOffer(
   ).bind();
   console.debug('[CESSteps] DUST transaction deserialized');
 
-  console.debug('[CESSteps] Proving user transaction');
-  const provenTx = (await proofProvider.proveTx(tx, { zkConfig })).bind();
-  console.debug('[CESSteps] User transaction proven');
-
-  console.debug('[CESSteps] Merging transactions');
-  const mergedTx = provenTx.merge(dustTx);
+  console.debug('[CESSteps] Binding and merging transactions');
+  const boundTx = tx.bind();
+  const mergedTx = boundTx.merge(dustTx);
   const serializedStr = uint8ArrayToHex(mergedTx.serialize());
   console.debug('[CESSteps] Transactions merged, calling wallet to balance and seal');
 
   const result = await connectedAPI.balanceSealedTransaction(serializedStr);
   console.debug('[CESSteps] Wallet balanced and sealed transaction');
 
-  const resultBytes = hexToUint8Array(result.tx);
+  const resultBytes = hexToBytes(result.tx);
   const transaction = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
     'signature',
     'proof',
@@ -124,8 +119,5 @@ export async function processTransactionWithOffer(
   ).bind();
 
   console.debug('[CESSteps] Transaction processing complete');
-  return {
-    transaction,
-    type: 'NothingToProve' as const,
-  };
+  return transaction;
 }

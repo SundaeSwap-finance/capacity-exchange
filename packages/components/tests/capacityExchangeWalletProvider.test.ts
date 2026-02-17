@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { capacityExchangeWalletProvider } from '../src/wallet/capacityExchangeWalletProvider';
-import { createMockUnprovenTransaction } from './mocks/mockProviders';
+import { createMockUnboundTransaction } from './mocks/mockProviders';
 import {
   createTestContext,
   createTestConfig,
@@ -16,8 +16,8 @@ vi.mock('../src/wallet/utils', async () => {
   };
 });
 
-vi.mock('@midnight-ntwrk/ledger-v6', async () => {
-  const actual = await vi.importActual('@midnight-ntwrk/ledger-v6');
+vi.mock('@midnight-ntwrk/ledger-v7', async () => {
+  const actual = await vi.importActual('@midnight-ntwrk/ledger-v7');
   return {
     ...actual,
     Transaction: {
@@ -45,15 +45,11 @@ describe('capacityExchangeWalletProvider', () => {
 
   it('should complete the full Capacity Exchange flow successfully', async () => {
     const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
-    const mockTx = createMockUnprovenTransaction(50000n);
+    const mockTx = createMockUnboundTransaction(50000n);
 
-    const result = await provider.balanceTx(mockTx, [], new Date(Date.now() + 60000));
+    const result = await provider.balanceTx(mockTx, new Date(Date.now() + 60000));
 
     expect(result).toBeDefined();
-    expect(result.type).toBe('NothingToProve');
-    if (result.type === 'NothingToProve') {
-      expect(result.transaction).toBeDefined();
-    }
 
     expect(ctx.promptForCurrency).toHaveBeenCalledTimes(1);
     expect(ctx.confirmOffer).toHaveBeenCalledTimes(1);
@@ -70,9 +66,9 @@ describe('capacityExchangeWalletProvider', () => {
   it('should calculate DUST requirements correctly', async () => {
     const dustRequired = 75000n;
     const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
-    const mockTx = createMockUnprovenTransaction(dustRequired);
+    const mockTx = createMockUnboundTransaction(dustRequired);
 
-    await provider.balanceTx(mockTx, [], new Date(Date.now() + 60000));
+    await provider.balanceTx(mockTx, new Date(Date.now() + 60000));
 
     expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired);
     expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired);
