@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "check": "eslint . && prettier --check .",
+    "fix": "eslint . --fix && prettier --write ."
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -17,9 +20,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
-    "concurrently": "^9.2.1",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
+    "globals": "^17.0.0",
     "prettier": "^3.4.2",
     "typescript-eslint": "^8.21.0"
   }

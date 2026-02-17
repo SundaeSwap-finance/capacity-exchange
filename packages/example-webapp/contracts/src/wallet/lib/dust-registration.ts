@@ -13,12 +13,12 @@ async function submitDustRegistration(state: FacadeState, walletFacade: WalletFa
   }
 
   if (nightUtxos.length === 0) {
-    logger.log('All NIGHT UTXOs already registered');
+    logger.info('All NIGHT UTXOs already registered');
     return;
   }
 
   const dustAddress = state.dust.dustAddress;
-  logger.log(`Registering ${nightUtxos.length} NIGHT UTXO(s) for dust generation to ${dustAddress}...`);
+  logger.info(`Registering ${nightUtxos.length} NIGHT UTXO(s) for dust generation to ${dustAddress}...`);
   const recipe = await walletFacade.registerNightUtxosForDustGeneration(
     nightUtxos,
     keys.unshieldedKeystore.getPublicKey(),
@@ -27,11 +27,11 @@ async function submitDustRegistration(state: FacadeState, walletFacade: WalletFa
   );
   const finalized = await walletFacade.finalizeRecipe(recipe);
   await walletFacade.submitTransaction(finalized);
-  logger.log('Registration submitted');
+  logger.info('Registration submitted');
 }
 
 async function waitForDustBalance(walletFacade: WalletFacade): Promise<FacadeState> {
-  logger.log('Waiting for dust to generate...');
+  logger.info('Waiting for dust to generate...');
   const state = await Rx.firstValueFrom(
     walletFacade.state().pipe(
       Rx.throttleTime(5_000),
@@ -39,7 +39,7 @@ async function waitForDustBalance(walletFacade: WalletFacade): Promise<FacadeSta
       Rx.filter((s) => s.dust.walletBalance(new Date()) > 0n)
     )
   );
-  logger.log('Dust tokens available');
+  logger.info('Dust tokens available');
   return state;
 }
 

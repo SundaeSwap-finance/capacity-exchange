@@ -6,9 +6,9 @@
 .vscode
 .editorconfig
 dist
-dust-wallet-state-*.data
 node_modules
 price-formulas.json
 wallet-mnemonic.txt
 wallet-seed.hex
 midnight-level-db/
+.wallet-state/

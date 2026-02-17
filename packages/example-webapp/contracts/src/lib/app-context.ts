@@ -15,7 +15,7 @@ export interface AppContext {
 }
 
 export async function createAppContext(config: AppConfig): Promise<AppContext> {
-  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config;
+  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config.endpoints;
 
   await Promise.all([checkWebSocket(nodeUrl), checkProofServer(proofServerUrl), checkIndexerFreshness(indexerHttpUrl)]);
 

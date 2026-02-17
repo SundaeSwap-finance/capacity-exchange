@@ -14,10 +14,7 @@ export interface GenerateWalletResult {
   address: string;
 }
 
-export async function generateWallet(
-  provider: Provider,
-  args: GenerateWalletArgs
-): Promise<GenerateWalletResult> {
+export async function generateWallet(provider: Provider, args: GenerateWalletArgs): Promise<GenerateWalletResult> {
   const mnemonic = generateMnemonic(wordlist);
   const address = await mnemonicToSeedFile(provider, mnemonic, args.seedFile);
 

@@ -3,11 +3,7 @@ import { Bip32PrivateKey, mnemonicToEntropy, wordlist } from '@blaze-cardano/cor
 import { HotWallet, Provider } from '@blaze-cardano/sdk';
 import { BIP39_PASSPHRASE } from '../constants';
 
-export async function mnemonicToSeedFile(
-  provider: Provider,
-  mnemonic: string,
-  seedFile: string
-): Promise<string> {
+export async function mnemonicToSeedFile(provider: Provider, mnemonic: string, seedFile: string): Promise<string> {
   const entropy = mnemonicToEntropy(mnemonic, wordlist);
   const masterKey = Bip32PrivateKey.fromBip39Entropy(Buffer.from(entropy), BIP39_PASSPHRASE);
 

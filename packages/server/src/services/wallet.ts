@@ -5,9 +5,9 @@ import {
 } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
-import { nativeToken } from '@midnight-ntwrk/ledger-v6';
-import { WalletContext } from '../utils/wallet.js';
-import { StateWriter } from './state-writer.js';
+import { nativeToken } from '@midnight-ntwrk/ledger-v7';
+import { WalletConnection } from '@capacity-exchange/core';
+import { StateWriter, StateStore } from '@capacity-exchange/core/node';
 
 export type WalletSyncState =
   | { status: 'syncing' }
@@ -19,7 +19,7 @@ export type WalletSyncState =
  */
 export class WalletService {
   private readonly logger: FastifyBaseLogger;
-  private readonly walletContext: WalletContext;
+  private readonly walletConnection: WalletConnection;
   private readonly stateWriter: StateWriter<DustWalletState>;
 
   // Holds the higher-level wallet sync state
@@ -30,44 +30,37 @@ export class WalletService {
   private lastDustWalletState: DustWalletState | null = null;
 
   constructor(
-    walletContext: WalletContext,
+    walletConnection: WalletConnection,
     logger: FastifyBaseLogger,
-    dustWalletStateFile: string,
+    walletStateStore: StateStore,
   ) {
-    this.walletContext = walletContext;
+    this.walletConnection = walletConnection;
     this.logger = logger;
     this.stateWriter = new StateWriter(
-      dustWalletStateFile,
-      {
-        hash: (state: DustWalletState) =>
-          `${state.totalCoins.length}-${state.walletBalance(new Date())}`,
-      },
+      walletStateStore,
+      'dust',
+      (state: DustWalletState) => `${state.totalCoins.length}-${state.walletBalance(new Date())}`,
       logger.child({ service: 'StateWriter' }),
     );
   }
 
   async start() {
     this.logger.info('Starting WalletService');
-    await this.walletContext.start();
 
-    // Subscribe to wallet state updates (logs progress during sync, persists after)
-    let lastLoggedCoins = -1;
-    this.dustWalletSub = this.walletContext.walletFacade.dust.state.subscribe({
+    const { walletFacade, keys } = this.walletConnection;
+
+    // Subscribe to dust state before starting so we capture sync progress
+    this.dustWalletSub = walletFacade.dust.state.subscribe({
       next: (dustWalletState) => {
+        const prevCoins = this.lastDustWalletState?.totalCoins.length ?? 0;
         this.lastDustWalletState = dustWalletState;
-
-        if (this._syncState.status === 'ok') {
-          // After sync: persist state changes
-          this.stateWriter.schedule(dustWalletState);
-        } else {
-          // During sync: log progress when coin count changes
-          const coins = dustWalletState.totalCoins.length;
-          if (coins !== lastLoggedCoins) {
-            lastLoggedCoins = coins;
-            const balance = dustWalletState.walletBalance(new Date());
-            this.logger.info({ coins, balance: balance.toString() }, 'Sync progress');
-          }
+        if (
+          this._syncState.status === 'syncing' &&
+          dustWalletState.totalCoins.length !== prevCoins
+        ) {
+          this.logger.info({ coins: dustWalletState.totalCoins.length }, 'Wallet syncing...');
         }
+        this.stateWriter.schedule(dustWalletState);
       },
       error: (err) => {
         this.logger.error(err, 'DUST wallet state subscription error');
@@ -75,41 +68,28 @@ export class WalletService {
       },
     });
 
-    // Wait for sync to complete in background
-    this.walletContext.walletFacade.dust
-      .waitForSyncedState()
-      .then(async (syncedWalletState) => {
-        this.logger.info({ state: syncedWalletState.state }, "DUST wallet sync'd");
+    // Start the wallet
+    await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
+
+    // Background sync — transitions to 'ok' or 'ko'
+    walletFacade.dust.waitForSyncedState().then(
+      async () => {
         this._syncState = { status: 'ok' };
-
-        const now = new Date();
-        const coins = syncedWalletState.availableCoinsWithFullInfo(now);
-        if (coins.length > 0) {
-          this.logger.info({ count: coins.length }, 'Available DUST UTxOs found');
-          this.logger.debug({ coins });
-        } else {
-          this.logger.warn('No DUST UTxOs found. The service requires DUST UTxOs.');
-        }
-
-        // Persist initial synced state
-        this.stateWriter.schedule(syncedWalletState);
-        await this.stateWriter.flush();
-
         const { unshielded, shielded, dust } = await this.getBalances();
-        this.logger.debug(
+        this.logger.info(
           {
             unshielded: unshielded.toString(),
             shielded: shielded.toString(),
             dust: dust.toString(),
           },
-          'Wallet Balances',
+          'Wallet synced, balances:',
         );
-      })
-      .catch((error) => {
-        const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(error, 'Dust wallet sync failed');
-        this._syncState = { status: 'ko', error: message };
-      });
+      },
+      (err) => {
+        this.logger.error(err, 'Wallet sync failed');
+        this._syncState = { status: 'ko', error: String(err) };
+      },
+    );
   }
 
   async stop() {
@@ -130,7 +110,7 @@ export class WalletService {
       throw new Error('dust wallet not synced');
     }
     const [[spend]] = state.state.spendCoins(
-      this.walletContext.dustSecretKey,
+      this.walletConnection.keys.dustSecretKey,
       [{ token: utxo.token, value: amount }],
       new Date(),
     );
@@ -139,7 +119,7 @@ export class WalletService {
   }
 
   public async getBalances() {
-    const state = await firstValueFrom(this.walletContext.walletFacade.state());
+    const state = await firstValueFrom(this.walletConnection.walletFacade.state());
     const unshielded = state.unshielded?.balances[nativeToken().raw] ?? 0n;
     const shielded = state.shielded?.balances[nativeToken().raw] ?? 0n;
     const dust = state.dust?.walletBalance(new Date()) ?? 0n;

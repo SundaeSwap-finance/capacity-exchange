@@ -46,6 +46,9 @@ export class PriceService {
   // price = basePrice + specks * (rateNumerator / rateDenominator)
   // All arithmetic is bigint to avoid precision loss on large speck values.
   #computePrice(specks: bigint, formula: PriceFormula): bigint {
-    return BigInt(formula.basePrice) + (specks * BigInt(formula.rateNumerator) / BigInt(formula.rateDenominator));
+    return (
+      BigInt(formula.basePrice) +
+      (specks * BigInt(formula.rateNumerator)) / BigInt(formula.rateDenominator)
+    );
   }
 }

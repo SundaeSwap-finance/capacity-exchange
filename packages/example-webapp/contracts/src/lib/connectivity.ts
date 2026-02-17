@@ -31,7 +31,7 @@ async function fetchLatestBlock(indexerHttpUrl: string): Promise<{ height: numbe
 }
 
 export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
-  logger.log(`Checking ws at ${url}...`);
+  logger.info(`Checking ws at ${url}...`);
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     const timer = setTimeout(() => {
@@ -41,7 +41,7 @@ export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
     ws.once('open', () => {
       clearTimeout(timer);
       ws.close();
-      logger.log(`${url} is healthy`);
+      logger.info(`${url} is healthy`);
       resolve();
     });
     ws.once('error', () => {
@@ -54,23 +54,23 @@ export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
 
 export async function checkProofServer(proofServerUrl: string): Promise<void> {
   const url = `${proofServerUrl}/health`;
-  logger.log(`Checking proof server at ${url}...`);
+  logger.info(`Checking proof server at ${url}...`);
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   const json = (await res.json()) as { status?: string };
   if (json.status !== 'ok') {
     throw new Error(`Proof server health check failed: ${JSON.stringify(json)}`);
   }
-  logger.log('Proof server is healthy');
+  logger.info('Proof server is healthy');
 }
 
 export async function checkIndexerFreshness(indexerHttpUrl: string): Promise<void> {
-  logger.log(`Checking indexer freshness at ${indexerHttpUrl}...`);
+  logger.info(`Checking indexer freshness at ${indexerHttpUrl}...`);
 
   const { height, ageSec } = await fetchLatestBlock(indexerHttpUrl);
   const ageStr = formatAge(ageSec);
 
-  logger.log(`Indexer at block ${height}, ${ageStr} ago`);
+  logger.info(`Indexer at block ${height}, ${ageStr} ago`);
 
   if (ageSec > DUST_GRACE_PERIOD_SEC) {
     throw new Error(`Indexer is ${ageStr} behind (block ${height}). `);

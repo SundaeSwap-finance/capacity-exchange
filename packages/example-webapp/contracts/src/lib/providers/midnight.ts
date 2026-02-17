@@ -14,7 +14,7 @@ class PolkadotMidnightProvider implements MidnightProvider {
 
   async submitTx(tx: FinalizedTransaction): Promise<string> {
     const serializedTx = tx.serialize();
-    logger.log(`Submitting tx (${serializedTx.byteLength} bytes)...`);
+    logger.info(`Submitting tx (${serializedTx.byteLength} bytes)...`);
 
     await this.#api.sendMidnightTransactionAndWait(serializedTx, 'Finalized');
     const id = tx.identifiers().at(-1);

@@ -3,7 +3,6 @@ export type { WalletKeys } from '@capacity-exchange/core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../../config';
-import { resolveUrl } from '../../../utils';
 
 export interface SeedWalletConnection {
   walletFacade: WalletFacade;
@@ -20,11 +19,11 @@ export async function connectSeedWallet(seedHex: string, config: NetworkConfig):
     walletConfig: {
       networkId: config.networkId as NetworkId.NetworkId,
       costParameters: COST_PARAMS,
-      relayURL: new URL(resolveUrl(config.nodeWsUrl)),
-      provingServerUrl: new URL(resolveUrl(config.proofServerUrl)),
+      relayURL: new URL(config.nodeWsUrl),
+      provingServerUrl: new URL(config.proofServerUrl),
       indexerClientConnection: {
-        indexerHttpUrl: resolveUrl(config.indexerUrl),
-        indexerWsUrl: resolveUrl(config.indexerWsUrl),
+        indexerHttpUrl: config.indexerUrl,
+        indexerWsUrl: config.indexerWsUrl,
       },
     },
   });

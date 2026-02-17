@@ -22,9 +22,13 @@ function buildNetworkConfig(networkId: string): NetworkConfig {
   if (!defaults) {
     throw new Error(`Unknown network: ${networkId}`);
   }
+
+  // Route through Vite dev proxy to avoid CORS on the indexer HTTP endpoint.
+  const indexerUrl = `${window.location.origin}/proxy/${networkId}/indexer/api/v3/graphql`;
+
   return {
     networkId,
-    indexerUrl: defaults.indexerHttpUrl,
+    indexerUrl,
     indexerWsUrl: defaults.indexerWsUrl,
     proofServerUrl: defaults.proofServerUrl,
     nodeWsUrl: defaults.nodeUrl,
@@ -32,21 +36,8 @@ function buildNetworkConfig(networkId: string): NetworkConfig {
   };
 }
 
-// In dev mode, route preview network traffic through the Vite proxy to avoid CORS issues.
-const DEV_PREVIEW_OVERRIDES: Partial<NetworkConfig> = {
-  indexerUrl: '/proxy/preview-indexer/api/v3/graphql',
-  indexerWsUrl: '/proxy/preview-indexer/api/v3/graphql',
-  proofServerUrl: '/proxy/preview-prover',
-};
-
 export const NETWORK_CONFIGS: Record<string, NetworkConfig> = Object.fromEntries(
-  Object.keys(NETWORK_ENDPOINTS).map((id) => {
-    const base = buildNetworkConfig(id);
-    if (id === 'preview' && import.meta.env.DEV) {
-      return [id, { ...base, ...DEV_PREVIEW_OVERRIDES }];
-    }
-    return [id, base];
-  })
+  Object.keys(NETWORK_ENDPOINTS).map((id) => [id, buildNetworkConfig(id)])
 );
 
 export type NetworkId = keyof typeof NETWORK_CONFIGS;

@@ -1,26 +1,19 @@
 contracts_dir := "packages/example-webapp/contracts"
 webapp_dir := "packages/example-webapp"
 
+# Compile contracts only if not already compiled
+_compile-contracts-if-needed: _check-compactc
+    @test -d {{contracts_dir}}/counter/out && echo "Contracts already compiled, skipping." || just compile-contracts
+
 # Check that COMPACTC is set and valid
 _check-compactc:
-    @test -n "${COMPACTC:-}" || (echo "Error: COMPACTC environment variable not set." && echo "Set it to the path of the compactc binary, e.g.:" && echo "  export COMPACTC=$(pwd)/tools/compactc/compactc_v0.26.108-rc.0-UT-L6" && exit 1)
+    @test -n "${COMPACTC:-}" || (echo "Error: COMPACTC environment variable not set." && echo "First, unzip the correct archive for your platform to your home directory:" && echo "  unzip tools/compactc/compactc_v0.28.0_aarch64-darwin.zip -d ~/compactc_v0.28.0" && echo "Then set the COMPACTC environment variable:" && echo "  export COMPACTC=~/compactc_v0.28.0/compactc" && exit 1)
     @test -f "$COMPACTC" || (echo "Error: COMPACTC path does not exist: $COMPACTC" && exit 1)
     @"$COMPACTC" --version | grep -q "0.28.0" || (echo "Error: COMPACTC version mismatch. Required: 0.28.0" && exit 1)
 
-# Check that setup has been run
-_check-setup:
-    @test -d {{webapp_dir}}/public/midnight/counter/keys || (echo "Error: counter ZK assets not found. Run 'just setup <networkId>' first." && exit 1)
-    @test -d {{webapp_dir}}/public/midnight/token-mint/keys || (echo "Error: token-mint ZK assets not found. Run 'just setup <networkId>' first." && exit 1)
-    @test -f {{webapp_dir}}/.env || (echo "Error: {{webapp_dir}}/.env not found. Copy from .env.example:" && echo "  cp {{webapp_dir}}/.env.example {{webapp_dir}}/.env" && exit 1)
-
 # Copy compiled ZK assets to webapp public directory
 _copy-zk-assets:
-    mkdir -p {{webapp_dir}}/public/midnight/counter/keys {{webapp_dir}}/public/midnight/counter/zkir
-    cp -r {{contracts_dir}}/counter/out/keys/* {{webapp_dir}}/public/midnight/counter/keys/
-    cp -r {{contracts_dir}}/counter/out/zkir/* {{webapp_dir}}/public/midnight/counter/zkir/
-    mkdir -p {{webapp_dir}}/public/midnight/token-mint/keys {{webapp_dir}}/public/midnight/token-mint/zkir
-    cp -r {{contracts_dir}}/token-mint/out/keys/* {{webapp_dir}}/public/midnight/token-mint/keys/
-    cp -r {{contracts_dir}}/token-mint/out/zkir/* {{webapp_dir}}/public/midnight/token-mint/zkir/
+    npm run copy-zk-assets --workspace=@capacity-exchange/example-webapp
 
 # Install dependencies
 install:
@@ -34,43 +27,35 @@ compile-contracts: _check-compactc
 _build-ws:
     npm run build -ws --if-present --workspace=packages/client --workspace=packages/components
 
-# One-time setup: install deps, compile contracts, copy assets, and deploy
-setup networkId: install compile-contracts _copy-zk-assets _build-ws (deploy-all networkId)
+# One-time setup: install deps, compile contracts, copy assets, build, and deploy
+setup networkId: install _compile-contracts-if-needed _copy-zk-assets _build-ws (deploy networkId)
     @echo "Setup complete. Run 'just dev' to start the dev server."
 
 # Build all packages
-build: _check-setup
+build:
     npm run build -ws --if-present
 
 # Build components and run dev server
-dev: _check-setup
-    npm run build --workspace=packages/components
-    npx concurrently --kill-others-on-fail "npm:build:watch --workspace=@capacity-exchange/components" "npm:dev --workspace=@capacity-exchange/example-webapp"
+dev: install _build-ws
+    npm run dev --workspace=@capacity-exchange/example-webapp
 
 # Run tests
 test:
     npm run test -ws --if-present
 
 # Deploy all contracts for a network
-deploy-all networkId:
+deploy networkId:
     npm run deploy-all --prefix {{contracts_dir}} -- {{networkId}}
 
 # Lint and format check
 check:
-    npx eslint . && npx prettier --check .
+    npm run check
 
 # Lint and format fix
 fix:
-    npx eslint . --fix && npx prettier --write .
-
-# Setup, build, and run dev server
-do-it-all networkId: (setup networkId) build dev
+    npm run fix
 
 # Clean build artifacts
 clean:
     npm run clean -ws --if-present
-    npm run clean --prefix {{contracts_dir}}
-    rm -rf {{webapp_dir}}/public/midnight
-    rm -rf {{contracts_dir}}/.midnight-private-state
-    rm -rf {{contracts_dir}}/.midnight-wallet-state
-    rm -f {{contracts_dir}}/.contracts.*.json
+    rm -rf node_modules

@@ -142,10 +142,18 @@ export function useCesTransaction(
       await findAndIncrementCounter(providers, contractAddress, promptForCurrency, confirmOffer, config);
       setStatus('success');
     } catch (err) {
-      console.error('[CESTransaction] Error:', err);
-      setError(toUserErrorMessage(err));
-      setStatus('error');
       setCurrencySelection(null);
+      setOfferConfirmation(null);
+      if (
+        err instanceof CapacityExchangeUserCancelledError ||
+        (err instanceof Error && err.cause instanceof CapacityExchangeUserCancelledError)
+      ) {
+        setStatus('idle');
+      } else {
+        console.error('[CESTransaction] Error:', err);
+        setError(toUserErrorMessage(err));
+        setStatus('error');
+      }
     }
   }, [providers, contractAddress, config]);
 

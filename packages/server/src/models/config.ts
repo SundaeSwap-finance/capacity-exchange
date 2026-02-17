@@ -1,13 +1,9 @@
+import { NetworkEndpoints, WalletConnection } from '@capacity-exchange/core';
+import { StateStore } from '@capacity-exchange/core/node';
 import { PriceFormula } from '../services/price.js';
-import { WalletContext } from '../utils/wallet.js';
 
 export interface BaseConfig {
   MIDNIGHT_NETWORK: string;
-  NODE_URL: string;
-  NODE_WS_URL: string;
-  INDEXER_URL: string;
-  INDEXER_WS_URL: string;
-  PROOF_SERVER_URL: string;
   WALLET_SEED_FILE?: string;
   WALLET_MNEMONIC_FILE?: string;
   PRICE_FORMULAS_FILE: string;
@@ -17,44 +13,18 @@ export interface BaseConfig {
 }
 
 export interface AppConfig extends BaseConfig {
+  endpoints: NetworkEndpoints;
   WALLET_SEED: string;
-  DUST_WALLET_STATE_FILE: string;
   PRICE_FORMULAS: PriceFormula[];
-  walletContext: WalletContext;
+  walletConnection: WalletConnection;
+  walletStateStore: StateStore;
 }
 
 export const schema = {
   type: 'object',
-  required: [
-    'MIDNIGHT_NETWORK',
-    'NODE_URL',
-    'NODE_WS_URL',
-    'INDEXER_URL',
-    'INDEXER_WS_URL',
-    'PROOF_SERVER_URL',
-    'PRICE_FORMULAS_FILE',
-    'PORT',
-    'LOG_LEVEL',
-    'OFFER_TTL_SECONDS',
-  ],
+  required: ['MIDNIGHT_NETWORK', 'PRICE_FORMULAS_FILE', 'PORT', 'LOG_LEVEL', 'OFFER_TTL_SECONDS'],
   properties: {
     MIDNIGHT_NETWORK: {
-      type: 'string',
-      default: 'testnet',
-    },
-    NODE_URL: {
-      type: 'string',
-    },
-    NODE_WS_URL: {
-      type: 'string',
-    },
-    INDEXER_URL: {
-      type: 'string',
-    },
-    INDEXER_WS_URL: {
-      type: 'string',
-    },
-    PROOF_SERVER_URL: {
       type: 'string',
     },
     // Note: WALLET_SEED_FILE and WALLET_MNEMONIC_FILE are mutually exclusive
