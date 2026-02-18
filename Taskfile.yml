@@ -32,16 +32,15 @@ tasks:
 
   compile-contracts-if-needed:
     internal: true
-    deps: [compile-contracts]
     status:
       - test -d {{.CONTRACTS_DIR}}/counter/out
+    cmds:
+      - task: compile-contracts
 
   copy-zk-assets:
     desc: Copy compiled ZK assets to webapp public directory
     internal: true
-    preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
-        msg: "Compiled contracts not found. Run 'task compile-contracts' first."
+    deps: [compile-contracts-if-needed]
     cmds:
       - bun run --filter @capacity-exchange/example-webapp copy-zk-assets
 
@@ -53,7 +52,7 @@ tasks:
 
   setup:
     desc: "One-time setup: install deps, compile contracts, copy assets, build, and deploy"
-    deps: [install, compile-contracts-if-needed, copy-zk-assets, build-ws]
+    deps: [install, copy-zk-assets, build-ws]
     cmds:
       - task: deploy
         vars:
