@@ -54,7 +54,7 @@ export class StateWriter<T extends Serializable> {
 
     this.#writeTimeout = setTimeout(() => {
       this.#writeTimeout = null;
-      this.flush();
+      void this.flush().catch((err) => this.#logger.error(err, 'Failed to flush state'));
     }, this.#debounceMs);
   }
 
