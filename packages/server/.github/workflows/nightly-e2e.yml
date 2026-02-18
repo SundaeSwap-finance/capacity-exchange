@@ -28,3 +28,4 @@ jobs:
 
       - name: Run E2E Tests
         run: ./scripts/run-e2e.sh
+        working-directory: packages/server
