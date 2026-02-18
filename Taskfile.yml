@@ -1,0 +1,116 @@
+version: "3"
+
+vars:
+  CONTRACTS_DIR: packages/example-webapp/contracts
+  WEBAPP_DIR: packages/example-webapp
+
+tasks:
+  install:
+    desc: Install dependencies
+    preconditions:
+      - sh: command -v bun
+        msg: "bun is not installed. Install it: https://bun.sh"
+    cmds:
+      - bun install
+
+  compile-contracts:
+    desc: Compile Compact contracts
+    preconditions:
+      - sh: test -n "${COMPACTC:-}"
+        msg: |
+          Error: COMPACTC environment variable not set.
+          First, unzip the correct archive for your platform to your home directory:
+            unzip tools/compactc/compactc_v0.28.0_aarch64-darwin.zip -d ~/compactc_v0.28.0
+          Then set the COMPACTC environment variable:
+            export COMPACTC=~/compactc_v0.28.0/compactc
+      - sh: test -f "$COMPACTC"
+        msg: "Error: COMPACTC path does not exist: $COMPACTC"
+      - sh: '"$COMPACTC" --version | grep -q "0.28.0"'
+        msg: "Error: COMPACTC version mismatch. Required: 0.28.0"
+    cmds:
+      - bun run --cwd {{.CONTRACTS_DIR}} compile
+
+  compile-contracts-if-needed:
+    internal: true
+    deps: [compile-contracts]
+    status:
+      - test -d {{.CONTRACTS_DIR}}/counter/out
+
+  copy-zk-assets:
+    desc: Copy compiled ZK assets to webapp public directory
+    internal: true
+    preconditions:
+      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
+        msg: "Compiled contracts not found. Run 'task compile-contracts' first."
+    cmds:
+      - bun run --filter @capacity-exchange/example-webapp copy-zk-assets
+
+  build-ws:
+    desc: Build workspace packages (client, components) needed by contracts at runtime
+    internal: true
+    cmds:
+      - bun run --filter @capacity-exchange/client --filter @capacity-exchange/components build
+
+  setup:
+    desc: "One-time setup: install deps, compile contracts, copy assets, build, and deploy"
+    deps: [install, compile-contracts-if-needed, copy-zk-assets, build-ws]
+    cmds:
+      - task: deploy
+        vars:
+          NETWORK_ID: "{{.NETWORK_ID}}"
+      - echo "Setup complete. Run 'task dev' to start the dev server."
+    requires:
+      vars: [NETWORK_ID]
+
+  build:
+    desc: Build all packages
+    deps: [install]
+    cmds:
+      - bun run --filter '*' build
+
+  dev:
+    desc: Build components and run dev server
+    deps: [install, build-ws]
+    cmds:
+      - bun run --filter @capacity-exchange/example-webapp dev
+
+  test:
+    desc: Run tests
+    deps: [install]
+    cmds:
+      - bun run --if-present --filter '*' test
+
+  deploy:
+    desc: Deploy all contracts for a network
+    deps: [install]
+    preconditions:
+      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
+        msg: "Compiled contracts not found. Run 'task compile-contracts' first."
+      - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED_HEX=|^${UPPER}_MNEMONIC=" {{.CONTRACTS_DIR}}/.env 2>/dev/null'
+        msg: 'Missing <NETWORK_ID>_SEED_HEX or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
+    cmds:
+      - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
+    requires:
+      vars: [NETWORK_ID]
+
+  check:
+    desc: Lint and format check
+    preconditions:
+      - sh: test -d node_modules
+        msg: "node_modules not found. Run 'task install' first."
+    cmds:
+      - bun run check
+
+  fix:
+    desc: Lint and format fix
+    preconditions:
+      - sh: test -d node_modules
+        msg: "node_modules not found. Run 'task install' first."
+    cmds:
+      - bun run fix
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - bun run --filter '*' clean
+      - rm -rf node_modules
