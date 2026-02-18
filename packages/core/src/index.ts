@@ -16,6 +16,7 @@ export type { Logger } from './logger';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider';
 export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks';
 export { parseSeedHex, parseMnemonic } from './seed';
+export { parseCoinPublicKey } from './midnight';
 export {
   type CardanoNetwork,
   type BlockfrostNetworkName,

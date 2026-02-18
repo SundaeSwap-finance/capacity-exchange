@@ -7,7 +7,7 @@ interface AsyncActionState<T> {
   run: () => Promise<void>;
 }
 
-/** Wraps an async action with loading/result/error state. Resets on each `run` call. */
+/** Wraps an async action with loading/result/error state. Preserves previous result during re-runs. */
 export function useAsyncAction<T>(action: () => Promise<T>): AsyncActionState<T> {
   const [result, setResult] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +15,6 @@ export function useAsyncAction<T>(action: () => Promise<T>): AsyncActionState<T>
 
   const run = useCallback(async () => {
     setLoading(true);
-    setResult(null);
     setError(null);
     try {
       setResult(await action());

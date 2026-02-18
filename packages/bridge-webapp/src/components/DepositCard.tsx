@@ -6,14 +6,17 @@ import { getDepositAddress } from '../lib/blockfrost';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { BridgeCard } from './BridgeCard';
 import { FormField } from './FormField';
+import type { PendingDeposit } from '../lib/deposits';
 
 interface DepositCardProps {
   blaze: Blaze<Provider, Wallet> | null;
+  onDepositSuccess: (pending: PendingDeposit) => void;
+  midnightAddress: string;
+  onMidnightAddressChange: (value: string) => void;
 }
 
-export function DepositCard({ blaze }: DepositCardProps) {
+export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnightAddressChange }: DepositCardProps) {
   const [depositAddress, setDepositAddress] = useState(getDepositAddress());
-  const [midnightAddress, setMidnightAddress] = useState('');
   const [adaAmount, setAdaAmount] = useState('');
 
   const amount = parseFloat(adaAmount);
@@ -25,8 +28,12 @@ export function DepositCard({ blaze }: DepositCardProps) {
   ].filter(Boolean) as string[];
 
   const action = useCallback(
-    () => deposit(blaze!, { depositAddress, shieldedMidnightAddress: midnightAddress, lovelace: adaToLovelace(amount) }),
-    [blaze, midnightAddress, amount, depositAddress],
+    async () => {
+      const res = await deposit(blaze!, { depositAddress, shieldedMidnightAddress: midnightAddress, lovelace: adaToLovelace(amount) });
+      onDepositSuccess({ txHash: res.txHash, lovelace: res.lovelace, coinPublicKey: res.coinPublicKey });
+      return res;
+    },
+    [blaze, midnightAddress, amount, depositAddress, onDepositSuccess],
   );
   const { result, error, loading, run } = useAsyncAction(action);
 
@@ -50,7 +57,7 @@ export function DepositCard({ blaze }: DepositCardProps) {
           id="midnight-address"
           label="Midnight shielded address"
           value={midnightAddress}
-          onChange={setMidnightAddress}
+          onChange={onMidnightAddressChange}
           placeholder="midnight1..."
         />
         <FormField

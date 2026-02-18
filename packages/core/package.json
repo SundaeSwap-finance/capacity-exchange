@@ -16,6 +16,7 @@
     "@blaze-cardano/sdk": "^0.2.31",
     "@midnight-ntwrk/ledger-v7": "7.0.0",
     "@midnight-ntwrk/midnight-js-types": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-address-format": "^3.0.0",
     "@midnight-ntwrk/wallet-sdk-abstractions": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",

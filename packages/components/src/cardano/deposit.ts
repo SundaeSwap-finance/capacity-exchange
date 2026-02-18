@@ -1,9 +1,6 @@
 import { Blaze, Core, makeValue, Provider, Wallet } from "@blaze-cardano/sdk";
-import {
-  MidnightBech32m,
-  ShieldedAddress,
-} from "@midnight-ntwrk/wallet-sdk-address-format";
 import { buildDepositDatum } from "./datum";
+import { parseCoinPublicKey } from "@capacity-exchange/core";
 
 export interface DepositArgs {
   depositAddress: string;
@@ -25,9 +22,7 @@ export async function deposit(
 ): Promise<DepositResult> {
   const depositAddress = Core.addressFromBech32(args.depositAddress);
 
-  const parsed = MidnightBech32m.parse(args.shieldedMidnightAddress);
-  const shieldedAddress = parsed.decode(ShieldedAddress, parsed.network);
-  const coinPublicKey = shieldedAddress.coinPublicKey.toHexString();
+  const coinPublicKey = parseCoinPublicKey(args.shieldedMidnightAddress);
 
   const value = makeValue(args.lovelace);
   const datum = buildDepositDatum(coinPublicKey);
