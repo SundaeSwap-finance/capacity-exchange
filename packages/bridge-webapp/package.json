@@ -14,6 +14,7 @@
     "@blaze-cardano/sdk": "^0.2.31",
     "@capacity-exchange/components": "1.0.0",
     "@capacity-exchange/core": "1.0.0",
+    "@midnight-ntwrk/wallet-sdk-address-format": "^3.0.0",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.3",

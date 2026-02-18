@@ -24,5 +24,6 @@ export {
   LOVELACE_PER_ADA,
   ADA_DECIMALS,
   lovelaceToAda,
+  adaToLovelace,
   createProvider,
 } from './cardano';

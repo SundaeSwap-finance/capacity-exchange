@@ -20,6 +20,10 @@ export function lovelaceToAda(lovelace: bigint): string {
   return (Number(lovelace) / LOVELACE_PER_ADA).toFixed(ADA_DECIMALS);
 }
 
+export function adaToLovelace(ada: number): bigint {
+  return BigInt(Math.round(ada * LOVELACE_PER_ADA));
+}
+
 export function createProvider(config: NetworkConfig): Provider {
   return new Blockfrost({
     network: config.blockfrostNetwork,

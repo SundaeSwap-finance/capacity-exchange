@@ -17,6 +17,10 @@ export function getCardanoNetwork(): CardanoNetwork {
   return requireEnv('VITE_CARDANO_NETWORK') as CardanoNetwork;
 }
 
+export function getDepositAddress(): string {
+  return requireEnv('VITE_DEPOSIT_ADDRESS');
+}
+
 export function createBlockfrostProvider(): { provider: Provider; network: CardanoNetwork } {
   const network = getCardanoNetwork();
   const projectId = requireEnv('VITE_BLOCKFROST_PROJECT_ID');

@@ -2,10 +2,11 @@ import { useCardanoWallet } from './hooks/useCardanoWallet';
 import { WalletConnect } from './components/WalletConnect';
 import { NetworkRibbon } from './components/NetworkRibbon';
 import { BridgeCard } from './components/BridgeCard';
+import { DepositCard } from './components/DepositCard';
 
 function App() {
   const {
-    wallets, connectedWallet, address, balanceAda,
+    wallets, connectedWallet, address, balanceAda, blaze,
     connecting, error, refreshWallets, connect, disconnect,
   } = useCardanoWallet();
 
@@ -32,10 +33,7 @@ function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <BridgeCard
-              title="Deposit"
-              description="Cardano → Midnight. Lock ADA on Cardano and receive mADA on the Midnight network."
-            />
+            <DepositCard blaze={blaze} />
             <BridgeCard
               title="Withdraw"
               description="Midnight → Cardano. Burn mADA on the Midnight network and reclaim ADA on Cardano."

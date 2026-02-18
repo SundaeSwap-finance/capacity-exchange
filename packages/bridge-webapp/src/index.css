@@ -50,6 +50,34 @@ body {
     @apply text-dark-500 mx-1.5;
   }
 
+  /* ── Forms ────────────────────────────────────────── */
+  .input {
+    @apply w-full rounded-lg border border-dark-700 bg-dark-900 px-3 py-2 text-sm text-dark-100
+           placeholder-dark-500 focus:border-dark-500 focus:outline-none transition-colors;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-dark-300 mb-1;
+  }
+
+  .btn-primary {
+    @apply w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white
+           hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+  }
+
+  /* ── Alerts ───────────────────────────────────────── */
+  .alert {
+    @apply mt-4 rounded-lg border p-3 text-sm break-all;
+  }
+
+  .alert-success {
+    @apply alert bg-green-900/30 border-green-700 text-green-300;
+  }
+
+  .alert-error {
+    @apply alert bg-red-900/30 border-red-700 text-red-300;
+  }
+
   /* ── Misc ─────────────────────────────────────────── */
   .spinner {
     @apply h-4 w-4 animate-spin rounded-full border-2 border-dark-400 border-t-dark-50;
