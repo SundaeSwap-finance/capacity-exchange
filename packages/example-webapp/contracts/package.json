@@ -11,18 +11,18 @@
     "clean": "rm -rf counter/out token-mint/out node_modules .midnight-private-state .wallet-state .contracts.*.json",
     "compile:counter": "\"$COMPACTC\" counter/counter.compact counter/out",
     "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
-    "compile": "npm run compile:counter && npm run compile:token-mint",
+    "compile": "bun run compile:counter && bun run compile:token-mint",
     "build": "tsc --noEmit",
-    "balances": "tsx src/wallet/cli/balances.ts",
-    "counter:e2e": "tsx src/counter/cli/e2e.ts",
-    "counter:deploy": "tsx src/counter/cli/deploy.ts",
-    "counter:increment": "tsx src/counter/cli/increment.ts",
-    "counter:query": "tsx src/counter/cli/query.ts",
-    "token-mint:e2e": "tsx src/token-mint/cli/e2e.ts",
-    "token-mint:deploy": "tsx src/token-mint/cli/deploy.ts",
-    "token-mint:mint": "tsx src/token-mint/cli/mint.ts",
-    "token-mint:verify": "tsx src/token-mint/cli/verify.ts",
-    "deploy-all": "tsx src/deploy-all.ts"
+    "balances": "bun src/wallet/cli/balances.ts",
+    "counter:e2e": "bun src/counter/cli/e2e.ts",
+    "counter:deploy": "bun src/counter/cli/deploy.ts",
+    "counter:increment": "bun src/counter/cli/increment.ts",
+    "counter:query": "bun src/counter/cli/query.ts",
+    "token-mint:e2e": "bun src/token-mint/cli/e2e.ts",
+    "token-mint:deploy": "bun src/token-mint/cli/deploy.ts",
+    "token-mint:mint": "bun src/token-mint/cli/mint.ts",
+    "token-mint:verify": "bun src/token-mint/cli/verify.ts",
+    "deploy-all": "bun src/deploy-all.ts"
   },
   "keywords": [
     "midnight",
@@ -43,6 +43,7 @@
     "@midnight-ntwrk/midnight-js-level-private-state-provider": "3.0.0",
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.0.0",
     "@midnight-ntwrk/midnight-js-types": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-node-client": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
     "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
@@ -65,7 +66,7 @@
     "eslint": "^9.39.2",
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
-    "tsx": "^4.21.0",
+
     "typescript": "^5.9.3"
   }
 }

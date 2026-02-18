@@ -13,49 +13,49 @@ _check-compactc:
 
 # Copy compiled ZK assets to webapp public directory
 _copy-zk-assets:
-    npm run copy-zk-assets --workspace=@capacity-exchange/example-webapp
+    bun run --filter @capacity-exchange/example-webapp copy-zk-assets
 
 # Install dependencies
 install:
-    npm install
+    bun install
 
 # Compile Compact contracts
 compile-contracts: _check-compactc
-    npm run compile --prefix {{contracts_dir}}
+    bun run --cwd {{contracts_dir}} compile
 
 # Build workspace packages (client, components) needed by contracts at runtime
 _build-ws:
-    npm run build -ws --if-present --workspace=packages/client --workspace=packages/components
+    bun run --filter @capacity-exchange/client --filter @capacity-exchange/components build
 
 # One-time setup: install deps, compile contracts, copy assets, build, and deploy
 setup networkId: install _compile-contracts-if-needed _copy-zk-assets _build-ws (deploy networkId)
     @echo "Setup complete. Run 'just dev' to start the dev server."
 
 # Build all packages
-build:
-    npm run build -ws --if-present
+build: install
+    bun run --filter '*' build
 
 # Build components and run dev server
 dev: install _build-ws
-    npm run dev --workspace=@capacity-exchange/example-webapp
+    bun run --filter @capacity-exchange/example-webapp dev
 
 # Run tests
-test:
-    npm run test -ws --if-present
+test: install
+    bun run --filter '*' test
 
 # Deploy all contracts for a network
 deploy networkId:
-    npm run deploy-all --prefix {{contracts_dir}} -- {{networkId}}
+    bun run --cwd {{contracts_dir}} deploy-all {{networkId}}
 
 # Lint and format check
 check:
-    npm run check
+    bun run check
 
 # Lint and format fix
 fix:
-    npm run fix
+    bun run fix
 
 # Clean build artifacts
 clean:
-    npm run clean -ws --if-present
+    bun run --filter '*' clean
     rm -rf node_modules
