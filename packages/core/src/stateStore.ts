@@ -63,7 +63,7 @@ export class StateStore {
   async clearAll(): Promise<void> {
     try {
       const files = await readdir(this.#dir);
-      const matching = files.filter((f) => f.includes(this.#suffix));
+      const matching = files.filter((f) => f.endsWith(`-${this.#suffix}.data`));
       await Promise.all(matching.map((f) => unlink(path.join(this.#dir, f)).catch(() => {})));
       this.#logger.debug(`Cleared all state (${matching.length} files)`);
     } catch {
