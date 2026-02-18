@@ -28,7 +28,6 @@
   "devDependencies": {
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
-
     "@eslint/js": "^9.39.2",
     "@midnight-ntwrk/dapp-connector-api": "4.0.0",
     "@midnight-ntwrk/ledger-v7": "7.0.0",

@@ -6,4 +6,4 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-npx tsx src/tools/deploy-cli.ts "$1"
+bun src/tools/deploy-cli.ts "$1"
