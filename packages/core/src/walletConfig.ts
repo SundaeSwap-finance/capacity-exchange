@@ -27,7 +27,10 @@ function buildWalletConfig(networkId: NetworkId.NetworkId, endpoints: NetworkEnd
 }
 
 export const WALLET_CONFIGS: Record<NetworkId.NetworkId, WalletConfig> = Object.fromEntries(
-  Object.entries(NETWORK_ENDPOINTS).map(([id, endpoints]) => [id, buildWalletConfig(id, endpoints)])
+  Object.entries(NETWORK_ENDPOINTS).map(([id, endpoints]) => [
+    id,
+    buildWalletConfig(id as NetworkId.NetworkId, endpoints),
+  ])
 );
 
 export function resolveWalletConfig(networkId: NetworkId.NetworkId): WalletConfig {

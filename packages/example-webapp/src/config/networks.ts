@@ -1,4 +1,5 @@
-import { NETWORK_ENDPOINTS } from '@capacity-exchange/core';
+import { NETWORK_ENDPOINTS, type NetworkEndpoints } from '@capacity-exchange/core';
+import type { NetworkId as MidnightNetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
 function requireEnv(name: string): string {
   const value = import.meta.env[name];
@@ -18,7 +19,7 @@ export interface NetworkConfig {
 }
 
 function buildNetworkConfig(networkId: string): NetworkConfig {
-  const defaults = NETWORK_ENDPOINTS[networkId];
+  const defaults: NetworkEndpoints | undefined = NETWORK_ENDPOINTS[networkId as MidnightNetworkId.NetworkId];
   if (!defaults) {
     throw new Error(`Unknown network: ${networkId}`);
   }
