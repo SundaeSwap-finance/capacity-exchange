@@ -43,9 +43,13 @@ export class StateStore {
       const data = await readFile(this.#filePath(name), 'utf-8');
       this.#logger.debug(`Loaded state '${name}'`);
       return data;
-    } catch {
-      this.#logger.debug(`No saved state for '${name}'`);
-      return undefined;
+    } catch (err) {
+      const nodeErr = err as NodeJS.ErrnoException;
+      if (nodeErr?.code === 'ENOENT') {
+        this.#logger.debug(`No saved state for '${name}'`);
+        return undefined;
+      }
+      throw err;
     }
   }
 
