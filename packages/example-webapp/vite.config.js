@@ -54,6 +54,11 @@ export default defineConfig({
     proxy: buildProxyConfig(),
   },
   optimizeDeps: {
+    include: [
+      'vite-plugin-node-polyfills/shims/buffer',
+      'vite-plugin-node-polyfills/shims/global',
+      'vite-plugin-node-polyfills/shims/process',
+    ],
     exclude: ['@midnight-ntwrk/ledger-v7'],
   },
 });
