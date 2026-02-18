@@ -3,7 +3,7 @@ webapp_dir := "packages/example-webapp"
 
 # Compile contracts only if not already compiled
 _compile-contracts-if-needed: _check-compactc
-    @test -d {{contracts_dir}}/counter/out && echo "Contracts already compiled, skipping." || just compile-contracts
+    @test -d {{contracts_dir}}/counter/out && test -d {{contracts_dir}}/token-mint/out && echo "Contracts already compiled, skipping." || just compile-contracts
 
 # Check that COMPACTC is set and valid
 _check-compactc:
