@@ -1,6 +1,6 @@
 import { Address } from '@blaze-cardano/core';
 import { Provider } from '@blaze-cardano/sdk';
-import { lovelaceToAda } from './constants';
+import { lovelaceToAda } from '@capacity-exchange/core';
 import { decodeDepositDatum, DecodedDepositDatum } from './datum';
 
 export interface UtxosArgs {

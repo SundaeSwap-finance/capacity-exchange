@@ -1,0 +1,50 @@
+import { useCardanoWallet } from './hooks/useCardanoWallet';
+import { WalletConnect } from './components/WalletConnect';
+import { NetworkRibbon } from './components/NetworkRibbon';
+import { BridgeCard } from './components/BridgeCard';
+
+function App() {
+  const {
+    wallets, connectedWallet, address, balanceAda,
+    connecting, error, refreshWallets, connect, disconnect,
+  } = useCardanoWallet();
+
+  return (
+    <>
+      <NetworkRibbon />
+      <div className="min-h-screen bg-gradient-dark p-8 pt-14">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-dark-50">
+              Bridge — Cardano ↔ Midnight
+            </h1>
+            <WalletConnect
+              wallets={wallets}
+              connectedWallet={connectedWallet}
+              address={address}
+              balanceAda={balanceAda}
+              connecting={connecting}
+              error={error}
+              onOpen={refreshWallets}
+              onConnect={connect}
+              onDisconnect={disconnect}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <BridgeCard
+              title="Deposit"
+              description="Cardano → Midnight. Lock ADA on Cardano and receive mADA on the Midnight network."
+            />
+            <BridgeCard
+              title="Withdraw"
+              description="Midnight → Cardano. Burn mADA on the Midnight network and reclaim ADA on Cardano."
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default App;

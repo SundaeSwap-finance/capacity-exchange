@@ -1,11 +1,7 @@
-export type CardanoNetwork = 'mainnet' | 'preprod' | 'preview';
-export type BlockfrostNetworkName = 'cardano-mainnet' | 'cardano-preprod' | 'cardano-preview';
-
-export interface NetworkConfig {
-  network: CardanoNetwork;
-  blockfrostNetwork: BlockfrostNetworkName;
-  blockfrostProjectId: string;
-}
+export type { CardanoNetwork, BlockfrostNetworkName, NetworkConfig } from '@capacity-exchange/core';
+export { toBlockfrostNetworkName } from '@capacity-exchange/core';
+import type { CardanoNetwork, NetworkConfig } from '@capacity-exchange/core';
+import { toBlockfrostNetworkName } from '@capacity-exchange/core';
 
 export function requireEnv(name: string): string {
   const value = process.env[name];
@@ -27,10 +23,6 @@ function requireNetwork(name: string): CardanoNetwork {
     throw new Error(`Invalid network: ${value}. Must be one of: ${VALID_NETWORKS.join(', ')}`);
   }
   return value;
-}
-
-export function toBlockfrostNetworkName(network: CardanoNetwork): BlockfrostNetworkName {
-  return `cardano-${network}`;
 }
 
 export function getNetworkConfig(): NetworkConfig {

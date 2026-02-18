@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-dark-900 text-dark-100 min-h-screen;
+}
+
+@layer components {
+  /* ── Surfaces ─────────────────────────────────────── */
+  .card {
+    @apply rounded-xl border border-dark-700 bg-dark-800 p-6 shadow-lg;
+  }
+
+  .chip {
+    @apply flex items-center rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm;
+  }
+
+  /* ── Buttons ──────────────────────────────────────── */
+  .btn {
+    @apply rounded-lg border border-dark-700 bg-dark-800 px-4 py-2 text-sm text-dark-200
+           hover:bg-dark-700 transition-colors;
+  }
+
+  .btn-sm {
+    @apply rounded bg-dark-700 px-2.5 py-1 text-xs text-dark-300
+           hover:bg-dark-600 hover:text-dark-200 transition-colors;
+  }
+
+  /* ── Dropdown ─────────────────────────────────────── */
+  .dropdown-menu {
+    @apply absolute right-0 mt-2 w-56 rounded-lg border border-dark-700 bg-dark-800 shadow-xl z-50;
+  }
+
+  .dropdown-item {
+    @apply flex w-full items-center gap-2 px-3 py-2 text-sm text-dark-200
+           hover:bg-dark-700 transition-colors;
+  }
+
+  /* ── Text ─────────────────────────────────────────── */
+  .text-muted {
+    @apply text-dark-400 text-sm;
+  }
+
+  .text-muted-xs {
+    @apply text-dark-400 text-xs;
+  }
+
+  .separator {
+    @apply text-dark-500 mx-1.5;
+  }
+
+  /* ── Misc ─────────────────────────────────────────── */
+  .spinner {
+    @apply h-4 w-4 animate-spin rounded-full border-2 border-dark-400 border-t-dark-50;
+  }
+
+  .ribbon {
+    @apply text-white text-xs font-semibold text-center py-1 tracking-wide uppercase;
+  }
+}
