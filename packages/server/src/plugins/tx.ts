@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { TxService } from '../services/tx';
+import { TxService } from '../services/tx.js';
 
 declare module 'fastify' {
   interface FastifyInstance {

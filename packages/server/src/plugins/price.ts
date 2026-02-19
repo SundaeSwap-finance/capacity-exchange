@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { PriceService } from '../services/price';
+import { PriceService } from '../services/price.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
