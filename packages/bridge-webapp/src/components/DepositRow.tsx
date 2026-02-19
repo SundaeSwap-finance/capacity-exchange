@@ -18,7 +18,8 @@ export function DepositRow({ txHash, index, lovelace, coinPublicKey, pending }: 
         </div>
       )}
       <div className="break-all">
-        <span className="text-muted">Tx:</span> {txHash}{index != null && `#${index}`}
+        <span className="text-muted">Tx:</span> {txHash}
+        {index != null && `#${index}`}
       </div>
       <div>
         <span className="text-muted">ADA:</span> {lovelaceToAda(BigInt(lovelace))}

@@ -12,7 +12,9 @@ interface FormFieldProps {
 export function FormField({ id, label, type = 'text', value, onChange, placeholder, min, step }: FormFieldProps) {
   return (
     <div>
-      <label className="label" htmlFor={id}>{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
       <input
         id={id}
         className="input"

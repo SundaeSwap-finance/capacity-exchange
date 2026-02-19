@@ -22,10 +22,13 @@ function getCardanoProviders(): Record<string, Cip30Provider> | undefined {
 
 export function detectWallets(): DetectedWallet[] {
   const cardano = getCardanoProviders();
-  if (!cardano) {return [];}
+  if (!cardano) {
+    return [];
+  }
   return Object.entries(cardano)
-    .filter(([, provider]) =>
-      provider && typeof provider === 'object' && typeof provider.enable === 'function' && provider.name
+    .filter(
+      ([, provider]) =>
+        provider && typeof provider === 'object' && typeof provider.enable === 'function' && provider.name
     )
     .map(([key, provider]) => ({
       name: key,
@@ -42,10 +45,7 @@ export async function enableWallet(walletName: string): Promise<WebWallet> {
   return new WebWallet(api);
 }
 
-export async function assertNetworkMatch(
-  webWallet: WebWallet,
-  configuredNetwork: CardanoNetwork,
-): Promise<void> {
+export async function assertNetworkMatch(webWallet: WebWallet, configuredNetwork: CardanoNetwork): Promise<void> {
   const walletNetworkId = await webWallet.getNetworkId();
   const expectMainnet = configuredNetwork === 'mainnet';
   const walletIsMainnet = walletNetworkId === 1;
@@ -54,7 +54,9 @@ export async function assertNetworkMatch(
     throw new Error('Wallet is on testnet but app is configured for mainnet. Switch your wallet to mainnet.');
   }
   if (!expectMainnet && walletIsMainnet) {
-    throw new Error(`Wallet is on mainnet but app is configured for ${configuredNetwork}. Switch your wallet to a testnet.`);
+    throw new Error(
+      `Wallet is on mainnet but app is configured for ${configuredNetwork}. Switch your wallet to a testnet.`
+    );
   }
 }
 

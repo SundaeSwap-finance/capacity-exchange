@@ -1,20 +1,18 @@
-import { parse, serialize, Type } from "@blaze-cardano/data";
-import { Core } from "@blaze-cardano/sdk";
+import { parse, serialize, Type } from '@blaze-cardano/data';
+import { Core } from '@blaze-cardano/sdk';
 
 export const DepositDatum = Type.Object(
   {
     coinPublicKey: Type.String(),
   },
-  { ctor: 0n },
+  { ctor: 0n }
 );
 
 export interface DecodedDepositDatum {
   coinPublicKey: string;
 }
 
-export function buildDepositDatum(
-  coinPublicKey: string,
-): Core.PlutusData {
+export function buildDepositDatum(coinPublicKey: string): Core.PlutusData {
   const datum = { coinPublicKey };
   const data = serialize(DepositDatum, datum);
   return Core.PlutusData.fromCbor(Core.HexBlob(data.toCbor()));

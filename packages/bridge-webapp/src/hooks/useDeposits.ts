@@ -19,7 +19,9 @@ export function useDeposits(): UseDepositsResult {
 
   const { result, error, loading, run } = useAsyncAction(fetchUtxos);
 
-  useEffect(() => { run(); }, [run]);
+  useEffect(() => {
+    run();
+  }, [run]);
 
   return { result, error, loading, refresh: run };
 }

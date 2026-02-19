@@ -1,9 +1,5 @@
 import type { Provider } from '@blaze-cardano/sdk';
-import {
-  createProvider,
-  toBlockfrostNetworkName,
-  type CardanoNetwork,
-} from '@capacity-exchange/core';
+import { createProvider, toBlockfrostNetworkName, type CardanoNetwork } from '@capacity-exchange/core';
 
 function requireEnv(name: string): string {
   const value = import.meta.env[name];
@@ -13,8 +9,14 @@ function requireEnv(name: string): string {
   return value;
 }
 
+const VALID_NETWORKS: CardanoNetwork[] = ['mainnet', 'preprod', 'preview'];
+
 export function getCardanoNetwork(): CardanoNetwork {
-  return requireEnv('VITE_CARDANO_NETWORK') as CardanoNetwork;
+  const value = requireEnv('VITE_CARDANO_NETWORK');
+  if (!VALID_NETWORKS.includes(value as CardanoNetwork)) {
+    throw new Error(`VITE_CARDANO_NETWORK must be one of ${VALID_NETWORKS.join(', ')}, got: ${value}`);
+  }
+  return value as CardanoNetwork;
 }
 
 export function getDepositAddress(): string {

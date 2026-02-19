@@ -14,7 +14,9 @@ interface WalletConnectProps {
 }
 
 function truncateAddress(addr: string): string {
-  if (addr.length <= 20) {return addr;}
+  if (addr.length <= 20) {
+    return addr;
+  }
   return `${addr.slice(0, 12)}...${addr.slice(-8)}`;
 }
 
@@ -59,26 +61,14 @@ function WalletConnected({
 }
 
 function DropdownError({ message }: { message: string }) {
-  return (
-    <p className="text-red-400 text-xs px-3 py-2 border-b border-dark-700">{message}</p>
-  );
+  return <p className="text-red-400 text-xs px-3 py-2 border-b border-dark-700">{message}</p>;
 }
 
 function DropdownEmpty() {
-  return (
-    <p className="text-muted-xs px-3 py-3">
-      No CIP-30 wallet detected. Install a Cardano wallet extension.
-    </p>
-  );
+  return <p className="text-muted-xs px-3 py-3">No CIP-30 wallet detected. Install a Cardano wallet extension.</p>;
 }
 
-function DropdownWalletItem({
-  wallet,
-  onSelect,
-}: {
-  wallet: DetectedWallet;
-  onSelect: () => void;
-}) {
+function DropdownWalletItem({ wallet, onSelect }: { wallet: DetectedWallet; onSelect: () => void }) {
   return (
     <button onClick={onSelect} className="dropdown-item">
       {wallet.icon && <img src={wallet.icon} alt={wallet.name} className="h-5 w-5" />}
@@ -104,11 +94,7 @@ function WalletDropdown({
       ) : (
         <div className="py-1">
           {wallets.map((wallet) => (
-            <DropdownWalletItem
-              key={wallet.name}
-              wallet={wallet}
-              onSelect={() => onSelect(wallet.name)}
-            />
+            <DropdownWalletItem key={wallet.name} wallet={wallet} onSelect={() => onSelect(wallet.name)} />
           ))}
         </div>
       )}
@@ -135,12 +121,7 @@ export function WalletConnect({
 
   if (connectedWallet && address) {
     return (
-      <WalletConnected
-        name={connectedWallet}
-        address={address}
-        balanceAda={balanceAda}
-        onDisconnect={onDisconnect}
-      />
+      <WalletConnected name={connectedWallet} address={address} balanceAda={balanceAda} onDisconnect={onDisconnect} />
     );
   }
 

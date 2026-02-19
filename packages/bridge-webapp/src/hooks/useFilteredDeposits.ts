@@ -23,7 +23,11 @@ interface UseFilteredDepositsResult {
   filterError: string | null;
 }
 
-export function useFilteredDeposits({ utxos, pendingDeposits, filterAddress }: UseFilteredDepositsArgs): UseFilteredDepositsResult {
+export function useFilteredDeposits({
+  utxos,
+  pendingDeposits,
+  filterAddress,
+}: UseFilteredDepositsArgs): UseFilteredDepositsResult {
   return useMemo(() => {
     const validDeposits = utxos.filter(isValidDeposit);
     const trimmed = filterAddress.trim();

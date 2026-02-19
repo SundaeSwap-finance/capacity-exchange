@@ -19,7 +19,7 @@ export function filterByCoinPublicKey(deposits: ValidDeposit[], coinPublicKey: s
 export function filterVisiblePending(
   pendingDeposits: PendingDeposit[],
   confirmedDeposits: ValidDeposit[],
-  coinPublicKey?: string,
+  coinPublicKey?: string
 ): PendingDeposit[] {
   const confirmedTxHashes = new Set(confirmedDeposits.map((u) => u.txHash));
   return pendingDeposits.filter((d) => {

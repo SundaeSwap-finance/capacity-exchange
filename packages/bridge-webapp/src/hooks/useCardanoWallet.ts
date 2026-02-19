@@ -53,5 +53,16 @@ export function useCardanoWallet(): CardanoWalletState {
     setError(null);
   }, []);
 
-  return { wallets, connectedWallet, address, balanceAda, blaze, connecting, error, refreshWallets, connect, disconnect };
+  return {
+    wallets,
+    connectedWallet,
+    address,
+    balanceAda,
+    blaze,
+    connecting,
+    error,
+    refreshWallets,
+    connect,
+    disconnect,
+  };
 }

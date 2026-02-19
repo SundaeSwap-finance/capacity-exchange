@@ -28,7 +28,12 @@ interface DepositsCardProps {
   onFilterAddressChange: (value: string) => void;
 }
 
-export function DepositsCard({ pendingDeposits, onDepositConfirmed, filterAddress, onFilterAddressChange }: DepositsCardProps) {
+export function DepositsCard({
+  pendingDeposits,
+  onDepositConfirmed,
+  filterAddress,
+  onFilterAddressChange,
+}: DepositsCardProps) {
   const { result, error, loading, refresh } = useDeposits();
   usePendingDeposits({ pendingDeposits, utxos: result?.utxos ?? [], onDepositConfirmed, refresh });
   const { filtered, visiblePending, totalAdaStr, filterError } = useFilteredDeposits({
@@ -38,10 +43,7 @@ export function DepositsCard({ pendingDeposits, onDepositConfirmed, filterAddres
   });
 
   return (
-    <BridgeCard
-      title="Deposits"
-      description="View deposits at the bridge deposit address."
-    >
+    <BridgeCard title="Deposits" description="View deposits at the bridge deposit address.">
       <div className="space-y-4">
         <FormField
           id="filter-midnight-address"

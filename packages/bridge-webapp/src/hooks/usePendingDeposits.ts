@@ -11,16 +11,27 @@ interface UsePendingDepositsArgs {
   refresh: () => Promise<void>;
 }
 
-export function usePendingDeposits({ pendingDeposits, utxos, onDepositConfirmed, refresh }: UsePendingDepositsArgs): void {
+export function usePendingDeposits({
+  pendingDeposits,
+  utxos,
+  onDepositConfirmed,
+  refresh,
+}: UsePendingDepositsArgs): void {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Poll while there are pending deposits
   useEffect(() => {
-    if (pendingDeposits.length === 0) {return;}
+    if (pendingDeposits.length === 0) {
+      return;
+    }
 
-    intervalRef.current = setInterval(() => { refresh(); }, POLL_INTERVAL_MS);
+    intervalRef.current = setInterval(() => {
+      refresh();
+    }, POLL_INTERVAL_MS);
     return () => {
-      if (intervalRef.current) {clearInterval(intervalRef.current);}
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, [pendingDeposits.length, refresh]);
 

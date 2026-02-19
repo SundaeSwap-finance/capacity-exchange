@@ -7,18 +7,14 @@ interface DepositsListProps {
 }
 
 export function DepositsList({ pending, confirmed }: DepositsListProps) {
-  if (pending.length === 0 && confirmed.length === 0) {return null;}
+  if (pending.length === 0 && confirmed.length === 0) {
+    return null;
+  }
 
   return (
     <ul className="space-y-2">
       {pending.map((d) => (
-        <DepositRow
-          key={d.txHash}
-          txHash={d.txHash}
-          lovelace={d.lovelace}
-          coinPublicKey={d.coinPublicKey}
-          pending
-        />
+        <DepositRow key={d.txHash} txHash={d.txHash} lovelace={d.lovelace} coinPublicKey={d.coinPublicKey} pending />
       ))}
       {confirmed.map((u) => (
         <DepositRow

@@ -16,7 +16,13 @@ interface DepositCardProps {
 }
 
 export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnightAddressChange }: DepositCardProps) {
-  const [depositAddress, setDepositAddress] = useState(getDepositAddress());
+  const [depositAddress, setDepositAddress] = useState(() => {
+    try {
+      return getDepositAddress();
+    } catch {
+      return '';
+    }
+  });
   const [adaAmount, setAdaAmount] = useState('');
 
   const amount = parseFloat(adaAmount);
@@ -27,14 +33,15 @@ export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnig
     !(amount > 0) && 'Enter an ADA amount greater than 0',
   ].filter(Boolean) as string[];
 
-  const action = useCallback(
-    async () => {
-      const res = await deposit(blaze!, { depositAddress, shieldedMidnightAddress: midnightAddress, lovelace: adaToLovelace(amount) });
-      onDepositSuccess({ txHash: res.txHash, lovelace: res.lovelace, coinPublicKey: res.coinPublicKey });
-      return res;
-    },
-    [blaze, midnightAddress, amount, depositAddress, onDepositSuccess],
-  );
+  const action = useCallback(async () => {
+    const res = await deposit(blaze!, {
+      depositAddress,
+      shieldedMidnightAddress: midnightAddress,
+      lovelace: adaToLovelace(amount),
+    });
+    onDepositSuccess({ txHash: res.txHash, lovelace: res.lovelace, coinPublicKey: res.coinPublicKey });
+    return res;
+  }, [blaze, midnightAddress, amount, depositAddress, onDepositSuccess]);
   const { result, error, loading, run } = useAsyncAction(action);
 
   return (
@@ -43,7 +50,10 @@ export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnig
       description="Cardano → Midnight. Lock ADA on Cardano and receive mADA on the Midnight network."
     >
       <form
-        onSubmit={(e) => { e.preventDefault(); run(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          run();
+        }}
         className="space-y-4"
       >
         <FormField
@@ -74,15 +84,13 @@ export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnig
         <button type="submit" className="btn-primary" disabled={disabledReasons.length > 0 || loading}>
           {loading ? 'Submitting…' : 'Submit Deposit'}
         </button>
-        {disabledReasons.length > 0 && <p className="text-muted-xs whitespace-pre-line">{disabledReasons.join('\n')}</p>}
+        {disabledReasons.length > 0 && (
+          <p className="text-muted-xs whitespace-pre-line">{disabledReasons.join('\n')}</p>
+        )}
       </form>
 
-      {result && (
-        <div className="alert-success">Transaction submitted: {result.txHash}</div>
-      )}
-      {error && (
-        <div className="alert-error">{error}</div>
-      )}
+      {result && <div className="alert-success">Transaction submitted: {result.txHash}</div>}
+      {error && <div className="alert-error">{error}</div>}
     </BridgeCard>
   );
 }
