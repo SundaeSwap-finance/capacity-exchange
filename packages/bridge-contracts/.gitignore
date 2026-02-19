@@ -1,0 +1,4 @@
+.contracts.*.json
+.midnight-private-state/
+.wallet-state/
+*.hex

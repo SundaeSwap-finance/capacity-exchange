@@ -1,0 +1,29 @@
+{
+  "name": "@capacity-exchange/bridge-contracts",
+  "version": "1.0.0",
+  "description": "Bridge compact contracts for capacity exchange",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf node_modules .midnight-private-state .wallet-state .contracts.*.json",
+    "compile": "echo 'No contracts to compile yet'",
+    "build": "tsc --noEmit"
+  },
+  "keywords": [
+    "midnight",
+    "compact",
+    "smart-contracts",
+    "bridge"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacity-exchange/core": "1.0.0",
+    "@midnight-ntwrk/compact-runtime": "^0.14.0",
+    "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
+    "@midnight-ntwrk/midnight-js-types": "3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "typescript": "^5.9.3"
+  }
+}
