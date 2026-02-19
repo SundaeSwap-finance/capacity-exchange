@@ -1,0 +1,121 @@
+pragma language_version >= 0.18.0;
+
+import CompactStandardLibrary;
+
+module Multisig<#n> {
+  circuit verifySchnorrMultisig(
+            msg: Field, signatures: Vector<n, SchnorrSignature>, pks: Vector<n, NativePoint>): [] {
+    assert(hashKeys<n>(pks) == aggregatePkh, "public keys do not match");
+    const allValid =
+                  fold((acc, valid) => acc && valid, true,
+                                                     map((sig, pk)
+                                                         => verifySchnorrSignature(msg, sig, pk), signatures,
+                                                                                                  pks));
+    assert(allValid, "invalid schnorr signature");
+  }
+
+  export circuit deposit(signatures: Vector<n, SchnorrSignature>,
+                         publicKeys: Vector<n, NativePoint>,
+                         domainSep: Bytes<32>,
+                         mintAmount: Uint<64>,
+                         recipient: Bytes<32>,
+                         ): [] {
+    const message = transientHash<[Bytes<32>, Field, Uint<64>, Bytes<32>]>(
+                      [recipient, mintNonce as Field, mintAmount, domainSep]);
+
+    verifySchnorrMultisig(message as Field, signatures, publicKeys);
+
+    mintShieldedToken(
+      disclose(domainSep),
+      disclose(mintAmount),
+      disclose(mintNonce) as Bytes<32>,
+      left<ZswapCoinPublicKey, ContractAddress>(ZswapCoinPublicKey { bytes: disclose(recipient) }));
+    mintNonce.increment(1);
+  }
+
+  export circuit acknowledgeWithdrawal(
+                   signatures: Vector<n, SchnorrSignature>,
+                   publicKeys: Vector<n, NativePoint>,
+                   withdrawalNonce: Bytes<32>
+                   ): [] {
+    assert(withdrawals.member(disclose(withdrawalNonce)), "withdrawal not found");
+
+    const message = transientHash<Bytes<32>>(withdrawalNonce);
+    verifySchnorrMultisig(message as Field, signatures, publicKeys);
+
+    withdrawals.remove(disclose(withdrawalNonce));
+  }
+}
+
+// This allows us to easily change the number of signatures required.
+// Note that we can't parameterize the constructor or the witness afaik, so we have to hardcode
+// the witness and the constructor
+import Multisig<3>;
+
+struct SchnorrSignature {
+  r: NativePoint, // R = k·G (nonce point)
+  s: Field // s = k + e·sk
+}
+
+struct Withdrawal {
+  amount: Uint<128>,
+  address: Bytes<112>,
+  domainSep: Bytes<32>,
+  datumHash: Maybe<Bytes<32>>,
+}
+
+export ledger aggregatePkh: Field;
+
+export ledger mintNonce: Counter;
+
+export ledger withdrawals: Map<Bytes<32>, Withdrawal>;
+
+witness getRequiredKeys(): Vector<3, NativePoint>;
+
+constructor() {
+  const keys = getRequiredKeys();
+  aggregatePkh = disclose(hashKeys<3>(keys));
+}
+
+// This can't seem to live inside our module, since it's called in the constructor...
+circuit hashKeys<#n>(pks: Vector<n, NativePoint>): Field {
+  return transientHash<[Bytes<32>, Vector<n, NativePoint>]>([pad(32, "capex:pkhs"), pks]);
+}
+
+circuit verifySchnorrSignature(message: Field, sig: SchnorrSignature, pubKey: NativePoint): Boolean {
+  // e = H(R || P || m)
+  const e = transientHash<[NativePoint, NativePoint, Field]>([sig.r, pubKey, message]);
+
+  // Check: s·G == R + e·P
+  const sG = ecMulGenerator(sig.s);
+  const eP = ecMul(pubKey, e);
+  const rhs = ecAdd(sig.r, eP);
+
+  return sG == rhs;
+}
+
+circuit requestWithdrawal(
+          nonce: Bytes<32>,
+          coin: ShieldedCoinInfo,
+          amount: Uint<128>,
+          domainSep: Bytes<32>,
+          cardanoAddress: Bytes<112>,
+          maybeDatumHash: Maybe<Bytes<32>>
+          ): [] {
+  assert(amount == coin.value, "withdrawal amount must match burn amount");
+
+  const expectedColor = tokenType(domainSep, kernel.self());
+  assert(coin.color == expectedColor, "wrong token type");
+
+  receiveShielded(disclose(coin));
+  sendImmediateShielded(disclose(coin), disclose(shieldedBurnAddress()), disclose(coin.value));
+
+  withdrawals.insert(
+    disclose(nonce),
+    Withdrawal { amount: disclose(amount),
+                 address: disclose(cardanoAddress),
+                 domainSep: disclose(domainSep),
+                 datumHash: disclose(maybeDatumHash), });
+}
+
+export { deposit, acknowledgeWithdrawal, requestWithdrawal };

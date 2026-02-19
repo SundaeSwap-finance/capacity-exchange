@@ -4,9 +4,12 @@
   "description": "Bridge compact contracts for capacity exchange",
   "type": "module",
   "scripts": {
-    "clean": "rm -rf node_modules .midnight-private-state .wallet-state .contracts.*.json",
-    "compile": "echo 'No contracts to compile yet'",
+    "clean": "rm -rf node_modules .midnight-private-state .wallet-state .contracts.*.json vault/out/",
+    "compile": "\"$COMPACTC\" vault/vault.compact vault/out",
     "build": "tsc --noEmit"
+  },
+  "exports": {
+    "./vault/out/contract/*": "./vault/out/contract/*"
   },
   "keywords": [
     "midnight",

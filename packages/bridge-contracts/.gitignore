@@ -2,3 +2,4 @@
 .midnight-private-state/
 .wallet-state/
 *.hex
+vault/out/
