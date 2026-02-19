@@ -41,7 +41,7 @@ dev: install _build-ws
 
 # Run tests
 test: install
-    bun run --filter '*' test
+    bun run --if-present --filter '*' test
 
 # Deploy all contracts for a network
 deploy networkId:
