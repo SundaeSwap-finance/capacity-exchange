@@ -12,14 +12,14 @@ export interface DeployOutput {
 }
 
 export async function deploy(ctx: AppContext): Promise<DeployOutput> {
-  logger.log('Deploying counter contract...');
+  logger.info('Deploying counter contract...');
   const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
   const deployed = await deployContract(providers, {
     compiledContract: CompiledCounterContract,
   });
 
-  logger.log(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
+  logger.info(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
   return {
     contractAddress: deployed.deployTxData.public.contractAddress,
     txHash: deployed.deployTxData.public.txHash,
@@ -34,7 +34,7 @@ export interface IncrementOutput {
 }
 
 export async function increment(ctx: AppContext, contractAddress: string): Promise<IncrementOutput> {
-  logger.log(`Incrementing counter at ${contractAddress}...`);
+  logger.info(`Incrementing counter at ${contractAddress}...`);
   const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
   const result = await submitCallTxDirect<CounterContract, 'increment'>(providers, {
@@ -43,7 +43,7 @@ export async function increment(ctx: AppContext, contractAddress: string): Promi
     circuitId: 'increment',
   });
 
-  logger.log(`Increment tx confirmed at block ${result.public.blockHeight}`);
+  logger.info(`Increment tx confirmed at block ${result.public.blockHeight}`);
   return {
     txHash: result.public.txHash,
     contractAddress,
@@ -58,7 +58,7 @@ export interface QueryOutput {
 }
 
 export async function query(ctx: AppContext, contractAddress: string): Promise<QueryOutput> {
-  logger.log(`Querying counter at ${contractAddress}...`);
+  logger.info(`Querying counter at ${contractAddress}...`);
   const contractState = await ctx.publicDataProvider.queryContractState(contractAddress);
 
   if (!contractState) {
@@ -66,7 +66,7 @@ export async function query(ctx: AppContext, contractAddress: string): Promise<Q
   }
 
   const ledgerState = Counter.ledger(contractState.data);
-  logger.log(`Counter value: ${ledgerState.round}`);
+  logger.info(`Counter value: ${ledgerState.round}`);
 
   return {
     contractAddress,

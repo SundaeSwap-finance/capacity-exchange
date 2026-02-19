@@ -1,15 +1,14 @@
-import { createHash } from 'crypto';
 import {
   createAndSyncWallet,
-  COST_PARAMS,
+  resolveWalletConfig,
   DustWalletProvider,
   uint8ArrayToHex,
   type WalletKeys,
   type CreateAndSyncWalletOptions,
 } from '@capacity-exchange/core';
+import { createWalletStateStore, type StateStore } from '@capacity-exchange/core/node';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { AppConfig } from '../config/networks.js';
-import { clearWalletState, loadWalletState, saveWalletState } from './storage.js';
 import { createLogger } from '../logger.js';
 
 const logger = createLogger(import.meta);
@@ -20,36 +19,27 @@ export interface WalletContext {
   keys: WalletKeys;
 }
 
-function stateSuffix(networkId: string, seedHex: string): string {
-  return createHash('sha256')
-    .update(networkId + seedHex)
-    .digest('hex')
-    .slice(0, 12);
-}
-
-async function saveWalletStates(facade: WalletFacade, suffix: string): Promise<void> {
+async function saveWalletStates(facade: WalletFacade, store: StateStore): Promise<void> {
   try {
     const [shieldedState, dustState] = await Promise.all([
       facade.shielded.serializeState(),
       facade.dust.serializeState(),
     ]);
-    saveWalletState('shielded', suffix, shieldedState);
-    saveWalletState('dust', suffix, dustState);
+    await Promise.all([store.save('shielded', shieldedState), store.save('dust', dustState)]);
   } catch {
-    logger.log('Failed to save wallet state');
+    logger.info('Failed to save wallet state');
   }
 }
 
-async function syncWithRetry(options: CreateAndSyncWalletOptions, suffix: string): Promise<WalletContext> {
+async function syncWithRetry(options: CreateAndSyncWalletOptions, store: StateStore): Promise<WalletContext> {
   try {
     return await createAndSyncWallet(options);
   } catch (error) {
     if (!options.savedShieldedState && !options.savedDustState) {
       throw error;
     }
-    logger.log('Failed with saved state, clearing and retrying fresh...');
-    clearWalletState('shielded', suffix);
-    clearWalletState('dust', suffix);
+    logger.info('Failed with saved state, clearing and retrying fresh...');
+    await store.clearAll();
     return await createAndSyncWallet({
       ...options,
       savedShieldedState: undefined,
@@ -60,33 +50,24 @@ async function syncWithRetry(options: CreateAndSyncWalletOptions, suffix: string
 
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
   const seedHex = uint8ArrayToHex(config.seed);
-  const suffix = stateSuffix(config.networkId, seedHex);
+  const store = createWalletStateStore(config.networkId, seedHex, logger);
 
-  const walletConfig = {
-    networkId: config.networkId,
-    costParameters: COST_PARAMS,
-    relayURL: new URL(config.nodeUrl),
-    provingServerUrl: new URL(config.proofServerUrl),
-    indexerClientConnection: {
-      indexerHttpUrl: config.indexerHttpUrl,
-      indexerWsUrl: config.indexerWsUrl,
-    },
-  };
+  logger.info('Creating and syncing wallets...');
+  const [savedShieldedState, savedDustState] = await Promise.all([store.load('shielded'), store.load('dust')]);
 
-  logger.log('Creating and syncing wallets...');
   const result = await syncWithRetry(
     {
       seedHex,
-      walletConfig,
-      savedShieldedState: loadWalletState('shielded', suffix) ?? undefined,
-      savedDustState: loadWalletState('dust', suffix) ?? undefined,
+      walletConfig: resolveWalletConfig(config.networkId),
+      savedShieldedState,
+      savedDustState,
       syncTimeoutMs: 120_000,
     },
-    suffix
+    store
   );
-  logger.log('Wallets synced');
+  logger.info('Wallets synced');
 
-  await saveWalletStates(result.walletFacade, suffix);
+  await saveWalletStates(result.walletFacade, store);
 
   return result;
 }

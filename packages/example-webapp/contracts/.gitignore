@@ -1,6 +1,6 @@
 .contracts.*.json
 .midnight-private-state/
-.midnight-wallet-state/
+.wallet-state/
 counter/out/
 token-mint/out/
 *.hex

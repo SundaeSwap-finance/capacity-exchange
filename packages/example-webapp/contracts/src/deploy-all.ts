@@ -16,17 +16,17 @@ async function main(): Promise<ContractsConfig> {
 
   const [networkId] = program.args;
 
-  logger.log('=== Deploying Token Mint Contract ===');
+  logger.info('=== Deploying Token Mint Contract ===');
   const tokenMintResult = await withAppContext(networkId, async (ctx) => {
     return deployTokenMint(ctx);
   });
-  logger.log(`Token mint deployed at ${tokenMintResult.contractAddress}`);
+  logger.info(`Token mint deployed at ${tokenMintResult.contractAddress}`);
 
-  logger.log('=== Deploying Counter Contract ===');
+  logger.info('=== Deploying Counter Contract ===');
   const counterResult = await withAppContext(networkId, async (ctx) => {
     return deployCounter(ctx);
   });
-  logger.log(`Counter deployed at ${counterResult.contractAddress}`);
+  logger.info(`Counter deployed at ${counterResult.contractAddress}`);
 
   const config: ContractsConfig = {
     networkId,
@@ -43,9 +43,9 @@ async function main(): Promise<ContractsConfig> {
     },
   };
 
-  logger.log('=== Saving Contracts Config ===');
+  logger.info('=== Saving Contracts Config ===');
   saveContractsConfig(networkId, config);
-  logger.log(`Config saved to .contracts.${networkId}.json`);
+  logger.info(`Config saved to .contracts.${networkId}.json`);
 
   return config;
 }

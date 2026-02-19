@@ -4,6 +4,28 @@ import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { contractsApiPlugin } from './server/index';
 
+// Proxy indexer HTTP endpoints to avoid CORS. WebSocket and proof server
+// connections don't need proxying.
+const INDEXER_TARGETS = {
+  undeployed: 'http://localhost:8088',
+  preview: 'https://indexer.preview.midnight.network',
+  preprod: 'https://indexer.preprod.midnight.network',
+  testnet: 'https://indexer.testnet.midnight.network',
+  mainnet: 'https://indexer.mainnet.midnight.network',
+};
+
+function buildProxyConfig() {
+  const proxy = {};
+  for (const [id, target] of Object.entries(INDEXER_TARGETS)) {
+    proxy[`/proxy/${id}/indexer`] = {
+      target,
+      changeOrigin: true,
+      rewrite: (path) => path.replace(new RegExp(`^/proxy/${id}/indexer`), ''),
+    };
+  }
+  return proxy;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
@@ -29,22 +51,7 @@ export default defineConfig({
     watch: {
       include: ['../components/src/**/*.{js,ts,jsx,tsx}'],
     },
-    // Dev server proxies to avoid CORS issues with Midnight network services.
-    // Requests to /proxy/* are forwarded to the target, with the /proxy/* prefix stripped.
-    // This allows the app to use relative URLs (e.g., /proxy/preview-indexer/api/v3/graphql)
-    // which work in dev (proxied) and can be configured differently in production.
-    proxy: {
-      '/proxy/preview-indexer': {
-        target: 'https://indexer.preview.midnight.network',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy\/preview-indexer/, ''),
-      },
-      '/proxy/preview-prover': {
-        target: 'https://lace-proof-pub.preview.midnight.network',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy\/preview-prover/, ''),
-      },
-    },
+    proxy: buildProxyConfig(),
   },
   optimizeDeps: {
     exclude: ['@midnight-ntwrk/ledger-v7'],

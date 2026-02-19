@@ -1,7 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import { TxService } from '../services/tx';
-import { deriveKeys } from '../utils/keys';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -10,8 +9,11 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  const { WALLET_SEED, MIDNIGHT_NETWORK, PROOF_SERVER_URL } = fastify.config;
-  const { zswap } = await deriveKeys(WALLET_SEED);
-  const txService = new TxService(MIDNIGHT_NETWORK, zswap, PROOF_SERVER_URL);
+  const { MIDNIGHT_NETWORK, endpoints, walletConnection } = fastify.config;
+  const txService = new TxService(
+    MIDNIGHT_NETWORK,
+    walletConnection.keys.shieldedSecretKeys,
+    endpoints.proofServerUrl,
+  );
   fastify.decorate('txService', txService);
 });

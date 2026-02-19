@@ -69,7 +69,11 @@ export function createSeedWalletConnectedAPIAdapter(
       ).bind();
 
       const ttl = new Date(Date.now() + balanceTtlMs);
-      const recipe = await walletFacade.balanceFinalizedTransaction(tx, { shieldedSecretKeys, dustSecretKey }, { ttl });
+      const recipe = await walletFacade.balanceFinalizedTransaction(
+        tx,
+        { shieldedSecretKeys, dustSecretKey },
+        { ttl, tokenKindsToBalance: ['shielded'] }
+      );
       const finalized = await walletFacade.finalizeRecipe(recipe);
 
       const serialized = finalized.serialize();

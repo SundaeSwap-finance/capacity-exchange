@@ -2,7 +2,7 @@ import { FastifyBaseLogger } from 'fastify';
 import { UtxoService } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
-import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v6';
+import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v7';
 
 export interface CreateOfferRequest {
   specks: string;
@@ -64,10 +64,7 @@ export class OfferService {
         return { status: 'illegal-state', error: result.error };
       case 'ok': {
         const lockedInfo = result.value;
-        const getPriceResult = this.priceService.getPrice(
-          request.offerCurrency,
-          specks,
-        );
+        const getPriceResult = this.priceService.getPrice(request.offerCurrency, specks);
         if (getPriceResult.status === 'unsupported-currency') {
           return {
             status: 'unsupported-currency',

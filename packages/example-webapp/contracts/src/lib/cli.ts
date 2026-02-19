@@ -6,14 +6,14 @@ import { createLogger } from './logger.js';
 const logger = createLogger(import.meta);
 
 export async function withAppContext<T>(networkId: string, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
-  logger.log(`Process ID: ${process.pid}`);
+  logger.info(`Process ID: ${process.pid}`);
   const config = getAppConfigById(networkId);
   const { seed: _, ...loggableConfig } = config;
-  logger.log('Config:', loggableConfig);
+  logger.info('Config:', loggableConfig);
   setNetworkId(config.networkId);
-  logger.log('Starting app context...');
+  logger.info('Starting app context...');
   const ctx = await createAppContext(config);
-  logger.log('App context ready');
+  logger.info('App context ready');
   return fn(ctx);
 }
 

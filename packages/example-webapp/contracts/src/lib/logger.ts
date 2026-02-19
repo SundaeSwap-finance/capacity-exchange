@@ -1,11 +1,8 @@
 import { fileURLToPath } from 'url';
 import * as path from 'path';
+import type { Logger } from '@capacity-exchange/core';
 
-export interface Logger {
-  log: (...args: unknown[]) => void;
-  warn: (...args: unknown[]) => void;
-  error: (...args: unknown[]) => void;
-}
+export type { Logger };
 
 function extractTag(meta: ImportMeta): string {
   const filePath = fileURLToPath(meta.url);
@@ -21,8 +18,11 @@ export function createLogger(meta: ImportMeta): Logger {
   const tag = extractTag(meta);
 
   return {
-    log: (...args: unknown[]) => {
-      console.error(`[${tag}]`, ...args);
+    debug: (...args: unknown[]) => {
+      console.error(`[${tag}] DEBUG:`, ...args);
+    },
+    info: (...args: unknown[]) => {
+      console.error(`[${tag}] INFO:`, ...args);
     },
     warn: (...args: unknown[]) => {
       console.error(`[${tag}] WARN:`, ...args);

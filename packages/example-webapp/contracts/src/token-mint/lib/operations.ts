@@ -23,17 +23,17 @@ export function generateTokenColor(): string {
 
 export async function deploy(ctx: AppContext, tokenColor?: string): Promise<DeployOutput> {
   const resolvedTokenColor = tokenColor ?? generateTokenColor();
-  logger.log(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
+  logger.info(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
 
   const providers = buildProviders<TokenMintContract>(ctx, './token-mint/out');
   const initialNonce = crypto.randomBytes(32);
 
   const privateStateId = crypto.randomBytes(32).toString('hex');
-  logger.log(`Generated private state ID: ${privateStateId}`);
+  logger.info(`Generated private state ID: ${privateStateId}`);
   const initialPrivateState = createPrivateState(crypto.randomBytes(32));
-  logger.log('Created initial private state');
+  logger.info('Created initial private state');
 
-  logger.log('Calling deployContract...');
+  logger.info('Calling deployContract...');
   const deployed = await deployContract(providers, {
     compiledContract: CompiledTokenMintContract,
     args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce],
@@ -43,8 +43,8 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
 
   const contractAddress = deployed.deployTxData.public.contractAddress;
   const derivedColor = deriveTokenColor(resolvedTokenColor, contractAddress);
-  logger.log(`Token-mint deployed at ${contractAddress}`);
-  logger.log(`Derived token color: ${derivedColor}`);
+  logger.info(`Token-mint deployed at ${contractAddress}`);
+  logger.info(`Derived token color: ${derivedColor}`);
   return {
     contractAddress,
     txHash: deployed.deployTxData.public.txHash,
@@ -69,11 +69,11 @@ export async function mint(
   privateStateId: string,
   amount: bigint
 ): Promise<MintOutput> {
-  logger.log(`Minting ${amount} tokens at ${contractAddress}...`);
-  logger.log(`Private state ID: ${privateStateId}`);
+  logger.info(`Minting ${amount} tokens at ${contractAddress}...`);
+  logger.info(`Private state ID: ${privateStateId}`);
   const providers = buildProviders<TokenMintContract>(ctx, './token-mint/out');
 
-  logger.log('Submitting mint transaction...');
+  logger.info('Submitting mint transaction...');
   const result = await submitStatefulCallTxDirect<TokenMintContract, 'mint_test_tokens'>(providers, {
     compiledContract: CompiledTokenMintContract,
     contractAddress,
@@ -87,7 +87,7 @@ export async function mint(
   }
 
   const derivedTokenColor = Buffer.from(result.private.result.color).toString('hex');
-  logger.log(`Mint confirmed, derived color: ${derivedTokenColor.slice(0, 8)}...`);
+  logger.info(`Mint confirmed, derived color: ${derivedTokenColor.slice(0, 8)}...`);
 
   return {
     txHash: result.public.txHash,
@@ -108,12 +108,12 @@ export interface VerifyOutput {
 }
 
 export async function verify(ctx: AppContext, contractAddress: string, tokenColor: string): Promise<VerifyOutput> {
-  logger.log(`Verifying token balance for ${contractAddress}...`);
+  logger.info(`Verifying token balance for ${contractAddress}...`);
   const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
-  logger.log('Syncing shielded wallet...');
+  logger.info('Syncing shielded wallet...');
   const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
   const balance = shieldedState.balances[derivedTokenColor] || 0n;
-  logger.log(`Token balance: ${balance}`);
+  logger.info(`Token balance: ${balance}`);
 
   return {
     verified: balance > 0n,
@@ -141,12 +141,12 @@ export async function send(
   amount: bigint
 ): Promise<SendOutput> {
   const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
-  logger.log(`Sending ${amount} tokens (color: ${derivedTokenColor.slice(0, 8)}...) to ${recipientAddress}...`);
+  logger.info(`Sending ${amount} tokens (color: ${derivedTokenColor.slice(0, 8)}...) to ${recipientAddress}...`);
 
-  logger.log('Syncing shielded wallet...');
+  logger.info('Syncing shielded wallet...');
   const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
   const balance = shieldedState.balances[derivedTokenColor] || 0n;
-  logger.log(`Current balance: ${balance}`);
+  logger.info(`Current balance: ${balance}`);
 
   if (balance < amount) {
     throw new Error(`Insufficient balance: have ${balance}, need ${amount}`);
@@ -155,7 +155,7 @@ export async function send(
   // Create a TTL 5 minutes from now
   const ttl = new Date(Date.now() + 5 * 60 * 1000);
 
-  logger.log('Creating transfer transaction...');
+  logger.info('Creating transfer transaction...');
   const { shieldedSecretKeys, dustSecretKey } = ctx.walletContext.keys;
   const transferRecipe = await ctx.walletContext.walletFacade.transferTransaction(
     [
@@ -174,12 +174,12 @@ export async function send(
     { ttl }
   );
 
-  logger.log('Finalizing transaction...');
+  logger.info('Finalizing transaction...');
   const finalizedTx = await ctx.walletContext.walletFacade.finalizeRecipe(transferRecipe);
-  logger.log('Submitting transaction...');
+  logger.info('Submitting transaction...');
   const txHash = await ctx.walletContext.walletFacade.submitTransaction(finalizedTx);
 
-  logger.log(`Transfer complete, tx hash: ${txHash}`);
+  logger.info(`Transfer complete, tx hash: ${txHash}`);
   return {
     txHash,
     contractAddress,

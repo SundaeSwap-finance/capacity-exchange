@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { NETWORK_CONFIGS, getEndpoints, NetworkConfigProvider } from './config';
 import type { NetworkId } from './config';
 import {
@@ -20,6 +21,10 @@ function App() {
 
   const currentConfig = NETWORK_CONFIGS[networkId];
   const endpoints = useMemo(() => getEndpoints(currentConfig), [currentConfig]);
+
+  useEffect(() => {
+    setMidnightNetworkId(networkId);
+  }, [networkId]);
 
   const seedWallet = useSeedWallet(currentConfig);
   const extensionWallet = useExtensionWallet(networkId);

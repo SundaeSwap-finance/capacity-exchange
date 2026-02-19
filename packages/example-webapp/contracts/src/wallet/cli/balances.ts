@@ -34,13 +34,13 @@ function main(): Promise<BalancesOutput> {
   return withAppContext(networkId, async (ctx) => {
     const { walletFacade, keys } = ctx.walletContext;
 
-    logger.log('Waiting for synced state...');
+    logger.info('Waiting for synced state...');
     let state = await walletFacade.waitForSyncedState();
     const dustRegistered = state.dust.availableCoins.length > 0;
-    logger.log(`Dust registered: ${dustRegistered}`);
+    logger.info(`Dust registered: ${dustRegistered}`);
 
     if (opts.registerDust && !dustRegistered) {
-      logger.log('Registering for dust...');
+      logger.info('Registering for dust...');
       state = await registerForDust(state, walletFacade, keys);
     }
 

@@ -11,7 +11,10 @@ export function createProvider(config: NetworkConfig): Provider {
   });
 }
 
-export async function createBlazeFromMnemonicFile(provider: Provider, mnemonicFile: string): Promise<Blaze<Provider, Wallet>> {
+export async function createBlazeFromMnemonicFile(
+  provider: Provider,
+  mnemonicFile: string
+): Promise<Blaze<Provider, Wallet>> {
   const mnemonic = fs.readFileSync(mnemonicFile, 'utf-8').trim();
   const entropy = mnemonicToEntropy(mnemonic, wordlist);
   const masterKey = Bip32PrivateKey.fromBip39Entropy(Buffer.from(entropy), BIP39_PASSPHRASE);

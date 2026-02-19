@@ -23,32 +23,40 @@ export interface NetworkEndpoints {
   indexerWsUrl: string;
 }
 
-export const NETWORK_ENDPOINTS: Record<string, NetworkEndpoints> = {
-  undeployed: {
+export function resolveEndpoints(networkId: NetworkId.NetworkId): NetworkEndpoints {
+  const endpoints = NETWORK_ENDPOINTS[networkId];
+  if (!endpoints) {
+    throw new Error(`Unknown network '${networkId}'. Known networks: ${Object.keys(NETWORK_ENDPOINTS).join(', ')}`);
+  }
+  return endpoints;
+}
+
+export const NETWORK_ENDPOINTS: Record<NetworkId.NetworkId, NetworkEndpoints> = {
+  [NetworkId.NetworkId.Undeployed]: {
     nodeUrl: 'ws://localhost:9944',
     proofServerUrl: 'http://127.0.0.1:6300',
     indexerHttpUrl: 'http://localhost:8088/api/v3/graphql',
     indexerWsUrl: 'ws://localhost:8088/api/v3/graphql/ws',
   },
-  preview: {
+  [NetworkId.NetworkId.Preview]: {
     nodeUrl: 'wss://rpc.preview.midnight.network/ws',
     proofServerUrl: 'http://127.0.0.1:6300',
     indexerHttpUrl: 'https://indexer.preview.midnight.network/api/v3/graphql',
     indexerWsUrl: 'wss://indexer.preview.midnight.network/api/v3/graphql/ws',
   },
-  preprod: {
+  [NetworkId.NetworkId.PreProd]: {
     nodeUrl: 'wss://rpc.preprod.midnight.network/ws',
     proofServerUrl: 'http://127.0.0.1:6300',
     indexerHttpUrl: 'https://indexer.preprod.midnight.network/api/v3/graphql',
     indexerWsUrl: 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
   },
-  testnet: {
+  [NetworkId.NetworkId.TestNet]: {
     nodeUrl: 'wss://rpc.testnet.midnight.network/ws',
     proofServerUrl: 'http://127.0.0.1:6300',
     indexerHttpUrl: 'https://indexer.testnet.midnight.network/api/v3/graphql',
     indexerWsUrl: 'wss://indexer.testnet.midnight.network/api/v3/graphql/ws',
   },
-  mainnet: {
+  [NetworkId.NetworkId.MainNet]: {
     nodeUrl: 'wss://rpc.mainnet.midnight.network/ws',
     proofServerUrl: 'http://127.0.0.1:6300',
     indexerHttpUrl: 'https://indexer.mainnet.midnight.network/api/v3/graphql',

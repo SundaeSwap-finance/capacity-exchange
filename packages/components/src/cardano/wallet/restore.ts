@@ -12,10 +12,7 @@ export interface RestoreWalletResult {
   address: string;
 }
 
-export async function restoreWallet(
-  provider: Provider,
-  args: RestoreWalletArgs
-): Promise<RestoreWalletResult> {
+export async function restoreWallet(provider: Provider, args: RestoreWalletArgs): Promise<RestoreWalletResult> {
   const mnemonic = fs.readFileSync(args.mnemonicIn, 'utf-8').trim();
   const address = await mnemonicToSeedFile(provider, mnemonic, args.seedFile);
 

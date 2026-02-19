@@ -1,10 +1,15 @@
-import { createHash } from 'node:crypto';
 import fp from 'fastify-plugin';
 import fastifyEnv from '@fastify/env';
 import { FastifyInstance } from 'fastify';
+import {
+  resolveEndpoints,
+  resolveWalletConfig,
+  toNetworkIdEnum,
+  createWallet,
+} from '@capacity-exchange/core';
 import { AppConfig, BaseConfig, schema } from '../models/config.js';
-import { getPriceFormulas, getWalletSeed, getDustWalletState } from '../utils/config.js';
-import { buildWalletContext } from '../utils/wallet.js';
+import { getPriceFormulas, getWalletSeed } from '../utils/config.js';
+import { createWalletStateStore } from '@capacity-exchange/core/node';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -25,31 +30,35 @@ export default fp(async (fastify: FastifyInstance) => {
   };
   await fastify.register(fastifyEnv, options);
 
-  // This is the merge of all the env vars
   const baseConfig = fastify.config as unknown as BaseConfig;
-  fastify.log.debug({ baseConfig });
+  const networkId = toNetworkIdEnum(baseConfig.MIDNIGHT_NETWORK);
+  const endpoints = resolveEndpoints(networkId);
+  fastify.log.debug({ baseConfig, endpoints });
 
   const walletSeed = await getWalletSeed(baseConfig, fastify.log);
+  const walletStateStore = createWalletStateStore(
+    networkId,
+    walletSeed,
+    fastify.log.child({ service: 'StateStore' }),
+  );
 
-  // Compute state file path from seed hash
-  const seedHash = createHash('sha256').update(walletSeed, 'hex').digest('hex');
-  const dustWalletStateFile = `dust-wallet-state-${seedHash}.data`;
-
-  const [priceFormulas, walletState] = await Promise.all([
+  const [priceFormulas, savedDustState] = await Promise.all([
     getPriceFormulas(baseConfig.PRICE_FORMULAS_FILE),
-    getDustWalletState(dustWalletStateFile, fastify.log),
+    walletStateStore.load('dust'),
   ]);
 
-  const walletContext = buildWalletContext(baseConfig, walletSeed, walletState);
+  const walletConnection = createWallet({
+    seedHex: walletSeed,
+    walletConfig: resolveWalletConfig(networkId),
+    savedDustState,
+  });
 
-  // Transform BaseConfig to the more useful AppConfig (incls a built WalletContext)
-  const appConfig: AppConfig = {
+  fastify.config = {
     ...baseConfig,
+    endpoints,
     WALLET_SEED: walletSeed,
-    DUST_WALLET_STATE_FILE: dustWalletStateFile,
     PRICE_FORMULAS: priceFormulas,
-    walletContext,
+    walletConnection,
+    walletStateStore,
   };
-
-  fastify.config = appConfig;
 });

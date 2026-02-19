@@ -8,20 +8,37 @@ import {
   ZswapOffer,
   ZswapOutput,
   ZswapSecretKeys,
-} from '@midnight-ntwrk/ledger-v6';
+} from '@midnight-ntwrk/ledger-v7';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import { ProofProvider, ProvenTransaction } from '@midnight-ntwrk/midnight-js-types';
+import {
+  ProofProvider,
+  ZKConfigProvider,
+  type UnboundTransaction,
+} from '@midnight-ntwrk/midnight-js-types';
 import { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+
+// The server's dust-spend txs don't take zk config / circuit artifacts.
+class EmptyZKConfigProvider extends ZKConfigProvider<never> {
+  getZKIR(): Promise<never> {
+    throw new Error('No ZK circuits in funding transactions');
+  }
+  getProverKey(): Promise<never> {
+    throw new Error('No ZK circuits in funding transactions');
+  }
+  getVerifierKey(): Promise<never> {
+    throw new Error('No ZK circuits in funding transactions');
+  }
+}
 
 export class TxService {
   readonly #networkId: string;
   readonly #zswap: ZswapSecretKeys;
-  readonly #proofProvider: ProofProvider<string>;
+  readonly #proofProvider: ProofProvider;
 
   constructor(networkId: string, zswap: ZswapSecretKeys, proofProviderUrl: string) {
     this.#networkId = networkId;
     this.#zswap = zswap;
-    this.#proofProvider = httpClientProofProvider(proofProviderUrl);
+    this.#proofProvider = httpClientProofProvider(proofProviderUrl, new EmptyZKConfigProvider());
   }
 
   async createFundingTx(
@@ -29,7 +46,7 @@ export class TxService {
     dust: UnprovenDustSpend,
     ttl: Date,
     segmentId?: number,
-  ): Promise<ProvenTransaction> {
+  ): Promise<UnboundTransaction> {
     const SEGMENT = 0;
     const output = ZswapOutput.new(
       coin,

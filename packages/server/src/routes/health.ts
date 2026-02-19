@@ -15,7 +15,7 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     ReadinessSchema,
     async (_request, reply): Promise<typeof ReadyResponse.static> => {
       // Check that we can reach the config'd indexer
-      const indexerStatus = await checkIndexer(fastify.config.INDEXER_URL);
+      const indexerStatus = await checkIndexer(fastify.config.endpoints.indexerHttpUrl);
 
       // Check wallet sync status
       const walletStatus = fastify.walletService.syncState;

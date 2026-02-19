@@ -1,17 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseDotenv } from 'dotenv';
-import {
-  NETWORK_ENDPOINTS,
-  toNetworkIdEnum,
-  parseMnemonic,
-  parseSeedHex,
-  type NetworkEndpoints,
-} from '@capacity-exchange/core';
+import { resolveEndpoints, toNetworkIdEnum, parseMnemonic, parseSeedHex } from '@capacity-exchange/core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
+import type { NetworkEndpoints } from '@capacity-exchange/core';
 
-export interface AppConfig extends NetworkEndpoints {
+export interface AppConfig {
   networkId: NetworkId.NetworkId;
+  endpoints: NetworkEndpoints;
   seed: Uint8Array;
 }
 
@@ -55,13 +51,10 @@ function resolveWalletSeed(dotEnv: Record<string, string>, networkId: string): U
   throw new Error(`Missing ${prefix}_SEED_HEX or ${prefix}_MNEMONIC in .env`);
 }
 
-export function getAppConfigById(networkId: string): AppConfig {
-  const defaults = NETWORK_ENDPOINTS[networkId];
-  if (!defaults) {
-    throw new Error(`Unknown network ID: ${networkId}. Known networks: ${Object.keys(NETWORK_ENDPOINTS).join(', ')}`);
-  }
-
+export function getAppConfigById(network: string): AppConfig {
+  const networkId = toNetworkIdEnum(network);
+  const endpoints = resolveEndpoints(networkId);
   const dotEnv = loadDotEnv();
-  const seed = resolveWalletSeed(dotEnv, networkId);
-  return { networkId: toNetworkIdEnum(networkId), ...defaults, seed };
+  const seed = resolveWalletSeed(dotEnv, network);
+  return { networkId, endpoints, seed };
 }
