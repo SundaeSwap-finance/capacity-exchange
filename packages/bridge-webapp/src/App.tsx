@@ -20,6 +20,7 @@ function App() {
     disconnect,
   } = useCardanoWallet();
   const [pendingDeposits, setPendingDeposits] = useState<PendingDeposit[]>([]);
+  // TODO: Pre-fill from connected Midnight wallet address once wallet integration is added
   const [midnightAddress, setMidnightAddress] = useState('');
   const addPending = useCallback((d: PendingDeposit) => setPendingDeposits((prev) => [...prev, d]), []);
   const removePending = useCallback(

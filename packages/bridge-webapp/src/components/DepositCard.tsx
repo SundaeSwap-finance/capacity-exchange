@@ -16,19 +16,14 @@ interface DepositCardProps {
 }
 
 export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnightAddressChange }: DepositCardProps) {
-  const [depositAddress, setDepositAddress] = useState(() => {
-    try {
-      return getDepositAddress();
-    } catch {
-      return '';
-    }
-  });
+  // TODO: Make deposit address read-only once testing is complete. Currently editable for testing convenience.
+  const [depositAddress, setDepositAddress] = useState(() => getDepositAddress());
   const [adaAmount, setAdaAmount] = useState('');
 
   const amount = parseFloat(adaAmount);
   const disabledReasons = [
     !blaze && 'Connect a wallet to submit',
-    !depositAddress && 'Enter a deposit address',
+    !depositAddress && 'Missing deposit address',
     !midnightAddress && 'Enter a Midnight shielded address',
     !(amount > 0) && 'Enter an ADA amount greater than 0',
   ].filter(Boolean) as string[];
