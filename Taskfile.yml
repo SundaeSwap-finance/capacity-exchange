@@ -6,6 +6,7 @@ vars:
 
 tasks:
   install:
+    run: once
     desc: Install dependencies
     preconditions:
       - sh: command -v bun
@@ -13,8 +14,69 @@ tasks:
     cmds:
       - bun install
 
+  # --- Precondition tasks ---
+
+  check-contracts:
+    internal: true
+    run: once
+    preconditions:
+      - sh: test -d {{.CONTRACTS_DIR}}/counter/out || (test -n "${COMPACTC:-}" && test -f "$COMPACTC")
+        msg: |
+          Compiled contracts not found. Either:
+            1. Set COMPACTC to a valid compactc binary path (contracts will be compiled automatically)
+            2. Run 'task compile-contracts' first
+
+  check-setup:
+    internal: true
+    run: once
+    preconditions:
+      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
+        msg: "Setup not complete: compiled contracts not found. Run 'COMPACTC=... NETWORK_ID=... task setup' first."
+      - sh: 'ls {{.CONTRACTS_DIR}}/.contracts.*.json >/dev/null 2>&1'
+        msg: "Setup not complete: contracts not deployed. Run 'COMPACTC=... NETWORK_ID=... task setup' first."
+
+  # --- Package build tasks (mirror dependency graph) ---
+
+  build-core:
+    internal: true
+    deps: [install]
+    cmds:
+      - bun run --filter @capacity-exchange/core build
+
+  build-client:
+    internal: true
+    deps: [install]
+    cmds:
+      - bun run --filter @capacity-exchange/client build
+
+  build-components:
+    internal: true
+    deps: [build-core, build-client]
+    cmds:
+      - bun run --filter @capacity-exchange/components build
+
+  build-libs:
+    internal: true
+    deps: [build-components]
+
+  build-server:
+    internal: true
+    deps: [build-core]
+    cmds:
+      - bun run --filter @capacity-exchange/server build
+
+  build-webapp:
+    internal: true
+    deps: [check-contracts, build-libs, copy-zk-assets]
+    cmds:
+      - bun run --filter @capacity-exchange/example-webapp build
+
+  # --- Contract tasks ---
+
   compile-contracts:
-    desc: Compile Compact contracts
+    desc: Compile Compact contracts (skipped if already compiled)
+    status:
+      - test -d {{.CONTRACTS_DIR}}/counter/out
     preconditions:
       - sh: test -n "${COMPACTC:-}"
         msg: |
@@ -30,30 +92,21 @@ tasks:
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} compile
 
-  compile-contracts-if-needed:
-    internal: true
-    status:
-      - test -d {{.CONTRACTS_DIR}}/counter/out
-    cmds:
-      - task: compile-contracts
-
   copy-zk-assets:
-    desc: Copy compiled ZK assets to webapp public directory
     internal: true
-    deps: [compile-contracts-if-needed]
+    deps: [compile-contracts]
     cmds:
       - bun run --filter @capacity-exchange/example-webapp copy-zk-assets
 
-  build-ws:
-    desc: Build workspace packages (client, components) needed by contracts at runtime
-    internal: true
-    deps: [install]
-    cmds:
-      - bun run --filter @capacity-exchange/client --filter @capacity-exchange/components build
+  # --- High-level targets ---
+
+  build:
+    desc: Build all packages
+    deps: [check-contracts, build-webapp, build-server]
 
   setup:
-    desc: 'One-time setup: install deps, compile contracts, copy assets, build, and deploy'
-    deps: [install, copy-zk-assets, build-ws]
+    desc: 'One-time setup: install, build everything, and deploy'
+    deps: [check-contracts, build]
     cmds:
       - task: deploy
         vars:
@@ -62,27 +115,30 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
-  build:
-    desc: Build all packages
-    deps: [install]
+  # server depends on: core
+  dev:server:
+    desc: Start the capacity exchange server with hot-reload
+    deps: [build-core]
     cmds:
-      - bun run --filter '*' build
+      - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/server dev & wait
 
+  # webapp depends on: core, client, components, compiled + deployed contracts
+  dev:webapp:
+    desc: Start the example webapp with hot-reload
+    deps: [check-setup, build-components]
+    cmds:
+      - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/example-webapp dev & wait
+
+  # dev runs both — watchers cover union of deps (core, components), deduplicated
   dev:
-    desc: Build components and run dev server
-    deps: [install, build-ws]
+    desc: Start server and webapp with hot-reload
+    deps: [check-setup, build-libs]
     cmds:
-      - bun run --filter @capacity-exchange/example-webapp dev
-
-  test:
-    desc: Run tests
-    deps: [install]
-    cmds:
-      - bun run --if-present --filter '*' test
+      - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/server dev & bun run --filter @capacity-exchange/example-webapp dev & wait
 
   deploy:
     desc: Deploy all contracts for a network
-    deps: [install]
+    deps: [build-core]
     preconditions:
       - sh: test -d {{.CONTRACTS_DIR}}/counter/out
         msg: "Compiled contracts not found. Run 'task compile-contracts' first."
@@ -92,6 +148,12 @@ tasks:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
     requires:
       vars: [NETWORK_ID]
+
+  test:
+    desc: Run tests
+    deps: [build-libs]
+    cmds:
+      - bun run --if-present --filter '*' test
 
   check:
     desc: Lint and format check

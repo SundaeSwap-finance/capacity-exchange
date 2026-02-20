@@ -6,7 +6,7 @@ This repo holds client packages related to the [Capacity Exchange Service](https
 
 - [bun](https://bun.sh)
 - [go-task](https://taskfile.dev) - command runner (`brew install go-task`)
-- `COMPACTC` environment variable pointing to the Compact compiler. To set it up:
+- `COMPACTC` environment variable pointing to the Compact compiler (needed for setup only). To set it up:
   ```bash
   unzip tools/compactc/compactc_v0.28.0_aarch64-darwin.zip -d ~/compactc_v0.28.0
   export COMPACTC=~/compactc_v0.28.0/compactc
@@ -15,9 +15,11 @@ This repo holds client packages related to the [Capacity Exchange Service](https
 ## Quick Start
 
 ```bash
-task install                        # install dependencies
-task setup NETWORK_ID=<network>     # compile contracts, copy assets, build, deploy
-task dev                            # run dev server
+# One-time setup: compile contracts, build all packages, deploy
+COMPACTC=~/compactc_v0.28.0/compactc task setup NETWORK_ID=<network>
+
+# Start both the server and webapp with hot-reload
+task dev
 ```
 
 ## Project Structure
@@ -26,15 +28,39 @@ task dev                            # run dev server
 .
 ├── Taskfile.yml                        # Task orchestration (calls into packages)
 ├── packages/
-│   ├── client/
-│   │   ├── openapi.json                # Capacity Exchange Service OpenAPI spec
-│   │   ├── generated/                  # Auto-generated OpenAPI client code
-│   │   └── tests/                      # Client tests
-│   ├── components/                     # Frontend components package (uses the generated client)
+│   ├── client/                         # Auto-generated OpenAPI client
 │   ├── core/                           # Shared core logic
-│   └── example-webapp/                 # Example webapp (uses the components)
+│   ├── components/                     # Frontend components (depends on core, client)
+│   ├── server/                         # Capacity exchange server (depends on core)
+│   └── example-webapp/                 # Example webapp (depends on core, client, components)
 │       └── contracts/                  # Compact smart contracts
 ```
+
+### Workspace Dependency Graph
+
+```
+core        (no workspace deps)
+client      (no workspace deps)
+components  → core, client
+server      → core
+example-webapp → core, client, components, compiled contracts
+```
+
+## Available Tasks
+
+| Task | Description |
+|------|-------------|
+| `task setup NETWORK_ID=<network>` | One-time setup: install, build everything, deploy contracts |
+| `task dev` | Start server and webapp with hot-reload (requires setup) |
+| `task dev:server` | Start just the capacity exchange server with hot-reload |
+| `task dev:webapp` | Start just the example webapp with hot-reload (requires setup) |
+| `task build` | Build all packages (requires compiled contracts) |
+| `task compile-contracts` | Compile Compact contracts |
+| `task deploy NETWORK_ID=<network>` | Deploy contracts for a network |
+| `task test` | Build libs and run tests |
+| `task check` | Lint and format check |
+| `task fix` | Lint and format fix |
+| `task clean` | Clean all build artifacts and node_modules |
 
 ## Build System Philosophy
 
@@ -43,23 +69,8 @@ This project uses a **distributed build architecture**:
 - **Each package is self-contained**: Packages define their own build/test/clean commands via bun scripts. They can be used independently.
 - **`task` orchestrates**: The root `Taskfile.yml` coordinates cross-package workflows (setup, dev server) by calling into package scripts.
 - **`task` doesn't duplicate**: The Taskfile calls `bun run` commands rather than reimplementing package-specific logic.
-
-This separation keeps packages portable while providing convenient top-level commands.
-
-## Available Tasks
-
-| Task | Description |
-|------|-------------|
-| `task install` | Install dependencies |
-| `task compile-contracts` | Compile Compact contracts |
-| `task setup NETWORK_ID=<network>` | One-time setup: install deps, compile contracts, copy assets, build, and deploy |
-| `task build` | Build all packages |
-| `task dev` | Build components and run dev server |
-| `task test` | Run tests |
-| `task deploy NETWORK_ID=<network>` | Deploy all contracts for a network |
-| `task check` | Lint and format check |
-| `task fix` | Lint and format fix |
-| `task clean` | Clean build artifacts |
+- **`task` models the dependency graph**: Build tasks mirror the workspace dependency graph so packages build in the correct order.
+- **`dev` includes hot-reload**: The dev tasks run `tsc --watch` for library packages so changes to core or components automatically rebuild and restart the dev servers.
 
 ## Generating the Client
 
