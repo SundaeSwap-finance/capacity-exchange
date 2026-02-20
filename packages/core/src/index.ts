@@ -28,3 +28,6 @@ export {
   adaToLovelace,
   createProvider,
 } from './cardano';
+export { deriveTokenColor } from './tokenColor';
+export { sendShieldedTokens } from './sendShieldedTokens';
+export { getShieldedBalance } from './getShieldedBalance';

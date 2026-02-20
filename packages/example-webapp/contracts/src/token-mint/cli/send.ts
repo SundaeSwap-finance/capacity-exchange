@@ -1,8 +1,8 @@
 import { program } from 'commander';
+import { deriveTokenColor, sendShieldedTokens } from '@capacity-exchange/core';
 import { runCli, withAppContext } from '../../lib/cli.js';
-import { send, SendOutput } from '../lib/operations.js';
 
-function main(): Promise<SendOutput> {
+function main() {
   program
     .name('token-mint:send')
     .description('Sends tokens from server wallet to a recipient address')
@@ -15,7 +15,17 @@ function main(): Promise<SendOutput> {
 
   const [networkId, contractAddress, tokenColor, recipientAddress, amountStr] = program.args;
   const amount = BigInt(amountStr);
-  return withAppContext(networkId, (ctx) => send(ctx, contractAddress, tokenColor, recipientAddress, amount));
+  const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
+
+  return withAppContext(networkId, (ctx) =>
+    sendShieldedTokens(
+      ctx.walletContext.walletFacade,
+      ctx.walletContext.keys,
+      derivedTokenColor,
+      recipientAddress,
+      amount
+    )
+  );
 }
 
 runCli(main);

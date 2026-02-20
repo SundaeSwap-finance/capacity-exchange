@@ -1,5 +1,6 @@
 import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import {
   capacityExchangeWalletProvider,
   DEFAULT_MARGIN,
@@ -19,6 +20,26 @@ const compiledCounterContract = CompiledContract.make<CounterContract>('Counter'
   CompiledContract.withCompiledFileAssets('/midnight/counter')
 );
 
+export interface GetCounterValueResult {
+  contractAddress: string;
+  round: string;
+}
+
+export async function getCounterValue(contractAddress: string, config: NetworkConfig): Promise<GetCounterValueResult> {
+  const publicDataProvider = indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl);
+  const contractState = await publicDataProvider.queryContractState(contractAddress);
+
+  if (!contractState) {
+    throw new Error(`Contract not found at address: ${contractAddress}`);
+  }
+
+  const ledgerState = Counter.ledger(contractState.data);
+  return {
+    contractAddress,
+    round: ledgerState.round.toString(),
+  };
+}
+
 export async function findAndIncrementCounter(
   providers: BrowserProviders,
   contractAddress: string,
@@ -27,7 +48,7 @@ export async function findAndIncrementCounter(
   config: NetworkConfig
 ) {
   const { contractProviders } = buildContractProviders<CounterCircuitId>(
-    providers,
+    providers.midnightProvider,
     providers.walletProvider,
     '/midnight/counter',
     config

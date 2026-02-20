@@ -20,3 +20,5 @@ export {
 export { useCesTransaction, type UseCesTransactionResult } from './useCesTransaction';
 export { useTokenMintTransaction } from './useTokenMintTransaction';
 export { createBrowserProviders, type BrowserProviders, type ShieldedAddressInfo } from './createBrowserProviders';
+export { getCounterValue, type GetCounterValueResult } from './counterContract';
+export { findAndMintTokens } from './tokenMintContract';

@@ -3,7 +3,7 @@ import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext } from '../../lib/app-context.js';
 import { buildProviders, submitStatefulCallTxDirect } from '../../lib/providers/contract.js';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
-import { deriveTokenColor } from './token-color.js';
+import { deriveTokenColor, getShieldedBalance } from '@capacity-exchange/core';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '../../lib/logger.js';
 
@@ -110,9 +110,7 @@ export interface VerifyOutput {
 export async function verify(ctx: AppContext, contractAddress: string, tokenColor: string): Promise<VerifyOutput> {
   logger.info(`Verifying token balance for ${contractAddress}...`);
   const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
-  logger.info('Syncing shielded wallet...');
-  const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
-  const balance = shieldedState.balances[derivedTokenColor] || 0n;
+  const balance = await getShieldedBalance(ctx.walletContext.walletFacade, derivedTokenColor);
   logger.info(`Token balance: ${balance}`);
 
   return {
@@ -121,71 +119,5 @@ export async function verify(ctx: AppContext, contractAddress: string, tokenColo
     tokenColor,
     derivedTokenColor,
     balance: balance.toString(),
-  };
-}
-
-export interface SendOutput {
-  txHash: string;
-  contractAddress: string;
-  tokenColor: string;
-  derivedTokenColor: string;
-  amount: string;
-  recipientAddress: string;
-}
-
-export async function send(
-  ctx: AppContext,
-  contractAddress: string,
-  tokenColor: string,
-  recipientAddress: string,
-  amount: bigint
-): Promise<SendOutput> {
-  const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
-  logger.info(`Sending ${amount} tokens (color: ${derivedTokenColor.slice(0, 8)}...) to ${recipientAddress}...`);
-
-  logger.info('Syncing shielded wallet...');
-  const shieldedState = await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
-  const balance = shieldedState.balances[derivedTokenColor] || 0n;
-  logger.info(`Current balance: ${balance}`);
-
-  if (balance < amount) {
-    throw new Error(`Insufficient balance: have ${balance}, need ${amount}`);
-  }
-
-  // Create a TTL 5 minutes from now
-  const ttl = new Date(Date.now() + 5 * 60 * 1000);
-
-  logger.info('Creating transfer transaction...');
-  const { shieldedSecretKeys, dustSecretKey } = ctx.walletContext.keys;
-  const transferRecipe = await ctx.walletContext.walletFacade.transferTransaction(
-    [
-      {
-        type: 'shielded',
-        outputs: [
-          {
-            type: derivedTokenColor,
-            receiverAddress: recipientAddress,
-            amount,
-          },
-        ],
-      },
-    ],
-    { shieldedSecretKeys, dustSecretKey },
-    { ttl }
-  );
-
-  logger.info('Finalizing transaction...');
-  const finalizedTx = await ctx.walletContext.walletFacade.finalizeRecipe(transferRecipe);
-  logger.info('Submitting transaction...');
-  const txHash = await ctx.walletContext.walletFacade.submitTransaction(finalizedTx);
-
-  logger.info(`Transfer complete, tx hash: ${txHash}`);
-  return {
-    txHash,
-    contractAddress,
-    tokenColor,
-    derivedTokenColor,
-    amount: amount.toString(),
-    recipientAddress,
   };
 }
