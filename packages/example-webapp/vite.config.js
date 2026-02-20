@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { contractsApiPlugin } from './server/index';
@@ -33,6 +34,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    basicSsl(),
     wasm(),
     nodePolyfills({
       include: ['process', 'buffer', 'crypto', 'stream', 'events', 'assert'],
