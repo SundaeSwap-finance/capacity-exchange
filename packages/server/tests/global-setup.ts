@@ -15,7 +15,7 @@ export async function setup() {
 
   console.log('Starting server');
   const logStream = createWriteStream(LOG_FILE, { flags: 'a' });
-  serverProcess = spawn('npx', ['tsx', 'src/server.ts'], {
+  serverProcess = spawn('bun', ['src/server.ts'], {
     stdio: 'pipe',
     env: {
       ...process.env,

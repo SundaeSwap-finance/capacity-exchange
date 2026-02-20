@@ -15,9 +15,9 @@
     }
   },
   "scripts": {
-    "clean": "rm -rf generated node_modules",
+    "clean": "rm -rf generated/dist node_modules",
     "generate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true",
-    "build": "npm run generate-client && tsc -p tsconfig.json",
+    "build": "bun run generate-client && tsc -p tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {

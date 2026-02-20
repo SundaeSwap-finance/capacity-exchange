@@ -1,7 +1,7 @@
 /**
  * Runs CLI scripts and streams output to clients via SSE.
  *
- * Scripts are executed in the contracts/ directory using tsx. Their stdout/stderr
+ * Scripts are executed in the contracts/ directory using bun. Their stdout/stderr
  * is streamed to the client in real-time as 'log' events. When the script exits,
  * the last JSON line of stdout is parsed as the result and sent as a 'done' event.
  */
@@ -60,9 +60,9 @@ function parseScriptResult<T>(stdout: string, stderr: string, exitCode: number):
   return { success: true, exitCode };
 }
 
-/** Spawns a CLI script using tsx in the contracts directory */
+/** Spawns a CLI script using bun in the contracts directory */
 function spawnScript(config: ScriptConfig): ChildProcess {
-  return spawn('npx', ['tsx', config.script, ...config.args], {
+  return spawn('bun', [config.script, ...config.args], {
     cwd: contractsDir,
     env: { ...process.env },
   });

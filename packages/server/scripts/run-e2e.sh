@@ -8,8 +8,8 @@ echo "Provisioning test wallet..."
 ./scripts/gen-test-wallet.sh
 
 echo "Building project"
-npm run build
+bun run build
 
 echo "Running E2E tests"
-npm run test:e2e
+bun run test:e2e
 echo "Complete"
