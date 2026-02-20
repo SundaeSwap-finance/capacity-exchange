@@ -4,29 +4,34 @@ This repo holds client packages related to the [Capacity Exchange Service](https
 
 ## Prerequisites
 
-- Node.js
-- [just](https://github.com/casey/just) - command runner (`brew install just`)
-- `COMPACTC` environment variable pointing to the Compact compiler (pre-built binaries available in `tools/compactc`)
+- [bun](https://bun.sh)
+- [go-task](https://taskfile.dev) - command runner (`brew install go-task`)
+- `COMPACTC` environment variable pointing to the Compact compiler. To set it up:
+  ```bash
+  unzip tools/compactc/compactc_v0.28.0_aarch64-darwin.zip -d ~/compactc_v0.28.0
+  export COMPACTC=~/compactc_v0.28.0/compactc
+  ```
 
 ## Quick Start
 
 ```bash
-npm install
-just setup    # compile contracts, copy assets
-just dev      # run dev server
+task install                        # install dependencies
+task setup NETWORK_ID=<network>     # compile contracts, copy assets, build, deploy
+task dev                            # run dev server
 ```
 
 ## Project Structure
 
 ```
 .
-├── justfile                            # Task orchestration (calls into packages)
+├── Taskfile.yml                        # Task orchestration (calls into packages)
 ├── packages/
 │   ├── client/
 │   │   ├── openapi.json                # Capacity Exchange Service OpenAPI spec
 │   │   ├── generated/                  # Auto-generated OpenAPI client code
 │   │   └── tests/                      # Client tests
 │   ├── components/                     # Frontend components package (uses the generated client)
+│   ├── core/                           # Shared core logic
 │   └── example-webapp/                 # Example webapp (uses the components)
 │       └── contracts/                  # Compact smart contracts
 ```
@@ -35,11 +40,26 @@ just dev      # run dev server
 
 This project uses a **distributed build architecture**:
 
-- **Each package is self-contained**: Packages define their own build/test/clean commands via npm scripts. They can be used independently.
-- **`just` orchestrates**: The root `justfile` coordinates cross-package workflows (setup, dev server) by calling into package scripts.
-- **`just` doesn't duplicate**: The justfile calls `npm run` commands rather than reimplementing package-specific logic.
+- **Each package is self-contained**: Packages define their own build/test/clean commands via bun scripts. They can be used independently.
+- **`task` orchestrates**: The root `Taskfile.yml` coordinates cross-package workflows (setup, dev server) by calling into package scripts.
+- **`task` doesn't duplicate**: The Taskfile calls `bun run` commands rather than reimplementing package-specific logic.
 
 This separation keeps packages portable while providing convenient top-level commands.
+
+## Available Tasks
+
+| Task | Description |
+|------|-------------|
+| `task install` | Install dependencies |
+| `task compile-contracts` | Compile Compact contracts |
+| `task setup NETWORK_ID=<network>` | One-time setup: install deps, compile contracts, copy assets, build, and deploy |
+| `task build` | Build all packages |
+| `task dev` | Build components and run dev server |
+| `task test` | Run tests |
+| `task deploy NETWORK_ID=<network>` | Deploy all contracts for a network |
+| `task check` | Lint and format check |
+| `task fix` | Lint and format fix |
+| `task clean` | Clean build artifacts |
 
 ## Generating the Client
 
@@ -57,5 +77,5 @@ The code in `packages/client/generated` is auto-generated from the Capacity Exch
 
     ```bash
     cd packages/client
-    npm run generate-client
+    bun run generate-client
     ```
