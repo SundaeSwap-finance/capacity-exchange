@@ -49,7 +49,10 @@ export default defineConfig({
   },
   server: {
     watch: {
-      include: ['../components/src/**/*.{js,ts,jsx,tsx}'],
+      include: [
+        '../core/src/**/*.{js,ts,jsx,tsx}',
+        '../components/src/**/*.{js,ts,jsx,tsx}',
+      ],
     },
     proxy: buildProxyConfig(),
   },

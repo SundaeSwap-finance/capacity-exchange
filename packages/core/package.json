@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:watch": "tsc --watch",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
