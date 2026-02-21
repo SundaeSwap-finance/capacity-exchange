@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { DustWalletProvider, type WalletKeys } from '@capacity-exchange/core';
+import { DustWalletProvider, resolveWalletSeed, uint8ArrayToHex, type WalletKeys } from '@capacity-exchange/core';
 import type { NetworkConfig } from '../../config';
 import type { WalletCapabilities } from '../wallet/types';
 import { connectSeedWallet } from '../wallet/seed/walletService';
 import { SeedWalletAdapter } from '../wallet/seed/SeedWalletAdapter';
 
-export type FaucetWalletStatus = 'idle' | 'syncing' | 'ready' | 'error';
+export type ServerWalletStatus = 'idle' | 'syncing' | 'ready' | 'error';
 
-export interface FaucetWallet {
-  status: FaucetWalletStatus;
+export interface ServerWallet {
+  status: ServerWalletStatus;
   error: string | null;
   walletFacade: WalletFacade | null;
   keys: WalletKeys | null;
@@ -19,7 +19,7 @@ export interface FaucetWallet {
   midnightProvider: MidnightProvider | null;
 }
 
-interface FaucetWalletReady {
+interface ServerWalletReady {
   walletFacade: WalletFacade;
   keys: WalletKeys;
   walletCapabilities: WalletCapabilities;
@@ -27,10 +27,11 @@ interface FaucetWalletReady {
   midnightProvider: MidnightProvider;
 }
 
-const FAUCET_SEED_HEX = import.meta.env.VITE_FAUCET_SEED_HEX as string;
-
-async function initFaucetWallet(config: NetworkConfig): Promise<FaucetWalletReady> {
-  const connection = await connectSeedWallet(FAUCET_SEED_HEX, config);
+async function initServerWallet(config: NetworkConfig): Promise<ServerWalletReady> {
+  const prefix = `VITE_SERVER_${config.networkId.toUpperCase()}`;
+  const seed = resolveWalletSeed(import.meta.env as Record<string, string | undefined>, prefix);
+  const seedHex = uint8ArrayToHex(seed);
+  const connection = await connectSeedWallet(seedHex, config);
   const { walletFacade, keys } = connection;
 
   const walletCapabilities = new SeedWalletAdapter(walletFacade, connection.networkId);
@@ -45,10 +46,10 @@ async function initFaucetWallet(config: NetworkConfig): Promise<FaucetWalletRead
   return { walletFacade, keys, walletCapabilities, walletProvider, midnightProvider };
 }
 
-export function useFaucetWallet(config: NetworkConfig | null): FaucetWallet {
-  const [status, setStatus] = useState<FaucetWalletStatus>('idle');
+export function useServerWallet(config: NetworkConfig | null): ServerWallet {
+  const [status, setStatus] = useState<ServerWalletStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState<FaucetWalletReady | null>(null);
+  const [ready, setReady] = useState<ServerWalletReady | null>(null);
   const initRef = useRef(false);
 
   useEffect(() => {
@@ -60,13 +61,13 @@ export function useFaucetWallet(config: NetworkConfig | null): FaucetWallet {
     setStatus('syncing');
     setError(null);
 
-    initFaucetWallet(config)
+    initServerWallet(config)
       .then((result) => {
         setReady(result);
         setStatus('ready');
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Failed to initialize faucet wallet');
+        setError(err instanceof Error ? err.message : 'Failed to initialize server wallet');
         setStatus('error');
       });
   }, [config]);

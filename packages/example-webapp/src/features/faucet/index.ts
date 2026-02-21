@@ -1,2 +1,2 @@
-export { useFaucetWallet } from './useFaucetWallet';
-export type { FaucetWallet, FaucetWalletStatus } from './useFaucetWallet';
+export { useServerWallet } from './useServerWallet';
+export type { ServerWallet, ServerWalletStatus } from './useServerWallet';

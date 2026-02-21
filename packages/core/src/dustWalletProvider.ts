@@ -35,6 +35,7 @@ export class DustWalletProvider implements WalletProvider {
       { shieldedSecretKeys: this.#zswapSecretKeys, dustSecretKey: this.#dustSecretKey },
       { ttl: realTtl }
     );
-    return await this.#wallet.finalizeRecipe(recipe);
+    const finalized = await this.#wallet.finalizeRecipe(recipe);
+    return finalized;
   }
 }

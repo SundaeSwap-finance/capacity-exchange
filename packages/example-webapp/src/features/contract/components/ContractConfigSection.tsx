@@ -5,13 +5,15 @@ import { useContractsConfig } from '../hooks/useContractsConfig';
 import { useSyncContractContext } from './useSyncContractContext';
 import { ContractConfigPlaceholder } from './ContractConfigPlaceholder';
 import type { WalletCapabilities } from '../../wallet/types';
+import type { ServerWallet } from '../../faucet';
 
 interface ContractConfigSectionProps {
   networkId: string;
   wallet: WalletCapabilities | null;
+  serverWallet: ServerWallet;
 }
 
-export function ContractConfigSection({ networkId, wallet }: ContractConfigSectionProps) {
+export function ContractConfigSection({ networkId, wallet, serverWallet }: ContractConfigSectionProps) {
   const result = useContractsConfig(networkId);
   const loadedConfig = result.status === 'loaded' ? result.config : null;
   useSyncContractContext(loadedConfig);
@@ -31,13 +33,28 @@ export function ContractConfigSection({ networkId, wallet }: ContractConfigSecti
       <Message variant="info" className="mb-4">
         These operations use the <strong>server&apos;s wallet</strong>, not your connected wallet.
       </Message>
+      {serverWallet.status === 'syncing' && (
+        <Message variant="info" className="mb-4">
+          Server wallet syncing...
+        </Message>
+      )}
+      {serverWallet.status === 'error' && (
+        <Message variant="error" className="mb-4">
+          Server wallet error: {serverWallet.error}
+        </Message>
+      )}
 
       <div className="space-y-6">
-        <TokenMintContractPanel networkId={networkId} config={result.config.tokenMint} wallet={wallet} />
+        <TokenMintContractPanel
+          networkId={networkId}
+          config={result.config.tokenMint}
+          wallet={wallet}
+          serverWallet={serverWallet}
+        />
 
         <div className="border-t border-dark-700" />
 
-        <CounterContractPanel networkId={networkId} config={result.config.counter} />
+        <CounterContractPanel config={result.config.counter} networkId={networkId} />
       </div>
     </Card>
   );

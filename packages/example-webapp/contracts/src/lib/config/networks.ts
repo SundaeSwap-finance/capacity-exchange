@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseDotenv } from 'dotenv';
-import { resolveEndpoints, toNetworkIdEnum, parseMnemonic, parseSeedHex } from '@capacity-exchange/core';
+import { resolveEndpoints, toNetworkIdEnum, resolveWalletSeed } from '@capacity-exchange/core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { NetworkEndpoints } from '@capacity-exchange/core';
 
@@ -34,27 +34,10 @@ function loadDotEnv(): Record<string, string> {
   return parseDotenv(content);
 }
 
-function resolveWalletSeed(dotEnv: Record<string, string>, networkId: string): Uint8Array {
-  const prefix = networkId.toUpperCase();
-  const seedHex = dotEnv[`${prefix}_SEED_HEX`];
-  const mnemonic = dotEnv[`${prefix}_MNEMONIC`];
-
-  if (seedHex && mnemonic) {
-    throw new Error(`Set exactly one of ${prefix}_SEED_HEX or ${prefix}_MNEMONIC in .env, not both`);
-  }
-  if (mnemonic) {
-    return parseMnemonic(mnemonic);
-  }
-  if (seedHex) {
-    return parseSeedHex(seedHex);
-  }
-  throw new Error(`Missing ${prefix}_SEED_HEX or ${prefix}_MNEMONIC in .env`);
-}
-
 export function getAppConfigById(network: string): AppConfig {
   const networkId = toNetworkIdEnum(network);
   const endpoints = resolveEndpoints(networkId);
   const dotEnv = loadDotEnv();
-  const seed = resolveWalletSeed(dotEnv, network);
+  const seed = resolveWalletSeed(dotEnv, network.toUpperCase());
   return { networkId, endpoints, seed };
 }

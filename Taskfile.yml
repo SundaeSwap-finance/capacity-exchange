@@ -67,9 +67,13 @@ tasks:
 
   build-webapp:
     internal: true
-    deps: [check-contracts, build-libs, copy-zk-assets]
+    deps: [check-contracts, build-libs, copy-zk-assets, copy-contract-configs]
+    env:
+      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
       - bun run --filter @capacity-exchange/example-webapp build
+    requires:
+      vars: [NETWORK_ID]
 
   # --- Contract tasks ---
 
@@ -98,6 +102,12 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/example-webapp copy-zk-assets
 
+  copy-contract-configs:
+    internal: true
+    cmds:
+      - mkdir -p {{.WEBAPP_DIR}}/public/contracts
+      - cp {{.CONTRACTS_DIR}}/.contracts.*.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
+
   # --- High-level targets ---
 
   build:
@@ -119,22 +129,35 @@ tasks:
   dev:server:
     desc: Start the capacity exchange server with hot-reload
     deps: [build-core]
+    env:
+      MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
     cmds:
       - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/server dev & wait
+    requires:
+      vars: [NETWORK_ID]
 
   # webapp depends on: core, client, components, compiled + deployed contracts
   dev:webapp:
     desc: Start the example webapp with hot-reload
     deps: [check-setup, build-components]
+    env:
+      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
       - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/example-webapp dev & wait
+    requires:
+      vars: [NETWORK_ID]
 
   # dev runs both — watchers cover union of deps (core, components), deduplicated
   dev:
     desc: Start server and webapp with hot-reload
     deps: [check-setup, build-libs]
+    env:
+      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
+      MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
     cmds:
       - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/server dev & bun run --filter @capacity-exchange/example-webapp dev & wait
+    requires:
+      vars: [NETWORK_ID]
 
   deploy:
     desc: Deploy all contracts for a network
@@ -142,10 +165,11 @@ tasks:
     preconditions:
       - sh: test -d {{.CONTRACTS_DIR}}/counter/out
         msg: "Compiled contracts not found. Run 'task compile-contracts' first."
-      - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED_HEX=|^${UPPER}_MNEMONIC=" {{.CONTRACTS_DIR}}/.env 2>/dev/null'
-        msg: 'Missing <NETWORK_ID>_SEED_HEX or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
+      - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED=|^${UPPER}_MNEMONIC=" {{.CONTRACTS_DIR}}/.env 2>/dev/null'
+        msg: 'Missing <NETWORK_ID>_SEED or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
+      - task: copy-contract-configs
     requires:
       vars: [NETWORK_ID]
 

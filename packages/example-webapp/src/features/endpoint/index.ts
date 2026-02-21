@@ -2,6 +2,6 @@ export type { EndpointStatus, EndpointConfig, GraphQLEndpoint, RESTEndpoint } fr
 export { checkEndpointHealth } from './checkEndpointHealth';
 export { useEndpointHealth } from './useEndpointHealth';
 export { EndpointHealthRow } from './EndpointHealthRow';
-export { NetworkIdSelector } from './NetworkIdSelector';
 export { EndpointsList } from './EndpointsList';
 export { ConnectionDetailsSection } from './ConnectionDetailsSection';
+export { NetworkBanner } from './NetworkBanner';

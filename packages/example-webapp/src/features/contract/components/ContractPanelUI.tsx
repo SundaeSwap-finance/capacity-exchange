@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Collapsible, LabelValue, LoadingSpinner, Message } from '../../../shared/ui';
-import { LogOutput } from './LogOutput';
 
 interface Field {
   label: string;
@@ -17,10 +16,9 @@ interface ContractPanelProps {
   isRunning: boolean;
   currentOperation: string | null;
   error: string | null;
-  logs: string;
   fields: Field[];
   queryRow: ReactNode;
-  modifyRow: ReactNode;
+  modifyRow?: ReactNode;
   result?: Result | null;
   messages?: ReactNode;
 }
@@ -42,7 +40,6 @@ export function ContractPanel({
   isRunning,
   currentOperation,
   error,
-  logs,
   fields,
   queryRow,
   modifyRow,
@@ -62,16 +59,13 @@ export function ContractPanel({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 items-center">{modifyRow}</div>
+      {modifyRow && <div className="flex flex-wrap gap-2 items-center">{modifyRow}</div>}
 
       {messages}
       {isRunning && currentOperation && <LoadingSpinner message={`${currentOperation}...`} showElapsed />}
       {error && <Message variant="error">{error}</Message>}
       <Collapsible title="Details" defaultOpen={false}>
-        <div className="space-y-4">
-          <FieldsBox fields={fields} />
-          <LogOutput logs={logs} isRunning={isRunning} />
-        </div>
+        <FieldsBox fields={fields} />
       </Collapsible>
     </div>
   );

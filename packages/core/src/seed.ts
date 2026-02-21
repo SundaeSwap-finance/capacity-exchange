@@ -20,3 +20,23 @@ export function parseMnemonic(mnemonic: string): Uint8Array {
   }
   return bip39.mnemonicToSeedSync(words);
 }
+
+/**
+ * Resolves a wallet seed from an env record by looking for `{prefix}_SEED`
+ * or `{prefix}_MNEMONIC`. Exactly one must be set.
+ */
+export function resolveWalletSeed(env: Record<string, string | undefined>, prefix: string): Uint8Array {
+  const seed = env[`${prefix}_SEED`];
+  const mnemonic = env[`${prefix}_MNEMONIC`];
+
+  if (seed && mnemonic) {
+    throw new Error(`Set exactly one of ${prefix}_SEED or ${prefix}_MNEMONIC, not both`);
+  }
+  if (mnemonic) {
+    return parseMnemonic(mnemonic);
+  }
+  if (seed) {
+    return parseSeedHex(seed);
+  }
+  throw new Error(`Missing ${prefix}_SEED or ${prefix}_MNEMONIC`);
+}

@@ -1,4 +1,5 @@
-import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { findDeployedContract, createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { uint8ArrayToHex } from '@capacity-exchange/core';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
@@ -70,11 +71,20 @@ export async function findAndMintTokens(
     initialPrivateState,
   });
 
-  await submitCallTx(contractProviders, {
+  const callTxData = await createUnprovenCallTx(contractProviders, {
     compiledContract: compiledTokenMintContract,
     contractAddress,
-    circuitId: 'mint_test_tokens',
-    args: [amount],
+    circuitId: 'mint_test_tokens' as const,
+    args: [amount] as [bigint],
     privateStateId,
   });
+
+  const provenTx = await contractProviders.proofProvider.proveTx(callTxData.private.unprovenTx);
+  const balancedTx = await contractProviders.walletProvider.balanceTx(provenTx);
+  const txId = await contractProviders.midnightProvider.submitTx(balancedTx);
+  const result = await contractProviders.publicDataProvider.watchForTxData(txId);
+
+  if (result.status !== SucceedEntirely) {
+    throw new Error(`Mint transaction failed with status: ${result.status}`);
+  }
 }
