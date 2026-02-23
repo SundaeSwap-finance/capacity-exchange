@@ -1,4 +1,4 @@
 export * from './common';
-export * from './provider';
+export * from './blaze';
 export * from './generate';
 export * from './restore';

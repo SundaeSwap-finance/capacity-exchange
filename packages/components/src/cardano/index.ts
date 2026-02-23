@@ -1,4 +1,3 @@
-export * from './constants';
 export * from './config';
 export * from './wallet';
 export * from './datum';

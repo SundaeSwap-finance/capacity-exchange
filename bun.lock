@@ -14,6 +14,29 @@
         "vite-plugin-node-polyfills": "^0.24.0",
       },
     },
+    "packages/bridge-webapp": {
+      "name": "@capacity-exchange/bridge-webapp",
+      "version": "1.0.0",
+      "dependencies": {
+        "@blaze-cardano/sdk": "^0.2.31",
+        "@capacity-exchange/components": "1.0.0",
+        "@capacity-exchange/core": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-address-format": "^3.0.0",
+        "@types/react": "^19.2.9",
+        "@types/react-dom": "^19.2.3",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+      },
+      "devDependencies": {
+        "@vitejs/plugin-react": "^5.1.2",
+        "autoprefixer": "^10.4.23",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^3.4.19",
+        "vite": "^7.3.1",
+        "vite-plugin-node-polyfills": "^0.24.0",
+        "vite-plugin-wasm": "^3.5.0",
+      },
+    },
     "packages/client": {
       "name": "@capacity-exchange/client",
       "version": "1.0.0",
@@ -64,9 +87,11 @@
       "name": "@capacity-exchange/core",
       "version": "1.0.0",
       "dependencies": {
+        "@blaze-cardano/sdk": "^0.2.31",
         "@midnight-ntwrk/ledger-v7": "7.0.0",
         "@midnight-ntwrk/midnight-js-types": "3.0.0",
         "@midnight-ntwrk/wallet-sdk-abstractions": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-address-format": "^3.0.0",
         "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
         "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
         "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
@@ -266,6 +291,8 @@
     "@blaze-cardano/wallet": ["@blaze-cardano/wallet@0.5.2", "", { "dependencies": { "@blaze-cardano/core": "0.8.0", "@blaze-cardano/jest-config": "0.0.1", "@blaze-cardano/query": "0.5.6", "@blaze-cardano/tx": "0.14.1", "@emurgo/cardano-message-signing-browser": "^1.1.0", "@emurgo/cardano-message-signing-nodejs": "^1.1.0" } }, "sha512-HM9QSYmrbSZ4Q+NZGhp6nbvPzoqf6QVEVDnkqOstXALTKmcXMGWl26RtX5gga2FN+ocuqalDAYraYE8k96+eIg=="],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.2.1", "", {}, "sha512-k7vvKPbf7J2fZ5klGRD9AeKfUvojuZIQ3BT5u7Jfv+puwXkUBUT5PVyMDfJZpy30CBDXGMgw7fguK/lpOMBvgw=="],
+
+    "@capacity-exchange/bridge-webapp": ["@capacity-exchange/bridge-webapp@workspace:packages/bridge-webapp"],
 
     "@capacity-exchange/client": ["@capacity-exchange/client@workspace:packages/client"],
 

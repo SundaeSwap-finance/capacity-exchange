@@ -1,15 +1,7 @@
 import { Bip32PrivateKey, mnemonicToEntropy, wordlist } from '@blaze-cardano/core';
-import { HotWallet, Blockfrost, Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
+import { HotWallet, Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
 import * as fs from 'fs';
-import { NetworkConfig } from '../config';
-import { BIP39_PASSPHRASE } from '../constants';
-
-export function createProvider(config: NetworkConfig): Provider {
-  return new Blockfrost({
-    network: config.blockfrostNetwork,
-    projectId: config.blockfrostProjectId,
-  });
-}
+const BIP39_PASSPHRASE = '';
 
 export async function createBlazeFromMnemonicFile(
   provider: Provider,
