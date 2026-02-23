@@ -15,6 +15,16 @@ export async function sendShieldedTokens(
   receiverAddress: string,
   amount: bigint
 ): Promise<string> {
+  if (amount <= 0n) {
+    throw new Error('amount must be greater than 0');
+  }
+  if (!receiverAddress) {
+    throw new Error('receiverAddress must not be empty');
+  }
+  if (!type) {
+    throw new Error('type must not be empty');
+  }
+
   const { shieldedSecretKeys, dustSecretKey } = keys;
   const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
 

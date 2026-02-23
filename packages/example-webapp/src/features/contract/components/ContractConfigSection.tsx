@@ -45,16 +45,11 @@ export function ContractConfigSection({ networkId, wallet, serverWallet }: Contr
       )}
 
       <div className="space-y-6">
-        <TokenMintContractPanel
-          networkId={networkId}
-          config={result.config.tokenMint}
-          wallet={wallet}
-          serverWallet={serverWallet}
-        />
+        <TokenMintContractPanel config={result.config.tokenMint} wallet={wallet} serverWallet={serverWallet} />
 
         <div className="border-t border-dark-700" />
 
-        <CounterContractPanel config={result.config.counter} networkId={networkId} />
+        <CounterContractPanel config={result.config.counter} />
       </div>
     </Card>
   );

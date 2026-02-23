@@ -18,10 +18,7 @@ import { inMemoryPrivateStateProvider } from '@capacity-exchange/core';
  * @see https://github.com/midnightntwrk/midnight-js/issues/536
  */
 async function binaryFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const url = typeof input === 'string' ? input : input.toString();
-  console.log('[binaryFetch]', init?.method ?? 'GET', url);
   const response = await fetch(input, init);
-  console.log('[binaryFetch] response:', response.status, response.headers.get('content-type'), url);
   if (!response.ok) {
     return response;
   }
@@ -29,7 +26,6 @@ async function binaryFetch(input: RequestInfo | URL, init?: RequestInit): Promis
   if (!contentType.includes('text/html')) {
     return response;
   }
-  console.warn('[binaryFetch] Rejected HTML response for', url);
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 

@@ -7,7 +7,6 @@ import { useTokenMintOperations } from './useTokenMintOperations';
 import { TokenMintModifyRow } from './TokenMintModifyRow';
 
 interface TokenMintContractPanelProps {
-  networkId: string;
   config: TokenMintConfig;
   wallet: WalletCapabilities | null;
   serverWallet: ServerWallet;

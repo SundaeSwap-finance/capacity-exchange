@@ -7,7 +7,6 @@ import type { CounterConfig } from '../hooks/useContractsConfig';
 import { ContractPanel } from './ContractPanelUI';
 
 interface CounterContractPanelProps {
-  networkId: string;
   config: CounterConfig;
 }
 
