@@ -1,9 +1,8 @@
-// TODO: Wire this into the UI once we migrate off the SSE/CLI backend.
-// This calls the contract directly from the browser, replacing the
-// server/scriptRunner to contracts/cli/mint.ts roundtrip.
-import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { findDeployedContract, createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
-import type { BrowserProviders } from './createBrowserProviders';
+import { uint8ArrayToHex } from '@capacity-exchange/core';
+import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { buildContractProviders } from './contractProviders';
 import type { NetworkConfig } from '../../config';
 import * as TokenMint from '../../../contracts/token-mint/out/contract/index.js';
@@ -38,23 +37,26 @@ function createPrivateState(): CircuitPrivateState {
   return { secret_key: secretKey };
 }
 
-function generatePrivateStateId(): string {
-  const bytes = new Uint8Array(32);
+function generateRandomBytes(length: number): Uint8Array {
+  const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  return bytes;
+}
+
+function generatePrivateStateId(): string {
+  return uint8ArrayToHex(generateRandomBytes(32));
 }
 
 export async function findAndMintTokens(
-  providers: BrowserProviders,
+  midnightProvider: MidnightProvider,
+  walletProvider: WalletProvider,
   contractAddress: string,
   amount: bigint,
   config: NetworkConfig
 ): Promise<void> {
   const { contractProviders } = buildContractProviders<TokenMintCircuitId>(
-    providers,
-    providers.walletProvider,
+    midnightProvider,
+    walletProvider,
     '/midnight/token-mint',
     config
   );
@@ -69,11 +71,20 @@ export async function findAndMintTokens(
     initialPrivateState,
   });
 
-  await submitCallTx(contractProviders, {
+  const callTxData = await createUnprovenCallTx(contractProviders, {
     compiledContract: compiledTokenMintContract,
     contractAddress,
-    circuitId: 'mint_test_tokens',
-    args: [amount],
+    circuitId: 'mint_test_tokens' as const,
+    args: [amount] as [bigint],
     privateStateId,
   });
+
+  const provenTx = await contractProviders.proofProvider.proveTx(callTxData.private.unprovenTx);
+  const balancedTx = await contractProviders.walletProvider.balanceTx(provenTx);
+  const txId = await contractProviders.midnightProvider.submitTx(balancedTx);
+  const result = await contractProviders.publicDataProvider.watchForTxData(txId);
+
+  if (result.status !== SucceedEntirely) {
+    throw new Error(`Mint transaction failed with status: ${result.status}`);
+  }
 }

@@ -37,14 +37,22 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
   const fetchConfig = async () => {
     setState({ status: 'loading' });
     try {
-      const response = await fetch(`/api/contracts/${networkId}`);
-      const data = await response.json();
-
-      if (data.error) {
+      const response = await fetch(`/contracts/.contracts.${networkId}.json`);
+      if (response.status === 404) {
         setState({ status: 'not-deployed' });
-      } else {
-        setState({ status: 'loaded', config: data as ContractsConfig });
+        return;
       }
+      if (!response.ok) {
+        setState({ status: 'error', error: `HTTP ${response.status}` });
+        return;
+      }
+      const contentType = response.headers.get('content-type') ?? '';
+      if (!contentType.includes('application/json')) {
+        setState({ status: 'not-deployed' });
+        return;
+      }
+      const data = await response.json();
+      setState({ status: 'loaded', config: data as ContractsConfig });
     } catch (err) {
       setState({ status: 'error', error: err instanceof Error ? err.message : 'Failed to load contracts config' });
     }

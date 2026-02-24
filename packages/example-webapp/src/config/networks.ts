@@ -24,12 +24,9 @@ function buildNetworkConfig(networkId: string): NetworkConfig {
     throw new Error(`Unknown network: ${networkId}`);
   }
 
-  // Route through Vite dev proxy to avoid CORS on the indexer HTTP endpoint.
-  const indexerUrl = `${window.location.origin}/proxy/${networkId}/indexer/api/v3/graphql`;
-
   return {
     networkId,
-    indexerUrl,
+    indexerUrl: defaults.indexerHttpUrl,
     indexerWsUrl: defaults.indexerWsUrl,
     proofServerUrl: defaults.proofServerUrl,
     nodeWsUrl: defaults.nodeUrl,

@@ -1,4 +1,5 @@
 import { program } from 'commander';
+import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { runCli, withAppContext } from '../../lib/cli.js';
 import { createLogger } from '../../lib/logger.js';
 import { registerForDust } from '../lib/dust-registration.js';
@@ -14,6 +15,11 @@ function bigintBalances(record: Record<string, bigint>): Record<string, string> 
 const logger = createLogger(import.meta);
 
 interface BalancesOutput {
+  addresses: {
+    dust: string;
+    shielded: string;
+    unshielded: string;
+  };
   dust: string;
   shielded: Record<string, string>;
   unshielded: Record<string, string>;
@@ -45,6 +51,11 @@ function main(): Promise<BalancesOutput> {
     }
 
     const result = {
+      addresses: {
+        dust: state.dust.dustAddress,
+        shielded: MidnightBech32m.encode(networkId, state.shielded.address).asString(),
+        unshielded: MidnightBech32m.encode(networkId, state.unshielded.address).asString(),
+      },
       dust: state.dust.walletBalance(new Date()).toString(),
       shielded: bigintBalances(state.shielded.balances),
       unshielded: bigintBalances(state.unshielded.balances),

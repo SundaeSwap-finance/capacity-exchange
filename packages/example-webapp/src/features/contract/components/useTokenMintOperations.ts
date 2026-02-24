@@ -1,55 +1,83 @@
 import { useState, useCallback } from 'react';
-import { tokenMintApi, type TokenMintVerifyResult, type TokenMintSendResult } from '../api';
-import { useContractOperation } from '../hooks/useContractOperation';
+import { deriveTokenColor, getShieldedBalance, sendShieldedTokens } from '@capacity-exchange/core';
+import { findAndMintTokens } from '../../ces/tokenMintContract';
+import { useSubmit } from '../../../lib/hooks/useSubmit';
+import { useNetworkConfig } from '../../../config';
 import type { TokenMintConfig } from '../hooks/useContractsConfig';
 import type { WalletCapabilities } from '../../wallet/types';
+import type { ServerWallet } from '../../faucet';
 
-export function useTokenMintOperations(networkId: string, config: TokenMintConfig, wallet: WalletCapabilities | null) {
-  const [verifyResult, setVerifyResult] = useState<TokenMintVerifyResult | null>(null);
-  const [sendResult, setSendResult] = useState<TokenMintSendResult | null>(null);
+export function useTokenMintOperations(
+  config: TokenMintConfig,
+  wallet: WalletCapabilities | null,
+  serverWallet: ServerWallet
+) {
+  const networkConfig = useNetworkConfig();
+  const [balance, setBalance] = useState<string | null>(null);
+  const [sendTxHash, setSendTxHash] = useState<string | null>(null);
   const [mintAmount, setMintAmount] = useState(1000);
   const [sendAmount, setSendAmount] = useState(1000);
-  const [state, { runOperation }] = useContractOperation();
+  const { run, state } = useSubmit();
+
+  const serverReady = serverWallet.status === 'ready';
+  const derivedColor = deriveTokenColor(config.tokenColor, config.contractAddress);
 
   const handleMint = useCallback(async () => {
-    if (mintAmount <= 0) {
+    if (mintAmount <= 0 || !serverWallet.midnightProvider || !serverWallet.walletProvider) {
       return;
     }
 
-    await runOperation(
-      'Minting',
-      (callbacks) => tokenMintApi.mint(networkId, config.contractAddress, config.privateStateId, mintAmount, callbacks),
-      () => {}
+    await run('Minting', () =>
+      findAndMintTokens(
+        serverWallet.midnightProvider!,
+        serverWallet.walletProvider!,
+        config.contractAddress,
+        BigInt(mintAmount),
+        networkConfig
+      )
     );
-  }, [networkId, config, mintAmount, runOperation]);
+  }, [config, mintAmount, serverWallet, networkConfig, run]);
 
   const handleVerify = useCallback(async () => {
-    await runOperation(
-      'Verifying',
-      (callbacks) => tokenMintApi.verify(networkId, config.contractAddress, config.tokenColor, callbacks),
-      setVerifyResult
+    if (!serverWallet.walletFacade) {
+      return;
+    }
+
+    await run(
+      'Checking balance',
+      async () => {
+        const bal = await getShieldedBalance(serverWallet.walletFacade!, derivedColor);
+        return bal.toString();
+      },
+      setBalance
     );
-  }, [networkId, config, runOperation]);
+  }, [derivedColor, serverWallet, run]);
 
   const handleSend = useCallback(async () => {
-    if (!wallet || sendAmount <= 0) {
+    if (!wallet || !serverWallet.walletFacade || !serverWallet.keys || sendAmount <= 0) {
       return;
     }
 
     const { shieldedAddress } = await wallet.getShieldedAddresses();
 
-    await runOperation(
+    await run(
       'Sending',
-      (callbacks) =>
-        tokenMintApi.send(networkId, config.contractAddress, config.tokenColor, shieldedAddress, sendAmount, callbacks),
-      setSendResult
+      () =>
+        sendShieldedTokens(
+          serverWallet.walletFacade!,
+          serverWallet.keys!,
+          derivedColor,
+          shieldedAddress,
+          BigInt(sendAmount)
+        ),
+      setSendTxHash
     );
-  }, [networkId, config, wallet, sendAmount, runOperation]);
+  }, [derivedColor, wallet, serverWallet, sendAmount, run]);
 
   return {
     state,
-    verifyResult,
-    sendResult,
+    balance,
+    sendTxHash,
     mintAmount,
     setMintAmount,
     sendAmount,
@@ -57,5 +85,6 @@ export function useTokenMintOperations(networkId: string, config: TokenMintConfi
     handleMint,
     handleVerify,
     handleSend,
+    serverReady,
   };
 }

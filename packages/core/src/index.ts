@@ -15,7 +15,7 @@ export {
 export type { Logger } from './logger';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider';
 export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks';
-export { parseSeedHex, parseMnemonic } from './seed';
+export { parseSeedHex, parseMnemonic, resolveWalletSeed } from './seed';
 export { parseCoinPublicKey } from './midnight';
 export {
   type CardanoNetwork,
@@ -28,3 +28,6 @@ export {
   adaToLovelace,
   createProvider,
 } from './cardano';
+export { deriveTokenColor } from './tokenColor';
+export { sendShieldedTokens } from './sendShieldedTokens';
+export { getShieldedBalance } from './getShieldedBalance';

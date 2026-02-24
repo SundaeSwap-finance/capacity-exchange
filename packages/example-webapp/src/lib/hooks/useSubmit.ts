@@ -1,26 +1,46 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
-type Submitter<T, TArgs> = (args: TArgs) => Promise<T>;
+export interface SubmitState {
+  submitting: boolean;
+  label: string | null;
+  error: string | null;
+}
 
-export function useSubmit<T, TArgs>(submitter: Submitter<T, TArgs>) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState<boolean>(false);
+const INITIAL_STATE: SubmitState = { submitting: false, label: null, error: null };
 
-  const submit = async (args: TArgs) => {
-    setSubmitting(true);
-    try {
-      const response = await submitter(args);
-      setData(response);
-      setError(null);
-      return response;
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-      throw e;
-    } finally {
-      setSubmitting(false);
-    }
-  };
+function startState(name: string): SubmitState {
+  return { submitting: true, label: name, error: null };
+}
 
-  return { submit, submitting, data, error };
+function doneState(): SubmitState {
+  return INITIAL_STATE;
+}
+
+function errorState(e: unknown): SubmitState {
+  return { submitting: false, label: null, error: e instanceof Error ? e.message : String(e) };
+}
+
+async function execute<T>(operation: () => Promise<T>, onSuccess?: (data: T) => void): Promise<string | null> {
+  try {
+    const result = await operation();
+    onSuccess?.(result);
+    return null;
+  } catch (e: unknown) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
+export function useSubmit() {
+  const [state, setState] = useState<SubmitState>(INITIAL_STATE);
+
+  const run = useCallback(
+    async <T>(name: string, operation: () => Promise<T>, onSuccess?: (data: T) => void): Promise<void> => {
+      setState(startState(name));
+      const error = await execute(operation, onSuccess);
+      setState(error ? errorState(error) : doneState());
+    },
+    []
+  );
+
+  return { run, state };
 }

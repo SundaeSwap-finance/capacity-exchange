@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSubmit } from '../hooks/useSubmit';
 import { useApiClient } from '../contexts/ApiContext';
 import { ApiOffersPostOperationRequest, ApiOffersPost201Response } from '@capacity-exchange/client';
 
 interface OffersRenderProps {
-  submit: (args: ApiOffersPostOperationRequest) => Promise<ApiOffersPost201Response | undefined>;
+  submit: (args: ApiOffersPostOperationRequest) => Promise<void>;
   submitting: boolean;
   data: ApiOffersPost201Response | null;
   error: string | null;
@@ -16,17 +16,19 @@ interface OffersProps {
 
 const Offers: React.FC<OffersProps> = ({ children }) => {
   const api = useApiClient();
-  const { submit, submitting, data, error } = useSubmit((args: ApiOffersPostOperationRequest) =>
-    api.apiOffersPost(args)
-  );
+  const [data, setData] = useState<ApiOffersPost201Response | null>(null);
+  const { run, state } = useSubmit();
+
+  const submit = (args: ApiOffersPostOperationRequest) =>
+    run('Submitting offer', () => api.apiOffersPost(args), setData);
 
   return (
     <>
       {children({
         submit,
-        submitting,
+        submitting: state.submitting,
         data,
-        error,
+        error: state.error,
       })}
     </>
   );

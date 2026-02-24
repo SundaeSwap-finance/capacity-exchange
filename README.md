@@ -62,6 +62,10 @@ example-webapp → core, client, components, compiled contracts
 | `task fix` | Lint and format fix |
 | `task clean` | Clean all build artifacts and node_modules |
 
+## Security Notes
+
+Because of the way Vite env vars work, the `VITE_SERVER_*` wallet credentials get baked into the `example-webapp` JS bundle. This is fine for a demo on a test network (undeployed, preview, preprod), but `example-webapp` shouldn't be run in a production env or with creds that map to a real wallet.
+
 ## Build System Philosophy
 
 This project uses a **distributed build architecture**:
