@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "LOG_LEVEL=debug bun --watch src/server.ts",
     "build": "tsc",
-    "start": "LOG_LEVEL=info node dist/server.js",
+    "start": "LOG_LEVEL=info bun dist/server.js",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "lint": "eslint .",
