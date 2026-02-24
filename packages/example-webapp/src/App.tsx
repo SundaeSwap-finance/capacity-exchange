@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { NETWORK_CONFIGS, getEndpoints, NetworkConfigProvider } from './config';
 import {
@@ -19,7 +19,9 @@ function App() {
   const [walletMode, setWalletMode] = useState<WalletMode | null>(null);
 
   const networkId = import.meta.env.VITE_NETWORK_ID as string;
-  setMidnightNetworkId(networkId);
+  useEffect(() => {
+    setMidnightNetworkId(networkId);
+  }, [networkId]);
 
   const currentConfig = NETWORK_CONFIGS[networkId];
   const endpoints = useMemo(() => getEndpoints(currentConfig), [currentConfig]);

@@ -4,6 +4,7 @@ import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const REQUIRED_ENV_VARS = ['VITE_NETWORK_ID'];
+// Restricted envs — testnet and mainnet are not targets for this repo.
 const VALID_NETWORK_IDS = ['undeployed', 'preview', 'preprod'];
 
 // https://vitejs.dev/config/
