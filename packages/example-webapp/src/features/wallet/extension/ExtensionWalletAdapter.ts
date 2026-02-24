@@ -1,13 +1,21 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import {
+  MidnightBech32m,
+  ShieldedAddress,
+  ShieldedCoinPublicKey,
+  ShieldedEncryptionPublicKey,
+} from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { WalletCapabilities, BalanceUpdate, BalanceData } from '../types';
 
 const DEFAULT_POLL_INTERVAL = 5000;
 
 export class ExtensionWalletAdapter implements WalletCapabilities {
+  #networkId: string;
   #wallet: ConnectedAPI;
   #pollInterval: number;
 
-  constructor(wallet: ConnectedAPI, pollInterval = DEFAULT_POLL_INTERVAL) {
+  constructor(networkId: string, wallet: ConnectedAPI, pollInterval = DEFAULT_POLL_INTERVAL) {
+    this.#networkId = networkId;
     this.#wallet = wallet;
     this.#pollInterval = pollInterval;
   }
@@ -21,8 +29,19 @@ export class ExtensionWalletAdapter implements WalletCapabilities {
     return { balance };
   }
 
-  getShieldedAddresses() {
-    return this.#wallet.getShieldedAddresses();
+  async getShieldedAddresses() {
+    const result = await this.#wallet.getShieldedAddresses();
+
+    // TODO: Change this to use result.shieldedAddress once Lace fixes their getter to return the right thing
+    // (currently it returns the raw hex)
+    const shieldedAddress = new ShieldedAddress(
+      ShieldedCoinPublicKey.fromHexString(result.shieldedCoinPublicKey),
+      ShieldedEncryptionPublicKey.fromHexString(result.shieldedEncryptionPublicKey)
+    );
+    return {
+      ...result,
+      shieldedAddress: MidnightBech32m.encode(this.#networkId, shieldedAddress).asString(),
+    };
   }
 
   getShieldedBalances() {
