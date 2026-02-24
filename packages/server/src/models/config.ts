@@ -10,6 +10,7 @@ export interface BaseConfig {
   PORT: number;
   LOG_LEVEL: string;
   OFFER_TTL_SECONDS: number;
+  PROOF_SERVER_URL: string;
 }
 
 export interface AppConfig extends BaseConfig {
@@ -22,7 +23,14 @@ export interface AppConfig extends BaseConfig {
 
 export const schema = {
   type: 'object',
-  required: ['MIDNIGHT_NETWORK', 'PRICE_FORMULAS_FILE', 'PORT', 'LOG_LEVEL', 'OFFER_TTL_SECONDS'],
+  required: [
+    'MIDNIGHT_NETWORK',
+    'PRICE_FORMULAS_FILE',
+    'PORT',
+    'LOG_LEVEL',
+    'OFFER_TTL_SECONDS',
+    'PROOF_SERVER_URL',
+  ],
   properties: {
     MIDNIGHT_NETWORK: {
       type: 'string',
@@ -49,6 +57,9 @@ export const schema = {
     OFFER_TTL_SECONDS: {
       type: 'number',
       default: 60,
+    },
+    PROOF_SERVER_URL: {
+      type: 'string',
     },
   },
 };
