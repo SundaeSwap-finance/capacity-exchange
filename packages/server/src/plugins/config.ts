@@ -41,6 +41,7 @@ export default fp(async (fastify: FastifyInstance) => {
     networkId,
     walletSeed,
     fastify.log.child({ service: 'StateStore' }),
+    baseConfig.WALLET_STATE_DIR,
   );
 
   const [priceFormulas, savedDustState] = await Promise.all([

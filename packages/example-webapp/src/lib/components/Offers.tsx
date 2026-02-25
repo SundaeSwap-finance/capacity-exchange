@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSubmit } from '../hooks/useSubmit';
-import { useApiClient } from '../contexts/ApiContext';
+import { useCesClient } from '../../config';
 import { ApiOffersPostOperationRequest, ApiOffersPost201Response } from '@capacity-exchange/client';
 
 interface OffersRenderProps {
@@ -15,7 +15,7 @@ interface OffersProps {
 }
 
 const Offers: React.FC<OffersProps> = ({ children }) => {
-  const api = useApiClient();
+  const api = useCesClient();
   const [data, setData] = useState<ApiOffersPost201Response | null>(null);
   const { run, state } = useSubmit();
 

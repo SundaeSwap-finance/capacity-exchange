@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApi } from '../hooks/useApi';
-import { useApiClient } from '../contexts/ApiContext';
+import { useCesClient } from '../../config';
 
 interface HealthCheckRenderProps {
   error: string | null;
@@ -13,7 +13,7 @@ interface HealthCheckProps {
 }
 
 const HealthCheck: React.FC<HealthCheckProps> = ({ children }) => {
-  const api = useApiClient();
+  const api = useCesClient();
   const { data: health, error } = useApi(() => api.healthGet(), [], { pollInterval: 2000 });
 
   return (

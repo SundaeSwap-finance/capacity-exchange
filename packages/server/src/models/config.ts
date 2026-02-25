@@ -11,6 +11,7 @@ export interface BaseConfig {
   LOG_LEVEL: string;
   OFFER_TTL_SECONDS: number;
   PROOF_SERVER_URL: string;
+  WALLET_STATE_DIR: string;
 }
 
 export interface AppConfig extends BaseConfig {
@@ -30,6 +31,7 @@ export const schema = {
     'LOG_LEVEL',
     'OFFER_TTL_SECONDS',
     'PROOF_SERVER_URL',
+    'WALLET_STATE_DIR',
   ],
   properties: {
     MIDNIGHT_NETWORK: {
@@ -44,21 +46,20 @@ export const schema = {
     },
     PRICE_FORMULAS_FILE: {
       type: 'string',
-      default: 'price-formulas.json',
     },
     PORT: {
       type: 'number',
-      default: 3000,
     },
     LOG_LEVEL: {
       type: 'string',
-      default: 'info',
     },
     OFFER_TTL_SECONDS: {
       type: 'number',
-      default: 60,
     },
     PROOF_SERVER_URL: {
+      type: 'string',
+    },
+    WALLET_STATE_DIR: {
       type: 'string',
     },
   },

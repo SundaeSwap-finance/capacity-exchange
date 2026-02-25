@@ -28,6 +28,8 @@ function buildSeedProviders(
   return createBrowserProviders(connectedAPI, shieldedAddress);
 }
 
+// TODO: Make useBrowserProviders responsible for building the ConnectedAPI for both paths,
+// so WalletConnection doesn't need to expose raw connectedAPI.
 function buildExtensionProviders(
   walletConnection: ExtensionWalletConnection,
   shieldedAddressInfo: ShieldedAddressInfo
@@ -45,12 +47,17 @@ export function useBrowserProviders(
   const [extensionAddressInfo, setExtensionAddressInfo] = useState<ShieldedAddressInfo | null>(null);
 
   useEffect(() => {
-    if (walletConnection?.type !== 'extension') {
+    if (walletConnection?.type !== 'extension' || !wallet) {
       setExtensionAddressInfo(null);
       return;
     }
-    walletConnection.connectedAPI.getShieldedAddresses().then(setExtensionAddressInfo);
-  }, [walletConnection]);
+    wallet
+      .getShieldedAddresses()
+      .then(setExtensionAddressInfo)
+      .catch((err) => {
+        console.error('Failed to fetch shielded addresses from extension:', err);
+      });
+  }, [walletConnection, wallet]);
 
   const providers = useMemo<BrowserProviders | null>(() => {
     if (!walletConnection || walletInfo.status !== 'ready') {

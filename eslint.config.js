@@ -11,6 +11,10 @@ export default tseslint.config(
   },
   {
     rules: {
+      'max-len': [
+        'error',
+        { code: 120, comments: 120, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true },
+      ],
       curly: 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',

@@ -1,7 +1,7 @@
 import React from 'react';
 import { HealthReadyGet200Response } from '@capacity-exchange/client';
 import { useApi } from '../hooks/useApi';
-import { useApiClient } from '../contexts/ApiContext';
+import { useCesClient } from '../../config';
 
 interface ReadyCheckRenderProps {
   error: string | null;
@@ -13,7 +13,7 @@ interface ReadyCheckProps {
 }
 
 const ReadyCheck: React.FC<ReadyCheckProps> = ({ children }) => {
-  const api = useApiClient();
+  const api = useCesClient();
   const { data: readiness, error } = useApi(() => api.healthReadyGet(), [], { pollInterval: 2000 });
 
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useApiClient } from '../../lib/contexts/ApiContext';
+import { useCesClient } from '../../config';
 import { ResponseError } from '@capacity-exchange/client';
 
 export type CesReadiness =
@@ -12,7 +12,7 @@ const POLL_INTERVAL = 1_000;
 
 // TODO: Use this for a list of CE services, to prove it works against multiple
 export function useCesReadiness(tokenColor: string | null): CesReadiness {
-  const api = useApiClient();
+  const api = useCesClient();
   const [state, setState] = useState<CesReadiness>({ status: 'loading' });
 
   const check = useCallback(async () => {

@@ -16,7 +16,7 @@ tasks:
 
   # --- Precondition tasks ---
 
-  check-contracts:
+  require-compilable-contracts:
     internal: true
     run: once
     preconditions:
@@ -26,7 +26,7 @@ tasks:
             1. Set COMPACTC to a valid compactc binary path (contracts will be compiled automatically)
             2. Run 'task compile-contracts' first
 
-  check-setup:
+  require-deployed-contracts:
     internal: true
     run: once
     preconditions:
@@ -67,7 +67,7 @@ tasks:
 
   build-webapp:
     internal: true
-    deps: [check-contracts, build-libs, copy-zk-assets, copy-contract-configs]
+    deps: [require-compilable-contracts, build-libs, copy-zk-assets, copy-contract-configs]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
@@ -110,13 +110,29 @@ tasks:
 
   # --- High-level targets ---
 
+  typecheck-contracts:
+    internal: true
+    deps: [build-core]
+    preconditions:
+      - sh: test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
+        msg: "Compiled contract output not found. Run 'task compile-contracts' first."
+    cmds:
+      - bun run --filter @capacity-exchange/example-contracts build
+
+  # TODO: Also typecheck test directories (packages/*/tests)
+  build-all:
+    desc: Typecheck all TypeScript packages (requires compiled contracts)
+    deps: [build-libs, build-server, typecheck-contracts]
+    cmds:
+      - bun run --filter @capacity-exchange/example-webapp typecheck
+
   build:
-    desc: Build all packages
-    deps: [check-contracts, build-webapp, build-server]
+    desc: Build all packages and compile/copy contracts
+    deps: [require-compilable-contracts, build-webapp, build-server, typecheck-contracts]
 
   setup:
     desc: 'One-time setup: install, build everything, and deploy'
-    deps: [check-contracts, build]
+    deps: [require-compilable-contracts, build]
     cmds:
       - task: deploy
         vars:
@@ -139,7 +155,7 @@ tasks:
   # webapp depends on: core, client, components, compiled + deployed contracts
   dev:webapp:
     desc: Start the example webapp with hot-reload
-    deps: [check-setup, build-components]
+    deps: [require-deployed-contracts, build-components]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
@@ -150,7 +166,7 @@ tasks:
   # dev runs both — watchers cover union of deps (core, components), deduplicated
   dev:
     desc: Start server and webapp with hot-reload
-    deps: [check-setup, build-libs]
+    deps: [require-deployed-contracts, build-libs]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'

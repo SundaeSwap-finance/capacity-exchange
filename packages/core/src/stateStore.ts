@@ -86,10 +86,15 @@ export class StateStore {
  * The suffix is a truncated SHA-256 hash of `network + seedHex`, so the same
  * seed on different networks gets separate state files.
  */
-export function createWalletStateStore(networkId: NetworkId.NetworkId, seedHex: string, logger: Logger): StateStore {
+export function createWalletStateStore(
+  networkId: NetworkId.NetworkId,
+  seedHex: string,
+  logger: Logger,
+  dir: string
+): StateStore {
   const suffix = createHash('sha256')
     .update(String(networkId) + seedHex)
     .digest('hex')
     .slice(0, 12);
-  return new StateStore('.wallet-state', suffix, logger);
+  return new StateStore(dir, suffix, logger);
 }

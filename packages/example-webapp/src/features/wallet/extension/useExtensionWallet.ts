@@ -55,7 +55,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
 
     try {
       const connection = await connectWallet(availability.connector, networkId);
-      setWallet(new ExtensionWalletAdapter(connection.wallet));
+      setWallet(new ExtensionWalletAdapter(networkId, connection.wallet));
       setConnectedAPI(connection.wallet);
       setConnectionStatus('connected');
     } catch (err) {
