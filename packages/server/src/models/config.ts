@@ -46,7 +46,6 @@ export const schema = {
     },
     PRICE_FORMULAS_FILE: {
       type: 'string',
-      default: 'price-formulas.json',
     },
     PORT: {
       type: 'number',
