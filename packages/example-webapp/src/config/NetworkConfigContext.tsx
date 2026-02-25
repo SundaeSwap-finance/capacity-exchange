@@ -1,16 +1,38 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
+import { DefaultApi, Configuration } from '@capacity-exchange/client';
 import type { NetworkConfig } from './networks';
 
-const NetworkConfigContext = createContext<NetworkConfig | null>(null);
+interface NetworkConfigContextValue {
+  config: NetworkConfig;
+  // TODO: Make this a list
+  cesClient: DefaultApi;
+}
+
+const NetworkConfigContext = createContext<NetworkConfigContextValue | null>(null);
 
 export function NetworkConfigProvider({ config, children }: { config: NetworkConfig; children: React.ReactNode }) {
-  return <NetworkConfigContext.Provider value={config}>{children}</NetworkConfigContext.Provider>;
+  const cesClient = useMemo(() => {
+    const cesConfig = new Configuration({ basePath: config.capacityExchangeUrl });
+    return new DefaultApi(cesConfig);
+  }, [config.capacityExchangeUrl]);
+
+  return (
+    <NetworkConfigContext.Provider value={{ config, cesClient: cesClient }}>{children}</NetworkConfigContext.Provider>
+  );
 }
 
 export function useNetworkConfig(): NetworkConfig {
-  const config = useContext(NetworkConfigContext);
-  if (!config) {
+  const ctx = useContext(NetworkConfigContext);
+  if (!ctx) {
     throw new Error('useNetworkConfig must be used within a NetworkConfigProvider');
   }
-  return config;
+  return ctx.config;
+}
+
+export function useCesClient(): DefaultApi {
+  const ctx = useContext(NetworkConfigContext);
+  if (!ctx) {
+    throw new Error('useCesClient must be used within a NetworkConfigProvider');
+  }
+  return ctx.cesClient;
 }

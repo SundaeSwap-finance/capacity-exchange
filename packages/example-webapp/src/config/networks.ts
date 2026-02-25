@@ -1,10 +1,18 @@
 import { NETWORK_ENDPOINTS, type NetworkEndpoints } from '@capacity-exchange/core';
 import type { NetworkId as MidnightNetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
-function requireEnv(name: string): string {
+export function requireEnv(name: string): string {
   const value = import.meta.env[name];
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+export function requireEnvOneOf(name: string, allowedValues: readonly string[]): string {
+  const value = requireEnv(name);
+  if (!allowedValues.includes(value)) {
+    throw new Error(`Invalid value "${value}" for ${name}. Must be one of: ${allowedValues.join(', ')}`);
   }
   return value;
 }
@@ -15,6 +23,7 @@ export interface NetworkConfig {
   indexerWsUrl: string;
   proofServerUrl: string;
   nodeWsUrl: string;
+  // TODO: Make this a list
   capacityExchangeUrl: string;
 }
 

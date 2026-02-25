@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApi } from '../hooks/useApi';
-import { useApiClient } from '../contexts/ApiContext';
+import { useCesClient } from '../../config';
 import { ApiPricesGet200Response } from '@capacity-exchange/client';
 
 interface PricesRenderProps {
@@ -14,7 +14,7 @@ interface PricesProps {
 }
 
 const Prices: React.FC<PricesProps> = ({ children, specks }) => {
-  const api = useApiClient();
+  const api = useCesClient();
   const { data: prices, error } = useApi(() => api.apiPricesGet({ specks }), [specks], {
     pollInterval: 5000,
   });

@@ -110,8 +110,14 @@ tasks:
 
   # --- High-level targets ---
 
+  build-packages:
+    desc: Build all packages (skips contract compilation and ZK asset copying)
+    deps: [build-libs, build-server]
+    cmds:
+      - bun run --filter @capacity-exchange/example-webapp build
+
   build:
-    desc: Build all packages
+    desc: Build all packages and compile/copy contracts
     deps: [check-contracts, build-webapp, build-server]
 
   setup:

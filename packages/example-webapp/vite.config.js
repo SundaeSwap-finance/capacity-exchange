@@ -1,26 +1,10 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-const REQUIRED_ENV_VARS = ['VITE_NETWORK_ID'];
-// Restricted envs — testnet and mainnet are not targets for this repo.
-const VALID_NETWORK_IDS = ['undeployed', 'preview', 'preprod'];
-
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, import.meta.dirname, 'VITE_');
-  for (const key of REQUIRED_ENV_VARS) {
-    if (!env[key]) {
-      throw new Error(`Missing required environment variable: ${key}`);
-    }
-  }
-  if (!VALID_NETWORK_IDS.includes(env.VITE_NETWORK_ID)) {
-    throw new Error(
-      `Invalid VITE_NETWORK_ID "${env.VITE_NETWORK_ID}". Must be one of: ${VALID_NETWORK_IDS.join(', ')}.`
-    );
-  }
-
+export default defineConfig(() => {
   return {
     define: {
       global: 'globalThis',

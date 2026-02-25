@@ -1,7 +1,7 @@
 import React from 'react';
 import { Get200Response } from '@capacity-exchange/client';
 import { useApi } from '../hooks/useApi';
-import { useApiClient } from '../contexts/ApiContext';
+import { useCesClient } from '../../config';
 
 interface RootInfoRenderProps {
   error: string | null;
@@ -13,7 +13,7 @@ interface RootInfoProps {
 }
 
 const RootInfo: React.FC<RootInfoProps> = ({ children }) => {
-  const api = useApiClient();
+  const api = useCesClient();
   const { data: info, error } = useApi(() => api.rootGet(), []);
 
   return (

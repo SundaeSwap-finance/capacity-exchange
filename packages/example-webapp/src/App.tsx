@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { NETWORK_CONFIGS, getEndpoints, NetworkConfigProvider } from './config';
+import { NETWORK_CONFIGS, getEndpoints, NetworkConfigProvider, requireEnvOneOf } from './config';
 import {
   WalletModeSelector,
   ExtensionWalletFlow,
@@ -18,7 +18,7 @@ import { useServerWallet } from './features/faucet';
 function App() {
   const [walletMode, setWalletMode] = useState<WalletMode | null>(null);
 
-  const networkId = import.meta.env.VITE_NETWORK_ID as string;
+  const networkId = requireEnvOneOf('VITE_NETWORK_ID', Object.keys(NETWORK_CONFIGS));
   useEffect(() => {
     setMidnightNetworkId(networkId);
   }, [networkId]);

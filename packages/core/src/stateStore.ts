@@ -68,7 +68,7 @@ export class StateStore {
     try {
       const files = await readdir(this.#dir);
       const matching = files.filter((f) => f.endsWith(`-${this.#suffix}.data`));
-      await Promise.all(matching.map((f) => unlink(path.join(this.#dir, f)).catch(() => { })));
+      await Promise.all(matching.map((f) => unlink(path.join(this.#dir, f)).catch(() => {})));
       this.#logger.debug(`Cleared all state (${matching.length} files)`);
     } catch {
       // Ignore if dir missing
