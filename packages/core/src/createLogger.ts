@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import type { Logger } from '@capacity-exchange/core';
+import type { Logger } from './index';
 
 export type { Logger };
 

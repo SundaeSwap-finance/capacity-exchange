@@ -5,6 +5,10 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./midnight": "./dist/midnight/index.js"
+  },
   "scripts": {
     "clean": "rm -rf dist node_modules",
     "build": "tsc && tsc --noEmit -p tests/tsconfig.json",
@@ -17,12 +21,19 @@
     "@blaze-cardano/data": "0.6.6",
     "@blaze-cardano/sdk": "^0.2.31",
     "@capacity-exchange/client": "1.0.0",
-    "@capacity-exchange/core": "1.0.0"
+    "@capacity-exchange/core": "1.0.0",
+    "@midnight-ntwrk/compact-js": "2.4.0",
+    "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.0.0",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.0.0",
+    "@midnight-ntwrk/midnight-js-network-id": "3.0.0",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.0.0",
+    "@midnight-ntwrk/midnight-js-types": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-facade": "1.0.0"
   },
   "peerDependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.0",
     "@midnight-ntwrk/ledger-v7": "7.0.0",
-    "@midnight-ntwrk/midnight-js-types": "3.0.0",
     "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0"
   },
   "devDependencies": {

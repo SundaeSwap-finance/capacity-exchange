@@ -1,7 +1,7 @@
 import { FinalizedTransaction } from '@midnight-ntwrk/ledger-v7';
 import { MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import { DEFAULT_CONFIG, PolkadotNodeClient } from '@midnight-ntwrk/wallet-sdk-node-client';
-import { createLogger } from '../logger.js';
+import { createLogger } from './createLogger';
 
 const logger = createLogger(import.meta);
 

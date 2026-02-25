@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
-import { runCli, withAppContext } from '../../lib/cli.js';
-import { createLogger } from '../../lib/logger.js';
+import { runCli, withAppContext } from '@capacity-exchange/components/midnight';
+import { createLogger } from '@capacity-exchange/core/node';
 import { registerForDust } from '../lib/dust-registration.js';
 
 function bigintBalances(record: Record<string, bigint>): Record<string, string> {

@@ -6,10 +6,8 @@ import {
   type WalletKeys,
   type CreateAndSyncWalletOptions,
 } from '@capacity-exchange/core';
-import { createWalletStateStore, type StateStore } from '@capacity-exchange/core/node';
+import { createWalletStateStore, createLogger, type StateStore, type AppConfig } from '@capacity-exchange/core/node';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { AppConfig } from '../config/networks.js';
-import { createLogger } from '../logger.js';
 
 const logger = createLogger(import.meta);
 

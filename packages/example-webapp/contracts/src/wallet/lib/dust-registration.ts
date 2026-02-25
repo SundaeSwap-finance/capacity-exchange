@@ -1,7 +1,7 @@
 import * as Rx from 'rxjs';
 import { type WalletFacade, FacadeState } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { WalletKeys } from '@capacity-exchange/core';
-import { createLogger } from '../../lib/logger.js';
+import { createLogger } from '@capacity-exchange/core/node';
 
 const logger = createLogger(import.meta);
 
