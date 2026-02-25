@@ -50,7 +50,7 @@ async function syncWithRetry(options: CreateAndSyncWalletOptions, store: StateSt
 
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
   const seedHex = uint8ArrayToHex(config.seed);
-  const store = createWalletStateStore(config.networkId, seedHex, logger);
+  const store = createWalletStateStore(config.networkId, seedHex, logger, config.walletStateDir);
 
   logger.info('Creating and syncing wallets...');
   const [savedShieldedState, savedDustState] = await Promise.all([store.load('shielded'), store.load('dust')]);

@@ -51,7 +51,12 @@ export function useBrowserProviders(
       setExtensionAddressInfo(null);
       return;
     }
-    wallet.getShieldedAddresses().then(setExtensionAddressInfo);
+    wallet
+      .getShieldedAddresses()
+      .then(setExtensionAddressInfo)
+      .catch((err) => {
+        console.error('Failed to fetch shielded addresses from extension:', err);
+      });
   }, [walletConnection, wallet]);
 
   const providers = useMemo<BrowserProviders | null>(() => {

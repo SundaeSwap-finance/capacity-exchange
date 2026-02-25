@@ -49,15 +49,12 @@ export const schema = {
     },
     PORT: {
       type: 'number',
-      default: 3000,
     },
     LOG_LEVEL: {
       type: 'string',
-      default: 'info',
     },
     OFFER_TTL_SECONDS: {
       type: 'number',
-      default: 60,
     },
     PROOF_SERVER_URL: {
       type: 'string',

@@ -87,8 +87,8 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
       wallet: null,
       connectedAPI: null,
       error: null,
-      connect: async () => { },
-      disconnect: () => { },
+      connect: async () => {},
+      disconnect: () => {},
     };
   }
 

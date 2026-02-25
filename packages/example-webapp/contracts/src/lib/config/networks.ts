@@ -9,6 +9,7 @@ export interface AppConfig {
   networkId: NetworkId.NetworkId;
   endpoints: NetworkEndpoints;
   seed: Uint8Array;
+  walletStateDir: string;
 }
 
 function findPackageRoot(from: string): string {
@@ -39,5 +40,9 @@ export function getAppConfigById(network: string): AppConfig {
   const endpoints = resolveEndpoints(networkId);
   const dotEnv = loadDotEnv();
   const seed = resolveWalletSeed(dotEnv, network.toUpperCase());
-  return { networkId, endpoints, seed };
+  const walletStateDir = dotEnv['WALLET_STATE_DIR'];
+  if (!walletStateDir) {
+    throw new Error('Missing WALLET_STATE_DIR in .env');
+  }
+  return { networkId, endpoints, seed, walletStateDir };
 }

@@ -1,6 +1,6 @@
 # Capacity Exchange SDK
 
-This repo holds client packages related to the [Capacity Exchange Service](https://github.com/SundaeSwap-finance/capacity-exchange-server).
+Client and server packages for the Capacity Exchange Service on the Midnight network.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ This repo holds client packages related to the [Capacity Exchange Service](https
 COMPACTC=~/compactc_v0.28.0/compactc task setup NETWORK_ID=<network>
 
 # Start both the server and webapp with hot-reload
-task dev
+NETWORK_ID=<network> task dev
 ```
 
 ## Project Structure
@@ -30,7 +30,7 @@ task dev
 ├── packages/
 │   ├── client/                         # Auto-generated OpenAPI client
 │   ├── core/                           # Shared core logic
-│   ├── components/                     # Frontend components (depends on core, client)
+│   ├── components/                     # Shared adapters and integrations (depends on core, client)
 │   ├── server/                         # Capacity exchange server (depends on core)
 │   └── example-webapp/                 # Example webapp (depends on core, client, components)
 │       └── contracts/                  # Compact smart contracts
@@ -50,13 +50,14 @@ example-webapp → core, client, components, compiled contracts
 
 | Task | Description |
 |------|-------------|
-| `task setup NETWORK_ID=<network>` | One-time setup: install, build everything, deploy contracts |
-| `task dev` | Start server and webapp with hot-reload (requires setup) |
-| `task dev:server` | Start just the capacity exchange server with hot-reload |
-| `task dev:webapp` | Start just the example webapp with hot-reload (requires setup) |
-| `task build` | Build all packages (requires compiled contracts) |
-| `task compile-contracts` | Compile Compact contracts |
-| `task deploy NETWORK_ID=<network>` | Deploy contracts for a network |
+| `NETWORK_ID=<network> task setup` | One-time setup: install, build everything, deploy contracts |
+| `NETWORK_ID=<network> task dev` | Start server and webapp with hot-reload (requires setup) |
+| `NETWORK_ID=<network> task dev:server` | Start just the capacity exchange server with hot-reload |
+| `NETWORK_ID=<network> task dev:webapp` | Start just the example webapp with hot-reload (requires setup) |
+| `task build-all` | Typecheck all TypeScript packages (requires compiled contracts) |
+| `NETWORK_ID=<network> task build` | Full build: compile contracts, copy ZK assets, build everything |
+| `task compile-contracts` | Compile Compact contracts (requires `COMPACTC`) |
+| `NETWORK_ID=<network> task deploy` | Deploy contracts for a network |
 | `task test` | Build libs and run tests |
 | `task check` | Lint and format check |
 | `task fix` | Lint and format fix |
@@ -64,7 +65,7 @@ example-webapp → core, client, components, compiled contracts
 
 ## Security Notes
 
-Because of the way Vite env vars work, the `VITE_SERVER_*` wallet credentials get baked into the `example-webapp` JS bundle. This is fine for a demo on a test network (undeployed, preview, preprod), but `example-webapp` shouldn't be run in a production env or with creds that map to a real wallet.
+Because of the way Vite env vars work, the `VITE_SERVER_*` wallet credentials get baked into the `example-webapp` JS bundle. This is fine for a demo on a test network (preview, preprod), but `example-webapp` shouldn't be run in a production env or with creds that map to a real wallet.
 
 ## Build System Philosophy
 
@@ -78,11 +79,11 @@ This project uses a **distributed build architecture**:
 
 ## Generating the Client
 
-The code in `packages/client/generated` is auto-generated from the Capacity Exchange Service's OpenAPI spec. To regenerate it:
+The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate it:
 
-1.  **Run the service:** Bring up the [Capacity Exchange Service](https://github.com/SundaeSwap-finance/capacity-exchange-server) locally.
+1.  **Run the server:** Start `packages/server` locally (e.g., `NETWORK_ID=preview task dev:server`).
 
-2.  **Download the OpenAPI spec:** Save the latest spec from the service's json docs endpoint.
+2.  **Download the OpenAPI spec:** Save the latest spec from the server's json docs endpoint.
 
     ```bash
     curl http://localhost:3000/docs/json > packages/client/openapi.json
