@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { createLogger } from './logger.js';
+import { createLogger } from './createLogger';
 
 const logger = createLogger(import.meta);
 

@@ -112,7 +112,7 @@ tasks:
 
   typecheck-contracts:
     internal: true
-    deps: [build-core]
+    deps: [build-components]
     preconditions:
       - sh: test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
         msg: "Compiled contract output not found. Run 'task compile-contracts' first."

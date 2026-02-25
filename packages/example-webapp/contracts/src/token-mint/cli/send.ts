@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { deriveTokenColor, sendShieldedTokens } from '@capacity-exchange/core';
-import { runCli, withAppContext } from '../../lib/cli.js';
+import { runCli, withAppContext } from '@capacity-exchange/components/midnight';
 
 function main() {
   program
