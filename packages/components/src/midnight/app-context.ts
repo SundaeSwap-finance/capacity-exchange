@@ -5,7 +5,6 @@ import {
   checkWebSocket,
   checkIndexerFreshness,
   checkProofServer,
-  createMidnightProvider,
   createPrivateStateProvider,
 } from '@capacity-exchange/core/node';
 import { WalletContext, createWalletContext } from './wallet-context';
@@ -23,10 +22,14 @@ export async function createAppContext(config: AppConfig): Promise<AppContext> {
 
   await Promise.all([checkWebSocket(nodeUrl), checkProofServer(proofServerUrl), checkIndexerFreshness(indexerHttpUrl)]);
 
-  const [midnightProvider, walletContext] = await Promise.all([
-    createMidnightProvider(nodeUrl),
-    createWalletContext(config),
-  ]);
+  const walletContext = await createWalletContext(config);
+
+  const midnightProvider: MidnightProvider = {
+    async submitTx(tx) {
+      await walletContext.walletFacade.submitTransaction(tx);
+      return tx.identifiers()[0];
+    },
+  };
 
   return {
     privateStateProvider: createPrivateStateProvider(),
