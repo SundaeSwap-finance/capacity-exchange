@@ -22,12 +22,12 @@ The Paima team builds Web3 games, integrating blockchains. They want to allow us
 ### Funded Contract Flow (new)
 
 1. User initates a transaction involves a "funded contract"
-2. User submits their unencrypted transaction to the CES. TODO: figure out what "unencrypted actually means here"
-3. CES validates the transaction only includes supported contracts
-4. CES provides the dust for the tranasction
-5. CES finalizes the transaction, ensuring it cannot be modified any further. TODO: make sure this is actually possible
-6. CES returns the completed transaction to the user
-7. User submits the final transaction
+2. User submits their proven transaction to the CES.
+3. CES calcualtes the cost of ONLY intents which involve funded contracts.
+4. CES provides the dust for the those intents, including some padding to cover the dust transaction/intent/utxo.
+5. CES merges the user's transaction with the dust transaction, which updates the pedersen commitment, ensuring they can't be separated.
+6. CES returns the merged transaction.
+7. User submits the final transaction.
 
 
 ## Key Components
@@ -38,31 +38,28 @@ A liquidity provider should be able to provide a list of contract addresses that
 
 ### Transaction Validation
 
-Since the user sent the raw bytes of the unfinalized transaction, the CES can inspect the transaction to confirm what intents are included. From there, building and submitting the transaction would use the same APIs we use currently.
+Since the user sent the raw bytes of the proven transaction, the CES can inspect the contract and specific circuit being executed in each intent. They would only provide dust to cover intents involving their funded contracts.
 
 ### Client-Side Changes
 
-In the standard flow, the user doesn't share the full transaction with the CES, just the quantity of dust needed. However, in order to ensure the LP is not paying for unrelated actions, the user must send the whole transaction to the CES here. Once the CES has finalized the transaction, the user would receive the transaction so they can submit it.
+In the standard flow, the user doesn't share the full transaction with the CES, just the quantity of dust needed. However, in order to ensure the LP is not paying for unrelated actions, the user must send the whole transaction to the CES here. Once the CES has merged the transaction, the user would receive the transaction so they can submit it.
 
 ## Security Considerations
 
 ### Preventing Exploitation
 
-The concern is that a malicious user could take advantage of an LP who supports funded contracts, and trick the CES into providing dust for a transaction that would (eventually) include intents that don't involve the funded contracts.
+The concern is that a malicious user could take advantage of an LP who supports funded contracts, and trick the CES into providing dust for a transaction that could (eventually) include intents that don't involve the funded contracts. This is mitigated by the fact that the CES only estimates the cost of the intents which involve their funded contracts.
 
-This is seemingly mitigated by the fact that the user shares an unencrypted transaction with the CES. With those bytes, the CES can confirm that the transaction only invovles actions that it should fund. Then, since it is "finalized" the malicious user cannot modify the transaction to include other intents, though this needs to be confirmed. If this is not true, the flow should change to the CES submitting the transaction, and returning the response to the user.
+An attacker could intentionaly wait until a period of high traffic before requesting dust to cover an intent and, since the transaction fees are based on recent network load, the CES would include more dust. The attacker could potentially wait until a period of low traffic, and then add intents which are already covered by the greater dust amount. This, however, is probably not worth worrying about in an initial implementation.
 
 ### Transaction Privacy
 
-The user is sending an unencrypted transaction to the CES, which allows the CES to read everything in the transaction. This is a violation of privacy, but may be acceptable in the context of games, where the CES is an unbiased third party.
+Once a transaction has been proven, the private inputs are erased. Therefore, the CES cannot read any private information they couldn't read from the transaction on-chain.
 
 ### Trust Model
 
-- The user must trust the LP to not reveal the contents of the transaction
-- In the case that the CES submits the transaction, the user must also trust the LP to be honest about the the transaction that was submitted AND the state of the submission
+There is no additional trust required with this flow.
 
 ## Open Questions
 
-- Can a single transaction mix funded and unfunded contract calls?
-- Is it possible to prevent modifications to a transaction (including merges?)
-- Would it be possible to prove the transaction ONLY contains certain contracts without revealing the actual details of the transaction?
+- Is it true that the proven transaction allows the CES to do everything it needs while preserving privacy?
