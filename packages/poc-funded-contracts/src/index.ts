@@ -4,7 +4,7 @@ import { createLogger } from './lib/logger.js';
 const logger = createLogger(import.meta);
 
 async function main(): Promise<void> {
-  const networkId = process.argv[2] ?? 'testnet';
+  const networkId = process.argv[2] ?? 'preprod';
   logger.info(`=== Funded Contracts PoC — Scaffold Verification ===`);
 
   const { ctx, contractAddress, txHash } = await setup(networkId);

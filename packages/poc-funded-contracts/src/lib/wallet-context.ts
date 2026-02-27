@@ -55,10 +55,14 @@ export async function createWalletContext(config: AppConfig): Promise<WalletCont
   logger.info('Creating and syncing wallets...');
   const [savedShieldedState, savedDustState] = await Promise.all([store.load('shielded'), store.load('dust')]);
 
+  const walletConfig = resolveWalletConfig(config.networkId);
+  // Apply endpoint overrides from .env (e.g. PREPROD_PROOF_SERVER_URL)
+  walletConfig.provingServerUrl = new URL(config.endpoints.proofServerUrl);
+
   const result = await syncWithRetry(
     {
       seedHex,
-      walletConfig: resolveWalletConfig(config.networkId),
+      walletConfig,
       savedShieldedState,
       savedDustState,
       syncTimeoutMs: 120_000,

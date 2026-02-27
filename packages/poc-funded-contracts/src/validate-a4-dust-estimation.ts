@@ -15,7 +15,7 @@
  *   4. Test: can we extract intents and build a new tx from one intent?
  *   5. Test: does the single-intent synthetic approach produce consistent estimates?
  *
- * Usage: bun src/validate-a4-dust-estimation.ts [networkId]
+ * Usage: bun src/validate-a4-dust-estimation.ts [networkId=preprod]
  */
 
 import {
@@ -84,7 +84,7 @@ function checkIntentFeeApi(): boolean {
 }
 
 async function main(): Promise<void> {
-  const networkId = process.argv[2] ?? 'testnet';
+  const networkId = process.argv[2] ?? 'preprod';
   logger.info('=== Validate A4: Per-intent dust estimation ===');
   logger.info('Scenario: CES receives a proven tx and needs to estimate dust per-intent');
 

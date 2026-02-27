@@ -56,5 +56,12 @@ export function getAppConfigById(network: string): AppConfig {
   const endpoints = resolveEndpoints(networkId);
   const dotEnv = loadDotEnv();
   const seed = resolveWalletSeed(dotEnv, network);
+
+  const prefix = network.toUpperCase();
+  const proofServerOverride = dotEnv[`${prefix}_PROOF_SERVER_URL`];
+  if (proofServerOverride) {
+    endpoints.proofServerUrl = proofServerOverride;
+  }
+
   return { networkId, endpoints, seed };
 }
