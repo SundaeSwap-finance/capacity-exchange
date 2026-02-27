@@ -1,27 +1,24 @@
 import { useState, useCallback } from 'react';
-import { useCardanoWallet } from './hooks/useCardanoWallet';
+import { useWallet } from './hooks/useWallet';
+import { useAsyncDerived } from './hooks/useAsyncDerived';
+import { connectCardanoWallet, deriveCardanoDisplay } from './lib/cip30';
+import { connectMidnightWallet, deriveMidnightDisplay } from './lib/midnight';
 import { WalletConnect } from './components/WalletConnect';
+import { truncateAddress } from './lib/format';
 import { NetworkRibbon } from './components/NetworkRibbon';
 import { BridgeCard } from './components/BridgeCard';
 import { DepositCard } from './components/DepositCard';
 import { DepositsCard, type PendingDeposit } from './components/DepositsCard';
 
 function App() {
-  const {
-    wallets,
-    connectedWallet,
-    address,
-    balanceAda,
-    blaze,
-    connecting,
-    error,
-    refreshWallets,
-    connect,
-    disconnect,
-  } = useCardanoWallet();
+  const cardanoWallet = useWallet(connectCardanoWallet);
+  const midnightWallet = useWallet(connectMidnightWallet);
+  const cardanoDisplay = useAsyncDerived(cardanoWallet.data, deriveCardanoDisplay);
+  const midnightDisplay = useAsyncDerived(midnightWallet.data, deriveMidnightDisplay);
+  const blaze = cardanoWallet.data ?? null;
+  const midnightAddress = midnightDisplay?.shieldedAddress ?? '';
+
   const [pendingDeposits, setPendingDeposits] = useState<PendingDeposit[]>([]);
-  // TODO: Pre-fill from connected Midnight wallet address once wallet integration is added
-  const [midnightAddress, setMidnightAddress] = useState('');
   const addPending = useCallback((d: PendingDeposit) => setPendingDeposits((prev) => [...prev, d]), []);
   const removePending = useCallback(
     (txHash: string) => setPendingDeposits((prev) => prev.filter((d) => d.txHash !== txHash)),
@@ -35,17 +32,40 @@ function App() {
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-dark-50">Bridge — Cardano ↔ Midnight</h1>
-            <WalletConnect
-              wallets={wallets}
-              connectedWallet={connectedWallet}
-              address={address}
-              balanceAda={balanceAda}
-              connecting={connecting}
-              error={error}
-              onOpen={refreshWallets}
-              onConnect={connect}
-              onDisconnect={disconnect}
-            />
+            <div className="flex flex-col items-end gap-2">
+              <WalletConnect
+                label="Cardano"
+                wallet={cardanoWallet}
+                renderConnected={() =>
+                  cardanoDisplay && (
+                    <>
+                      <span className="text-muted-xs font-mono">{truncateAddress(cardanoDisplay.address)}</span>
+                      <span className="separator">|</span>
+                      <span className="text-dark-200 text-xs font-medium">
+                        {Number(cardanoDisplay.balanceAda).toFixed(2)} ₳
+                      </span>
+                    </>
+                  )
+                }
+              />
+              <WalletConnect
+                label="Midnight"
+                wallet={midnightWallet}
+                renderConnected={() =>
+                  midnightDisplay && (
+                    <>
+                      <span className="text-muted-xs font-mono">
+                        {truncateAddress(midnightDisplay.shieldedAddress)}
+                      </span>
+                      <span className="separator">|</span>
+                      <span className="text-dark-200 text-xs font-medium">
+                        {(midnightDisplay.nightBalance / 1_000_000n).toLocaleString()} NIGHT
+                      </span>
+                    </>
+                  )
+                }
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -53,7 +73,7 @@ function App() {
               blaze={blaze}
               onDepositSuccess={addPending}
               midnightAddress={midnightAddress}
-              onMidnightAddressChange={setMidnightAddress}
+              onMidnightAddressChange={() => {}}
             />
             <BridgeCard
               title="Withdraw"
@@ -65,7 +85,7 @@ function App() {
             pendingDeposits={pendingDeposits}
             onDepositConfirmed={removePending}
             filterAddress={midnightAddress}
-            onFilterAddressChange={setMidnightAddress}
+            onFilterAddressChange={() => {}}
           />
         </div>
       </div>
