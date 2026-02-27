@@ -36,10 +36,11 @@ export function useFilteredDeposits({
     let filterError: string | null = null;
 
     if (trimmed) {
-      try {
-        coinPublicKey = parseCoinPublicKey(trimmed);
-      } catch (err) {
-        filterError = err instanceof Error ? err.message : 'Invalid Midnight address';
+      const result = parseCoinPublicKey(trimmed);
+      if (result.ok) {
+        coinPublicKey = result.coinPublicKey;
+      } else {
+        filterError = result.error;
       }
     }
 
