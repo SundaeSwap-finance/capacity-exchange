@@ -11,6 +11,7 @@
     "compile": "compact compile +0.28.0 contract/poc.compact contract/out",
     "build": "tsc --noEmit",
     "setup": "bun src/index.ts",
+    "validate:a1": "bun src/validate-a1-inspectability.ts",
     "validate:a4": "bun src/validate-a4-dust-estimation.ts"
   },
   "dependencies": {
