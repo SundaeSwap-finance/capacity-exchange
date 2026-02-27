@@ -1,3 +1,4 @@
+export { requireBrowserEnv } from './envBrowser';
 export { hexToBytes, uint8ArrayToHex } from './hex';
 export { DUST_PARAMS, COST_PARAMS } from './params';
 export { deriveWalletKeys, type WalletKeys } from './keys';
@@ -16,7 +17,16 @@ export type { Logger } from './logger';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider';
 export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks';
 export { parseSeedHex, parseMnemonic, resolveWalletSeed } from './seed';
-export { parseCoinPublicKey } from './midnight';
+export {
+  parseCoinPublicKey,
+  type ParseCoinPublicKeyResult,
+  encodeShieldedAddress,
+  type EncodeShieldedAddressResult,
+  detectMidnightExtension,
+  connectMidnightExtension,
+  type ConnectMidnightExtensionResult,
+  type DetectMidnightExtensionResult,
+} from './midnight';
 export {
   type CardanoNetwork,
   type BlockfrostNetworkName,

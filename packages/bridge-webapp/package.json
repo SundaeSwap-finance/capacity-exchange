@@ -8,7 +8,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsc && vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@blaze-cardano/sdk": "^0.2.31",

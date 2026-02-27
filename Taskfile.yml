@@ -30,10 +30,8 @@ tasks:
     internal: true
     run: once
     preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
-        msg: "Setup not complete: compiled contracts not found. Run 'COMPACTC=... NETWORK_ID=... task setup' first."
-      - sh: 'ls {{.CONTRACTS_DIR}}/.contracts.*.json >/dev/null 2>&1'
-        msg: "Setup not complete: contracts not deployed. Run 'COMPACTC=... NETWORK_ID=... task setup' first."
+      - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.json >/dev/null 2>&1'
+        msg: "Setup not complete: deployed contract configs not found in {{.WEBAPP_DIR}}/public/contracts/. Run 'COMPACTC=... NETWORK_ID=... task setup' first."
 
   # --- Package build tasks (mirror dependency graph) ---
 
@@ -125,6 +123,7 @@ tasks:
     deps: [build-libs, build-server, typecheck-contracts]
     cmds:
       - bun run --filter @capacity-exchange/example-webapp typecheck
+      - bun run --filter @capacity-exchange/bridge-webapp typecheck
 
   build:
     desc: Build all packages and compile/copy contracts

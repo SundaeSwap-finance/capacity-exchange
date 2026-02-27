@@ -13,13 +13,17 @@ export interface DepositResult {
   depositAddress: string;
   shieldedMidnightAddress: string;
   coinPublicKey: string;
-  lovelace: string;
+  lovelace: bigint;
 }
 
 export async function deposit(blaze: Blaze<Provider, Wallet>, args: DepositArgs): Promise<DepositResult> {
   const depositAddress = Core.addressFromBech32(args.depositAddress);
 
-  const coinPublicKey = parseCoinPublicKey(args.shieldedMidnightAddress);
+  const result = parseCoinPublicKey(args.shieldedMidnightAddress);
+  if (result.ok === false) {
+    throw new Error(`Invalid Midnight shielded address: ${result.error}`);
+  }
+  const coinPublicKey = result.coinPublicKey;
 
   const value = makeValue(args.lovelace);
   const datum = buildDepositDatum(coinPublicKey);
@@ -34,6 +38,6 @@ export async function deposit(blaze: Blaze<Provider, Wallet>, args: DepositArgs)
     depositAddress: args.depositAddress,
     shieldedMidnightAddress: args.shieldedMidnightAddress,
     coinPublicKey,
-    lovelace: args.lovelace.toString(),
+    lovelace: args.lovelace,
   };
 }
