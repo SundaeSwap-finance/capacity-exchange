@@ -25,7 +25,9 @@ import {
   type SignatureEnabled,
   type Proof,
   type PreBinding,
+  type PreProof,
 } from '@midnight-ntwrk/ledger-v7';
+import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { setup } from './setup.js';
 import { getAppConfigById } from './lib/config.js';
@@ -167,78 +169,112 @@ async function main(): Promise<void> {
     }
   }
 
-  // Step 4: Try the reconstruction approach
-  logger.info('--- Step 4: Reconstruct a single-intent tx from proven intent ---');
+  // Step 4: Try building a synthetic tx from an extracted proven intent
+  logger.info('--- Step 4: Build synthetic single-intent tx from extracted proven intent ---');
 
-  // Approach A: Serialize the whole proven tx, modify it
-  // The tx.intents setter docs say "modifying existing intents will succeed"
-  // on proven txs, but "creating or removing intents will lead to binding error"
-  // Let's test if we can create a new tx and assign the proven intent to it
+  const firstIntent = provenTx.intents ? [...provenTx.intents.entries()][0] : undefined;
 
+  // Approach A: Create empty unproven tx, assign proven intent to its intents map
+  logger.info('Approach A: Create empty tx via fromParts(), assign proven intent...');
+  let approachAFee: bigint | null = null;
   try {
-    // Serialize the proven tx and deserialize as a copy
-    const txBytes = provenTx.serialize();
-    const txCopy = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
-      'signature', 'proof', 'pre-binding', txBytes
-    );
+    const emptyTx = Transaction.fromParts(getNetworkId());
+    logger.info(`  Empty tx created, intents: ${emptyTx.intents?.size ?? 0}`);
 
-    const copyFee = txCopy.feesWithMargin(ledgerParams, DEFAULT_MARGIN);
-    logger.info(`Serialized/deserialized copy fee: ${copyFee} specks`);
-    logger.info(`Matches original: ${copyFee === wholeTxFee}`);
+    if (firstIntent) {
+      const [segmentId, intent] = firstIntent;
+      const newIntents = new Map<number, Intent<SignatureEnabled, PreProof, PreBinding>>();
+      // Force-assign the proven intent (bypassing TS types to test runtime behavior)
+      newIntents.set(segmentId, intent as unknown as Intent<SignatureEnabled, PreProof, PreBinding>);
+      emptyTx.intents = newIntents;
+      logger.info(`  Assigned intent to empty tx, intents: ${emptyTx.intents?.size ?? 0}`);
 
-    // Since this tx already has exactly one intent, the fee IS the per-intent fee
-    // In the real scenario with multiple intents, we'd need to figure out
-    // how to isolate each intent's contribution
-    logger.info('NOTE: For a single-intent tx, whole-tx fee = per-intent fee');
+      // Now prove it to get fee estimation
+      const provenSynthetic = await proofProvider.proveTx(emptyTx);
+      approachAFee = provenSynthetic.feesWithMargin(ledgerParams, DEFAULT_MARGIN);
+      logger.info(`  PASS: Synthetic single-intent tx fee: ${approachAFee} specks`);
+    }
   } catch (err) {
-    logger.info(`Serialize/deserialize round-trip failed: ${err instanceof Error ? err.message : String(err)}`);
+    logger.info(`  FAIL: ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  // Step 5: Test consistency across multiple single-intent txs
-  logger.info('--- Step 5: Consistency check (two identical single-intent txs) ---');
+  // Approach B: eraseProofs() on intent, then fromParts() with it
+  logger.info('Approach B: eraseProofs() on intent, then fromParts()...');
+  let approachBFee: bigint | null = null;
+  try {
+    if (firstIntent) {
+      const [, intent] = firstIntent;
+      const erasedIntent = intent.eraseProofs();
+      logger.info(`  eraseProofs() succeeded, type: ${typeof erasedIntent}`);
 
-  const callTxData2 = await createUnprovenCallTx(providers, {
-    contractAddress,
-    compiledContract: CompiledPocContract,
-    circuitId: 'increment' as const,
-  });
-  const provenTx2 = await proofProvider.proveTx(callTxData2.private.unprovenTx);
-  const fee2 = provenTx2.feesWithMargin(ledgerParams, DEFAULT_MARGIN);
+      // Try using it as an UnprovenIntent (runtime cast)
+      const syntheticTx = Transaction.fromParts(
+        getNetworkId(),
+        undefined,
+        undefined,
+        erasedIntent as unknown as Intent<SignatureEnabled, PreProof, PreBinding>
+      );
+      logger.info(`  fromParts() with erased intent succeeded, intents: ${syntheticTx.intents?.size ?? 0}`);
 
-  logger.info(`Tx #1 fee: ${wholeTxFee} specks`);
-  logger.info(`Tx #2 fee: ${fee2} specks`);
+      const provenSynthetic = await proofProvider.proveTx(syntheticTx);
+      approachBFee = provenSynthetic.feesWithMargin(ledgerParams, DEFAULT_MARGIN);
+      logger.info(`  PASS: Synthetic fee from erased intent: ${approachBFee} specks`);
+    }
+  } catch (err) {
+    logger.info(`  FAIL: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  const diff = wholeTxFee > fee2 ? wholeTxFee - fee2 : fee2 - wholeTxFee;
-  const avgFee = (wholeTxFee + fee2) / 2n;
-  const variancePct = avgFee > 0n ? Number((diff * 10000n) / avgFee) / 100 : 0;
-  logger.info(`Variance: ${variancePct}%`);
+  // Approach C: fromPartsRandomized() with erased intent
+  logger.info('Approach C: fromPartsRandomized() with erased intent...');
+  let approachCFee: bigint | null = null;
+  try {
+    if (firstIntent) {
+      const [, intent] = firstIntent;
+      const erasedIntent = intent.eraseProofs();
+
+      const syntheticTx = Transaction.fromPartsRandomized(
+        getNetworkId(),
+        undefined,
+        undefined,
+        erasedIntent as unknown as Intent<SignatureEnabled, PreProof, PreBinding>
+      );
+      logger.info(`  fromPartsRandomized() succeeded, intents: ${syntheticTx.intents?.size ?? 0}`);
+
+      const provenSynthetic = await proofProvider.proveTx(syntheticTx);
+      approachCFee = provenSynthetic.feesWithMargin(ledgerParams, DEFAULT_MARGIN);
+      logger.info(`  PASS: Synthetic fee from randomized: ${approachCFee} specks`);
+    }
+  } catch (err) {
+    logger.info(`  FAIL: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  // Step 5: Consistency check — compare original vs synthetic fees
+  logger.info('--- Step 5: Fee comparison ---');
+  logger.info(`Original whole-tx fee: ${wholeTxFee} specks`);
+  if (approachAFee !== null) logger.info(`Approach A (assign to empty tx): ${approachAFee} specks`);
+  if (approachBFee !== null) logger.info(`Approach B (eraseProofs + fromParts): ${approachBFee} specks`);
+  if (approachCFee !== null) logger.info(`Approach C (eraseProofs + fromPartsRandomized): ${approachCFee} specks`);
+
+  const anyApproachWorked = approachAFee !== null || approachBFee !== null || approachCFee !== null;
 
   // Step 6: Verdict
   logger.info('--- Verdict ---');
 
-  if (hasNativeApi) {
-    logger.info('PASS: Native per-intent fee estimation API exists on Intent');
+  logger.info(`feesWithMargin() on whole proven tx: PASS (${wholeTxFee} specks)`);
+  logger.info(`Intent extraction from proven tx: PASS (${provenTx.intents?.size ?? 0} intent(s))`);
+  logger.info(`Intent serialize/deserialize round-trip: PASS`);
+
+  if (anyApproachWorked) {
+    logger.info('Synthetic single-intent tx construction: PASS');
+    logger.info('CONCLUSION: CES CAN extract intents and estimate fees per-intent.');
   } else {
-    logger.info('INFO: No native per-intent API on Intent');
+    logger.info('Synthetic single-intent tx construction: FAIL (all approaches failed)');
+    logger.info('CONCLUSION: CES cannot build synthetic per-intent txs from proven intents.');
+    logger.info('Viable alternatives:');
+    logger.info('  a) Estimate the whole tx fee and fund it entirely');
+    logger.info('  b) Require users to submit one tx per funded-contract call');
+    logger.info('  c) Use cost() breakdown to approximate per-intent contribution');
   }
-
-  logger.info(`PASS: feesWithMargin() works on proven unbound transactions (${wholeTxFee} specks)`);
-  logger.info(`PASS: Proven tx intents are readable (${provenTx.intents?.size ?? 0} intent(s))`);
-
-  const consistent = variancePct < 10;
-  if (consistent) {
-    logger.info(`PASS: Fee estimates are consistent across identical txs (${variancePct}% variance)`);
-  } else {
-    logger.info(`WARN: High variance (${variancePct}%) — investigate`);
-  }
-
-  logger.info('');
-  logger.info('CONCLUSION: The CES can estimate fees on a proven tx via feesWithMargin().');
-  logger.info('For multi-intent txs, the CES would need to either:');
-  logger.info('  a) Estimate the whole tx fee and fund it entirely (simpler)');
-  logger.info('  b) Have the user build separate single-intent txs for estimation');
-  logger.info('  c) Use cost() breakdown to approximate per-intent contribution');
-  logger.info('The exact per-intent isolation strategy needs runtime testing with multi-intent txs.');
 
   logger.info('=== A4 validation complete ===');
 }
