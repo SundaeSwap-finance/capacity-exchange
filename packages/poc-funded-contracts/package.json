@@ -10,7 +10,8 @@
     "clean": "rm -rf contract/out dist node_modules .midnight-private-state .wallet-state .deployed-address.json",
     "compile": "compact compile +0.28.0 contract/poc.compact contract/out",
     "build": "tsc --noEmit",
-    "setup": "bun src/index.ts"
+    "setup": "bun src/index.ts",
+    "validate:a4": "bun src/validate-a4-dust-estimation.ts"
   },
   "dependencies": {
     "@capacity-exchange/core": "1.0.0",
