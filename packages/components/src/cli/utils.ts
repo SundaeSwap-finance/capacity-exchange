@@ -4,6 +4,10 @@ export interface CliResult<T> {
   error?: string;
 }
 
+function bigintReplacer(_key: string, value: unknown): unknown {
+  return typeof value === 'bigint' ? value.toString() : value;
+}
+
 export async function runCli<T>(fn: () => Promise<T>): Promise<void> {
   try {
     const result = await fn();
@@ -11,14 +15,14 @@ export async function runCli<T>(fn: () => Promise<T>): Promise<void> {
       success: true,
       data: result,
     };
-    console.log(JSON.stringify(output, null, 2));
+    console.log(JSON.stringify(output, bigintReplacer, 2));
     process.exit(0);
   } catch (error) {
     const output: CliResult<T> = {
       success: false,
       error: error instanceof Error ? error.message : String(error),
     };
-    console.error(JSON.stringify(output, null, 2));
+    console.error(JSON.stringify(output, bigintReplacer, 2));
     process.exit(1);
   }
 }

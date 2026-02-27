@@ -34,7 +34,7 @@ export function DepositCard({ blaze, onDepositSuccess, midnightAddress, onMidnig
       shieldedMidnightAddress: midnightAddress,
       lovelace: adaToLovelace(amount),
     });
-    onDepositSuccess({ txHash: res.txHash, lovelace: res.lovelace.toString(), coinPublicKey: res.coinPublicKey });
+    onDepositSuccess({ txHash: res.txHash, lovelace: res.lovelace, coinPublicKey: res.coinPublicKey });
     return res;
   }, [blaze, midnightAddress, amount, depositAddress, onDepositSuccess]);
   const { result, error, loading, run } = useAsyncAction(action);

@@ -2,8 +2,8 @@ import { lovelaceToAda } from '@capacity-exchange/core';
 
 interface DepositRowProps {
   txHash: string;
-  index?: number;
-  lovelace: string;
+  index?: bigint;
+  lovelace: bigint;
   coinPublicKey: string;
   pending?: boolean;
 }
@@ -19,10 +19,10 @@ export function DepositRow({ txHash, index, lovelace, coinPublicKey, pending }: 
       )}
       <div className="break-all">
         <span className="text-muted">Tx:</span> {txHash}
-        {index != null && `#${index}`}
+        {index != null && `#${String(index)}`}
       </div>
       <div>
-        <span className="text-muted">ADA:</span> {lovelaceToAda(BigInt(lovelace))}
+        <span className="text-muted">ADA:</span> {lovelaceToAda(lovelace)}
       </div>
       <div className="break-all">
         <span className="text-muted">coinPublicKey:</span> {coinPublicKey}
