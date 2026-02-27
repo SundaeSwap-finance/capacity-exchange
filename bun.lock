@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "capacity-exchange-sdk",
@@ -159,6 +158,41 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/poc-funded-contracts": {
+      "name": "@capacity-exchange/poc-funded-contracts",
+      "version": "1.0.0",
+      "dependencies": {
+        "@capacity-exchange/core": "1.0.0",
+        "@midnight-ntwrk/compact-js": "2.4.0",
+        "@midnight-ntwrk/compact-runtime": "^0.14.0",
+        "@midnight-ntwrk/ledger-v7": "7.0.0",
+        "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.0.0",
+        "@midnight-ntwrk/midnight-js-level-private-state-provider": "3.0.0",
+        "@midnight-ntwrk/midnight-js-network-id": "3.0.0",
+        "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.0.0",
+        "@midnight-ntwrk/midnight-js-types": "3.0.0",
+        "@midnight-ntwrk/wallet-sdk-abstractions": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
+        "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
+        "@midnight-ntwrk/wallet-sdk-node-client": "1.0.0",
+        "@scure/bip32": "2.0.1",
+        "@scure/bip39": "^2.0.1",
+        "dotenv": "17.2.3",
+        "ws": "^8.18.0",
+      },
+      "devDependencies": {
+        "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-runtime": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
+        "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
+        "@types/node": "22.10.7",
+        "@types/ws": "^8.18.1",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/server": {
       "name": "@capacity-exchange/server",
       "version": "1.0.0",
@@ -276,6 +310,8 @@
     "@capacity-exchange/example-contracts": ["@capacity-exchange/example-contracts@workspace:packages/example-webapp/contracts"],
 
     "@capacity-exchange/example-webapp": ["@capacity-exchange/example-webapp@workspace:packages/example-webapp"],
+
+    "@capacity-exchange/poc-funded-contracts": ["@capacity-exchange/poc-funded-contracts@workspace:packages/poc-funded-contracts"],
 
     "@capacity-exchange/server": ["@capacity-exchange/server@workspace:packages/server"],
 
@@ -2061,6 +2097,10 @@
 
     "@capacity-exchange/example-contracts/dotenv": ["dotenv@17.2.3", "", {}, "sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w=="],
 
+    "@capacity-exchange/poc-funded-contracts/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
+
+    "@capacity-exchange/poc-funded-contracts/dotenv": ["dotenv@17.2.3", "", {}, "sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w=="],
+
     "@capacity-exchange/server/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@capacity-exchange/server/dotenv": ["dotenv@17.2.3", "", {}, "sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w=="],
@@ -2214,6 +2254,8 @@
     "zip-stream/readable-stream": ["readable-stream@4.7.0", "", { "dependencies": { "abort-controller": "^3.0.0", "buffer": "^6.0.3", "events": "^3.3.0", "process": "^0.11.10", "string_decoder": "^1.3.0" } }, "sha512-oIGGmcpTLwPga8Bn6/Z75SVaH1z5dUut2ibSyAMVhmUggWpmDn2dapB0n7f8nwaSiRtepAsfJyfXIO5DCVAODg=="],
 
     "@capacity-exchange/example-contracts/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
+
+    "@capacity-exchange/poc-funded-contracts/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
     "@capacity-exchange/server/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 

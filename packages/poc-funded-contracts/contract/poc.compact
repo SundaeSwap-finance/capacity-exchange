@@ -1,0 +1,10 @@
+pragma language_version 0.20.0;
+
+import CompactStandardLibrary;
+
+// Minimal contract for PoC: public counter with increment circuit.
+export ledger counter: Counter;
+
+export circuit increment(): [] {
+  counter.increment(1);
+}
