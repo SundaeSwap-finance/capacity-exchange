@@ -140,11 +140,9 @@ async function main(): Promise<void> {
     for (const [segmentId, intent] of intents) {
       logger.info(`Intent segment ${segmentId}:`);
 
-      // Enumerate intent properties
-      const intentProto = Object.getOwnPropertyNames(Object.getPrototypeOf(intent));
       const intentFields = [
         'ttl', 'dustActions', 'guaranteedUnshieldedOffer',
-        'fallibleUnshieldedOffer', 'signatureData', 'binding',
+        'fallibleUnshieldedOffer', 'binding',
       ];
       for (const field of intentFields) {
         const { value, error } = safeRead(intent, field);
