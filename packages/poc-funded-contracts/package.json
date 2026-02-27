@@ -12,6 +12,7 @@
     "build": "tsc --noEmit",
     "setup": "bun src/index.ts",
     "validate:a1": "bun src/validate-a1-inspectability.ts",
+    "validate:a2": "bun src/validate-a2-mergeability.ts",
     "validate:a4": "bun src/validate-a4-dust-estimation.ts"
   },
   "dependencies": {
