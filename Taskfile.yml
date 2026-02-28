@@ -194,6 +194,11 @@ tasks:
     cmds:
       - bun run --if-present --filter '*' test
 
+  test:e2e:
+    desc: Run E2E tests
+    deps: [build-libs]
+    cmds:
+      - bun run --if-present --filter '*' test:e2e
   check:
     desc: Lint and format check
     deps: [install]

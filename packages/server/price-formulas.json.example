@@ -1,13 +1,22 @@
 {
   "prices": [
     {
-      "currency": "lovelace",
+      "token": "de987b69b4b5ca4f14bb77efc4afe8932de8b82426f4f75d503437058ab9d127",
+      "tokenType": "shielded",
       "basePrice": "1000000",
       "rateNumerator": "100",
       "rateDenominator": "1000000000000000"
     },
     {
-      "currency": "satoshi",
+      "token": "lovelace",
+      "tokenType": "shielded",
+      "basePrice": "1000000",
+      "rateNumerator": "100",
+      "rateDenominator": "1000000000000000"
+    },
+    {
+      "token": "satoshi",
+      "tokenType": "unshielded",
       "basePrice": "1000",
       "rateNumerator": "10",
       "rateDenominator": "1000000000000000"

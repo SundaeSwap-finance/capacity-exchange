@@ -1,5 +1,8 @@
+export type TokenType = 'shielded' | 'unshielded';
+
 export interface PriceFormula {
-  currency: string;
+  token: string;
+  tokenType: TokenType;
   basePrice: string;
   rateNumerator: string;
   rateDenominator: string;
@@ -10,14 +13,17 @@ export interface Price {
   currency: string;
 }
 
-export type GetPriceResult = { status: 'ok'; price: bigint } | { status: 'unsupported-currency' };
+export type GetPriceResult =
+  | { status: 'ok'; price: bigint; tokenType: TokenType; token: string }
+  | { status: 'unsupported-currency' };
 
 export class PriceService {
   readonly #formulas: Map<string, PriceFormula>;
   constructor(formulas: PriceFormula[]) {
     this.#formulas = new Map();
     for (const formula of formulas) {
-      this.#formulas.set(formula.currency, formula);
+      const currency = `${formula.tokenType}:${formula.token}`;
+      this.#formulas.set(currency, formula);
     }
   }
 
@@ -26,9 +32,12 @@ export class PriceService {
     if (!formula) {
       return { status: 'unsupported-currency' };
     }
+    const [tokenType, token] = currency.split(':', 2);
     return {
       status: 'ok',
       price: this.#computePrice(specks, formula),
+      tokenType: tokenType as TokenType,
+      token,
     };
   }
 
@@ -37,7 +46,7 @@ export class PriceService {
     for (const formula of this.#formulas.values()) {
       prices.push({
         amount: this.#computePrice(specks, formula).toString(),
-        currency: formula.currency,
+        currency: `${formula.tokenType}:${formula.token}`,
       });
     }
     return prices;

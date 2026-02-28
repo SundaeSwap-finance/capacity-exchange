@@ -30,7 +30,8 @@ Prices are configured in `price-formulas.json` (see `price-formulas.json.example
 
 ```jsonc
 {
-  "currency": "lovelace",
+  "token": "lovelace",
+  "tokenType": "shielded",      // "shielded" or "unshielded"
   "basePrice": "200000",        // 0.2 ADA = 2 * 10^5 lovelace
   "rateNumerator": "1100000",   // 1.1 ADA = 1.1 * 10^6 lovelace
   "rateDenominator": "1000000000000000000" // 1000 DUST = 10^18 specks
@@ -38,7 +39,8 @@ Prices are configured in `price-formulas.json` (see `price-formulas.json.example
 ```
 
 // TODO: This should be something like tokenId (determined by the Midnight contract) and displayName
-- `currency`: The payment currency identifier.
+- `token`: The payment currency identifier.
+- `tokenType`: Whether this is a shielded or unshielded token.
 - `basePrice`: A fixed base cost added to every price, in the smallest subunit of the currency.
 - `rateNumerator` / `rateDenominator`: The per-speck rate, expressed as a fraction to avoid floating-point precision loss.
 

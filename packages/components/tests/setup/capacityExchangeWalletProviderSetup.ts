@@ -20,7 +20,7 @@ export function createTestContext(): TestContext {
     mockWalletProvider: createMockWalletProvider(),
     mockConnectedAPI: createMockConnectedAPI(),
     promptForCurrency: vi.fn().mockImplementation((exchangePrices: ExchangePrice[]) => {
-      const selectedPrice = exchangePrices.find((ep) => ep.price.currency === 'ADA') || exchangePrices[0];
+      const selectedPrice = exchangePrices.find((ep) => ep.price.currency === 'shielded:ADA') || exchangePrices[0];
       return Promise.resolve({ status: 'selected', exchangePrice: selectedPrice });
     }),
     confirmOffer: vi.fn().mockResolvedValue({ status: 'confirmed' }),
@@ -49,8 +49,8 @@ export function setupFetchMock(): void {
         status: 200,
         json: async () => ({
           prices: [
-            { currency: 'ADA', amount: '1000000' },
-            { currency: 'BTC', amount: '50000' },
+            { currency: 'shielded:ADA', amount: '1000000' },
+            { currency: 'shielded:BTC', amount: '50000' },
           ],
         }),
       } as Response);

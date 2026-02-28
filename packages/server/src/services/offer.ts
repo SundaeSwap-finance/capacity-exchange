@@ -2,7 +2,6 @@ import { FastifyBaseLogger } from 'fastify';
 import { UtxoService } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
-import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v7';
 
 export interface CreateOfferRequest {
   specks: string;
@@ -73,10 +72,11 @@ export class OfferService {
         }
 
         // Create Offer
-        const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
         const expiration = new Date(lockedInfo.expiresAtMillis);
         const tx = await this.txService.createFundingTx(
-          coin,
+          getPriceResult.tokenType,
+          getPriceResult.token,
+          getPriceResult.price,
           lockedInfo.spend,
           expiration,
           request.segmentId,

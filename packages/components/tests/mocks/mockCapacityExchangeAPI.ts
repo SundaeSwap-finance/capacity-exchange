@@ -5,15 +5,15 @@ export function createMockCapacityExchangeAPI() {
   const mockApi = {
     apiPricesGet: vi.fn().mockResolvedValue({
       prices: [
-        { currency: 'ADA', amount: '1000000' },
-        { currency: 'BTC', amount: '50000' },
+        { currency: 'shielded:ADA', amount: '1000000' },
+        { currency: 'shielded:BTC', amount: '50000' },
       ],
     }),
 
     apiOffersPost: vi.fn().mockResolvedValue({
       offerId: 'test-offer-123',
       offerAmount: '1000000',
-      offerCurrency: 'ADA',
+      offerCurrency: 'shielded:ADA',
       serializedTx: '0102030405',
       expiresAt: new Date(Date.now() + 60000),
     }),
