@@ -16,8 +16,8 @@ export function getCardanoNetwork(): CardanoNetwork {
   return value as CardanoNetwork;
 }
 
-export function getDepositAddress(): string {
-  return requireBrowserEnv('VITE_DEPOSIT_ADDRESS');
+export function getBridgeDepositAddress(): string {
+  return requireBrowserEnv('VITE_BRIDGE_DEPOSIT_ADDRESS');
 }
 
 export function createBlockfrostProvider(): { provider: Provider; network: CardanoNetwork } {

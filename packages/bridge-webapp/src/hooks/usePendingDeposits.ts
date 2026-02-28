@@ -1,27 +1,23 @@
 import { useEffect, useRef } from 'react';
 import type { BridgeDepositUtxo } from '@capacity-exchange/components';
-import type { PendingDeposit } from '../lib/deposits';
+import type { Deposit } from '../lib/deposits';
 
 const POLL_INTERVAL_MS = 5_000;
 
-interface UsePendingDepositsArgs {
-  pendingDeposits: PendingDeposit[];
+interface UseUnconfirmedPollingArgs {
+  sessionDeposits: Deposit[];
   utxos: BridgeDepositUtxo[];
-  onDepositConfirmed: (txHash: string) => void;
   refresh: () => Promise<void>;
 }
 
-export function usePendingDeposits({
-  pendingDeposits,
-  utxos,
-  onDepositConfirmed,
-  refresh,
-}: UsePendingDepositsArgs): void {
+export function useUnconfirmedPolling({ sessionDeposits, utxos, refresh }: UseUnconfirmedPollingArgs): void {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Poll while there are pending deposits
+  const confirmedTxHashes = new Set(utxos.map((u) => u.txHash));
+  const hasUnconfirmed = sessionDeposits.some((d) => !confirmedTxHashes.has(d.txHash));
+
   useEffect(() => {
-    if (pendingDeposits.length === 0) {
+    if (!hasUnconfirmed) {
       return;
     }
 
@@ -33,14 +29,5 @@ export function usePendingDeposits({
         clearInterval(intervalRef.current);
       }
     };
-  }, [pendingDeposits.length, refresh]);
-
-  // Remove each pending deposit once its tx appears in the UTxO set
-  useEffect(() => {
-    for (const pending of pendingDeposits) {
-      if (utxos.some((u) => u.txHash === pending.txHash)) {
-        onDepositConfirmed(pending.txHash);
-      }
-    }
-  }, [pendingDeposits, utxos, onDepositConfirmed]);
+  }, [hasUnconfirmed, refresh]);
 }
