@@ -199,6 +199,7 @@ tasks:
     deps: [build-libs]
     cmds:
       - bun run --if-present --filter '*' test:e2e
+
   check:
     desc: Lint and format check
     deps: [install]

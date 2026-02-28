@@ -32,12 +32,11 @@ export class PriceService {
     if (!formula) {
       return { status: 'unsupported-currency' };
     }
-    const [tokenType, token] = currency.split(':', 2);
     return {
       status: 'ok',
       price: this.#computePrice(specks, formula),
-      tokenType: tokenType as TokenType,
-      token,
+      tokenType: formula.tokenType,
+      token: formula.token,
     };
   }
 

@@ -4,7 +4,6 @@ import {
   Transaction,
   type SignatureEnabled,
   type Proof,
-  type PreBinding,
   type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v7';
