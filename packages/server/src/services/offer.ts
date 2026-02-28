@@ -81,12 +81,13 @@ export class OfferService {
           expiration,
           request.segmentId,
         );
+        const boundTx = tx.bind();
 
         const offer: OfferResponse = {
           offerId: lockedInfo.id,
           offerAmount: getPriceResult.price.toString(),
           offerCurrency: request.offerCurrency,
-          serializedTx: Buffer.from(tx.serialize()).toString('hex'),
+          serializedTx: Buffer.from(boundTx.serialize()).toString('hex'),
           expiresAt: expiration.toISOString(),
         };
 

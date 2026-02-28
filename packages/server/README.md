@@ -88,7 +88,7 @@ The service responds with how much of that currency you must pay and the seriali
 - `offerId`: ID for this trade.
 - `offerAmount`: How much currency you must pay.
 - `offerCurrency`: The currency in which you must pay.
-- `serializedTx`: The signed, proven transaction that must be merged with your TX.
+- `serializedTx`: The signed, proven, and bound transaction that must be merged with your TX.
 - `expiresAt`: When this offer expires.
 
 ## Development
