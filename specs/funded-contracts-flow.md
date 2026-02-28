@@ -23,26 +23,32 @@ The Paima team builds Web3 games, integrating blockchains. They want to allow us
 
 1. User initates a transaction involves a "funded contract"
 2. User submits their proven transaction to the CES.
-3. CES calcualtes the cost of ONLY intents which involve funded contracts.
-4. CES provides the dust for the those intents, including some padding to cover the dust transaction/intent/utxo.
+3. CES validates that there are no intents invoking contracts that aren't "funded contracts"
+4. CES provides dust to cover the whole transaction
 5. CES merges the user's transaction with the dust transaction, which updates the pedersen commitment, ensuring they can't be separated.
 6. CES returns the merged transaction.
-7. User submits the final transaction.
+7a. User can optionally merge this with another transaction, allowing users to have "partially funded" transactions. 
+7b. User submits the final transaction.
 
 
 ## Key Components
 
 ### CES Configuration
 
-A liquidity provider should be able to provide a list of contract addresses that are considered "funded contracts". If there are none, the CES should not allow any transactions to follow this flow. 
+A liquidity provider should be able to provide a list of contract addresses and specific circuit names that are considered "funded contracts". If there are none, the CES should not allow any transactions to follow this flow. 
 
 ### Transaction Validation
 
-Since the user sent the raw bytes of the proven transaction, the CES can inspect the contract and specific circuit being executed in each intent. They would only provide dust to cover intents involving their funded contracts.
+Since the user sent the raw bytes of the proven transaction, the CES can inspect the contract and specific circuit being executed in each intent. A transaction must not involve any non funded contracts in order to be funded.
 
 ### Client-Side Changes
 
 In the standard flow, the user doesn't share the full transaction with the CES, just the quantity of dust needed. However, in order to ensure the LP is not paying for unrelated actions, the user must send the whole transaction to the CES here. Once the CES has merged the transaction, the user would receive the transaction so they can submit it.
+
+
+### SDK Changes
+
+In an attempt to ensure immediate interpoerability, the `capacityExchangeWalletProvider` should check how much dust a transaction is already spending, and subtract that amount from how much dust it will request from LPs. That would allow users to fund a transaction via the "funded contracts" flow, build another transaction doing some other action(s), merge it with the funded transaction, and use the "standard" flow to cover the additional cost.
 
 ## Security Considerations
 
@@ -50,7 +56,7 @@ In the standard flow, the user doesn't share the full transaction with the CES, 
 
 The concern is that a malicious user could take advantage of an LP who supports funded contracts, and trick the CES into providing dust for a transaction that could (eventually) include intents that don't involve the funded contracts. This is mitigated by the fact that the CES only estimates the cost of the intents which involve their funded contracts.
 
-An attacker could intentionaly wait until a period of high traffic before requesting dust to cover an intent and, since the transaction fees are based on recent network load, the CES would include more dust. The attacker could potentially wait until a period of low traffic, and then add intents which are already covered by the greater dust amount. This, however, is probably not worth worrying about in an initial implementation.
+An attacker could intentionaly wait until a period of high traffic before requesting dust to cover an intent and, since the transaction fees are based on recent network load, the CES would include more dust. The attacker could potentially wait until a period of low traffic, and then add intents which are already covered by the greater dust amount. The `balanceTx` API takes a TTL within the `WalletProider` interface, so this risk could be reduced. Generally though, this is probably not worth worrying about in an initial implementation.
 
 ### Transaction Privacy
 
@@ -58,8 +64,8 @@ Once a transaction has been proven, the private inputs are erased. Therefore, th
 
 ### Trust Model
 
-There is no additional trust required with this flow.
+While the specifics of a transaction are not available here, it is possible (depending on the context of the transaction) that just knowing which circuits are called reveals information that could give the LP an "unfair advantage". Therefore. the user must trust that the LP running the CES is unbiased and honest.
 
 ## Open Questions
 
-- Is it true that the proven transaction allows the CES to do everything it needs while preserving privacy?
+None
