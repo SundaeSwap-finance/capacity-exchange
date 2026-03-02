@@ -1,51 +1,24 @@
 import type { UseUserDepositsResult } from '../hooks/useUserDeposits';
-import { ActionButton } from './ActionButton';
 import { BridgeCard } from './BridgeCard';
 import { DepositsList } from './DepositsList';
-
-interface DepositsSummaryProps {
-  count: number;
-  totalAdaStr: string;
-}
-
-function DepositsSummary({ count, totalAdaStr }: DepositsSummaryProps) {
-  return (
-    <p className="text-muted">
-      {count} deposit{count !== 1 ? 's' : ''} · {totalAdaStr} ADA
-    </p>
-  );
-}
 
 interface DepositListProps {
   deposits: UseUserDepositsResult | undefined;
 }
 
 export function DepositList({ deposits }: DepositListProps) {
-  if (!deposits) {
-    return (
-      <BridgeCard title="Deposits" description="View your deposits at the Bridge deposit address.">
-        <p className="text-muted">Connect your Midnight wallet to view deposits.</p>
-      </BridgeCard>
-    );
-  }
-
-  const { deposits: depositList, totalAdaStr, fetchError, loading, refresh } = deposits;
-  const confirmedCount = depositList.filter((d) => d.status === 'confirmed').length;
-  const hasResult = depositList.length > 0 || (!fetchError && !loading);
+  const { deposits: depositList, loading } = deposits ?? { deposits: [], loading: false };
 
   return (
-    <BridgeCard title="Deposits" description="View your deposits at the Bridge deposit address.">
+    <BridgeCard title="Recent Deposit Transactions" description="Showing deposits made from this browser.">
       <div className="space-y-4">
-        <ActionButton label="Refresh" loadingLabel="Fetching…" loading={loading} onClick={refresh} />
+        {!deposits && <p className="text-muted">Connect your Midnight wallet to view deposits.</p>}
 
-        {fetchError && <div className="alert-error">{fetchError}</div>}
+        {loading && <p className="text-muted text-sm">Checking confirmations…</p>}
 
-        {hasResult && !fetchError && (
-          <>
-            <DepositsSummary count={confirmedCount} totalAdaStr={totalAdaStr} />
-            <DepositsList deposits={depositList} />
-          </>
-        )}
+        {deposits && depositList.length === 0 && !loading && <p className="text-muted">No deposits yet.</p>}
+
+        <DepositsList deposits={depositList} />
       </div>
     </BridgeCard>
   );

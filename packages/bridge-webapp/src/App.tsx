@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { useWallet } from './hooks/useWallet';
 import { useAsyncDerived } from './hooks/useAsyncDerived';
 import { useUserDeposits } from './hooks/useUserDeposits';
 import { useCoinPublicKey } from './hooks/useCoinPublicKey';
 import { connectCardanoWallet, deriveCardanoDisplay } from './lib/cip30';
 import { connectMidnightWallet, deriveMidnightDisplay } from './lib/midnight';
-import type { Deposit } from './lib/deposits';
 import { truncateAddress } from './lib/format';
 import { WalletConnect } from './components/WalletConnect';
 import { NetworkRibbon } from './components/NetworkRibbon';
@@ -22,10 +20,7 @@ function App() {
   const midnightAddress = midnightDisplay?.shieldedAddress;
   const coinPublicKey = useCoinPublicKey(midnightAddress);
 
-  const [sessionDeposits, setSessionDeposits] = useState<Deposit[]>([]);
-  const addDeposit = (d: Deposit) => setSessionDeposits((prev) => [...prev, d]);
-
-  const deposits = useUserDeposits({ sessionDeposits, coinPublicKey });
+  const deposits = useUserDeposits({ coinPublicKey });
 
   return (
     <>
@@ -71,7 +66,7 @@ function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <DepositForm blaze={blaze} midnightAddress={midnightAddress} addDeposit={addDeposit} />
+            <DepositForm blaze={blaze} midnightAddress={midnightAddress} />
             <BridgeCard
               title="Withdraw"
               description="Midnight → Cardano. Burn mADA on the Midnight network and reclaim ADA on Cardano."

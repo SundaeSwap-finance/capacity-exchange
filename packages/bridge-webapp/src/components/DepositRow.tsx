@@ -24,33 +24,25 @@ function ElapsedTime({ since }: { since: number }) {
 
 interface DepositRowProps {
   txHash: string;
-  index?: bigint;
   lovelace: bigint;
   coinPublicKey: string;
   unconfirmed?: boolean;
-  submittedAt?: number;
+  submittedAt: number;
 }
 
-export function DepositRow({ txHash, index, lovelace, coinPublicKey, unconfirmed, submittedAt }: DepositRowProps) {
+export function DepositRow({ txHash, lovelace, coinPublicKey, unconfirmed, submittedAt }: DepositRowProps) {
   return (
     <li className={`card text-sm space-y-1${unconfirmed ? ' opacity-60 animate-pulse' : ''}`}>
       {unconfirmed && (
         <div className="flex items-center gap-2">
           <span className="loading loading-spinner loading-xs" />
           <span className="text-muted">
-            Waiting for confirmation…
-            {submittedAt != null && (
-              <>
-                {' '}
-                <ElapsedTime since={submittedAt} />
-              </>
-            )}
+            Waiting for confirmation… <ElapsedTime since={submittedAt} />
           </span>
         </div>
       )}
       <div className="break-all">
         <span className="text-muted">Tx:</span> {txHash}
-        {index != null && `#${String(index)}`}
       </div>
       <div>
         <span className="text-muted">ADA:</span> {lovelaceToAda(lovelace)}

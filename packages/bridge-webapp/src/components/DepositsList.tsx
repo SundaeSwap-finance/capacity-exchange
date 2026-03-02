@@ -1,4 +1,4 @@
-import type { Deposit } from '../lib/deposits';
+import type { Deposit } from '../lib/depositStore';
 import { DepositRow } from './DepositRow';
 
 interface DepositsListProps {
@@ -14,9 +14,8 @@ export function DepositsList({ deposits }: DepositsListProps) {
     <ul className="space-y-2">
       {deposits.map((d) => (
         <DepositRow
-          key={d.index != null ? `${d.txHash}#${String(d.index)}` : d.txHash}
+          key={d.txHash}
           txHash={d.txHash}
-          index={d.index}
           lovelace={d.lovelace}
           coinPublicKey={d.coinPublicKey}
           unconfirmed={d.status === 'unconfirmed'}

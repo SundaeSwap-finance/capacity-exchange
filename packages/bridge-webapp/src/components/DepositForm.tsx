@@ -3,19 +3,18 @@ import type { Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
 import { deposit } from '@capacity-exchange/components';
 import { adaToLovelace } from '@capacity-exchange/core';
 import { getBridgeDepositAddress } from '../lib/blockfrost';
+import { saveDeposit } from '../lib/depositStore';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { BridgeCard } from './BridgeCard';
 import { BridgeForm } from './BridgeForm';
 import { FormField } from './FormField';
-import type { Deposit } from '../lib/deposits';
 
 interface DepositFormProps {
   blaze: Blaze<Provider, Wallet> | undefined;
   midnightAddress: string | undefined;
-  addDeposit: (deposit: Deposit) => void;
 }
 
-export function DepositForm({ blaze, midnightAddress, addDeposit }: DepositFormProps) {
+export function DepositForm({ blaze, midnightAddress }: DepositFormProps) {
   const [depositAddress] = useState(() => getBridgeDepositAddress());
   const [adaAmount, setAdaAmount] = useState('');
 
@@ -33,7 +32,7 @@ export function DepositForm({ blaze, midnightAddress, addDeposit }: DepositFormP
       shieldedMidnightAddress: midnightAddress!,
       lovelace: adaToLovelace(amount),
     });
-    addDeposit({
+    saveDeposit({
       txHash: res.txHash,
       lovelace: res.lovelace,
       coinPublicKey: res.coinPublicKey,
@@ -41,7 +40,7 @@ export function DepositForm({ blaze, midnightAddress, addDeposit }: DepositFormP
       status: 'unconfirmed',
     });
     return res;
-  }, [blaze, midnightAddress, amount, depositAddress, addDeposit]);
+  }, [blaze, midnightAddress, amount, depositAddress]);
   const { result, error, loading, run } = useAsyncAction(action);
 
   return (

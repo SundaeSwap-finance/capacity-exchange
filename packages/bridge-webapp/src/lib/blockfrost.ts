@@ -20,10 +20,15 @@ export function getBridgeDepositAddress(): string {
   return requireBrowserEnv('VITE_BRIDGE_DEPOSIT_ADDRESS');
 }
 
-export function createBlockfrostProvider(): { provider: Provider; network: CardanoNetwork } {
+export function getBlockfrostConfig() {
   const network = getCardanoNetwork();
-  const projectId = requireBrowserEnv('VITE_BLOCKFROST_PROJECT_ID');
   const blockfrostNetwork = toBlockfrostNetworkName(network);
-  const provider = createProvider({ network, blockfrostNetwork, blockfrostProjectId: projectId });
-  return { provider, network };
+  const blockfrostProjectId = requireBrowserEnv('VITE_BLOCKFROST_PROJECT_ID');
+  return { network, blockfrostNetwork, blockfrostProjectId };
+}
+
+export function createBlockfrostProvider(): { provider: Provider; network: CardanoNetwork } {
+  const config = getBlockfrostConfig();
+  const provider = createProvider(config);
+  return { provider, network: config.network };
 }
