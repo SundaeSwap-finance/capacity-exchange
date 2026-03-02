@@ -33,12 +33,12 @@ Restore a Cardano wallet from an existing mnemonic file.
 npm run cardano-wallet -- restore --output ./seed.hex --mnemonic-in ./existing-mnemonic.txt
 ```
 
-### cardano-wallet utxos
+### cardano-wallet bridge-utxos
 
-List UTXOs at a Cardano address.
+List bridge deposit UTXOs at a Cardano address.
 
 ```bash
-npm run cardano-wallet -- utxos --address <bech32-address>
+npm run cardano-wallet -- bridge-utxos --address <bech32-address>
 ```
 
 ### cardano-wallet deposit-midnight
@@ -60,7 +60,7 @@ npm run cardano-wallet -- deposit-midnight --mnemonic ./mnemonic.txt --deposit-a
 
 3. Verify funds arrived:
    ```bash
-   npm run cardano-wallet -- utxos --address <address>
+   npm run cardano-wallet -- bridge-utxos --address <address>
    ```
 
 4. Deposit to a Midnight address:

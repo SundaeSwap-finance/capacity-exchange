@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import type { Utxo } from '@capacity-exchange/components';
+import type { BridgeDepositUtxo } from '@capacity-exchange/components';
 import type { PendingDeposit } from '../lib/deposits';
 
 const POLL_INTERVAL_MS = 5_000;
 
 interface UsePendingDepositsArgs {
   pendingDeposits: PendingDeposit[];
-  utxos: Utxo[];
+  utxos: BridgeDepositUtxo[];
   onDepositConfirmed: (txHash: string) => void;
   refresh: () => Promise<void>;
 }

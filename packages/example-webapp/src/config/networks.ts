@@ -1,16 +1,8 @@
-import { NETWORK_ENDPOINTS, type NetworkEndpoints } from '@capacity-exchange/core';
+import { NETWORK_ENDPOINTS, requireBrowserEnv, type NetworkEndpoints } from '@capacity-exchange/core';
 import type { NetworkId as MidnightNetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
-export function requireEnv(name: string): string {
-  const value = import.meta.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
 export function requireEnvOneOf(name: string, allowedValues: readonly string[]): string {
-  const value = requireEnv(name);
+  const value = requireBrowserEnv(name);
   if (!allowedValues.includes(value)) {
     throw new Error(`Invalid value "${value}" for ${name}. Must be one of: ${allowedValues.join(', ')}`);
   }
@@ -39,7 +31,7 @@ function buildNetworkConfig(networkId: string): NetworkConfig {
     indexerWsUrl: defaults.indexerWsUrl,
     proofServerUrl: defaults.proofServerUrl,
     nodeWsUrl: defaults.nodeUrl,
-    capacityExchangeUrl: requireEnv('VITE_CAPACITY_EXCHANGE_URL'),
+    capacityExchangeUrl: requireBrowserEnv('VITE_CAPACITY_EXCHANGE_URL'),
   };
 }
 

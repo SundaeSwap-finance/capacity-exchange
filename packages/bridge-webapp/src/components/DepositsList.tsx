@@ -1,9 +1,10 @@
-import type { PendingDeposit, ValidDeposit } from '../lib/deposits';
+import type { BridgeDepositUtxo } from '@capacity-exchange/components';
+import type { PendingDeposit } from '../lib/deposits';
 import { DepositRow } from './DepositRow';
 
 interface DepositsListProps {
   pending: PendingDeposit[];
-  confirmed: ValidDeposit[];
+  confirmed: BridgeDepositUtxo[];
 }
 
 export function DepositsList({ pending, confirmed }: DepositsListProps) {
@@ -22,7 +23,7 @@ export function DepositsList({ pending, confirmed }: DepositsListProps) {
           txHash={u.txHash}
           index={u.index}
           lovelace={u.lovelace}
-          coinPublicKey={u.datum.decoded.coinPublicKey}
+          coinPublicKey={u.datum.coinPublicKey}
         />
       ))}
     </ul>

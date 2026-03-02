@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { detectMidnightExtension, connectMidnightExtension } from '@capacity-exchange/core';
 import type { WalletCapabilities } from '../types';
-import { connectWallet } from './walletService';
-import { useExtensionAvailability } from './useExtensionAvailability';
 import { ExtensionWalletAdapter } from './ExtensionWalletAdapter';
 
 /**
@@ -27,9 +26,12 @@ export interface ExtensionWalletState {
 
 /**
  * Hook that manages the lifecycle of connecting to the Lace wallet extension.
+ *
+ * TODO(SUNDAE-2355): Replace with shared useWallet<T> from webapp-common
  */
 export function useExtensionWallet(networkId: string): ExtensionWalletState {
-  const availability = useExtensionAvailability();
+  const detected = detectMidnightExtension();
+  const connector = detected.ok ? detected.connector : null;
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>(
     'disconnected'
   );
@@ -46,7 +48,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
   }, [networkId]);
 
   const connect = useCallback(async () => {
-    if (availability.status !== 'available' || connectionStatus === 'connecting' || connectionStatus === 'connected') {
+    if (!connector || connectionStatus === 'connecting' || connectionStatus === 'connected') {
       return;
     }
 
@@ -54,25 +56,18 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     setError(null);
 
     try {
-      const connection = await connectWallet(availability.connector, networkId);
-      setWallet(new ExtensionWalletAdapter(networkId, connection.wallet));
-      setConnectedAPI(connection.wallet);
+      const result = await connectMidnightExtension(networkId);
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+      setWallet(new ExtensionWalletAdapter(networkId, result.wallet));
+      setConnectedAPI(result.wallet);
       setConnectionStatus('connected');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-
-      // Provide helpful message for network mismatch
-      if (message === 'Network ID mismatch') {
-        setError(
-          `Network mismatch: Your Lace wallet is configured for a different network. Please change Lace to "${networkId}" or select a different network in the dropdown.`
-        );
-      } else {
-        setError(message);
-      }
-
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setConnectionStatus('error');
     }
-  }, [availability, connectionStatus, networkId]);
+  }, [connector, connectionStatus, networkId]);
 
   const disconnect = useCallback(() => {
     setWallet(null);
@@ -81,7 +76,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     setConnectionStatus('disconnected');
   }, []);
 
-  if (availability.status === 'unavailable') {
+  if (!connector) {
     return {
       status: 'unavailable',
       wallet: null,

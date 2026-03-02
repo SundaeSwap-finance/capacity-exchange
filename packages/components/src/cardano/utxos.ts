@@ -1,65 +1,60 @@
-import { Address } from '@blaze-cardano/core';
-import { Provider } from '@blaze-cardano/sdk';
-import { lovelaceToAda } from '@capacity-exchange/core';
-import { decodeDepositDatum, DecodedDepositDatum } from './datum';
+import { Address, type TransactionUnspentOutput } from '@blaze-cardano/core';
+import type { Provider } from '@blaze-cardano/sdk';
 
-export interface UtxosArgs {
-  address: string;
-}
+export type DatumDecodeResult<D> = { ok: true; datum: D } | { ok: false; error: string };
 
-export type DatumDecodeResult =
-  | { status: 'success'; cbor: string; decoded: DecodedDepositDatum }
-  | { status: 'error'; cbor: string; error: string };
-
-export interface Utxo {
+export interface Utxo<D> {
   txHash: string;
-  index: number;
-  lovelace: string;
-  datum?: DatumDecodeResult;
+  index: bigint;
+  lovelace: bigint;
+  datum?: DatumDecodeResult<D>;
 }
 
-export interface UtxosResult {
+export interface UtxosResult<D> {
   address: string;
-  totalLovelace: string;
-  totalAda: string;
-  count: number;
-  utxos: Utxo[];
+  utxos: Utxo<D>[];
 }
 
-export async function getUtxos(provider: Provider, args: UtxosArgs): Promise<UtxosResult> {
-  const address = Address.fromBech32(args.address);
-  const utxos = await provider.getUnspentOutputs(address);
+function parseUtxo<D>(raw: TransactionUnspentOutput, decodeDatum?: (cbor: string) => D): Utxo<D> {
+  const lovelace = raw.output().amount().coin();
 
-  let totalLovelace = 0n;
-  const utxoList: Utxo[] = utxos.map((utxo) => {
-    const lovelace = utxo.output().amount().coin();
-    totalLovelace += lovelace;
-
-    const inlineDatum = utxo.output().datum()?.asInlineData();
-    const cbor = inlineDatum ? inlineDatum.toCbor() : undefined;
-
-    let datum: DatumDecodeResult | undefined;
-    if (cbor) {
+  let datum: DatumDecodeResult<D> | undefined;
+  if (decodeDatum) {
+    const inlineDatum = raw.output().datum()?.asInlineData();
+    if (!inlineDatum) {
+      datum = { ok: false, error: 'no inline datum' };
+    } else {
       try {
-        datum = { status: 'success', cbor, decoded: decodeDepositDatum(cbor) };
-      } catch (error) {
-        datum = { status: 'error', cbor, error: error instanceof Error ? error.message : String(error) };
+        datum = { ok: true, datum: decodeDatum(inlineDatum.toCbor()) };
+      } catch (err) {
+        datum = { ok: false, error: err instanceof Error ? err.message : String(err) };
       }
     }
+  }
 
-    return {
-      txHash: utxo.input().transactionId(),
-      index: Number(utxo.input().index()),
-      lovelace: lovelace.toString(),
-      datum,
-    };
-  });
+  return {
+    txHash: raw.input().transactionId(),
+    index: raw.input().index(),
+    lovelace,
+    datum,
+  };
+}
+
+export function sumLovelace(utxos: { lovelace: bigint }[]): bigint {
+  return utxos.reduce((sum, u) => sum + u.lovelace, 0n);
+}
+
+export async function getUtxos<D>(
+  provider: Provider,
+  args: { address: string; decodeDatum?: (cbor: string) => D }
+): Promise<UtxosResult<D>> {
+  const address = Address.fromBech32(args.address);
+  const rawUtxos = await provider.getUnspentOutputs(address);
+
+  const utxos = rawUtxos.map((raw) => parseUtxo(raw, args.decodeDatum));
 
   return {
     address: args.address,
-    totalLovelace: totalLovelace.toString(),
-    totalAda: lovelaceToAda(totalLovelace),
-    count: utxoList.length,
-    utxos: utxoList,
+    utxos,
   };
 }

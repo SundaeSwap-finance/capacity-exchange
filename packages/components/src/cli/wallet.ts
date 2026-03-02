@@ -4,7 +4,7 @@ import { generateWallet } from '../cardano/wallet/generate';
 import { restoreWallet } from '../cardano/wallet/restore';
 import { createBlazeFromMnemonicFile } from '../cardano/wallet/blaze';
 import { createProvider } from '@capacity-exchange/core';
-import { getUtxos } from '../cardano/utxos';
+import { getBridgeDepositUtxos } from '../cardano/bridge-deposit-utxos';
 import { deposit } from '../cardano/deposit';
 import { getNetworkConfig } from '../cardano/config';
 import { runCli } from './utils';
@@ -44,13 +44,14 @@ program
   });
 
 program
-  .command('utxos')
-  .description('List all UTxOs at an address')
+  .command('bridge-utxos')
+  .description('List Bridge deposit UTxOs at an address')
   .requiredOption('-a, --address <address>', 'Bech32 address to query')
   .action(async (options: { address: string }) => {
     await runCli(async () => {
-      const provider = createProvider(getNetworkConfig());
-      return getUtxos(provider, { address: options.address });
+      const config = getNetworkConfig();
+      const provider = createProvider(config);
+      return getBridgeDepositUtxos(provider, { address: options.address });
     });
   });
 
@@ -58,7 +59,7 @@ program
   .command('deposit-midnight')
   .description('Deposit ADA to a Midnight shielded address')
   .requiredOption('-k, --mnemonic <file>', 'Path to mnemonic file')
-  .requiredOption('-d, --deposit-address <address>', 'Cardano deposit address')
+  .requiredOption('-d, --deposit-address <address>', 'Deposit Bridge Cardano address')
   .requiredOption('-m, --midnight-address <address>', 'Recipient Midnight shielded address')
   .requiredOption('-l, --lovelace <amount>', 'Amount in lovelace (1 ADA = 1,000,000 lovelace)')
   .action(async (options: { mnemonic: string; depositAddress: string; midnightAddress: string; lovelace: string }) => {

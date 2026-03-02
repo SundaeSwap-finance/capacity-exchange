@@ -1,23 +1,17 @@
 import { useMemo } from 'react';
-import type { Utxo } from '@capacity-exchange/components';
+import type { BridgeDepositUtxo } from '@capacity-exchange/components';
+import { sumLovelace } from '@capacity-exchange/components';
 import { lovelaceToAda, parseCoinPublicKey } from '@capacity-exchange/core';
-import {
-  isValidDeposit,
-  filterByCoinPublicKey,
-  filterVisiblePending,
-  totalLovelace,
-  type ValidDeposit,
-  type PendingDeposit,
-} from '../lib/deposits';
+import { filterByCoinPublicKey, filterVisiblePending, type PendingDeposit } from '../lib/deposits';
 
 interface UseFilteredDepositsArgs {
-  utxos: Utxo[];
+  utxos: BridgeDepositUtxo[];
   pendingDeposits: PendingDeposit[];
   filterAddress: string;
 }
 
 interface UseFilteredDepositsResult {
-  filtered: ValidDeposit[];
+  filtered: BridgeDepositUtxo[];
   visiblePending: PendingDeposit[];
   totalAdaStr: string;
   filterError: string | null;
@@ -29,7 +23,6 @@ export function useFilteredDeposits({
   filterAddress,
 }: UseFilteredDepositsArgs): UseFilteredDepositsResult {
   return useMemo(() => {
-    const validDeposits = utxos.filter(isValidDeposit);
     const trimmed = filterAddress.trim();
 
     let coinPublicKey: string | undefined;
@@ -44,9 +37,9 @@ export function useFilteredDeposits({
       }
     }
 
-    const filtered = coinPublicKey ? filterByCoinPublicKey(validDeposits, coinPublicKey) : validDeposits;
+    const filtered = coinPublicKey ? filterByCoinPublicKey(utxos, coinPublicKey) : utxos;
     const visiblePending = filterVisiblePending(pendingDeposits, filtered, coinPublicKey);
-    const totalAdaStr = lovelaceToAda(totalLovelace(filtered));
+    const totalAdaStr = lovelaceToAda(sumLovelace(filtered));
 
     return { filtered, visiblePending, totalAdaStr, filterError };
   }, [utxos, pendingDeposits, filterAddress]);
