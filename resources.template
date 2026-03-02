@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Route53 DNS records for capacity-exchange subdomains
+
+Parameters:
+  Env:
+    Type: String
+    Description: Deployment environment
+    AllowedValues:
+      - preview
+      - preprod
+
+Mappings:
+  Env:
+    preview:
+      HostedZoneId: Z0609244DFBX99Y22ZA3
+      Hostname: capacity-exchange.preview.sundae.fi
+      IpAddress: 3.143.229.120
+    preprod:
+      HostedZoneId: Z0871142ZC4EA6HPBBZB
+      Hostname: capacity-exchange.preprod.sundae.fi
+      IpAddress: 3.143.229.120
+
+Resources:
+  DnsRecord:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !FindInMap [Env, !Ref Env, HostedZoneId]
+      Name: !FindInMap [Env, !Ref Env, Hostname]
+      Type: A
+      TTL: '300'
+      ResourceRecords:
+        - !FindInMap [Env, !Ref Env, IpAddress]
+
+Outputs:
+  Fqdn:
+    Description: Fully qualified domain name
+    Value: !FindInMap [Env, !Ref Env, Hostname]
