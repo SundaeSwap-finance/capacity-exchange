@@ -40,5 +40,6 @@ export {
   isTransactionConfirmed,
 } from './cardano';
 export { deriveTokenColor } from './tokenColor';
-export { sendShieldedTokens } from './sendShieldedTokens';
+export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens';
 export { getShieldedBalance } from './getShieldedBalance';
+export { waitForState } from './waitForState';

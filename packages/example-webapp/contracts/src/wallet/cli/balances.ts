@@ -2,7 +2,7 @@ import { program } from 'commander';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { createLogger } from '@capacity-exchange/midnight-node';
-import { registerForDust } from '../lib/dust-registration.js';
+import { registerAllForDust, waitForDustBalance } from '../lib/dust-registration.js';
 
 function bigintBalances(record: Record<string, bigint>): Record<string, string> {
   const out: Record<string, string> = {};
@@ -47,7 +47,8 @@ function main(): Promise<BalancesOutput> {
 
     if (opts.registerDust && !dustRegistered) {
       logger.info('Registering for dust...');
-      state = await registerForDust(state, walletFacade, keys);
+      await registerAllForDust(state, walletFacade, keys);
+      state = await waitForDustBalance(walletFacade);
     }
 
     const result = {
@@ -59,6 +60,10 @@ function main(): Promise<BalancesOutput> {
       dust: state.dust.walletBalance(new Date()).toString(),
       shielded: bigintBalances(state.shielded.balances),
       unshielded: bigintBalances(state.unshielded.balances),
+      unshieldedUtxos: state.unshielded.availableCoins.map((coin) => ({
+        value: coin.utxo.value.toString(),
+        registeredForDust: coin.meta.registeredForDustGeneration,
+      })),
       dustRegistered: state.dust.availableCoins.length > 0,
     };
     return result;

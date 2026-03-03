@@ -18,13 +18,9 @@ function main() {
   const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
 
   return withAppContext(networkId, (ctx) =>
-    sendShieldedTokens(
-      ctx.walletContext.walletFacade,
-      ctx.walletContext.keys,
-      derivedTokenColor,
-      recipientAddress,
-      amount
-    )
+    sendShieldedTokens(ctx.walletContext.walletFacade, ctx.walletContext.keys, [
+      { type: derivedTokenColor, receiverAddress: recipientAddress, amount },
+    ])
   );
 }
 
