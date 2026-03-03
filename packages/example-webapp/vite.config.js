@@ -5,6 +5,10 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
+  if (process.env.NETWORK_ID) {
+    process.env.VITE_NETWORK_ID = process.env.NETWORK_ID;
+    process.env.VITE_CAPACITY_EXCHANGE_URL ??= `https://capacity-exchange.${process.env.NETWORK_ID}.sundae.fi`;
+  }
   return {
     define: {
       global: 'globalThis',
