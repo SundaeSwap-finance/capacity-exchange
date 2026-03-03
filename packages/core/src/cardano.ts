@@ -32,3 +32,21 @@ export function createProvider(config: NetworkConfig): Provider {
     projectId: config.blockfrostProjectId,
   });
 }
+
+/** Returns true if the transaction is confirmed on-chain, false if not yet seen. */
+export async function isTransactionConfirmed(
+  txHash: string,
+  config: { blockfrostNetwork: BlockfrostNetworkName; blockfrostProjectId: string }
+): Promise<boolean> {
+  const baseUrl = `https://${config.blockfrostNetwork}.blockfrost.io/api/v0`;
+  const res = await fetch(`${baseUrl}/txs/${txHash}`, {
+    headers: { project_id: config.blockfrostProjectId },
+  });
+  if (res.ok) {
+    return true;
+  }
+  if (res.status === 404) {
+    return false;
+  }
+  throw new Error(`Blockfrost error checking tx ${txHash}: ${res.status}`);
+}

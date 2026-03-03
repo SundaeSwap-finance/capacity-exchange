@@ -1,29 +1,25 @@
-import type { BridgeDepositUtxo } from '@capacity-exchange/components';
-import type { PendingDeposit } from '../lib/deposits';
+import type { Deposit } from '../lib/depositStore';
 import { DepositRow } from './DepositRow';
 
 interface DepositsListProps {
-  pending: PendingDeposit[];
-  confirmed: BridgeDepositUtxo[];
+  deposits: Deposit[];
 }
 
-export function DepositsList({ pending, confirmed }: DepositsListProps) {
-  if (pending.length === 0 && confirmed.length === 0) {
+export function DepositsList({ deposits }: DepositsListProps) {
+  if (deposits.length === 0) {
     return null;
   }
 
   return (
     <ul className="space-y-2">
-      {pending.map((d) => (
-        <DepositRow key={d.txHash} txHash={d.txHash} lovelace={d.lovelace} coinPublicKey={d.coinPublicKey} pending />
-      ))}
-      {confirmed.map((u) => (
+      {deposits.map((d) => (
         <DepositRow
-          key={`${u.txHash}#${u.index}`}
-          txHash={u.txHash}
-          index={u.index}
-          lovelace={u.lovelace}
-          coinPublicKey={u.datum.coinPublicKey}
+          key={d.txHash}
+          txHash={d.txHash}
+          lovelace={d.lovelace}
+          coinPublicKey={d.coinPublicKey}
+          unconfirmed={d.status === 'unconfirmed'}
+          submittedAt={d.submittedAt}
         />
       ))}
     </ul>

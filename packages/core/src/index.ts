@@ -37,6 +37,7 @@ export {
   lovelaceToAda,
   adaToLovelace,
   createProvider,
+  isTransactionConfirmed,
 } from './cardano';
 export { deriveTokenColor } from './tokenColor';
 export { sendShieldedTokens } from './sendShieldedTokens';
