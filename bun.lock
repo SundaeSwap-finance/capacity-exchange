@@ -19,9 +19,13 @@
       "version": "1.0.0",
       "dependencies": {
         "@capacity-exchange/midnight-core": "1.0.0",
+        "@capacity-exchange/midnight-node": "1.0.0",
+        "@midnight-ntwrk/compact-js": "2.4.0",
         "@midnight-ntwrk/compact-runtime": "^0.14.0",
+        "@midnight-ntwrk/ledger-v7": "7.0.0",
         "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
         "@midnight-ntwrk/midnight-js-types": "3.0.0",
+        "commander": "^14.0.2",
       },
       "devDependencies": {
         "@types/node": "22.10.7",

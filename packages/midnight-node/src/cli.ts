@@ -5,6 +5,14 @@ import { createLogger } from './createLogger';
 
 const logger = createLogger(import.meta);
 
+export function requireNetworkId(): string {
+  const networkId = process.env.NETWORK_ID;
+  if (!networkId) {
+    throw new Error('NETWORK_ID environment variable is required (e.g., NETWORK_ID=preview)');
+  }
+  return networkId;
+}
+
 export async function withAppContext<T>(networkId: string, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
   logger.info(`Process ID: ${process.pid}`);
   const config = getAppConfigById(networkId);
