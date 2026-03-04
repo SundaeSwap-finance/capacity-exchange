@@ -23,6 +23,7 @@ interface BalancesOutput {
   dust: string;
   shielded: Record<string, string>;
   unshielded: Record<string, string>;
+  unshieldedUtxos: { value: string; registeredForDust: boolean }[];
   dustRegistered: boolean;
 }
 

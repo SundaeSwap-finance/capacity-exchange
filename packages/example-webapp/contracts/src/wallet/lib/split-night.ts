@@ -58,6 +58,9 @@ export async function splitAndRegister(
   networkId: string,
   count: number
 ): Promise<SplitNightOutput> {
+  if (!Number.isInteger(count) || count < 2) {
+    throw new Error('count must be an integer >= 2');
+  }
   // Single shared subscription — state updates flow through as txs land on-chain.
   const state$ = walletFacade.state().pipe(Rx.shareReplay({ bufferSize: 1, refCount: true }));
 
