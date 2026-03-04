@@ -1,5 +1,6 @@
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext, buildProviders, submitCallTxDirect } from '@capacity-exchange/midnight-node';
+import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
 
@@ -25,14 +26,7 @@ export async function deploy(ctx: AppContext): Promise<DeployOutput> {
   };
 }
 
-export interface IncrementOutput {
-  txHash: string;
-  contractAddress: string;
-  blockHeight: string;
-  blockHash: string;
-}
-
-export async function increment(ctx: AppContext, contractAddress: string): Promise<IncrementOutput> {
+export async function increment(ctx: AppContext, contractAddress: string): Promise<TxResult> {
   logger.info(`Incrementing counter at ${contractAddress}...`);
   const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
@@ -43,12 +37,7 @@ export async function increment(ctx: AppContext, contractAddress: string): Promi
   });
 
   logger.info(`Increment tx confirmed at block ${result.public.blockHeight}`);
-  return {
-    txHash: result.public.txHash,
-    contractAddress,
-    blockHeight: result.public.blockHeight.toString(),
-    blockHash: result.public.blockHash,
-  };
+  return toTxResult(contractAddress, result.public);
 }
 
 export interface QueryOutput {

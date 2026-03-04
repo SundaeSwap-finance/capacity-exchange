@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
+import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor, getShieldedBalance } from '@capacity-exchange/midnight-core';
 import { createPrivateState } from './witnesses.js';
@@ -54,12 +55,9 @@ export async function deploy(ctx: AppContext, tokenColor?: string): Promise<Depl
 }
 
 export interface MintOutput {
-  txHash: string;
-  contractAddress: string;
+  tx: TxResult;
   amount: string;
   derivedTokenColor: string;
-  blockHeight: string;
-  blockHash: string;
 }
 
 export async function mint(
@@ -89,12 +87,9 @@ export async function mint(
   logger.info(`Mint confirmed, derived color: ${derivedTokenColor.slice(0, 8)}...`);
 
   return {
-    txHash: result.public.txHash,
-    contractAddress,
+    tx: toTxResult(contractAddress, result.public),
     amount: amount.toString(),
     derivedTokenColor,
-    blockHeight: result.public.blockHeight.toString(),
-    blockHash: result.public.blockHash,
   };
 }
 

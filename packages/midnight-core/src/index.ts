@@ -44,3 +44,4 @@ export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } 
 export { getShieldedBalance } from './getShieldedBalance';
 export { getLedgerParameters } from './getLedgerParameters';
 export { waitForState } from './waitForState';
+export { type TxResult, toTxResult } from './txResult';
