@@ -1,4 +1,9 @@
-import { createAndSyncWallet, COST_PARAMS, type WalletKeys } from '@capacity-exchange/midnight-core';
+import {
+  createAndSyncWalletWithStore,
+  COST_PARAMS,
+  LocalStorageStateStore,
+  type WalletKeys,
+} from '@capacity-exchange/midnight-core';
 export type { WalletKeys } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
@@ -12,21 +17,25 @@ export interface SeedWalletConnection {
 
 /**
  * Creates and syncs a wallet from a seed.
+ * Wallet state is persisted to localStorage for faster subsequent syncs.
  */
 export async function connectSeedWallet(seedHex: string, config: NetworkConfig): Promise<SeedWalletConnection> {
-  const { walletFacade, keys } = await createAndSyncWallet({
-    seedHex,
-    walletConfig: {
-      networkId: config.networkId as NetworkId.NetworkId,
-      costParameters: COST_PARAMS,
-      relayURL: new URL(config.nodeWsUrl),
-      provingServerUrl: new URL(config.proofServerUrl),
-      indexerClientConnection: {
-        indexerHttpUrl: config.indexerUrl,
-        indexerWsUrl: config.indexerWsUrl,
+  const { walletFacade, keys } = await createAndSyncWalletWithStore(
+    {
+      seedHex,
+      walletConfig: {
+        networkId: config.networkId as NetworkId.NetworkId,
+        costParameters: COST_PARAMS,
+        relayURL: new URL(config.nodeWsUrl),
+        provingServerUrl: new URL(config.proofServerUrl),
+        indexerClientConnection: {
+          indexerHttpUrl: config.indexerUrl,
+          indexerWsUrl: config.indexerWsUrl,
+        },
       },
     },
-  });
+    new LocalStorageStateStore()
+  );
 
   return { walletFacade, keys, networkId: config.networkId };
 }

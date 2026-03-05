@@ -1,14 +1,13 @@
 import {
-  createAndSyncWallet,
+  createAndSyncWalletWithStore,
   resolveWalletConfig,
   DustWalletProvider,
   uint8ArrayToHex,
   type WalletKeys,
-  type CreateAndSyncWalletOptions,
 } from '@capacity-exchange/midnight-core';
-import { createWalletStateStore, type StateStore } from './stateStore';
-import type { AppConfig } from './appConfig';
+import { FileStateStore } from './fileStateStore';
 import { createLogger } from './createLogger';
+import type { AppConfig } from './appConfig';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 
 const logger = createLogger(import.meta);
@@ -19,55 +18,20 @@ export interface WalletContext {
   keys: WalletKeys;
 }
 
-async function saveWalletStates(facade: WalletFacade, store: StateStore): Promise<void> {
-  try {
-    const [shieldedState, dustState] = await Promise.all([
-      facade.shielded.serializeState(),
-      facade.dust.serializeState(),
-    ]);
-    await Promise.all([store.save('shielded', shieldedState), store.save('dust', dustState)]);
-  } catch {
-    logger.info('Failed to save wallet state');
-  }
-}
-
-async function syncWithRetry(options: CreateAndSyncWalletOptions, store: StateStore): Promise<WalletContext> {
-  try {
-    return await createAndSyncWallet(options);
-  } catch (error) {
-    if (!options.savedShieldedState && !options.savedDustState) {
-      throw error;
-    }
-    logger.info('Failed with saved state, clearing and retrying fresh...');
-    await store.clearAll();
-    return await createAndSyncWallet({
-      ...options,
-      savedShieldedState: undefined,
-      savedDustState: undefined,
-    });
-  }
-}
-
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
   const seedHex = uint8ArrayToHex(config.seed);
-  const store = createWalletStateStore(config.networkId, seedHex, logger, config.walletStateDir);
+  const store = new FileStateStore(config.walletStateDir, logger);
 
   logger.info('Creating and syncing wallets...');
-  const [savedShieldedState, savedDustState] = await Promise.all([store.load('shielded'), store.load('dust')]);
-
-  const result = await syncWithRetry(
+  const result = await createAndSyncWalletWithStore(
     {
       seedHex,
       walletConfig: resolveWalletConfig(config.networkId),
-      savedShieldedState,
-      savedDustState,
       syncTimeoutMs: 120_000,
     },
     store
   );
   logger.info('Wallets synced');
-
-  await saveWalletStates(result.walletFacade, store);
 
   return result;
 }

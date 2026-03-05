@@ -1,5 +1,8 @@
-import { NetworkEndpoints, WalletConnection } from '@capacity-exchange/midnight-core';
-import { StateStore } from '@capacity-exchange/midnight-node';
+import {
+  NetworkEndpoints,
+  WalletConnection,
+  type WalletStateStore,
+} from '@capacity-exchange/midnight-core';
 import { Static, Type } from '@sinclair/typebox';
 
 export const PriceFormulaSchema = Type.Object({
@@ -49,7 +52,7 @@ export interface AppConfig extends BaseConfig {
   PRICE_FORMULAS: PriceFormula[];
   FUNDED_CONTRACTS: FundedContract[];
   walletConnection: WalletConnection;
-  walletStateStore: StateStore;
+  walletStateStore: WalletStateStore;
 }
 
 export const schema = {

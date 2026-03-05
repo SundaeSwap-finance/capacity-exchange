@@ -1,6 +1,5 @@
 export { requireNodeEnv } from './envNode';
-export { StateStore, createWalletStateStore } from './stateStore';
-export { StateWriter, type Serializable } from './stateWriter';
+export { FileStateStore } from './fileStateStore';
 export { type AppConfig, getAppConfigById } from './appConfig';
 export { createLogger } from './createLogger';
 export { checkWebSocket, checkProofServer, checkIndexerFreshness } from './connectivity';

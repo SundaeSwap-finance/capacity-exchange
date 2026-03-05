@@ -6,8 +6,7 @@ import {
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
 import { nativeToken } from '@midnight-ntwrk/ledger-v7';
-import { WalletConnection } from '@capacity-exchange/midnight-core';
-import { StateWriter, StateStore } from '@capacity-exchange/midnight-node';
+import { WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
 
 export type WalletSyncState =
   | { status: 'syncing' }
@@ -20,7 +19,7 @@ export type WalletSyncState =
 export class WalletService {
   private readonly logger: FastifyBaseLogger;
   private readonly walletConnection: WalletConnection;
-  private readonly stateWriter: StateWriter<DustWalletState>;
+  private readonly walletStateStore: WalletStateStore;
 
   // Holds the higher-level wallet sync state
   private _syncState: WalletSyncState = { status: 'syncing' };
@@ -32,16 +31,11 @@ export class WalletService {
   constructor(
     walletConnection: WalletConnection,
     logger: FastifyBaseLogger,
-    walletStateStore: StateStore,
+    walletStateStore: WalletStateStore,
   ) {
     this.walletConnection = walletConnection;
     this.logger = logger;
-    this.stateWriter = new StateWriter(
-      walletStateStore,
-      'dust',
-      (state: DustWalletState) => `${state.totalCoins.length}-${state.walletBalance(new Date())}`,
-      logger.child({ service: 'StateWriter' }),
-    );
+    this.walletStateStore = walletStateStore;
   }
 
   async start() {
@@ -60,7 +54,9 @@ export class WalletService {
         ) {
           this.logger.info({ coins: dustWalletState.totalCoins.length }, 'Wallet syncing...');
         }
-        this.stateWriter.schedule(dustWalletState);
+        this.walletStateStore.saveWalletState(walletFacade).catch((err) => {
+          this.logger.error(err, 'Failed to save wallet state');
+        });
       },
       error: (err) => {
         this.logger.error(err, 'DUST wallet state subscription error');
@@ -94,9 +90,6 @@ export class WalletService {
 
   async stop() {
     this.logger.info('Stopping WalletService');
-
-    // Flush any pending state writes
-    await this.stateWriter.flush();
 
     if (this.dustWalletSub) {
       this.dustWalletSub.unsubscribe();
