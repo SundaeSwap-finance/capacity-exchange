@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
 import { deposit } from '@capacity-exchange/components';
-import { adaToLovelace } from '@capacity-exchange/core';
+import { adaToLovelace } from '@capacity-exchange/midnight-core';
 import { getBridgeDepositAddress } from '../lib/blockfrost';
 import { saveDeposit } from '../lib/depositStore';
 import { useAsyncAction } from '../hooks/useAsyncAction';

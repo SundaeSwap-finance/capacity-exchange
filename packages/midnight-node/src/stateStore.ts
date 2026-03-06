@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { writeFile, readFile, rename, unlink, readdir, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import type { Logger } from './logger';
+import type { Logger } from '@capacity-exchange/midnight-core';
 
 /**
  * File-backed key-value store for serialized state.

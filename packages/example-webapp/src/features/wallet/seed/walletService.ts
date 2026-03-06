@@ -1,5 +1,5 @@
-import { createAndSyncWallet, COST_PARAMS, type WalletKeys } from '@capacity-exchange/core';
-export type { WalletKeys } from '@capacity-exchange/core';
+import { createAndSyncWallet, COST_PARAMS, type WalletKeys } from '@capacity-exchange/midnight-core';
+export type { WalletKeys } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../../config';

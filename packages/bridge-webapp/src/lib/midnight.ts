@@ -1,5 +1,5 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import { requireBrowserEnv, connectMidnightExtension, encodeShieldedAddress } from '@capacity-exchange/core';
+import { requireBrowserEnv, connectMidnightExtension, encodeShieldedAddress } from '@capacity-exchange/midnight-core';
 
 export interface MidnightDisplayInfo {
   shieldedAddress: string;

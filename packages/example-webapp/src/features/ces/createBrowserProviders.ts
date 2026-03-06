@@ -2,7 +2,7 @@ import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { FinalizedTransaction, CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v7';
-import { uint8ArrayToHex } from '@capacity-exchange/core';
+import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 
 export interface BrowserProviders {
   walletProvider: WalletProvider;

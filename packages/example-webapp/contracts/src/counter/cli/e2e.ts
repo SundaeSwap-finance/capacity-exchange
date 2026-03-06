@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@capacity-exchange/components/midnight';
+import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { deploy, increment, query, DeployOutput, IncrementOutput, QueryOutput } from '../lib/operations.js';
 
 interface E2EOutput {

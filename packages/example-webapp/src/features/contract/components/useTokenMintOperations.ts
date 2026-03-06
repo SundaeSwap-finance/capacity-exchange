@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { deriveTokenColor, getShieldedBalance, sendShieldedTokens } from '@capacity-exchange/core';
+import { deriveTokenColor, getShieldedBalance, sendShieldedTokens } from '@capacity-exchange/midnight-core';
 import { findAndMintTokens } from '../../ces/tokenMintContract';
 import { useSubmit } from '../../../lib/hooks/useSubmit';
 import { useNetworkConfig } from '../../../config';

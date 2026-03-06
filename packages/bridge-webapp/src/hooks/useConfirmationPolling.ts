@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { isTransactionConfirmed } from '@capacity-exchange/core';
+import { isTransactionConfirmed } from '@capacity-exchange/midnight-core';
 import type { Deposit } from '../lib/depositStore';
 import { loadDeposits, markConfirmed } from '../lib/depositStore';
 import { getBlockfrostConfig } from '../lib/blockfrost';

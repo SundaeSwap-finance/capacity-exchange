@@ -1,8 +1,6 @@
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import type { Logger } from './index';
-
-export type { Logger };
+import type { Logger } from '@capacity-exchange/midnight-core';
 
 function extractTag(meta: ImportMeta): string {
   const filePath = fileURLToPath(meta.url);

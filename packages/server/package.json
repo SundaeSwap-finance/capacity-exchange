@@ -19,7 +19,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@capacity-exchange/core": "1.0.0",
+    "@capacity-exchange/midnight-core": "1.0.0",
+    "@capacity-exchange/midnight-node": "1.0.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/env": "^5.0.3",
     "@fastify/swagger": "^9.6.1",

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { parseCoinPublicKey } from '@capacity-exchange/core';
+import { parseCoinPublicKey } from '@capacity-exchange/midnight-core';
 
 export function useCoinPublicKey(shieldedAddress: string | undefined): string | undefined {
   return useMemo(() => {

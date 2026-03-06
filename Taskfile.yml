@@ -35,11 +35,17 @@ tasks:
 
   # --- Package build tasks (mirror dependency graph) ---
 
-  build-core:
+  build-midnight-core:
     internal: true
     deps: [install]
     cmds:
-      - bun run --filter @capacity-exchange/core build
+      - bun run --filter @capacity-exchange/midnight-core build
+
+  build-midnight-node:
+    internal: true
+    deps: [build-midnight-core]
+    cmds:
+      - bun run --filter @capacity-exchange/midnight-node build
 
   build-client:
     internal: true
@@ -49,7 +55,7 @@ tasks:
 
   build-components:
     internal: true
-    deps: [build-core, build-client]
+    deps: [build-midnight-node, build-client]
     cmds:
       - bun run --filter @capacity-exchange/components build
 
@@ -59,7 +65,7 @@ tasks:
 
   build-server:
     internal: true
-    deps: [build-core]
+    deps: [build-midnight-node]
     cmds:
       - bun run --filter @capacity-exchange/server build
 
@@ -140,29 +146,29 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
-  # server depends on: core
+  # server depends on: midnight-core, midnight-node
   dev:server:
     desc: Start the capacity exchange server with hot-reload
-    deps: [build-core]
+    deps: [build-midnight-node]
     env:
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
     cmds:
-      - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/server dev & wait
+      - bun run --filter @capacity-exchange/midnight-core build:watch & bun run --filter @capacity-exchange/midnight-node build:watch & bun run --filter @capacity-exchange/server dev & wait
     requires:
       vars: [NETWORK_ID]
 
-  # webapp depends on: core, client, components, compiled + deployed contracts
+  # webapp depends on: midnight-core, midnight-node, client, components, compiled + deployed contracts
   dev:webapp:
     desc: Start the example webapp with hot-reload
     deps: [require-deployed-contracts, build-components]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
-      - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/example-webapp dev & wait
+      - bun run --filter @capacity-exchange/midnight-core build:watch & bun run --filter @capacity-exchange/midnight-node build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/example-webapp dev & wait
     requires:
       vars: [NETWORK_ID]
 
-  # dev runs both — watchers cover union of deps (core, components), deduplicated
+  # dev runs both — watchers cover union of deps, deduplicated
   dev:
     desc: Start server and webapp with hot-reload
     deps: [require-deployed-contracts, build-libs]
@@ -170,13 +176,13 @@ tasks:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
     cmds:
-      - bun run --filter @capacity-exchange/core build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/server dev & bun run --filter @capacity-exchange/example-webapp dev & wait
+      - bun run --filter @capacity-exchange/midnight-core build:watch & bun run --filter @capacity-exchange/midnight-node build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/server dev & bun run --filter @capacity-exchange/example-webapp dev & wait
     requires:
       vars: [NETWORK_ID]
 
   deploy:
     desc: Deploy all contracts for a network
-    deps: [build-core]
+    deps: [build-midnight-node]
     preconditions:
       - sh: test -d {{.CONTRACTS_DIR}}/counter/out
         msg: "Compiled contracts not found. Run 'task compile-contracts' first."

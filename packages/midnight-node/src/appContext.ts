@@ -1,13 +1,9 @@
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { MidnightProvider, PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { AppConfig } from '@capacity-exchange/core/node';
-import {
-  checkWebSocket,
-  checkIndexerFreshness,
-  checkProofServer,
-  createPrivateStateProvider,
-} from '@capacity-exchange/core/node';
-import { WalletContext, createWalletContext } from './wallet-context';
+import type { AppConfig } from './appConfig';
+import { checkWebSocket, checkIndexerFreshness, checkProofServer } from './connectivity';
+import { createPrivateStateProvider } from './levelPrivateStateProvider';
+import { WalletContext, createWalletContext } from './walletContext';
 
 export interface AppContext {
   privateStateProvider: PrivateStateProvider;

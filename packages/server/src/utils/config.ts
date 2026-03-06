@@ -1,7 +1,7 @@
 import { FastifyBaseLogger } from 'fastify';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { parseSeedHex, parseMnemonic, uint8ArrayToHex } from '@capacity-exchange/core';
+import { parseSeedHex, parseMnemonic, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 import { BaseConfig } from '../models/config.js';
 import { PriceFormula } from '../services/price.js';
 

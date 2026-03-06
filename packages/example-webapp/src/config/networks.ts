@@ -1,4 +1,4 @@
-import { NETWORK_ENDPOINTS, requireBrowserEnv, type NetworkEndpoints } from '@capacity-exchange/core';
+import { NETWORK_ENDPOINTS, requireBrowserEnv, type NetworkEndpoints } from '@capacity-exchange/midnight-core';
 import type { NetworkId as MidnightNetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
 export function requireEnvOneOf(name: string, allowedValues: readonly string[]): string {

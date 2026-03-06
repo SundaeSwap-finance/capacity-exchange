@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { generateWallet } from '../cardano/wallet/generate';
 import { restoreWallet } from '../cardano/wallet/restore';
 import { createBlazeFromMnemonicFile } from '../cardano/wallet/blaze';
-import { createProvider } from '@capacity-exchange/core';
+import { createProvider } from '@capacity-exchange/midnight-core';
 import { getBridgeDepositUtxos } from '../cardano/bridge-deposit-utxos';
 import { deposit } from '../cardano/deposit';
 import { getNetworkConfig } from '../cardano/config';
