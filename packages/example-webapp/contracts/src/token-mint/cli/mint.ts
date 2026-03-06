@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@capacity-exchange/components/midnight';
+import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { mint, MintOutput } from '../lib/operations.js';
 
 function main(): Promise<MintOutput> {

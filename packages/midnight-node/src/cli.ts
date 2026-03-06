@@ -1,6 +1,7 @@
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { AppContext, createAppContext } from './app-context';
-import { getAppConfigById, createLogger } from '@capacity-exchange/core/node';
+import { AppContext, createAppContext } from './appContext';
+import { getAppConfigById } from './appConfig';
+import { createLogger } from './createLogger';
 
 const logger = createLogger(import.meta);
 

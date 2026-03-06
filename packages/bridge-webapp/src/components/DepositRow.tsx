@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { lovelaceToAda } from '@capacity-exchange/core';
+import { lovelaceToAda } from '@capacity-exchange/midnight-core';
 
 function formatElapsed(ms: number): string {
   const seconds = Math.floor(ms / 1000);

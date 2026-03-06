@@ -15,7 +15,7 @@ import type {
   FinalizedCallTxData,
   UnsubmittedCallTxData,
 } from '@midnight-ntwrk/midnight-js-contracts';
-import { AppContext } from './app-context';
+import { AppContext } from './appContext';
 
 export function buildProviders<C extends Contract.Any>(
   ctx: AppContext,

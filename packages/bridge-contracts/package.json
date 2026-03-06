@@ -20,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@capacity-exchange/core": "1.0.0",
+    "@capacity-exchange/midnight-core": "1.0.0",
     "@midnight-ntwrk/compact-runtime": "^0.14.0",
     "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
     "@midnight-ntwrk/midnight-js-types": "3.0.0"

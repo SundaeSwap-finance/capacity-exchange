@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import { detectMidnightExtension, connectMidnightExtension } from '@capacity-exchange/core';
+import { detectMidnightExtension, connectMidnightExtension } from '@capacity-exchange/midnight-core';
 import type { WalletCapabilities } from '../types';
 import { ExtensionWalletAdapter } from './ExtensionWalletAdapter';
 

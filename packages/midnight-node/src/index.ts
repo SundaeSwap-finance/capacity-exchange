@@ -1,8 +1,11 @@
 export { requireNodeEnv } from './envNode';
-export type { Logger } from './logger';
 export { StateStore, createWalletStateStore } from './stateStore';
 export { StateWriter, type Serializable } from './stateWriter';
 export { type AppConfig, getAppConfigById } from './appConfig';
 export { createLogger } from './createLogger';
 export { checkWebSocket, checkProofServer, checkIndexerFreshness } from './connectivity';
 export { createPrivateStateProvider } from './levelPrivateStateProvider';
+export { type AppContext, createAppContext } from './appContext';
+export { type WalletContext, createWalletContext } from './walletContext';
+export { buildProviders, submitCallTxDirect, submitStatefulCallTxDirect } from './providers';
+export { withAppContext, runCli, type RunCliOptions } from './cli';

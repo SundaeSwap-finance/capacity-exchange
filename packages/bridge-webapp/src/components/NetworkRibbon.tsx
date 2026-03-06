@@ -1,4 +1,4 @@
-import type { CardanoNetwork } from '@capacity-exchange/core';
+import type { CardanoNetwork } from '@capacity-exchange/midnight-core';
 import { getCardanoNetwork } from '../lib/blockfrost';
 
 const NETWORK_COLORS: Record<CardanoNetwork, string> = {

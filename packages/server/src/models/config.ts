@@ -1,5 +1,5 @@
-import { NetworkEndpoints, WalletConnection } from '@capacity-exchange/core';
-import { StateStore } from '@capacity-exchange/core/node';
+import { NetworkEndpoints, WalletConnection } from '@capacity-exchange/midnight-core';
+import { StateStore } from '@capacity-exchange/midnight-node';
 import { PriceFormula } from '../services/price.js';
 
 export interface BaseConfig {

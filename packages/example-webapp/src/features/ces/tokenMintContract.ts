@@ -1,7 +1,7 @@
 import { findDeployedContract, createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
-import { uint8ArrayToHex } from '@capacity-exchange/core';
+import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { buildContractProviders } from './contractProviders';
 import type { NetworkConfig } from '../../config';

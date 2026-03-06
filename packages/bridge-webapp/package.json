@@ -14,7 +14,7 @@
   "dependencies": {
     "@blaze-cardano/sdk": "^0.2.31",
     "@capacity-exchange/components": "1.0.0",
-    "@capacity-exchange/core": "1.0.0",
+    "@capacity-exchange/midnight-core": "1.0.0",
     "@midnight-ntwrk/dapp-connector-api": "4.0.0",
     "@midnight-ntwrk/ledger-v7": "^7.0.0",
     "@midnight-ntwrk/midnight-js-network-id": "3.0.0",

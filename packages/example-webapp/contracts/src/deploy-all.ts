@@ -1,9 +1,9 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@capacity-exchange/components/midnight';
+import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { deploy as deployCounter } from './counter/lib/operations.js';
 import { deploy as deployTokenMint } from './token-mint/lib/operations.js';
 import { saveContractsConfig, ContractsConfig } from './lib/contracts-config.js';
-import { createLogger } from '@capacity-exchange/core/node';
+import { createLogger } from '@capacity-exchange/midnight-node';
 
 const logger = createLogger(import.meta);
 

@@ -1,6 +1,6 @@
 import { Blaze, WebWallet } from '@blaze-cardano/sdk';
 import type { CIP30Interface, Provider, Wallet } from '@blaze-cardano/sdk';
-import { lovelaceToAda, type CardanoNetwork } from '@capacity-exchange/core';
+import { lovelaceToAda, type CardanoNetwork } from '@capacity-exchange/midnight-core';
 
 export interface CardanoDisplayInfo {
   address: string;

@@ -6,8 +6,8 @@ import {
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
 import { nativeToken } from '@midnight-ntwrk/ledger-v7';
-import { WalletConnection } from '@capacity-exchange/core';
-import { StateWriter, StateStore } from '@capacity-exchange/core/node';
+import { WalletConnection } from '@capacity-exchange/midnight-core';
+import { StateWriter, StateStore } from '@capacity-exchange/midnight-node';
 
 export type WalletSyncState =
   | { status: 'syncing' }

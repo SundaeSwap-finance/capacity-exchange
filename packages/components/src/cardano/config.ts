@@ -1,5 +1,5 @@
-import type { CardanoNetwork, NetworkConfig } from '@capacity-exchange/core';
-import { toBlockfrostNetworkName } from '@capacity-exchange/core';
+import type { CardanoNetwork, NetworkConfig } from '@capacity-exchange/midnight-core';
+import { toBlockfrostNetworkName } from '@capacity-exchange/midnight-core';
 
 function requireEnv(name: string): string {
   const value = process.env[name];

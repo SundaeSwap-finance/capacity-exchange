@@ -1,5 +1,5 @@
 import { StateStore } from './stateStore';
-import type { Logger } from './logger';
+import type { Logger } from '@capacity-exchange/midnight-core';
 
 export interface Serializable {
   serialize(): string | Uint8Array;

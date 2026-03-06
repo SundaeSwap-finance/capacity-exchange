@@ -6,10 +6,10 @@ import {
   resolveWalletConfig,
   toNetworkIdEnum,
   createWallet,
-} from '@capacity-exchange/core';
+} from '@capacity-exchange/midnight-core';
 import { AppConfig, BaseConfig, schema } from '../models/config.js';
 import { getPriceFormulas, getWalletSeed } from '../utils/config.js';
-import { createWalletStateStore } from '@capacity-exchange/core/node';
+import { createWalletStateStore } from '@capacity-exchange/midnight-node';
 
 declare module 'fastify' {
   interface FastifyInstance {

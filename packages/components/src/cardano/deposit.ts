@@ -1,6 +1,6 @@
 import { Blaze, Core, makeValue, Provider, Wallet } from '@blaze-cardano/sdk';
 import { buildDepositDatum } from './datum';
-import { parseCoinPublicKey } from '@capacity-exchange/core';
+import { parseCoinPublicKey } from '@capacity-exchange/midnight-core';
 
 export interface DepositArgs {
   depositAddress: string;

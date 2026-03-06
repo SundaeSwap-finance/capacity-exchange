@@ -6,8 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./midnight": "./dist/midnight/index.js"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "clean": "rm -rf dist node_modules",
@@ -21,13 +20,7 @@
     "@blaze-cardano/data": "0.6.6",
     "@blaze-cardano/sdk": "^0.2.31",
     "@capacity-exchange/client": "1.0.0",
-    "@capacity-exchange/core": "1.0.0",
-    "@midnight-ntwrk/compact-js": "2.4.0",
-    "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
-    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.0.0",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.0.0",
-    "@midnight-ntwrk/midnight-js-network-id": "3.0.0",
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.0.0",
+    "@capacity-exchange/midnight-core": "1.0.0",
     "@midnight-ntwrk/midnight-js-types": "3.0.0",
     "@midnight-ntwrk/wallet-sdk-facade": "1.0.0"
   },

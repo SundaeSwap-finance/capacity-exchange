@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { DustWalletProvider, resolveWalletSeed, uint8ArrayToHex, type WalletKeys } from '@capacity-exchange/core';
+import { DustWalletProvider, resolveWalletSeed, uint8ArrayToHex, type WalletKeys } from '@capacity-exchange/midnight-core';
 import type { NetworkConfig } from '../../config';
 import type { WalletCapabilities } from '../wallet/types';
 import { connectSeedWallet } from '../wallet/seed/walletService';

@@ -1,10 +1,10 @@
 import * as crypto from 'crypto';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/components/midnight';
+import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
-import { deriveTokenColor, getShieldedBalance } from '@capacity-exchange/core';
+import { deriveTokenColor, getShieldedBalance } from '@capacity-exchange/midnight-core';
 import { createPrivateState } from './witnesses.js';
-import { createLogger } from '@capacity-exchange/core/node';
+import { createLogger } from '@capacity-exchange/midnight-node';
 
 const logger = createLogger(import.meta);
 

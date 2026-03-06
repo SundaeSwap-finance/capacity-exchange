@@ -1,7 +1,7 @@
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { AppContext, buildProviders, submitCallTxDirect } from '@capacity-exchange/components/midnight';
+import { AppContext, buildProviders, submitCallTxDirect } from '@capacity-exchange/midnight-node';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
-import { createLogger } from '@capacity-exchange/core/node';
+import { createLogger } from '@capacity-exchange/midnight-node';
 
 const logger = createLogger(import.meta);
 

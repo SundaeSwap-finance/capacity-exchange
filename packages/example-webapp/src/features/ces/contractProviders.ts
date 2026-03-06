@@ -3,7 +3,7 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import type { NetworkConfig } from '../../config';
-import { inMemoryPrivateStateProvider } from '@capacity-exchange/core';
+import { inMemoryPrivateStateProvider } from '@capacity-exchange/midnight-core';
 
 /**
  * Fetch wrapper that rejects HTML responses as 404.

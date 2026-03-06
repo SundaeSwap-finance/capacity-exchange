@@ -4,7 +4,7 @@ import {
   createProvider,
   toBlockfrostNetworkName,
   type CardanoNetwork,
-} from '@capacity-exchange/core';
+} from '@capacity-exchange/midnight-core';
 
 const VALID_NETWORKS: CardanoNetwork[] = ['mainnet', 'preprod', 'preview'];
 
