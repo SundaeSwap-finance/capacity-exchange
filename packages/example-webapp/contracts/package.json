@@ -13,8 +13,6 @@
     "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
     "compile": "bun run compile:counter && bun run compile:token-mint",
     "build": "tsc --noEmit",
-    "balances": "bun src/wallet/cli/balances.ts",
-    "split-night": "bun src/wallet/cli/split-night.ts",
     "counter:e2e": "bun src/counter/cli/e2e.ts",
     "counter:deploy": "bun src/counter/cli/deploy.ts",
     "counter:increment": "bun src/counter/cli/increment.ts",

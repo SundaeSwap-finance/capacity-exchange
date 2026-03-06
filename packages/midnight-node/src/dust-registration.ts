@@ -1,7 +1,7 @@
 import { type WalletFacade, FacadeState } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { WalletKeys } from '@capacity-exchange/midnight-core';
 import { DEFAULT_TTL_MS, waitForState } from '@capacity-exchange/midnight-core';
-import { createLogger } from '@capacity-exchange/midnight-node';
+import { createLogger } from './createLogger';
 
 const logger = createLogger(import.meta);
 

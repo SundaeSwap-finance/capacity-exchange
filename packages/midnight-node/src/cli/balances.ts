@@ -1,8 +1,8 @@
 import { program } from 'commander';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
-import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
-import { createLogger } from '@capacity-exchange/midnight-node';
-import { registerAllForDust, waitForDustBalance } from '../lib/dust-registration.js';
+import { runCli, withAppContext } from '../cli';
+import { createLogger } from '../createLogger';
+import { registerAllForDust, waitForDustBalance } from '../dust-registration';
 
 function bigintBalances(record: Record<string, bigint>): Record<string, string> {
   const out: Record<string, string> = {};
