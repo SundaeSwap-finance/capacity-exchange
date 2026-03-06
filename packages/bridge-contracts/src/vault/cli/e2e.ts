@@ -54,7 +54,6 @@ async function runE2E(ctx: AppContext, params: E2EParams): Promise<E2EOutput> {
 
   const depositResult = await deposit(ctx, {
     contractAddress: deployResult.contractAddress,
-    privateStateId: deployResult.privateStateId,
     keyPairs,
     domainSep,
     amount,

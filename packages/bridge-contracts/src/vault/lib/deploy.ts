@@ -14,7 +14,6 @@ export interface DeployParams {
 export interface DeployOutput {
   contractAddress: string;
   txHash: string;
-  privateStateId: string;
 }
 
 export async function deploy(ctx: AppContext, params: DeployParams): Promise<DeployOutput> {
@@ -35,6 +34,5 @@ export async function deploy(ctx: AppContext, params: DeployParams): Promise<Dep
   return {
     contractAddress,
     txHash: deployed.deployTxData.public.txHash,
-    privateStateId,
   };
 }

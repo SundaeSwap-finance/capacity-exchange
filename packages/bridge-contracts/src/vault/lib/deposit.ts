@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import {
   transientHash,
   CompactTypeField,
@@ -14,6 +15,7 @@ import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
 import { CompiledVaultContract, VaultContract, Vault } from './contract.js';
 import { type KeyPair } from './schnorr.js';
+import { createPrivateState } from './witnesses.js';
 import { vaultSignMultisig } from './vault-signing.js';
 
 const logger = createLogger(import.meta);
@@ -54,7 +56,6 @@ const depositMsgDescriptor = {
 
 export interface DepositParams {
   contractAddress: string;
-  privateStateId: string;
   keyPairs: KeyPair[];
   domainSep: string;
   amount: bigint;
@@ -98,10 +99,14 @@ function signDeposit(keyPairs: KeyPair[], message: bigint) {
 }
 
 export async function deposit(ctx: AppContext, params: DepositParams): Promise<TxResult> {
-  const { contractAddress, privateStateId, keyPairs, domainSep, amount } = params;
+  const { contractAddress, keyPairs, domainSep, amount } = params;
   logger.info(`Depositing ${amount} to vault ${contractAddress}...`);
 
   const providers = buildProviders<VaultContract>(ctx, './vault/out');
+
+  const privateStateId = crypto.randomBytes(32).toString('hex');
+  const publicKeys = keyPairs.map((kp) => kp.publicKey);
+  await providers.privateStateProvider.set(privateStateId, createPrivateState(publicKeys));
 
   const mintNonce = await queryMintNonce(providers, contractAddress);
   logger.info(`Current mintNonce: ${mintNonce}`);
@@ -112,7 +117,7 @@ export async function deposit(ctx: AppContext, params: DepositParams): Promise<T
   const { message, domainSepBytes } = computeDepositMessage(recipient, mintNonce, amount, domainSep);
   logger.info(`Deposit message hash: ${message}`);
 
-  const { signatures, challengeQuotients, publicKeys } = signDeposit(keyPairs, message);
+  const { signatures, challengeQuotients } = signDeposit(keyPairs, message);
 
   const result = await submitStatefulCallTxDirect<VaultContract, 'deposit'>(providers, {
     contractAddress,
