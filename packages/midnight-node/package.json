@@ -10,7 +10,9 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules",
+    "balances": "bun src/cli/balances.ts",
+    "split-night": "bun src/cli/split-night.ts"
   },
   "dependencies": {
     "@capacity-exchange/midnight-core": "1.0.0",
@@ -25,10 +27,13 @@
     "@midnight-ntwrk/wallet-sdk-abstractions": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
     "dotenv": "17.2.3",
+    "rxjs": "^7.5",
     "ws": "^8.18.1"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
+    "commander": "^14.0.2",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
     "typescript": "^5.9.3"
   }
 }

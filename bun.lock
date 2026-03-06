@@ -201,6 +201,7 @@
         "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
         "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
         "@scure/bip39": "^2.0.1",
+        "rxjs": "^7.5",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -222,10 +223,13 @@
         "@midnight-ntwrk/wallet-sdk-abstractions": "1.0.0",
         "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
         "dotenv": "17.2.3",
+        "rxjs": "^7.5",
         "ws": "^8.18.1",
       },
       "devDependencies": {
+        "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
         "@types/ws": "^8.18.1",
+        "commander": "^14.0.2",
         "typescript": "^5.9.3",
       },
     },

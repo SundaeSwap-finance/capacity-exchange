@@ -10,4 +10,5 @@ tools/compactc/*/
 vendor
 wallet-seed.hex
 wallet-mnemonic.txt
+.wallet-state
 .env

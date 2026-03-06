@@ -63,13 +63,9 @@ export function useTokenMintOperations(
     await run(
       'Sending',
       () =>
-        sendShieldedTokens(
-          serverWallet.walletFacade!,
-          serverWallet.keys!,
-          derivedColor,
-          shieldedAddress,
-          BigInt(sendAmount)
-        ),
+        sendShieldedTokens(serverWallet.walletFacade!, serverWallet.keys!, [
+          { type: derivedColor, receiverAddress: shieldedAddress, amount: BigInt(sendAmount) },
+        ]),
       setSendTxHash
     );
   }, [derivedColor, wallet, serverWallet, sendAmount, run]);

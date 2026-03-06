@@ -25,7 +25,8 @@
     "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
     "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
-    "@scure/bip39": "^2.0.1"
+    "@scure/bip39": "^2.0.1",
+    "rxjs": "^7.5"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
