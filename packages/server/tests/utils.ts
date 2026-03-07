@@ -6,7 +6,7 @@ export const CLIENT = new CapacityExchangeClient(BASE_URL);
 
 export const DEFAULT_REQUEST = {
   specks: '1000',
-  offerCurrency: 'lovelace',
+  offerCurrency: 'shielded:de987b69b4b5ca4f14bb77efc4afe8932de8b82426f4f75d503437058ab9d127',
 };
 
 export async function waitForLocksToRelease() {

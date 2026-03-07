@@ -1,10 +1,16 @@
 import {
+  createShieldedCoinInfo,
   DustActions,
   Intent,
+  PreBinding,
   PreProof,
   ShieldedCoinInfo,
   SignatureEnabled,
   Transaction,
+  UnprovenTransaction,
+  UnshieldedOffer,
+  UserAddress,
+  UtxoOutput,
   ZswapOffer,
   ZswapOutput,
   ZswapSecretKeys,
@@ -16,6 +22,7 @@ import {
   type UnboundTransaction,
 } from '@midnight-ntwrk/midnight-js-types';
 import { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+import { TokenType } from './price';
 
 // The server's dust-spend txs don't take zk config / circuit artifacts.
 class EmptyZKConfigProvider extends ZKConfigProvider<never> {
@@ -33,15 +40,63 @@ class EmptyZKConfigProvider extends ZKConfigProvider<never> {
 export class TxService {
   readonly #networkId: string;
   readonly #zswap: ZswapSecretKeys;
+  readonly #unshielded: UserAddress;
   readonly #proofProvider: ProofProvider;
 
-  constructor(networkId: string, zswap: ZswapSecretKeys, proofProviderUrl: string) {
+  constructor(
+    networkId: string,
+    zswap: ZswapSecretKeys,
+    unshielded: UserAddress,
+    proofProviderUrl: string,
+  ) {
     this.#networkId = networkId;
     this.#zswap = zswap;
+    this.#unshielded = unshielded;
     this.#proofProvider = httpClientProofProvider(proofProviderUrl, new EmptyZKConfigProvider());
   }
 
   async createFundingTx(
+    tokenType: TokenType,
+    token: string,
+    amount: bigint,
+    dust: UnprovenDustSpend,
+    ttl: Date,
+    segmentId?: number,
+  ): Promise<UnboundTransaction> {
+    if (tokenType === 'unshielded') {
+      const output = {
+        type: token,
+        value: amount,
+        owner: this.#unshielded,
+      };
+      return this.#createUnshieldedFundingTx(output, dust, ttl, segmentId);
+    }
+    if (tokenType === 'shielded') {
+      const coin = createShieldedCoinInfo(token, amount);
+      return this.#createShieldedFundingTx(coin, dust, ttl, segmentId);
+    }
+    throw new Error(`invalid token type: expected "shielded" or "unshielded", got "${tokenType}"`);
+  }
+
+  async #createUnshieldedFundingTx(
+    output: UtxoOutput,
+    dust: UnprovenDustSpend,
+    ttl: Date,
+    segmentId?: number,
+  ): Promise<UnboundTransaction> {
+    const intent = Intent.new(ttl);
+    intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [output], []);
+    intent.dustActions = new DustActions<SignatureEnabled, PreProof>(
+      'signature',
+      'pre-proof',
+      new Date(),
+      [dust],
+    );
+
+    return this.#buildTx(intent, undefined, segmentId);
+  }
+
+  async #createShieldedFundingTx(
     coin: ShieldedCoinInfo,
     dust: UnprovenDustSpend,
     ttl: Date,
@@ -64,9 +119,23 @@ export class TxService {
       [dust],
     );
     // TODO: pass in segmentId when we can
-    const tx = segmentId
-      ? Transaction.fromParts(this.#networkId, offer, undefined, intent)
-      : Transaction.fromPartsRandomized(this.#networkId, offer, undefined, intent);
+    return this.#buildTx(intent, offer, segmentId);
+  }
+
+  async #buildTx(
+    intent: Intent<SignatureEnabled, PreProof, PreBinding>,
+    offer?: ZswapOffer<PreProof>,
+    segmentId?: number,
+  ): Promise<UnboundTransaction> {
+    let tx: UnprovenTransaction;
+    if (segmentId) {
+      tx = Transaction.fromParts(this.#networkId, offer);
+      const intents = new Map();
+      intents.set(segmentId, intent);
+      tx.intents = intents;
+    } else {
+      tx = Transaction.fromPartsRandomized(this.#networkId, offer, undefined, intent);
+    }
     return this.#proofProvider.proveTx(tx);
   }
 }

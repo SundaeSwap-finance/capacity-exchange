@@ -4,7 +4,6 @@ import {
   Transaction,
   type SignatureEnabled,
   type Proof,
-  type PreBinding,
   type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v7';
@@ -93,12 +92,12 @@ export async function processTransactionWithOffer(
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToBytes(offer.serializedTx);
-  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
     'signature',
     'proof',
-    'pre-binding',
+    'binding',
     txBytes
-  ).bind();
+  );
   console.debug('[CESSteps] DUST transaction deserialized');
 
   console.debug('[CESSteps] Binding and merging transactions');

@@ -4,13 +4,14 @@ import { formatDust } from '../../../utils/format';
 import type { ExchangePrice, CurrencySelectionResult } from '../types';
 
 function CurrencyOption({ exchangePrice, onSelect }: { exchangePrice: ExchangePrice; onSelect: () => void }) {
+  const [_tokenType, token] = exchangePrice.price.currency.split(':', 2);
   return (
     <button
       onClick={onSelect}
       className="w-full p-3 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-left transition-colors"
     >
       <div className="flex justify-between items-center">
-        <span className="text-white font-medium font-mono text-sm break-all">{exchangePrice.price.currency}</span>
+        <span className="text-white font-medium font-mono text-sm break-all">{token}</span>
         <span className="text-dark-300 font-mono">{exchangePrice.price.amount}</span>
       </div>
     </button>
