@@ -24,9 +24,19 @@ The service can handle multiple trades at once so long as you set up your NIGHT 
 - **Reservation:** When a user asks for DUST, the service "locks" the offered DUST.
 - **Swaps:** The service creates an atomic swap tx that ensures DUST is only sent if the user pays the required ADA.
 
-## Pricing
+## Configuration
 
-Prices are configured in `price-formulas.json` (see `price-formulas.json.example` for a starting template). Each entry defines how to convert a specks amount into a price in a given currency. For example, to charge a 0.2 ADA flat fee and 1.1 ADA per 1000 DUST:
+Price and funded contract configuration are defined in a JSON file (see `price-config.example.json` for a starting template).
+
+```jsonc
+{
+  "priceFormulas": [],
+  "fundedContracts": [],
+}
+```
+###  Price Formulas
+
+Price formulas are used to calculate the cost of speck for a given currency. For example, to charge a 0.2 ADA flat fee and 1.1 ADA per 1,000 DUST:
 
 ```jsonc
 {
@@ -52,6 +62,27 @@ price = 4321 DUST * (1.1 ADA / 1000 DUST) + 0.2 ADA
       = 4,753,100 + 200,000 lovelace
       = 4,953,100 lovelace
 ```
+
+### Funded Contracts
+
+A funded contract is a contract, or some subset of circuits in a contract, that you allow users to request DUST for at no charge. For example:
+
+```jsonc
+{
+  "fundedContracts": [
+    {
+      "contractAddress": "0000000000000000000000000000000000000000000000000000000000000000",
+      "circuits": { "type": "all" }
+    },
+    {
+      "contractAddress": "0000000000000000000000000000000000000000000000000000000000000001",
+      "circuits": { "type": "subset", "circuitNames": ["trade", "deposit"] }
+    }
+  ]
+}
+```
+
+In the above configuration, any circuit at the contractAddress `0000000000000000000000000000000000000000000000000000000000000000` would be eligible for funding, while only the circuits with the names "trade" and "deposit" at `0000000000000000000000000000000000000000000000000000000000000001` would be eligible for funding.
 
 ## API
 

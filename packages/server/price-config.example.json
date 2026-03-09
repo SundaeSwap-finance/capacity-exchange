@@ -1,5 +1,5 @@
 {
-  "prices": [
+  "priceFormulas": [
     {
       "currency": "lovelace",
       "basePrice": "1000000",
@@ -12,5 +12,6 @@
       "rateNumerator": "10",
       "rateDenominator": "1000000000000000"
     }
-  ]
+  ],
+  "fundedContracts": []
 }
