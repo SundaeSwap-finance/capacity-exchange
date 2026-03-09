@@ -1,12 +1,41 @@
 import { NetworkEndpoints, WalletConnection } from '@capacity-exchange/midnight-core';
 import { StateStore } from '@capacity-exchange/midnight-node';
-import { PriceFormula } from '../services/price.js';
+import { Static, Type } from '@sinclair/typebox';
+
+export const PriceFormulaSchema = Type.Object({
+  currency: Type.String(),
+  basePrice: Type.String(),
+  rateNumerator: Type.String(),
+  rateDenominator: Type.String(),
+});
+
+export type PriceFormula = Static<typeof PriceFormulaSchema>;
+
+const CircuitFilterSchema = Type.Union([
+  Type.Object({ type: Type.Literal('all') }),
+  Type.Object({ type: Type.Literal('subset'), circuitNames: Type.Array(Type.String()) }),
+]);
+
+const FundedContractSchema = Type.Object({
+  contractAddress: Type.String(),
+  circuits: CircuitFilterSchema,
+});
+
+export type FundedContract = Static<typeof FundedContractSchema>;
+
+// I think we may need a better name than PriceConfig
+export const PriceConfigSchema = Type.Object({
+  priceFormulas: Type.Array(PriceFormulaSchema),
+  fundedContracts: Type.Array(FundedContractSchema),
+});
+
+export type PriceConfig = Static<typeof PriceConfigSchema>;
 
 export interface BaseConfig {
   MIDNIGHT_NETWORK: string;
   WALLET_SEED_FILE?: string;
   WALLET_MNEMONIC_FILE?: string;
-  PRICE_FORMULAS_FILE: string;
+  PRICE_CONFIG_FILE: string;
   PORT: number;
   LOG_LEVEL: string;
   OFFER_TTL_SECONDS: number;
@@ -18,6 +47,7 @@ export interface AppConfig extends BaseConfig {
   endpoints: NetworkEndpoints;
   WALLET_SEED: string;
   PRICE_FORMULAS: PriceFormula[];
+  FUNDED_CONTRACTS: FundedContract[];
   walletConnection: WalletConnection;
   walletStateStore: StateStore;
 }
@@ -26,7 +56,7 @@ export const schema = {
   type: 'object',
   required: [
     'MIDNIGHT_NETWORK',
-    'PRICE_FORMULAS_FILE',
+    'PRICE_CONFIG_FILE',
     'PORT',
     'LOG_LEVEL',
     'OFFER_TTL_SECONDS',
@@ -44,7 +74,7 @@ export const schema = {
     WALLET_MNEMONIC_FILE: {
       type: 'string',
     },
-    PRICE_FORMULAS_FILE: {
+    PRICE_CONFIG_FILE: {
       type: 'string',
     },
     PORT: {

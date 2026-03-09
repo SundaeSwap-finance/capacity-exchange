@@ -1,9 +1,4 @@
-export interface PriceFormula {
-  currency: string;
-  basePrice: string;
-  rateNumerator: string;
-  rateDenominator: string;
-}
+import type { PriceFormula } from '../models/config';
 
 export interface Price {
   amount: string;

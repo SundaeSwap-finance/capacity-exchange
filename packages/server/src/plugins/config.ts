@@ -8,7 +8,7 @@ import {
   createWallet,
 } from '@capacity-exchange/midnight-core';
 import { AppConfig, BaseConfig, schema } from '../models/config.js';
-import { getPriceFormulas, getWalletSeed } from '../utils/config.js';
+import { getPriceConfig, getWalletSeed } from '../utils/config.js';
 import { createWalletStateStore } from '@capacity-exchange/midnight-node';
 
 declare module 'fastify' {
@@ -44,8 +44,8 @@ export default fp(async (fastify: FastifyInstance) => {
     baseConfig.WALLET_STATE_DIR,
   );
 
-  const [priceFormulas, savedDustState] = await Promise.all([
-    getPriceFormulas(baseConfig.PRICE_FORMULAS_FILE),
+  const [priceConfig, savedDustState] = await Promise.all([
+    getPriceConfig(baseConfig.PRICE_CONFIG_FILE),
     walletStateStore.load('dust'),
   ]);
 
@@ -59,7 +59,8 @@ export default fp(async (fastify: FastifyInstance) => {
     ...baseConfig,
     endpoints,
     WALLET_SEED: walletSeed,
-    PRICE_FORMULAS: priceFormulas,
+    PRICE_FORMULAS: priceConfig.priceFormulas,
+    FUNDED_CONTRACTS: priceConfig.fundedContracts,
     walletConnection,
     walletStateStore,
   };

@@ -2,8 +2,8 @@ import { FastifyBaseLogger } from 'fastify';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parseSeedHex, parseMnemonic, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
-import { BaseConfig } from '../models/config.js';
-import { PriceFormula } from '../services/price.js';
+import { BaseConfig, PriceConfig, PriceConfigSchema } from '../models/config.js';
+import { Value } from '@sinclair/typebox/value';
 
 export const getWalletSeed = async (
   baseConfig: BaseConfig,
@@ -50,12 +50,18 @@ const loadSeedFromFile = async (config: BaseConfig): Promise<string> => {
   return seedStr.trim();
 };
 
-export const getPriceFormulas = async (priceFormulasFile: string): Promise<PriceFormula[]> => {
-  const priceFormulasStr = await readFileOrError(
-    priceFormulasFile,
-    'Failed to read price formula data from',
+export const getPriceConfig = async (priceConfigFile: string): Promise<PriceConfig> => {
+  const raw = await readFileOrError(
+    priceConfigFile,
+    'Failed to read config price config data from',
   );
-  return JSON.parse(priceFormulasStr).prices;
+
+  try {
+    return Value.Decode(PriceConfigSchema, JSON.parse(raw));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Invalid price config in ${priceConfigFile}: ${message}`);
+  }
 };
 
 const readFileOrError = async (filePath: string, errorMessagePrefix: string): Promise<string> => {
