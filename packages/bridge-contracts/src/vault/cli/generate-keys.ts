@@ -11,7 +11,7 @@ interface GenerateKeysOutput {
 function main(): Promise<GenerateKeysOutput> {
   program
     .name('vault:generate-keys')
-    .description('Generates Schnorr key pairs and saves them to a JSON file')
+    .description('[Internal] Generates Schnorr key pairs and saves them to a JSON file')
     .argument('<outputFile>', 'Path to write the key pairs JSON file')
     .argument('[count]', 'Number of key pairs to generate', '3')
     .parse();

@@ -1,7 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseDotenv } from 'dotenv';
-import { resolveEndpoints, toNetworkIdEnum, resolveWalletSeed, type NetworkEndpoints } from '@capacity-exchange/midnight-core';
+import {
+  resolveEndpoints,
+  toNetworkIdEnum,
+  resolveWalletSeed,
+  type NetworkEndpoints,
+} from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 
 export interface AppConfig {

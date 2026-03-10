@@ -6,11 +6,7 @@ import {
   CompactTypeUnsignedInteger,
 } from '@midnight-ntwrk/compact-runtime';
 import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger-v7';
-import {
-  AppContext,
-  buildProviders,
-  submitStatefulCallTxDirect,
-} from '@capacity-exchange/midnight-node';
+import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
 import { CompiledVaultContract, VaultContract, Vault } from './contract.js';

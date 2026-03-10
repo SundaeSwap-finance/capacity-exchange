@@ -5,7 +5,7 @@ import { listWithdrawalRequests, WithdrawalEntry } from '../lib/list-withdrawal-
 function main(): Promise<WithdrawalEntry[]> {
   program
     .name('vault:list-withdrawal-requests')
-    .description('Lists pending withdrawal requests from a deployed vault contract')
+    .description('[Internal] Lists pending withdrawal requests from a deployed vault contract')
     .argument('<contractAddress>', 'Address of the deployed vault contract')
     .parse();
 

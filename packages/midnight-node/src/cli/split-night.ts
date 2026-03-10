@@ -5,7 +5,9 @@ import { splitAndRegister, type SplitNightOutput } from '../split-night';
 function main(): Promise<SplitNightOutput> {
   program
     .name('split-night')
-    .description('Splits unshielded NIGHT balance into N UTxOs of approximately equal size (one UTxO may contain the remainder/change; handles dust de/re-registration)')
+    .description(
+      'Splits unshielded NIGHT balance into N UTxOs of approximately equal size (one UTxO may contain the remainder/change; handles dust de/re-registration)'
+    )
     .argument('<networkId>', 'Network ID (e.g., preview, preprod)')
     .argument('<count>', 'Target number of UTxOs to create')
     .parse();

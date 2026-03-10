@@ -7,7 +7,7 @@ import { loadKeyPairs } from '../lib/schnorr.js';
 function main(): Promise<TxResult> {
   program
     .name('vault:deposit')
-    .description('Deposits tokens into a deployed vault via multisig signatures')
+    .description('[Internal] Deposits tokens into a deployed vault via multisig signatures')
     .argument('<contractAddress>', 'Address of the deployed vault contract')
     .argument('<keysFile>', 'JSON file with key pairs from vault:generate-keys')
     .argument('<amount>', 'Amount to deposit (in atomic units)')
@@ -19,9 +19,7 @@ function main(): Promise<TxResult> {
   const amount = BigInt(amountStr);
   const keyPairs = loadKeyPairs(keysFile);
 
-  return withAppContext(networkId, (ctx) =>
-    deposit(ctx, { contractAddress, keyPairs, domainSep, amount })
-  );
+  return withAppContext(networkId, (ctx) => deposit(ctx, { contractAddress, keyPairs, domainSep, amount }));
 }
 
 runCli(main);

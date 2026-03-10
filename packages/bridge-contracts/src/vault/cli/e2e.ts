@@ -13,7 +13,6 @@ interface E2EParams {
   amount: bigint;
   domainSep: string;
   cardanoAddress: string;
-  datumHash?: string;
 }
 
 interface E2EOutput {
@@ -26,28 +25,25 @@ interface E2EOutput {
 function parseArgs(): E2EParams {
   program
     .name('vault:e2e')
-    .description('Deploys a vault, deposits tokens, and requests a withdrawal')
+    .description('[Internal] Deploys a vault, deposits tokens, and requests a withdrawal')
     .argument('<keysFile>', 'JSON file with key pairs from vault:generate-keys')
     .argument('<amount>', 'Amount to deposit and withdraw (in atomic units)')
     .argument('<domainSep>', 'Domain separator (64-char hex)')
     .argument('<cardanoAddress>', 'Cardano address to withdraw to (hex)')
-    .option('--datum-hash <hash>', 'Optional datum hash (hex)')
     .parse();
 
   const [keysFile, amountStr, domainSep, cardanoAddress] = program.args;
-  const opts = program.opts<{ datumHash?: string }>();
 
   return {
     keyPairs: loadKeyPairs(keysFile),
     amount: BigInt(amountStr),
     domainSep,
     cardanoAddress,
-    datumHash: opts.datumHash,
   };
 }
 
 async function runE2E(ctx: AppContext, params: E2EParams): Promise<E2EOutput> {
-  const { keyPairs, amount, domainSep, cardanoAddress, datumHash } = params;
+  const { keyPairs, amount, domainSep, cardanoAddress } = params;
   const publicKeys = keyPairs.map((kp) => kp.publicKey);
 
   const deployResult = await deploy(ctx, { publicKeys });
@@ -64,7 +60,6 @@ async function runE2E(ctx: AppContext, params: E2EParams): Promise<E2EOutput> {
     amount,
     domainSep,
     cardanoAddress,
-    datumHash,
   });
 
   const withdrawalRequests = await listWithdrawalRequests(ctx, deployResult.contractAddress);

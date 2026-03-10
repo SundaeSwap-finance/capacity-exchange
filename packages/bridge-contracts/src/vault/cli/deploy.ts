@@ -6,7 +6,7 @@ import { loadKeyPairs } from '../lib/schnorr.js';
 function main(): Promise<DeployOutput> {
   program
     .name('vault:deploy')
-    .description('Deploys a new vault contract with multisig public keys')
+    .description('[Internal] Deploys a new vault contract with multisig public keys')
     .argument('<keysFile>', 'JSON file with key pairs from vault:generate-keys')
     .parse();
 

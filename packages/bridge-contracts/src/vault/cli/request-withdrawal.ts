@@ -11,12 +11,10 @@ function main(): Promise<TxResult> {
     .argument('<amount>', 'Withdrawal amount (in atomic units)')
     .argument('<domainSep>', 'Domain separator (hex)')
     .argument('<cardanoAddress>', 'Cardano address to withdraw to (hex)')
-    .option('--datum-hash <hash>', 'Optional datum hash (hex)')
     .parse();
 
   const networkId = requireNetworkId();
   const [contractAddress, amountStr, domainSep, cardanoAddress] = program.args;
-  const opts = program.opts<{ datumHash?: string }>();
 
   return withAppContext(networkId, (ctx) =>
     requestWithdrawal(ctx, {
@@ -24,7 +22,6 @@ function main(): Promise<TxResult> {
       amount: BigInt(amountStr),
       domainSep,
       cardanoAddress,
-      datumHash: opts.datumHash,
     })
   );
 }

@@ -9,5 +9,10 @@ export { type AppContext, createAppContext } from './appContext';
 export { type WalletContext, createWalletContext } from './walletContext';
 export { buildProviders, submitCallTxDirect, submitStatefulCallTxDirect } from './providers';
 export { withAppContext, runCli, requireNetworkId, type RunCliOptions } from './cli';
-export { registerAllForDust, registerEachForDust, deregisterAllFromDust, waitForDustBalance } from './dust-registration';
+export {
+  registerAllForDust,
+  registerEachForDust,
+  deregisterAllFromDust,
+  waitForDustBalance,
+} from './dust-registration';
 export { splitAndRegister, type SplitNightOutput } from './split-night';
