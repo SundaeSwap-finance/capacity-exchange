@@ -5,6 +5,8 @@ import {
   ShieldedCoinInfo,
   SignatureEnabled,
   Transaction,
+  type UnprovenIntent,
+  type UnprovenTransaction,
   ZswapOffer,
   ZswapOutput,
   ZswapSecretKeys,
@@ -20,13 +22,13 @@ import { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 // The server's dust-spend txs don't take zk config / circuit artifacts.
 class EmptyZKConfigProvider extends ZKConfigProvider<never> {
   getZKIR(): Promise<never> {
-    throw new Error('No ZK circuits in funding transactions');
+    throw new Error('No ZK circuits in dust transactions');
   }
   getProverKey(): Promise<never> {
-    throw new Error('No ZK circuits in funding transactions');
+    throw new Error('No ZK circuits in dust transactions');
   }
   getVerifierKey(): Promise<never> {
-    throw new Error('No ZK circuits in funding transactions');
+    throw new Error('No ZK circuits in dust transactions');
   }
 }
 
@@ -41,7 +43,22 @@ export class TxService {
     this.#proofProvider = httpClientProofProvider(proofProviderUrl, new EmptyZKConfigProvider());
   }
 
-  async createFundingTx(
+  buildDustIntent(dust: UnprovenDustSpend, ttl: Date): UnprovenIntent {
+    const intent = Intent.new(ttl);
+    intent.dustActions = new DustActions<SignatureEnabled, PreProof>(
+      'signature',
+      'pre-proof',
+      new Date(),
+      [dust],
+    );
+    return intent;
+  }
+
+  async proveTx(tx: UnprovenTransaction): Promise<UnboundTransaction> {
+    return this.#proofProvider.proveTx(tx);
+  }
+
+  async createOfferTx(
     coin: ShieldedCoinInfo,
     dust: UnprovenDustSpend,
     ttl: Date,
@@ -55,18 +72,12 @@ export class TxService {
       this.#zswap.encryptionPublicKey,
     );
     const offer = ZswapOffer.fromOutput(output, coin.type, coin.value);
+    const intent = this.buildDustIntent(dust, ttl);
 
-    const intent = Intent.new(ttl);
-    intent.dustActions = new DustActions<SignatureEnabled, PreProof>(
-      'signature',
-      'pre-proof',
-      new Date(),
-      [dust],
-    );
     // TODO: pass in segmentId when we can
     const tx = segmentId
       ? Transaction.fromParts(this.#networkId, offer, undefined, intent)
       : Transaction.fromPartsRandomized(this.#networkId, offer, undefined, intent);
-    return this.#proofProvider.proveTx(tx);
+    return this.proveTx(tx);
   }
 }
