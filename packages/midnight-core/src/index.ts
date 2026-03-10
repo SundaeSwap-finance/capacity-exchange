@@ -42,4 +42,5 @@ export {
 export { deriveTokenColor } from './tokenColor';
 export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens';
 export { getShieldedBalance } from './getShieldedBalance';
+export { getLedgerParameters } from './getLedgerParameters';
 export { waitForState } from './waitForState';
