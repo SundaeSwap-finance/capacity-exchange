@@ -9,7 +9,7 @@ export interface UtxoLockInfo {
   expiresAtMillis: number;
 }
 
-// I don't love this living here, but I'm not sure where else it could/should live
+// TODO: decide if this the wallet service to own this type and actually return it
 export type WalletUnavailableResult =
   | { status: 'insufficient-funds'; requested: bigint }
   | { status: 'wallet-syncing' }
