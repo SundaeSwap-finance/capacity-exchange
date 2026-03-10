@@ -75,7 +75,7 @@ export class OfferService {
         // Create Offer
         const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
         const expiration = new Date(lockedInfo.expiresAtMillis);
-        const tx = await this.txService.createFundingTx(
+        const tx = await this.txService.createOfferTx(
           coin,
           lockedInfo.spend,
           expiration,
