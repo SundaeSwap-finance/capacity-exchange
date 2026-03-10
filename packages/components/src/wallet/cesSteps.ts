@@ -9,8 +9,8 @@ import {
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v7';
 import type { ExchangePrice, Offer } from './types';
-import { getLedgerParameters, isOfferExpired } from './utils';
-import { hexToBytes, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
+import { isOfferExpired } from './utils';
+import { getLedgerParameters, hexToBytes, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 import { createExchangeApis } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@capacity-exchange/client';

@@ -8,8 +8,8 @@ import {
   type TestContext,
 } from './setup/capacityExchangeWalletProviderSetup';
 
-vi.mock('../src/wallet/utils', async () => {
-  const actual = await vi.importActual('../src/wallet/utils');
+vi.mock('@capacity-exchange/midnight-core', async () => {
+  const actual = await vi.importActual('@capacity-exchange/midnight-core');
   return {
     ...actual,
     getLedgerParameters: vi.fn().mockResolvedValue({} as any),
