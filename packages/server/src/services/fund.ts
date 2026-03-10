@@ -10,7 +10,7 @@ import {
 } from '@midnight-ntwrk/ledger-v7';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
-import { UtxoService } from './utxo.js';
+import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import type { FundedContract } from '../models/config.js';
 
@@ -19,10 +19,7 @@ const FEE_MARGIN_BLOCKS = 2;
 export type FundTxResult =
   | { status: 'ok'; tx: FinalizedTransaction }
   | { status: 'ineligible' }
-  | { status: 'insufficient-funds'; requested: bigint }
-  | { status: 'wallet-syncing' }
-  | { status: 'wallet-sync-failed'; error: string }
-  | { status: 'illegal-state'; error: string };
+  | WalletUnavailableResult;
 
 export class FundService {
   private readonly utxoService: UtxoService;
@@ -58,17 +55,8 @@ export class FundService {
     );
 
     const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
-    switch (lockResult.status) {
-      case 'insufficient-funds':
-        return { status: 'insufficient-funds', requested: lockResult.requested };
-      case 'wallet-syncing':
-        return { status: 'wallet-syncing' };
-      case 'wallet-sync-failed':
-        return { status: 'wallet-sync-failed', error: lockResult.error };
-      case 'illegal-state':
-        return { status: 'illegal-state', error: lockResult.error };
-      case 'ok':
-        break;
+    if (lockResult.status !== 'ok') {
+      return lockResult;
     }
 
     const { spend, expiresAtMillis } = lockResult.value;
@@ -135,5 +123,4 @@ export class FundService {
       return fc.circuits.circuitNames.includes(entryPoint);
     });
   }
-
 }

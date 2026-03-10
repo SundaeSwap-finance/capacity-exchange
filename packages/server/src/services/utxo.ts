@@ -9,12 +9,14 @@ export interface UtxoLockInfo {
   expiresAtMillis: number;
 }
 
-export type LockUtxoResult =
-  | { status: 'ok'; value: UtxoLockInfo }
+// I don't love this living here, but I'm not sure where else it could/should live
+export type WalletUnavailableResult =
   | { status: 'insufficient-funds'; requested: bigint }
   | { status: 'wallet-syncing' }
   | { status: 'wallet-sync-failed'; error: string }
   | { status: 'illegal-state'; error: string };
+
+export type LockUtxoResult = { status: 'ok'; value: UtxoLockInfo } | WalletUnavailableResult;
 
 /**
  * Manages DUST UTxO locking and lifecycle.

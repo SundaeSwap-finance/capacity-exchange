@@ -1,5 +1,5 @@
 import { FastifyBaseLogger } from 'fastify';
-import { UtxoService } from './utxo.js';
+import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
 import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v7';
@@ -20,11 +20,8 @@ export interface OfferResponse {
 
 export type CreateOfferResult =
   | { status: 'ok'; offer: OfferResponse }
-  | { status: 'insufficient-funds'; requested: bigint }
-  | { status: 'wallet-syncing' }
-  | { status: 'wallet-sync-failed'; error: string }
   | { status: 'unsupported-currency'; currency: string }
-  | { status: 'illegal-state'; error: string };
+  | WalletUnavailableResult;
 
 /**
  * Manages the exchange offer logic.
@@ -52,46 +49,37 @@ export class OfferService {
     this.logger.debug({ specks: specks.toString() }, 'Processing offer request');
 
     const result = this.utxoService.lockUtxo(specks);
-
-    switch (result.status) {
-      case 'insufficient-funds':
-        return { status: 'insufficient-funds', requested: result.requested };
-      case 'wallet-syncing':
-        return { status: 'wallet-syncing' };
-      case 'wallet-sync-failed':
-        return { status: 'wallet-sync-failed', error: result.error };
-      case 'illegal-state':
-        return { status: 'illegal-state', error: result.error };
-      case 'ok': {
-        const lockedInfo = result.value;
-        const getPriceResult = this.priceService.getPrice(request.offerCurrency, specks);
-        if (getPriceResult.status === 'unsupported-currency') {
-          return {
-            status: 'unsupported-currency',
-            currency: request.offerCurrency,
-          };
-        }
-
-        // Create Offer
-        const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
-        const expiration = new Date(lockedInfo.expiresAtMillis);
-        const tx = await this.txService.createOfferTx(
-          coin,
-          lockedInfo.spend,
-          expiration,
-          request.segmentId,
-        );
-
-        const offer: OfferResponse = {
-          offerId: lockedInfo.id,
-          offerAmount: getPriceResult.price.toString(),
-          offerCurrency: request.offerCurrency,
-          serializedTx: Buffer.from(tx.serialize()).toString('hex'),
-          expiresAt: expiration.toISOString(),
-        };
-
-        return { status: 'ok', offer };
-      }
+    if (result.status !== 'ok') {
+      return result;
     }
+
+    const lockedInfo = result.value;
+    const getPriceResult = this.priceService.getPrice(request.offerCurrency, specks);
+    if (getPriceResult.status === 'unsupported-currency') {
+      return {
+        status: 'unsupported-currency',
+        currency: request.offerCurrency,
+      };
+    }
+
+    // Create Offer
+    const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
+    const expiration = new Date(lockedInfo.expiresAtMillis);
+    const tx = await this.txService.createOfferTx(
+      coin,
+      lockedInfo.spend,
+      expiration,
+      request.segmentId,
+    );
+
+    const offer: OfferResponse = {
+      offerId: lockedInfo.id,
+      offerAmount: getPriceResult.price.toString(),
+      offerCurrency: request.offerCurrency,
+      serializedTx: Buffer.from(tx.serialize()).toString('hex'),
+      expiresAt: expiration.toISOString(),
+    };
+
+    return { status: 'ok', offer };
   }
 }
