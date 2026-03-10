@@ -7,6 +7,7 @@ import {
   type Signaturish,
   type Bindingish,
   type Transaction,
+  Intent,
 } from '@midnight-ntwrk/ledger-v7';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
@@ -87,23 +88,19 @@ export class FundService {
       return false;
     }
 
-    for (const [, intent] of intents) {
-      const actions = intent.actions;
-      if (actions.length === 0) {
-        return false;
-      }
-
-      for (const action of actions) {
-        if (!this.isActionFunded(action)) {
-          return false;
-        }
-      }
-    }
-
-    return true;
+    return Array.from(intents.values()).every(this.isIntentEligible);
   }
 
-  private isActionFunded(action: ContractAction<Proofish>): boolean {
+  private isIntentEligible<S extends Signaturish, P extends Proofish, B extends Bindingish>(
+    intent: Intent<S, P, B>,
+  ): boolean {
+    if (intent.actions.length === 0) {
+      return false;
+    }
+    return intent.actions.every(this.isActionEligible);
+  }
+
+  private isActionEligible(action: ContractAction<Proofish>): boolean {
     if (!(action instanceof ContractCall)) {
       return false;
     }
@@ -120,7 +117,15 @@ export class FundService {
       if (fc.circuits.type === 'all') {
         return true;
       }
-      return fc.circuits.circuitNames.includes(entryPoint);
+      if (fc.circuits.type === 'subset') {
+        return fc.circuits.circuitNames.includes(entryPoint);
+      }
+
+      // This ensures that if we modify the circuits schema, we have a compile time error
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _exhaustive: never = fc.circuits;
+
+      return false;
     });
   }
 }
