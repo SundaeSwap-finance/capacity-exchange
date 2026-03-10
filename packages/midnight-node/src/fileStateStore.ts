@@ -57,8 +57,6 @@ export class FileStateStore implements StateStore {
     }
   }
 
-  async flush(): Promise<void> {}
-
   #filePath(name: string): string {
     return path.join(this.#dir, `${name}.data`);
   }

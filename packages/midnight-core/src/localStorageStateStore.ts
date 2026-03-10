@@ -14,6 +14,4 @@ export class LocalStorageStateStore implements StateStore {
   async clear(name: string): Promise<void> {
     localStorage.removeItem(name);
   }
-
-  async flush(): Promise<void> {}
 }

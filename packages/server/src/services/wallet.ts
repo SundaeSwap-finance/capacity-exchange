@@ -54,9 +54,7 @@ export class WalletService {
         ) {
           this.logger.info({ coins: dustWalletState.totalCoins.length }, 'Wallet syncing...');
         }
-        this.walletStateStore.saveWalletState(walletFacade).catch((err) => {
-          this.logger.error(err, 'Failed to save wallet state');
-        });
+        this.walletStateStore.saveWalletState(walletFacade);
       },
       error: (err) => {
         this.logger.error(err, 'DUST wallet state subscription error');

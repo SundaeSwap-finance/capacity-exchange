@@ -41,7 +41,7 @@ export {
   createProvider,
   isTransactionConfirmed,
 } from './cardano';
-export { type StateStore, withPrefix, withDebounce } from './stateStore';
+export { type StateStore, withPrefix } from './stateStore';
 export { LocalStorageStateStore } from './localStorageStateStore';
 export { deriveTokenColor } from './tokenColor';
 export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens';

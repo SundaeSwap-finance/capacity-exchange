@@ -14,9 +14,7 @@
   },
   "dependencies": {
     "@blaze-cardano/sdk": "^0.2.31",
-    "@midnight-ntwrk/compact-js": "2.4.0",
     "@midnight-ntwrk/compact-runtime": "^0.14.0",
-    "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
     "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
     "@midnight-ntwrk/ledger-v7": "7.0.0",
     "@midnight-ntwrk/midnight-js-types": "3.0.0",
