@@ -1,7 +1,6 @@
 import { FastifyBaseLogger } from 'fastify';
 import {
   ContractCall,
-  LedgerParameters,
   type ContractAction,
   type FinalizedTransaction,
   type Proofish,
@@ -10,6 +9,7 @@ import {
   type Transaction,
 } from '@midnight-ntwrk/ledger-v7';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import { getLedgerParameters } from '@capacity-exchange/midnight-core';
 import { UtxoService } from './utxo.js';
 import { TxService } from './tx.js';
 import type { FundedContract } from '../models/config.js';
@@ -50,7 +50,7 @@ export class FundService {
       return { status: 'ineligible' };
     }
 
-    const ledgerParams = await this.fetchLedgerParameters();
+    const ledgerParams = await getLedgerParameters(this.indexerUrl);
     const estimatedSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS);
     this.logger.debug(
       { estimatedSpecks: estimatedSpecks.toString() },
@@ -136,15 +136,4 @@ export class FundService {
     });
   }
 
-  private async fetchLedgerParameters(): Promise<LedgerParameters> {
-    const query = `query BlockQuery { block { ledgerParameters } }`;
-    const response = await fetch(this.indexerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-    const result = (await response.json()) as { data: { block: { ledgerParameters: string } } };
-    const bytes = Buffer.from(result.data.block.ledgerParameters, 'hex');
-    return LedgerParameters.deserialize(bytes);
-  }
 }
