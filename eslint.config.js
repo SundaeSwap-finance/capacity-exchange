@@ -10,6 +10,11 @@ export default tseslint.config(
     ignores: ['**/dist/**', '**/out/**', '**/node_modules/**', '**/generated/**', 'vendor/**', '**/jest.config.js'],
   },
   {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       'max-len': [
         'error',
