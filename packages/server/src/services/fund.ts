@@ -122,7 +122,7 @@ export class FundService {
       }
 
       // This ensures that if we modify the circuits schema, we have a compile time error
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       const _exhaustive: never = fc.circuits;
 
       return false;
