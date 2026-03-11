@@ -18,5 +18,6 @@ export {
   ErrorModal,
 } from './modals';
 export { useCesTransaction, type UseCesTransactionResult } from './useCesTransaction';
-export { getCounterValue, type GetCounterValueResult } from './counterContract';
+export { useFundedTransaction, type UseFundedTransactionResult } from './useFundedTransaction';
+export { getCounterValue, incrementCounter, type GetCounterValueResult } from './counterContract';
 export { findAndMintTokens } from './tokenMintContract';
