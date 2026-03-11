@@ -1,0 +1,16 @@
+{
+  "prices": [
+    {
+      "currency": "b6c0b47e5ff33662210650594ff614e2c4421405d55add59dc21355b29113865",
+      "basePrice": "12",
+      "rateNumerator": "11",
+      "rateDenominator": "1000000000000000"
+    },
+    {
+      "currency": "satoshi",
+      "basePrice": "1000",
+      "rateNumerator": "10",
+      "rateDenominator": "1000000000000000"
+    }
+  ]
+}

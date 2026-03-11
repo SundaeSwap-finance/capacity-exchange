@@ -8,6 +8,7 @@ import { hexToBytes, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
+// TODO: Replace with createConnectedAPI from @capacity-exchange/midnight-core
 /**
  * Creates a ConnectedAPI adapter for seed wallets.
  * Implements the subset of ConnectedAPI needed for CES flow.

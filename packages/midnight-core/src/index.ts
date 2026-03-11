@@ -4,15 +4,14 @@ export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';
 export { resolveWalletConfig, type WalletConfig } from './walletConfig.js';
+export { createWallet, type CreateWalletOptions, type WalletConnection } from './walletFacade.js';
 export {
-  createWallet,
   startAndSyncWallet,
   createAndSyncWallet,
   createAndSyncWalletWithStore,
+  createWalletFromMnemonic,
   WalletSyncTimeoutError,
-  type CreateWalletOptions,
-  type CreateAndSyncWalletOptions,
-  type WalletConnection,
+  type CreateWalletFromMnemonicOptions,
 } from './wallet.js';
 export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
 export type { Logger } from './logger.js';
@@ -49,3 +48,4 @@ export { getShieldedBalance } from './getShieldedBalance.js';
 export { getLedgerParameters } from './getLedgerParameters.js';
 export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
+export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';

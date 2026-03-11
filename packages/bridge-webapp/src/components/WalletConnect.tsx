@@ -1,19 +1,31 @@
 // TODO: Move to shared frontend package (SUNDAE-2355)
-import type { ReactNode } from 'react';
 import type { WalletState } from '../hooks/useWallet';
+import { ConnectDropdown, type ConnectOption } from './ConnectDropdown';
+
+export type { ConnectOption };
 
 interface WalletConnectProps<T> {
   label: string;
+  connectingLabel?: string;
   wallet: WalletState<T>;
-  renderConnected: (data: T) => ReactNode;
+  connectOptions: ConnectOption[];
+  address?: string;
+  balance?: string;
 }
 
-export function WalletConnect<T>({ label, wallet, renderConnected }: WalletConnectProps<T>) {
+export function WalletConnect<T>({
+  label,
+  connectingLabel,
+  wallet,
+  connectOptions,
+  address,
+  balance,
+}: WalletConnectProps<T>) {
   if (wallet.status === 'connecting') {
     return (
       <div className="chip gap-2">
         <div className="spinner" />
-        <span className="text-dark-400">Connecting {label}…</span>
+        <span className="text-dark-400">{connectingLabel ?? `Connecting ${label}…`}</span>
       </div>
     );
   }
@@ -23,8 +35,18 @@ export function WalletConnect<T>({ label, wallet, renderConnected }: WalletConne
       <div className="chip gap-3">
         <div>
           <span className="text-dark-200 font-medium">{label}</span>
-          <span className="separator">|</span>
-          {renderConnected(wallet.data)}
+          {address && (
+            <>
+              <span className="separator">|</span>
+              <span className="text-muted-xs font-mono">{address}</span>
+            </>
+          )}
+          {balance && (
+            <>
+              <span className="separator">|</span>
+              <span className="text-dark-200 text-xs font-medium">{balance}</span>
+            </>
+          )}
         </div>
         <button onClick={wallet.disconnect} className="btn-sm">
           Disconnect
@@ -34,11 +56,6 @@ export function WalletConnect<T>({ label, wallet, renderConnected }: WalletConne
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button onClick={wallet.connect} className="btn">
-        Connect {label} Wallet
-      </button>
-      {wallet.status === 'error' && wallet.error && <p className="text-red-400 text-xs max-w-xs">{wallet.error}</p>}
-    </div>
+    <ConnectDropdown label={label} error={wallet.status === 'error' ? wallet.error : null} options={connectOptions} />
   );
 }
