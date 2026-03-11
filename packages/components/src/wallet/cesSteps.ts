@@ -11,7 +11,7 @@ import {
 import type { ExchangePrice, Offer } from './types';
 import { isOfferExpired } from './utils';
 import { getLedgerParameters, hexToBytes, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
-import { createExchangeApis } from './exchangeApi';
+import { createCesApis } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@capacity-exchange/client';
 import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
@@ -48,7 +48,7 @@ export async function fetchCesPrices(
   const specksRequired = tx.feesWithMargin(ledgerParameters, margin);
   console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString());
 
-  const exchangeApis = createExchangeApis(capacityExchangeUrls);
+  const exchangeApis = createCesApis(capacityExchangeUrls);
   const prices = await fetchPricesFromExchanges(exchangeApis, specksRequired);
 
   if (prices.length === 0) {

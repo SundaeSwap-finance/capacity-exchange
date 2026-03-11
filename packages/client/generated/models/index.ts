@@ -1,5 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './ApiFundPost200Response';
+export * from './ApiFundPostRequest';
 export * from './ApiOffersPost201Response';
 export * from './ApiOffersPostRequest';
 export * from './ApiPricesGet200Response';

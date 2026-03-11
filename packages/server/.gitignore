@@ -8,7 +8,9 @@
 dist
 node_modules
 price-formulas.json
+price-config.json
 wallet-mnemonic.txt
 wallet-seed.hex
 midnight-level-db/
 .wallet-state/
+wallet-state/

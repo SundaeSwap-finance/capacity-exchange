@@ -1,5 +1,7 @@
 apis/DefaultApi.ts
 apis/index.ts
+docs/ApiFundPost200Response.md
+docs/ApiFundPostRequest.md
 docs/ApiOffersPost201Response.md
 docs/ApiOffersPostRequest.md
 docs/ApiPricesGet200Response.md
@@ -13,6 +15,8 @@ docs/HealthReadyGet200Response.md
 docs/HealthReadyGet200ResponseIndexer.md
 docs/HealthReadyGet200ResponseWallet.md
 index.ts
+models/ApiFundPost200Response.ts
+models/ApiFundPostRequest.ts
 models/ApiOffersPost201Response.ts
 models/ApiOffersPostRequest.ts
 models/ApiPricesGet200Response.ts
