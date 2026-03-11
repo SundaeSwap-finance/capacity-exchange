@@ -1,6 +1,7 @@
 import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
   DEFAULT_MARGIN,
@@ -40,11 +41,14 @@ export async function getCounterValue(contractAddress: string, config: NetworkCo
   };
 }
 
-export async function findAndIncrementCounter(
+/**
+ * Finds a deployed counter contract and submits an increment transaction
+ * using the provided wallet provider for balancing.
+ */
+export async function incrementCounter(
   providers: BrowserProviders,
   contractAddress: string,
-  promptForCurrency: PromptForCurrency,
-  confirmOffer: ConfirmOffer,
+  walletProvider: WalletProvider,
   config: NetworkConfig
 ) {
   const { contractProviders } = buildContractProviders<CounterCircuitId>(
@@ -54,17 +58,7 @@ export async function findAndIncrementCounter(
     config
   );
 
-  const cesWalletProvider = capacityExchangeWalletProvider({
-    walletProvider: providers.walletProvider,
-    connectedAPI: providers.connectedAPI,
-    indexerUrl: config.indexerUrl,
-    capacityExchangeUrls: [config.capacityExchangeUrl],
-    margin: DEFAULT_MARGIN,
-    promptForCurrency,
-    confirmOffer,
-  });
-
-  contractProviders.walletProvider = cesWalletProvider;
+  contractProviders.walletProvider = walletProvider;
 
   await findDeployedContract(contractProviders, {
     compiledContract: compiledCounterContract,
@@ -75,4 +69,27 @@ export async function findAndIncrementCounter(
     contractAddress,
     circuitId: 'increment' as CounterCircuitId,
   });
+}
+
+/**
+ * Convenience wrapper that builds a CES wallet provider and increments the counter.
+ */
+export async function findAndIncrementCounter(
+  providers: BrowserProviders,
+  contractAddress: string,
+  promptForCurrency: PromptForCurrency,
+  confirmOffer: ConfirmOffer,
+  config: NetworkConfig
+) {
+  const cesWalletProvider = capacityExchangeWalletProvider({
+    walletProvider: providers.walletProvider,
+    connectedAPI: providers.connectedAPI,
+    indexerUrl: config.indexerUrl,
+    capacityExchangeUrls: [config.capacityExchangeUrl],
+    margin: DEFAULT_MARGIN,
+    promptForCurrency,
+    confirmOffer,
+  });
+
+  return incrementCounter(providers, contractAddress, cesWalletProvider, config);
 }

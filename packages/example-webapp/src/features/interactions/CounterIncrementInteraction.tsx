@@ -2,10 +2,12 @@ import { Button, Card, Message } from '../../shared/ui';
 import { useContractContext } from '../contract/ContractContext';
 import type { WalletCapabilities, WalletConnection } from '../wallet/types';
 import { useCesTransaction } from '../ces';
+import { useFundedTransaction } from '../ces/useFundedTransaction';
 import { useCesReadiness } from './useCesReadiness';
 import { useBrowserProviders } from './useBrowserProviders';
 import { ReadinessMessages } from './ReadinessMessages';
 import { CesTransactionFeedback } from './CesTransactionFeedback';
+import { FundedTransactionFeedback } from './FundedTransactionFeedback';
 
 interface CounterIncrementInteractionProps {
   wallet: WalletCapabilities | null;
@@ -20,12 +22,15 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
   const cesReadiness = useCesReadiness(tokenColor);
   const { providers, walletInfo } = useBrowserProviders(wallet, walletConnection);
   const ces = useCesTransaction(providers, contractAddress);
+  const funded = useFundedTransaction(providers, contractAddress);
 
   const walletConnected = wallet !== null && walletConnection !== null;
   const hasTokenBalance =
     walletInfo.status === 'ready' && tokenColor !== null && (walletInfo.data.shieldedBalances[tokenColor] ?? 0n) > 0n;
   const cesReady = cesReadiness.status === 'ready' && cesReadiness.hasCurrency;
-  const isProcessing = ces.status !== 'idle' && ces.status !== 'success' && ces.status !== 'error';
+  const isCesProcessing = ces.status !== 'idle' && ces.status !== 'success' && ces.status !== 'error';
+  const isFundedProcessing = funded.status !== 'idle' && funded.status !== 'success' && funded.status !== 'error';
+  const isProcessing = isCesProcessing || isFundedProcessing;
   const canIncrement =
     walletConnected && contractAddress !== null && providers !== null && cesReady && hasTokenBalance && !isProcessing;
 
@@ -47,10 +52,16 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
         />
 
         <Button variant="blue" fullWidth onClick={ces.incrementCounter} disabled={!canIncrement || isProcessing}>
-          {isProcessing ? 'Processing...' : 'Increment Counter (via CES)'}
+          {isCesProcessing ? 'Processing...' : 'Increment Counter (via CES)'}
         </Button>
 
         <CesTransactionFeedback ces={ces} />
+
+        <Button variant="purple" fullWidth onClick={funded.incrementCounter} disabled={!canIncrement || isProcessing}>
+          {isFundedProcessing ? 'Processing...' : 'Increment Counter (Funded)'}
+        </Button>
+
+        <FundedTransactionFeedback funded={funded} />
       </div>
     </Card>
   );
