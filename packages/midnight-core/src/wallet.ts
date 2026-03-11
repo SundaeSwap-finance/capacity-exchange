@@ -1,16 +1,18 @@
-import { DustWallet, type DustWallet as DustWalletType } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { ShieldedWallet, type ShieldedWallet as ShieldedWalletType } from '@midnight-ntwrk/wallet-sdk-shielded';
 import {
   UnshieldedWallet,
-  InMemoryTransactionHistoryStorage,
+  NoOpTransactionHistoryStorage,
   PublicKey,
 } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+import { DustWallet, type DustWallet as DustWalletType } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v7';
 import { deriveWalletKeys, type WalletKeys } from './keys';
 import { DustWalletProvider } from './dustWalletProvider';
 import { DUST_PARAMS } from './params';
 import type { WalletConfig } from './walletConfig';
+import type { StateStore } from './stateStore';
+import { WalletStateStore } from './walletStateStore';
 
 export class WalletSyncTimeoutError extends Error {
   readonly _tag = 'WalletSyncTimeoutError' as const;
@@ -27,6 +29,7 @@ export interface CreateWalletOptions {
   seedHex: string;
   walletConfig: WalletConfig;
   savedShieldedState?: string;
+  savedUnshieldedState?: string;
   savedDustState?: string;
 }
 
@@ -55,6 +58,26 @@ function createShieldedWallet(
   return ShieldedWallet(config).startWithSecretKeys(shieldedSecretKeys);
 }
 
+function createUnshieldedWallet(
+  config: WalletConfig,
+  unshieldedKeystore: WalletKeys['unshieldedKeystore'],
+  savedState?: string
+) {
+  // We don't use transaction history; NoOp avoids accumulating unused data in memory
+  const walletBuilder = UnshieldedWallet({
+    ...config,
+    txHistoryStorage: new NoOpTransactionHistoryStorage(),
+  });
+  if (savedState) {
+    try {
+      return walletBuilder.restore(savedState);
+    } catch {
+      // Fall through to fresh start
+    }
+  }
+  return walletBuilder.startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
+}
+
 function createDustWallet(config: WalletConfig, dustSecretKey: DustSecretKey, savedState?: string): DustWalletType {
   if (savedState) {
     try {
@@ -67,7 +90,11 @@ function createDustWallet(config: WalletConfig, dustSecretKey: DustSecretKey, sa
 }
 
 async function waitForSync(walletFacade: WalletFacade, timeoutMs?: number): Promise<void> {
-  const syncPromise = Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]);
+  const syncPromise = Promise.all([
+    walletFacade.shielded.waitForSyncedState(),
+    walletFacade.unshielded.waitForSyncedState(),
+    walletFacade.dust.waitForSyncedState(),
+  ]);
 
   if (timeoutMs) {
     const timeout = new Promise<never>((_, reject) =>
@@ -80,16 +107,13 @@ async function waitForSync(walletFacade: WalletFacade, timeoutMs?: number): Prom
 }
 
 export function createWallet(options: CreateWalletOptions): WalletConnection {
-  const { seedHex, walletConfig, savedShieldedState, savedDustState } = options;
+  const { seedHex, walletConfig, savedShieldedState, savedUnshieldedState, savedDustState } = options;
 
   const keys = deriveWalletKeys(seedHex, walletConfig.networkId);
 
   const shieldedWallet = createShieldedWallet(walletConfig, keys.shieldedSecretKeys, savedShieldedState);
+  const unshieldedWallet = createUnshieldedWallet(walletConfig, keys.unshieldedKeystore, savedUnshieldedState);
   const dustWallet = createDustWallet(walletConfig, keys.dustSecretKey, savedDustState);
-  const unshieldedWallet = UnshieldedWallet({
-    ...walletConfig,
-    txHistoryStorage: new InMemoryTransactionHistoryStorage(),
-  }).startWithPublicKey(PublicKey.fromKeyStore(keys.unshieldedKeystore));
 
   const walletFacade = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
   const walletProvider = new DustWalletProvider(walletFacade, keys.shieldedSecretKeys, keys.dustSecretKey);
@@ -108,4 +132,33 @@ export async function createAndSyncWallet(options: CreateAndSyncWalletOptions): 
   const connection = createWallet(createOptions);
   await startAndSyncWallet(connection, syncTimeoutMs);
   return connection;
+}
+
+/** Create and sync a wallet with persistent state, retrying fresh if saved state is corrupt. */
+export async function createAndSyncWalletWithStore(
+  options: CreateAndSyncWalletOptions,
+  baseStore: StateStore
+): Promise<WalletConnection> {
+  const keys = deriveWalletKeys(options.seedHex, options.walletConfig.networkId);
+  const store = new WalletStateStore(
+    baseStore,
+    String(options.walletConfig.networkId),
+    keys.shieldedSecretKeys.coinPublicKey
+  );
+  const saved = await store.loadWalletState();
+  const fullOptions = { ...options, ...saved };
+
+  let result: WalletConnection;
+  try {
+    result = await createAndSyncWallet(fullOptions);
+  } catch (error) {
+    if (!saved.savedShieldedState && !saved.savedUnshieldedState && !saved.savedDustState) {
+      throw error;
+    }
+    await store.clearAll();
+    result = await createAndSyncWallet(options);
+  }
+
+  await store.saveWalletState(result.walletFacade);
+  return result;
 }

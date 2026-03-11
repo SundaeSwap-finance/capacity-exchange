@@ -6,10 +6,12 @@ import {
   resolveWalletConfig,
   toNetworkIdEnum,
   createWallet,
+  WalletStateStore,
+  deriveWalletKeys,
 } from '@capacity-exchange/midnight-core';
 import { AppConfig, BaseConfig, schema } from '../models/config.js';
 import { getPriceConfig, getWalletSeed } from '../utils/config.js';
-import { createWalletStateStore } from '@capacity-exchange/midnight-node';
+import { FileStateStore } from '@capacity-exchange/midnight-node';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -37,22 +39,26 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.log.debug({ baseConfig, endpoints });
 
   const walletSeed = await getWalletSeed(baseConfig, fastify.log);
-  const walletStateStore = createWalletStateStore(
-    networkId,
-    walletSeed,
-    fastify.log.child({ service: 'StateStore' }),
-    baseConfig.WALLET_STATE_DIR,
+  const keys = deriveWalletKeys(walletSeed, networkId);
+  const walletStateStore = new WalletStateStore(
+    new FileStateStore(baseConfig.WALLET_STATE_DIR, fastify.log.child({ service: 'StateStore' })),
+    String(networkId),
+    keys.shieldedSecretKeys.coinPublicKey,
+    {
+      debounceMs: 1000,
+      onFlushError: (err) => fastify.log.error(err, 'Failed to flush wallet state'),
+    },
   );
 
-  const [priceConfig, savedDustState] = await Promise.all([
+  const [priceConfig, saved] = await Promise.all([
     getPriceConfig(baseConfig.PRICE_CONFIG_FILE),
-    walletStateStore.load('dust'),
+    walletStateStore.loadWalletState(),
   ]);
 
   const walletConnection = createWallet({
     seedHex: walletSeed,
     walletConfig: resolveWalletConfig(networkId),
-    savedDustState,
+    ...saved,
   });
 
   fastify.config = {

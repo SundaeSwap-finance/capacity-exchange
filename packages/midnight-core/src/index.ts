@@ -8,11 +8,13 @@ export {
   createWallet,
   startAndSyncWallet,
   createAndSyncWallet,
+  createAndSyncWalletWithStore,
   WalletSyncTimeoutError,
   type CreateWalletOptions,
   type CreateAndSyncWalletOptions,
   type WalletConnection,
 } from './wallet';
+export { WalletStateStore, type SavedWalletState } from './walletStateStore';
 export type { Logger } from './logger';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider';
 export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks';
@@ -39,6 +41,8 @@ export {
   createProvider,
   isTransactionConfirmed,
 } from './cardano';
+export { type StateStore, withPrefix } from './stateStore';
+export { LocalStorageStateStore } from './localStorageStateStore';
 export { deriveTokenColor } from './tokenColor';
 export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens';
 export { getShieldedBalance } from './getShieldedBalance';
