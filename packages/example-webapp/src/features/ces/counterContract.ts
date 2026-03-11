@@ -1,6 +1,7 @@
 import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
   DEFAULT_MARGIN,
@@ -40,6 +41,37 @@ export async function getCounterValue(contractAddress: string, config: NetworkCo
   };
 }
 
+/**
+ * Finds a deployed counter contract and submits an increment transaction
+ * using the provided wallet provider for balancing.
+ */
+export async function incrementCounter(
+  providers: ConnectedApiProviders,
+  contractAddress: string,
+  walletProvider: WalletProvider,
+  config: NetworkConfig
+) {
+  const contractProviders = buildMidnightProviders<CounterCircuitId>(
+    walletProvider,
+    providers.midnightProvider,
+    '/midnight/counter',
+    config
+  );
+
+  await findDeployedContract(contractProviders, {
+    compiledContract: compiledCounterContract,
+    contractAddress,
+  });
+  await submitCallTx(contractProviders, {
+    compiledContract: compiledCounterContract,
+    contractAddress,
+    circuitId: 'increment' as CounterCircuitId,
+  });
+}
+
+/**
+ * Convenience wrapper that builds a CES wallet provider and increments the counter.
+ */
 export async function findAndIncrementCounter(
   providers: ConnectedApiProviders,
   contractAddress: string,
@@ -57,20 +89,5 @@ export async function findAndIncrementCounter(
     confirmOffer,
   });
 
-  const contractProviders = buildMidnightProviders<CounterCircuitId>(
-    cesWalletProvider,
-    providers.midnightProvider,
-    '/midnight/counter',
-    config
-  );
-
-  await findDeployedContract(contractProviders, {
-    compiledContract: compiledCounterContract,
-    contractAddress,
-  });
-  await submitCallTx(contractProviders, {
-    compiledContract: compiledCounterContract,
-    contractAddress,
-    circuitId: 'increment' as CounterCircuitId,
-  });
+  return incrementCounter(providers, contractAddress, cesWalletProvider, config);
 }
