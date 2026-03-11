@@ -1,14 +1,11 @@
-import type { ExchangeApi } from './exchangeApi';
+import type { CesApi } from './exchangeApi';
 import { ExchangePrice } from './types';
 
 /**
  * Fetches prices from all capacity exchanges in parallel.
  * Returns combined prices from all successful responses.
  */
-export async function fetchPricesFromExchanges(
-  exchangeApis: ExchangeApi[],
-  dustRequired: bigint
-): Promise<ExchangePrice[]> {
+export async function fetchPricesFromExchanges(exchangeApis: CesApi[], dustRequired: bigint): Promise<ExchangePrice[]> {
   console.debug('[CapacityExchange] Fetching prices from', exchangeApis.length, 'exchanges');
 
   const priceResponses = await Promise.allSettled(

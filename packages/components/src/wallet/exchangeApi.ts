@@ -1,7 +1,7 @@
 import { Configuration, DefaultApi, ResponseError } from '@capacity-exchange/client';
 import { CapacityExchangeServerError } from './errors';
 
-export interface ExchangeApi {
+export interface CesApi {
   url: string;
   api: DefaultApi;
 }
@@ -31,11 +31,19 @@ class WrappedDefaultApi extends DefaultApi {
   async apiOffersPost(requestParameters: Parameters<DefaultApi['apiOffersPost']>[0]) {
     return wrapCesApi(() => super.apiOffersPost(requestParameters));
   }
+
+  async apiFundPost(requestParameters: Parameters<DefaultApi['apiFundPost']>[0]) {
+    return wrapCesApi(() => super.apiFundPost(requestParameters));
+  }
 }
 
-export function createExchangeApis(urls: string[]): ExchangeApi[] {
-  return urls.map((url) => ({
+export function createCesApi(url: string): CesApi {
+  return {
     url,
     api: new WrappedDefaultApi(new Configuration({ basePath: url })),
-  }));
+  };
+}
+
+export function createCesApis(urls: string[]): CesApi[] {
+  return urls.map((url) => createCesApi(url));
 }
