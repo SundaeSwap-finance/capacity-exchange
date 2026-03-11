@@ -1,11 +1,11 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { ExchangeApi } from './exchangeApi';
+import type { CesApi } from './exchangeApi';
 
 export const DEFAULT_MARGIN = 3;
 
 export interface ExchangePrice {
-  exchangeApi: ExchangeApi;
+  exchangeApi: CesApi;
   price: {
     currency: string;
     amount: string;
@@ -36,4 +36,9 @@ export interface CapacityExchangeConfig {
   margin: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
+}
+
+export interface FundedContractsConfig {
+  walletProvider: WalletProvider;
+  capacityExchangeUrl: string;
 }
