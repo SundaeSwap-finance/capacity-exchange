@@ -6,7 +6,13 @@
   "scripts": {
     "clean": "rm -rf node_modules .midnight-private-state .wallet-state .contracts.*.json vault/out/",
     "compile": "\"$COMPACTC\" vault/vault.compact vault/out",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "vault:generate-keys": "bun src/vault/cli/generate-keys.ts",
+    "vault:deploy": "bun src/vault/cli/deploy.ts",
+    "vault:deposit": "bun src/vault/cli/deposit.ts",
+    "vault:list-withdrawal-requests": "bun src/vault/cli/list-withdrawal-requests.ts",
+    "vault:request-withdrawal": "bun src/vault/cli/request-withdrawal.ts",
+    "vault:e2e": "bun src/vault/cli/e2e.ts"
   },
   "exports": {
     "./vault/out/contract/*": "./vault/out/contract/*"
@@ -21,9 +27,13 @@
   "license": "ISC",
   "dependencies": {
     "@capacity-exchange/midnight-core": "1.0.0",
+    "@capacity-exchange/midnight-node": "1.0.0",
+    "@midnight-ntwrk/compact-js": "2.4.0",
+    "@midnight-ntwrk/ledger-v7": "7.0.0",
     "@midnight-ntwrk/compact-runtime": "^0.14.0",
     "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
-    "@midnight-ntwrk/midnight-js-types": "3.0.0"
+    "@midnight-ntwrk/midnight-js-types": "3.0.0",
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@types/node": "22.10.7",

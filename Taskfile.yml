@@ -120,8 +120,11 @@ tasks:
     preconditions:
       - sh: test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
         msg: "Compiled contract output not found. Run 'task compile-contracts' first."
+      - sh: test -d packages/bridge-contracts/vault/out
+        msg: "Compiled vault contract output not found. Run 'task compile-contracts' first."
     cmds:
       - bun run --filter @capacity-exchange/example-contracts build
+      - bun run --filter @capacity-exchange/bridge-contracts build
 
   # TODO: Also typecheck test directories (packages/*/tests)
   build-all:

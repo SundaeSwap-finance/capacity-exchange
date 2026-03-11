@@ -1,8 +1,9 @@
 import { program } from 'commander';
 import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
-import { increment, IncrementOutput } from '../lib/operations.js';
+import { type TxResult } from '@capacity-exchange/midnight-core';
+import { increment } from '../lib/operations.js';
 
-function main(): Promise<IncrementOutput> {
+function main(): Promise<TxResult> {
   program
     .name('counter:increment')
     .description('Increments a deployed counter contract')

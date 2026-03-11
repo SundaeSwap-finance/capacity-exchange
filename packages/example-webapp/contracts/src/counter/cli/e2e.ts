@@ -1,10 +1,11 @@
 import { program } from 'commander';
 import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
-import { deploy, increment, query, DeployOutput, IncrementOutput, QueryOutput } from '../lib/operations.js';
+import { type TxResult } from '@capacity-exchange/midnight-core';
+import { deploy, increment, query, DeployOutput, QueryOutput } from '../lib/operations.js';
 
 interface E2EOutput {
   deploy: DeployOutput;
-  increments: IncrementOutput[];
+  increments: TxResult[];
   query: QueryOutput;
 }
 
@@ -26,7 +27,7 @@ function main(): Promise<E2EOutput> {
   return withAppContext(networkId, async (ctx) => {
     const deployResult = await deploy(ctx);
 
-    const incrementResults: IncrementOutput[] = [];
+    const incrementResults: TxResult[] = [];
     for (let i = 0; i < incrementCount; i++) {
       const incrementResult = await increment(ctx, deployResult.contractAddress);
       incrementResults.push(incrementResult);
