@@ -1,6 +1,6 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '../cli';
-import { splitAndRegister, type SplitNightOutput } from '../split-night';
+import { runCli, withAppContext } from '../cli.js';
+import { splitAndRegister, type SplitNightOutput } from '../split-night.js';
 
 function main(): Promise<SplitNightOutput> {
   program

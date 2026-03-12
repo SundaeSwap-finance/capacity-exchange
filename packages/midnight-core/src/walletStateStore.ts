@@ -1,6 +1,6 @@
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { StateStore } from './stateStore';
-import { withPrefix } from './stateStore';
+import type { StateStore } from './stateStore.js';
+import { withPrefix } from './stateStore.js';
 
 const WALLET_STATE_KEYS = ['shielded', 'unshielded', 'dust'] as const;
 

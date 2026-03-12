@@ -7,12 +7,12 @@ import {
 import { DustWallet, type DustWallet as DustWalletType } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v7';
-import { deriveWalletKeys, type WalletKeys } from './keys';
-import { DustWalletProvider } from './dustWalletProvider';
-import { DUST_PARAMS } from './params';
-import type { WalletConfig } from './walletConfig';
-import type { StateStore } from './stateStore';
-import { WalletStateStore } from './walletStateStore';
+import { deriveWalletKeys, type WalletKeys } from './keys.js';
+import { DustWalletProvider } from './dustWalletProvider.js';
+import { DUST_PARAMS } from './params.js';
+import type { WalletConfig } from './walletConfig.js';
+import type { StateStore } from './stateStore.js';
+import { WalletStateStore } from './walletStateStore.js';
 
 export class WalletSyncTimeoutError extends Error {
   readonly _tag = 'WalletSyncTimeoutError' as const;

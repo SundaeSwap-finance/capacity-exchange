@@ -2,9 +2,9 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "noImplicitAny": true,
-    "module": "esnext",
+    "module": "nodenext",
     "target": "es2020",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "declaration": true,
     "esModuleInterop": true,
     "skipLibCheck": true

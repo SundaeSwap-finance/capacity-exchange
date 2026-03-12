@@ -1,5 +1,5 @@
 import { persistentCommit, CompactTypeBytes, CompactTypeVector } from '@midnight-ntwrk/compact-runtime';
-import { hexToBytes, uint8ArrayToHex } from './hex';
+import { hexToBytes, uint8ArrayToHex } from './hex.js';
 
 function toZeroPadded32Bytes(str: string): Uint8Array {
   const bytes = new TextEncoder().encode(str);
