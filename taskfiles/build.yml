@@ -1,7 +1,7 @@
 version: '3'
 
-# Internal build tasks — included by root Taskfile.yml under the _ namespace.
-# These are not shown in `task --list`.
+# Internal build tasks — TypeScript package build dependency graph.
+# Included by root Taskfile.yml under the _build namespace.
 
 tasks:
   # --- Bootstrap ---
@@ -10,23 +10,6 @@ tasks:
     run: once
     cmds:
       - bun install
-
-  # --- Preconditions ---
-
-  require-compilable-contracts:
-    run: once
-    preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out || (test -n "${COMPACTC:-}" && test -f "$COMPACTC")
-        msg: |
-          Compiled contracts not found. Either:
-            1. Set COMPACTC to a valid compactc binary path (contracts will be compiled automatically)
-            2. Run 'task compile-contracts' first
-
-  require-deployed-contracts:
-    run: once
-    preconditions:
-      - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.json >/dev/null 2>&1'
-        msg: "Setup not complete: deployed contract configs not found. Run 'COMPACTC=... NETWORK_ID=... task setup' first."
 
   # --- Package build graph ---
 
@@ -59,7 +42,7 @@ tasks:
       - bun run --filter @capacity-exchange/server build
 
   webapp:
-    deps: [require-compilable-contracts, libs, copy-zk-assets, copy-contract-configs]
+    deps: [libs]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
@@ -67,37 +50,7 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
-  # --- Contract helpers ---
-
-  compile-contracts:
-    status:
-      - test -d {{.CONTRACTS_DIR}}/counter/out
-    preconditions:
-      - sh: test -n "${COMPACTC:-}"
-        msg: |
-          COMPACTC environment variable not set.
-          First, unzip the correct archive for your platform:
-            unzip tools/compactc/compactc_v0.28.0_aarch64-darwin.zip -d ~/compactc_v0.28.0
-          Then set the environment variable:
-            export COMPACTC=~/compactc_v0.28.0/compactc
-      - sh: test -f "$COMPACTC"
-        msg: 'COMPACTC path does not exist: $COMPACTC'
-      - sh: '"$COMPACTC" --version | grep -q "0.28.0"'
-        msg: 'COMPACTC version mismatch. Required: 0.28.0'
-    cmds:
-      - bun run --cwd {{.CONTRACTS_DIR}} compile
-
-  copy-zk-assets:
-    deps: [compile-contracts]
-    cmds:
-      - bun run --filter @capacity-exchange/example-webapp copy-zk-assets
-
-  copy-contract-configs:
-    cmds:
-      - mkdir -p {{.WEBAPP_DIR}}/public/contracts
-      - cp {{.CONTRACTS_DIR}}/.contracts.*.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
-
-  # --- Typecheck / build-all ---
+  # --- Typecheck ---
 
   typecheck-contracts:
     deps: [components]
@@ -116,6 +69,3 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/example-webapp typecheck
       - bun run --filter @capacity-exchange/bridge-webapp typecheck
-
-  build:
-    deps: [require-compilable-contracts, webapp, server, typecheck-contracts]
