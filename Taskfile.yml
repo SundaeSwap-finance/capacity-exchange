@@ -36,10 +36,8 @@ tasks:
 
   deploy:
     desc: Deploy contracts for a network
-    deps: [_build:midnight-node]
+    deps: [_build:midnight-node, _contracts:require-compiled]
     preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
-        msg: "Compiled contracts not found. Run 'task compile-contracts' first."
       - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED=|^${UPPER}_MNEMONIC=" {{.CONTRACTS_DIR}}/.env 2>/dev/null'
         msg: 'Missing <NETWORK_ID>_SEED or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
     cmds:
