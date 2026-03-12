@@ -38,17 +38,44 @@ tasks:
     desc: Deploy contracts for a network
     deps: [_build:midnight-node, _contracts:require-compiled]
     preconditions:
-      - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED=|^${UPPER}_MNEMONIC=" {{.CONTRACTS_DIR}}/.env 2>/dev/null'
-        msg: 'Missing <NETWORK_ID>_SEED or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
+      - sh: 'test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
+        msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup to create it'
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
       - task: _contracts:copy-configs
     requires:
       vars: [NETWORK_ID]
 
-  setup:
-    desc: 'One-time setup: install, build everything, deploy'
+  prompt-mnemonic:
+    internal: true
+    vars:
+      MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
+    status:
+      - test -f {{.MNEMONIC_FILE}}
     cmds:
+      - echo "Enter your wallet mnemonic for {{.NETWORK_ID}}:" && read MNEMONIC < /dev/tty && echo "$MNEMONIC" > {{.MNEMONIC_FILE}}
+
+  init-env:
+    internal: true
+    status:
+      - test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt
+      - test -f {{.CONTRACTS_DIR}}/.env
+      - test -f {{.ROOT_DIR}}/packages/server/.env
+      - test -f {{.WEBAPP_DIR}}/.env
+    cmds:
+      - task: prompt-mnemonic
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
+      - cp -n {{.CONTRACTS_DIR}}/.env.example {{.CONTRACTS_DIR}}/.env
+      - cp -n {{.ROOT_DIR}}/packages/server/.env.example {{.ROOT_DIR}}/packages/server/.env
+      - cp -n {{.WEBAPP_DIR}}/.env.example {{.WEBAPP_DIR}}/.env
+
+  setup:
+    desc: 'One-time setup: configure env, install, build, deploy'
+    cmds:
+      - task: init-env
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
       - task: install
       - task: compile-contracts
       - task: _contracts:copy-zk-assets

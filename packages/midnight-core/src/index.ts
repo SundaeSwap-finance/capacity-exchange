@@ -18,7 +18,7 @@ export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
 export type { Logger } from './logger.js';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
 export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks.js';
-export { parseSeedHex, parseMnemonic, resolveWalletSeed } from './seed.js';
+export { parseSeedHex, parseMnemonic } from './seed.js';
 export {
   parseCoinPublicKey,
   type ParseCoinPublicKeyResult,

@@ -9,15 +9,21 @@ Client and server packages for the Capacity Exchange Service on the Midnight net
 
 ## Quick Start
 
-```bash
-# One-time setup: install deps, compile contracts, build packages, deploy
-NETWORK_ID=undeployed task setup
+### 1. Get a funded wallet
 
-# Start both the server and webapp with hot-reload
-NETWORK_ID=undeployed task dev
+You'll need a wallet mnemonic funded with tNIGHT on preprod. You can create one using the [Lace wallet](https://www.lace.io/) browser extension and fund it via the [preprod faucet](https://faucet.preprod.midnight.network/).
+
+### 2. Setup and run
+
+```bash
+# One-time setup: install, compile, build, deploy (prompts for your mnemonic)
+NETWORK_ID=preprod task setup
+
+# Start server and webapp with hot-reload
+NETWORK_ID=preprod task dev
 ```
 
-- Note, the Compact compiler (`compactc`) is bundled in `tools/compactc/` and extracted automatically during setup.
+- The Compact compiler is bundled in `tools/compactc/` and extracted automatically.
 - Run `task --list` to see all available tasks.
 
 ## Generating the Client
@@ -61,6 +67,18 @@ The code in `packages/client/generated` is auto-generated from the server's Open
 │   └── bridge-webapp/                  # Bridge webapp
 ```
 
+## Wallet Configuration
+
+All packages resolve the wallet mnemonic from a shared file at the project root:
+
+```
+wallet-mnemonic.{network}.txt   # e.g. wallet-mnemonic.preprod.txt
+```
+
+`task setup` prompts for your mnemonic and creates this file. Each package finds it by walking up the directory tree from its working directory, so you only configure it once.
+
+In production (mainnet), set `WALLET_MNEMONIC_FILE` or `WALLET_SEED_FILE` explicitly instead — the walk-up fallback is disabled on mainnet.
+
 ## Security Notes
 
-You'll notice wallet credentials env vars like `VITE_SERVER_PREVIEW_MNEMONIC` in .env.example. These get baked into the `example-webapp` JS bundle via Vite. This is fine for a demo on a test network (preview, preprod), but `example-webapp` shouldn't be run in a production env or with creds that map to a real wallet.
+The `example-webapp` reads the wallet mnemonic at build time and bakes it into the JS bundle via Vite (`VITE_SERVER_MNEMONIC`). This is fine for a demo on a test network (preprod), but `example-webapp` shouldn't be run in a production env or with credentials that map to a real wallet.
