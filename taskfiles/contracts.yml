@@ -42,7 +42,7 @@ tasks:
 
   compile:
     status:
-      - test -d {{.CONTRACTS_DIR}}/counter/out
+      - test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
     deps: [extract-compactc]
     env:
       COMPACTC: '{{.COMPACTC_BIN}}'
@@ -65,9 +65,7 @@ tasks:
 
   require-compiled:
     run: once
-    preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
-        msg: "Compiled contracts not found. Run 'task compile-contracts' first."
+    deps: [compile]
 
   require-deployed:
     run: once
