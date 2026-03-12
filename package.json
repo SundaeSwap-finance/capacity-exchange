@@ -10,6 +10,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "bun": ">=1.1.0"
+  },
   "workspaces": [
     "packages/*",
     "packages/example-webapp/contracts"
