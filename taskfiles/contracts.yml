@@ -5,9 +5,8 @@ version: '3'
 
 vars:
   COMPACTC_VERSION: 0.28.0
-  COMPACTC_DIR: tools/compactc
-  COMPACTC_BIN:
-    sh: echo "$(pwd)/tools/compactc/bin/compactc"
+  COMPACTC_DIR: '{{.ROOT_DIR}}/tools/compactc'
+  COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
 
 tasks:
   # --- Compiler setup ---
