@@ -6,65 +6,83 @@ Client and server packages for the Capacity Exchange Service on the Midnight net
 
 - [bun](https://bun.sh) (>= 1.1.0)
 - [go-task](https://taskfile.dev) — command runner (`brew install go-task`)
+- A running [proof server](https://docs.midnight.network) at `http://127.0.0.1:6300`
 
 ## Quick Start
 
 ### 1. Get a funded wallet
 
-You'll need a wallet mnemonic funded with tNIGHT on preprod. You can create one using the [Lace wallet](https://www.lace.io/) browser extension and fund it via the [preprod faucet](https://faucet.preprod.midnight.network/).
+You'll need a wallet mnemonic funded with tNIGHT on preprod. Create one using the [Lace wallet](https://www.lace.io/) browser extension and fund it via the [preprod faucet](https://faucet.preprod.midnight.network/).
 
-### 2. Setup and run
+### 2. Setup
 
 ```bash
-# One-time setup: install, compile, build, deploy (prompts for your mnemonic)
+# One-time: install deps, compile contracts, build packages, deploy, generate price config
+# Prompts for your wallet mnemonic on first run
 NETWORK_ID=preprod task setup
+```
 
-# Start server and webapp with hot-reload
+### 3. Run
+
+```bash
+# Start capacity exchange server (port 3000) and webapp (port 5173) with hot-reload
 NETWORK_ID=preprod task dev
 ```
 
-- The Compact compiler is bundled in `tools/compactc/` and extracted automatically.
-- Run `task --list` to see all available tasks.
+You can also run them independently:
 
-## Generating the Client
+```bash
+NETWORK_ID=preprod task dev:server   # CES server only
+NETWORK_ID=preprod task dev:webapp   # webapp only
+```
 
-The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate it:
+## What `task setup` Does
 
-1.  **Run the server:** Start `packages/server` locally (e.g., `NETWORK_ID=preview task dev:server`).
+1. **Prompts for wallet mnemonic** — saved to `wallet-mnemonic.preprod.txt` at the project root
+2. **Copies `.env.example` files** — creates `.env` for server, webapp, and contracts packages
+3. **Installs dependencies** — `bun install`
+4. **Compiles Compact contracts** — extracts the bundled compiler and compiles counter + token-mint
+5. **Builds all packages** — midnight-core → midnight-node → client → components → webapp + server
+6. **Deploys contracts** — deploys to the Midnight preprod network (requires a proof server)
+7. **Generates price config** — creates `packages/server/price-config.preprod.json` from deployed contract data
 
-2.  **Download the OpenAPI spec:** Save the latest spec from the server's json docs endpoint.
+## Available Tasks
 
-    ```bash
-    curl http://localhost:3000/docs/json > packages/client/openapi.json
-    ```
+Run `task --list` to see all tasks. Key ones:
 
-3.  **Generate the client code:** Go to `packages/client` and run the generate script.
+| Task | Description |
+|------|-------------|
+| `setup` | One-time setup: configure env, install, build, deploy |
+| `dev` | Start server and webapp with hot-reload |
+| `dev:server` | Start the server only |
+| `dev:webapp` | Start the webapp only |
+| `build` | Build all packages and compile/copy contracts |
+| `deploy` | Deploy contracts for a network |
+| `compile-contracts` | Compile Compact contracts |
+| `test` | Run tests |
+| `check` | Lint and format check |
+| `fix` | Lint and format fix |
+| `clean` | Clean build artifacts |
 
-    ```bash
-    cd packages/client
-    bun run generate-client
-    ```
+All network-aware tasks require `NETWORK_ID=<network>` (e.g., `preprod`, `undeployed`).
 
 ## Project Structure
 
 ```
 .
-├── Taskfile.yml                        # User-facing task orchestration
-├── taskfiles/
-│   ├── build.yml                       # Internal: TypeScript package build graph
-│   └── contracts.yml                   # Internal: Compact contract compilation and deploy
-├── tools/
-│   └── compactc/                       # Bundled Compact compiler (auto-extracted)
+├── Taskfile.yml              # User-facing task orchestration
+├── taskfiles/                # Internal task definitions
+├── scripts/                  # Cross-package CLI tools
+├── tools/                    # Bundled tooling (Compact compiler)
 ├── packages/
-│   ├── client/                         # Auto-generated OpenAPI client
-│   ├── midnight-core/                  # Shared core logic
-│   ├── midnight-node/                  # Node-side Midnight integrations
-│   ├── components/                     # High-level Capacity Exchange Service (CES) components 
-│   ├── server/                         # The CES server
-│   ├── example-webapp/                 # Example CES webapp--illustrates using the CES components
-│   │   └── contracts/                  # Example compact contracts--drive the example webapp
-│   ├── bridge-contracts/               # Bridge compact contracts
-│   └── bridge-webapp/                  # Bridge webapp
+│   ├── midnight-core/        # Shared core logic
+│   ├── midnight-node/        # Node-side Midnight integrations
+│   ├── client/               # Auto-generated OpenAPI client
+│   ├── components/           # High-level CES components
+│   ├── server/               # CES server
+│   ├── example-webapp/       # Example CES webapp + Compact contracts
+│   ├── bridge-contracts/     # Bridge Compact contracts
+│   └── bridge-webapp/        # Bridge webapp
 ```
 
 ## Wallet Configuration
@@ -79,6 +97,14 @@ wallet-mnemonic.{network}.txt   # e.g. wallet-mnemonic.preprod.txt
 
 In production (mainnet), set `WALLET_MNEMONIC_FILE` or `WALLET_SEED_FILE` explicitly instead — the walk-up fallback is disabled on mainnet.
 
+## Generating the Client
+
+The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate:
+
+1. Start the server: `NETWORK_ID=preprod task dev:server`
+2. Download the spec: `curl http://localhost:3000/docs/json > packages/client/openapi.json`
+3. Generate: `cd packages/client && bun run generate-client`
+
 ## Security Notes
 
-The `example-webapp` reads the wallet mnemonic at build time and bakes it into the JS bundle via Vite (`VITE_SERVER_MNEMONIC`). This is fine for a demo on a test network (preprod), but `example-webapp` shouldn't be run in a production env or with credentials that map to a real wallet.
+The `example-webapp` reads the wallet mnemonic at build time and bakes it into the JS bundle via Vite (`VITE_SERVER_MNEMONIC`). This is fine for a demo on a test network but should not be used in production or with a real wallet.
