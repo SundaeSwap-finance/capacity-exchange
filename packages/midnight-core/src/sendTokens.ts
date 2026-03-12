@@ -1,5 +1,5 @@
 import type { WalletFacade, TokenTransfer, BalancingRecipe } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { WalletKeys } from './keys';
+import type { WalletKeys } from './keys.js';
 
 export const DEFAULT_TTL_MS = 5 * 60 * 1000;
 

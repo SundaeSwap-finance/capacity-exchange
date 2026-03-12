@@ -5,9 +5,9 @@ import {
   uint8ArrayToHex,
   type WalletKeys,
 } from '@capacity-exchange/midnight-core';
-import { FileStateStore } from './fileStateStore';
-import { createLogger } from './createLogger';
-import type { AppConfig } from './appConfig';
+import { FileStateStore } from './fileStateStore.js';
+import { createLogger } from './createLogger.js';
+import type { AppConfig } from './appConfig.js';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 
 const logger = createLogger(import.meta);

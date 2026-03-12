@@ -1,6 +1,6 @@
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { COST_PARAMS } from './params';
-import { NETWORK_ENDPOINTS, type NetworkEndpoints } from './networks';
+import { COST_PARAMS } from './params.js';
+import { NETWORK_ENDPOINTS, type NetworkEndpoints } from './networks.js';
 
 export interface WalletConfig {
   networkId: NetworkId.NetworkId;

@@ -1,4 +1,4 @@
-import type { StateStore } from './stateStore';
+import type { StateStore } from './stateStore.js';
 
 /** Browser-compatible StateStore backed by localStorage. */
 export class LocalStorageStateStore implements StateStore {

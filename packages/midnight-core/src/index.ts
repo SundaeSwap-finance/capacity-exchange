@@ -1,9 +1,9 @@
-export { requireBrowserEnv } from './envBrowser';
-export { hexToBytes, uint8ArrayToHex } from './hex';
-export { DUST_PARAMS, COST_PARAMS } from './params';
-export { deriveWalletKeys, type WalletKeys } from './keys';
-export { DustWalletProvider } from './dustWalletProvider';
-export { WALLET_CONFIGS, resolveWalletConfig, type WalletConfig } from './walletConfig';
+export { requireBrowserEnv } from './envBrowser.js';
+export { hexToBytes, uint8ArrayToHex } from './hex.js';
+export { DUST_PARAMS, COST_PARAMS } from './params.js';
+export { deriveWalletKeys, type WalletKeys } from './keys.js';
+export { DustWalletProvider } from './dustWalletProvider.js';
+export { WALLET_CONFIGS, resolveWalletConfig, type WalletConfig } from './walletConfig.js';
 export {
   createWallet,
   startAndSyncWallet,
@@ -13,12 +13,12 @@ export {
   type CreateWalletOptions,
   type CreateAndSyncWalletOptions,
   type WalletConnection,
-} from './wallet';
-export { WalletStateStore, type SavedWalletState } from './walletStateStore';
-export type { Logger } from './logger';
-export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider';
-export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks';
-export { parseSeedHex, parseMnemonic, resolveWalletSeed } from './seed';
+} from './wallet.js';
+export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
+export type { Logger } from './logger.js';
+export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
+export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks.js';
+export { parseSeedHex, parseMnemonic, resolveWalletSeed } from './seed.js';
 export {
   parseCoinPublicKey,
   type ParseCoinPublicKeyResult,
@@ -28,7 +28,7 @@ export {
   connectMidnightExtension,
   type ConnectMidnightExtensionResult,
   type DetectMidnightExtensionResult,
-} from './midnight';
+} from './midnight.js';
 export {
   type CardanoNetwork,
   type BlockfrostNetworkName,
@@ -40,12 +40,12 @@ export {
   adaToLovelace,
   createProvider,
   isTransactionConfirmed,
-} from './cardano';
-export { type StateStore, withPrefix } from './stateStore';
-export { LocalStorageStateStore } from './localStorageStateStore';
-export { deriveTokenColor } from './tokenColor';
-export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens';
-export { getShieldedBalance } from './getShieldedBalance';
-export { getLedgerParameters } from './getLedgerParameters';
-export { waitForState } from './waitForState';
-export { type TxResult, toTxResult } from './txResult';
+} from './cardano.js';
+export { type StateStore, withPrefix } from './stateStore.js';
+export { LocalStorageStateStore } from './localStorageStateStore.js';
+export { deriveTokenColor } from './tokenColor.js';
+export { DEFAULT_TTL_MS, sendTokens, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens.js';
+export { getShieldedBalance } from './getShieldedBalance.js';
+export { getLedgerParameters } from './getLedgerParameters.js';
+export { waitForState } from './waitForState.js';
+export { type TxResult, toTxResult } from './txResult.js';

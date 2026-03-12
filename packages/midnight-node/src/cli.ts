@@ -1,7 +1,7 @@
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { AppContext, createAppContext } from './appContext';
-import { getAppConfigById } from './appConfig';
-import { createLogger } from './createLogger';
+import { AppContext, createAppContext } from './appContext.js';
+import { getAppConfigById } from './appConfig.js';
+import { createLogger } from './createLogger.js';
 
 const logger = createLogger(import.meta);
 

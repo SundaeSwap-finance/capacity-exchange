@@ -3,8 +3,8 @@ import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { type WalletFacade, type FacadeState, type TokenTransfer } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { WalletKeys } from '@capacity-exchange/midnight-core';
 import { sendUnshieldedTokens, waitForState } from '@capacity-exchange/midnight-core';
-import { createLogger } from './createLogger';
-import { deregisterAllFromDust, registerEachForDust } from './dust-registration';
+import { createLogger } from './createLogger.js';
+import { deregisterAllFromDust, registerEachForDust } from './dust-registration.js';
 
 const NIGHT_TOKEN_TYPE = '0000000000000000000000000000000000000000000000000000000000000000';
 
