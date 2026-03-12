@@ -1,7 +1,12 @@
 version: '3'
 
-# Internal build tasks — TypeScript package build dependency graph.
+# Internal build tasks — TypeScript package build dependency graph and shared tooling.
 # Included by root Taskfile.yml under the _build namespace.
+
+vars:
+  COMPACTC_VERSION: 0.28.0
+  COMPACTC_DIR: '{{.ROOT_DIR}}/tools/compactc'
+  COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
 
 tasks:
   # --- Bootstrap ---
@@ -49,6 +54,34 @@ tasks:
       - bun run --filter @capacity-exchange/example-webapp build
     requires:
       vars: [NETWORK_ID]
+
+  # --- Compact compiler ---
+
+  extract-compactc:
+    run: once
+    status:
+      - test -f {{.COMPACTC_BIN}}
+    vars:
+      ARCH:
+        sh: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          MACHINE=$(uname -m)
+          case "${OS}_${MACHINE}" in
+            darwin_arm64)  echo "aarch64-darwin" ;;
+            darwin_x86_64) echo "x86_64-darwin" ;;
+            linux_x86_64)  echo "x86_64-unknown-linux-musl" ;;
+            *) echo "unsupported" ;;
+          esac
+    preconditions:
+      - sh: test '{{.ARCH}}' != 'unsupported'
+        msg: "Unsupported platform: $(uname -s) $(uname -m). Supported: macOS (ARM/Intel), Linux (x86_64)."
+      - sh: test -f {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip
+        msg: "Compiler archive not found: {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip"
+    cmds:
+      - mkdir -p {{.COMPACTC_DIR}}/bin
+      - unzip -o {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip -d {{.COMPACTC_DIR}}/bin
+    generates:
+      - '{{.COMPACTC_BIN}}'
 
   # --- Typecheck ---
 
