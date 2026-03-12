@@ -42,7 +42,7 @@ export interface BaseConfig {
   PORT: number;
   LOG_LEVEL: string;
   OFFER_TTL_SECONDS: number;
-  PROOF_SERVER_URL: string;
+  PROOF_SERVER_URL?: string;
   WALLET_STATE_DIR: string;
 }
 
@@ -63,7 +63,6 @@ export const schema = {
     'PORT',
     'LOG_LEVEL',
     'OFFER_TTL_SECONDS',
-    'PROOF_SERVER_URL',
     'WALLET_STATE_DIR',
   ],
   properties: {

@@ -1,5 +1,7 @@
 version: '3'
 
+output: prefixed
+
 includes:
   _build:
     taskfile: taskfiles/build.yml
@@ -7,6 +9,9 @@ includes:
     vars:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
+  _dev:
+    taskfile: taskfiles/dev.yml
+    internal: true
   _example:
     taskfile: taskfiles/example.yml
     internal: true
@@ -96,33 +101,30 @@ tasks:
   dev:
     desc: Start server and webapp with hot-reload
     deps: [_example:require-deployed, _example:require-price-config, _build:libs]
-    env:
-      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
-      MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
-      PRICE_CONFIG_FILE: 'price-config.{{.NETWORK_ID}}.json'
     cmds:
-      - bun run --filter @capacity-exchange/midnight-core build:watch & bun run --filter @capacity-exchange/midnight-node build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/server dev & bun run --filter @capacity-exchange/example-webapp dev & wait
+      - task: _dev:all
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
     requires:
       vars: [NETWORK_ID]
 
   dev:server:
     desc: Start the capacity exchange server with hot-reload
     deps: [_build:midnight-node, _example:require-price-config]
-    env:
-      MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
-      PRICE_CONFIG_FILE: 'price-config.{{.NETWORK_ID}}.json'
     cmds:
-      - bun run --filter @capacity-exchange/midnight-core build:watch & bun run --filter @capacity-exchange/midnight-node build:watch & bun run --filter @capacity-exchange/server dev & wait
+      - task: _dev:server-only
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
     requires:
       vars: [NETWORK_ID]
 
   dev:webapp:
     desc: Start the example webapp with hot-reload
     deps: [_example:require-deployed, _build:components]
-    env:
-      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
-      - bun run --filter @capacity-exchange/midnight-core build:watch & bun run --filter @capacity-exchange/midnight-node build:watch & bun run --filter @capacity-exchange/components build:watch & bun run --filter @capacity-exchange/example-webapp dev & wait
+      - task: _dev:webapp-only
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
     requires:
       vars: [NETWORK_ID]
 

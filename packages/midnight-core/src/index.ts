@@ -3,7 +3,7 @@ export { hexToBytes, uint8ArrayToHex } from './hex.js';
 export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';
-export { WALLET_CONFIGS, resolveWalletConfig, type WalletConfig } from './walletConfig.js';
+export { resolveWalletConfig, type WalletConfig } from './walletConfig.js';
 export {
   createWallet,
   startAndSyncWallet,
@@ -17,7 +17,7 @@ export {
 export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
 export type { Logger } from './logger.js';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
-export { NETWORK_ENDPOINTS, resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks.js';
+export { resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks.js';
 export { parseSeedHex, parseMnemonic } from './seed.js';
 export {
   parseCoinPublicKey,

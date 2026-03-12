@@ -35,7 +35,9 @@ export default fp(async (fastify: FastifyInstance) => {
   const baseConfig = fastify.config as unknown as BaseConfig;
   const networkId = toNetworkIdEnum(baseConfig.MIDNIGHT_NETWORK);
   const endpoints = resolveEndpoints(networkId);
-  endpoints.proofServerUrl = baseConfig.PROOF_SERVER_URL;
+  if (baseConfig.PROOF_SERVER_URL) {
+    endpoints.proofServerUrl = baseConfig.PROOF_SERVER_URL;
+  }
   fastify.log.debug({ baseConfig, endpoints });
 
   const walletSeed = await getWalletSeed(baseConfig, fastify.log);
