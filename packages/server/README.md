@@ -142,7 +142,7 @@ You can use the `gen-test-wallet` script to creates a new wallet, register its D
 - `night_amount`: Amount of NIGHT to send per transaction
 - `num_txs`: Number of transactions to send
 
-The generated wallet seed is saved to `wallet-seed.hex` (this is the file path specified by `WALLET_SEED_FILE` in `.env`).
+The generated wallet seed is saved to `wallet-seed.hex`. Point `WALLET_SEED_FILE` at it in your `.env`, or for dev use, place a `wallet-mnemonic.{network}.txt` file at the project root (the server finds it automatically via walk-up resolution).
 
 ### Running E2E Tests
 

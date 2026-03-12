@@ -9,7 +9,7 @@ node_modules
 tools/compactc/*/
 vendor
 wallet-seed.hex
-wallet-mnemonic.txt
+wallet-mnemonic*.txt
 .wallet-state
 keys.json
 .env

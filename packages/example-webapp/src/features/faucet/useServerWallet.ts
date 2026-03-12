@@ -3,7 +3,8 @@ import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   DustWalletProvider,
-  resolveWalletSeed,
+  parseMnemonic,
+  requireBrowserEnv,
   uint8ArrayToHex,
   type WalletKeys,
 } from '@capacity-exchange/midnight-core';
@@ -33,8 +34,7 @@ interface ServerWalletReady {
 }
 
 async function initServerWallet(config: NetworkConfig): Promise<ServerWalletReady> {
-  const prefix = `VITE_SERVER_${config.networkId.toUpperCase()}`;
-  const seed = resolveWalletSeed(import.meta.env as Record<string, string | undefined>, prefix);
+  const seed = parseMnemonic(requireBrowserEnv('VITE_SERVER_MNEMONIC'));
   const seedHex = uint8ArrayToHex(seed);
   const connection = await connectSeedWallet(seedHex, config);
   const { walletFacade, keys } = connection;
