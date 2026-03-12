@@ -18,6 +18,8 @@ tasks:
     preconditions:
       - sh: command -v bun
         msg: 'bun is not installed. Install it: https://bun.sh'
+      - sh: 'BUN_V=$(bun --version) && test "$(printf "%s\n1.1.0\n" "$BUN_V" | sort -V | head -1)" = "1.1.0"'
+        msg: "bun >= 1.1.0 is required. Update with: bun upgrade"
     cmds:
       - task: _:install
 
