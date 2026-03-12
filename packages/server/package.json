@@ -4,10 +4,10 @@
   "description": "Capacity Exchange Server",
   "type": "module",
   "scripts": {
-    "dev": "LOG_LEVEL=debug bun --watch src/server.ts",
+    "dev": "bun --watch src/server.ts",
     "prebuild": "bun run --filter '@capacity-exchange/midnight-core' build && bun run --filter '@capacity-exchange/midnight-node' build",
     "build": "tsc",
-    "start": "LOG_LEVEL=info bun dist/server.js",
+    "start": "bun dist/server.js",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "lint": "eslint .",

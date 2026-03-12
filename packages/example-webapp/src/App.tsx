@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { NETWORK_CONFIGS, getEndpoints, NetworkConfigProvider, requireEnvOneOf } from './config';
+import { resolveNetworkConfig, getEndpoints, NetworkConfigProvider, requireEnvOneOf } from './config';
 import {
   WalletModeSelector,
   ExtensionWalletFlow,
@@ -23,7 +23,7 @@ function App() {
     setMidnightNetworkId(networkId);
   }, [networkId]);
 
-  const currentConfig = NETWORK_CONFIGS[networkId];
+  const currentConfig = resolveNetworkConfig(networkId);
   const endpoints = useMemo(() => getEndpoints(currentConfig), [currentConfig]);
 
   const serverWallet = useServerWallet(currentConfig);
