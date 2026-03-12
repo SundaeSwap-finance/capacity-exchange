@@ -23,7 +23,7 @@ function App() {
     setMidnightNetworkId(networkId);
   }, [networkId]);
 
-  const currentConfig = resolveNetworkConfig(networkId);
+  const currentConfig = useMemo(() => resolveNetworkConfig(networkId), [networkId]);
   const endpoints = useMemo(() => getEndpoints(currentConfig), [currentConfig]);
 
   const serverWallet = useServerWallet(currentConfig);
