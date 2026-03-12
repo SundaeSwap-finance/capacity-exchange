@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@blaze-cardano/sdk": "^0.2.31",
