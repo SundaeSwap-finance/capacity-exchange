@@ -55,7 +55,7 @@ tasks:
   typecheck-contracts:
     deps: [components]
     preconditions:
-      - sh: test -d packages/bridge-contracts/vault/out
+      - sh: test -d {{.ROOT_DIR}}/packages/bridge-contracts/vault/out
         msg: "Compiled vault contract output not found. Run 'task compile-contracts' first."
     cmds:
       - bun run --filter @capacity-exchange/example-contracts build

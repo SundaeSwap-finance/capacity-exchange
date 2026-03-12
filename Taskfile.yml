@@ -15,8 +15,8 @@ includes:
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
 
 vars:
-  CONTRACTS_DIR: packages/example-webapp/contracts
-  WEBAPP_DIR: packages/example-webapp
+  CONTRACTS_DIR: '{{.ROOT_DIR}}/packages/example-webapp/contracts'
+  WEBAPP_DIR: '{{.ROOT_DIR}}/packages/example-webapp'
 
 tasks:
   install:
