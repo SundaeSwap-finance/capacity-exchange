@@ -1,8 +1,14 @@
 version: '3'
 
 includes:
-  _:
+  _build:
     taskfile: taskfiles/build.yml
+    internal: true
+    vars:
+      CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
+      WEBAPP_DIR: '{{.WEBAPP_DIR}}'
+  _contracts:
+    taskfile: taskfiles/contracts.yml
     internal: true
     vars:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
@@ -21,16 +27,16 @@ tasks:
       - sh: 'BUN_V=$(bun --version) && test "$(printf "%s\n1.1.0\n" "$BUN_V" | sort -V | head -1)" = "1.1.0"'
         msg: "bun >= 1.1.0 is required. Update with: bun upgrade"
     cmds:
-      - task: _:install
+      - task: _build:install
 
   compile-contracts:
-    desc: Compile Compact contracts (requires COMPACTC env var)
+    desc: Compile Compact contracts (auto-extracts compiler)
     cmds:
-      - task: _:compile-contracts
+      - task: _contracts:compile
 
   deploy:
     desc: Deploy contracts for a network
-    deps: [_:midnight-node]
+    deps: [_build:midnight-node]
     preconditions:
       - sh: test -d {{.CONTRACTS_DIR}}/counter/out
         msg: "Compiled contracts not found. Run 'task compile-contracts' first."
@@ -38,14 +44,20 @@ tasks:
         msg: 'Missing <NETWORK_ID>_SEED or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
-      - task: _:copy-contract-configs
+      - task: _contracts:copy-configs
     requires:
       vars: [NETWORK_ID]
 
   setup:
     desc: 'One-time setup: install, build everything, deploy'
-    deps: [_:require-compilable-contracts, _:build]
     cmds:
+      - task: install
+      - task: compile-contracts
+      - task: _contracts:copy-zk-assets
+      - task: _build:webapp
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
+      - task: _build:server
       - task: deploy
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
@@ -55,7 +67,7 @@ tasks:
 
   dev:
     desc: Start server and webapp with hot-reload
-    deps: [_:require-deployed-contracts, _:libs]
+    deps: [_contracts:require-deployed, _build:libs]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
@@ -66,7 +78,7 @@ tasks:
 
   dev:server:
     desc: Start the capacity exchange server with hot-reload
-    deps: [_:midnight-node]
+    deps: [_build:midnight-node]
     env:
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
     cmds:
@@ -76,7 +88,7 @@ tasks:
 
   dev:webapp:
     desc: Start the example webapp with hot-reload
-    deps: [_:require-deployed-contracts, _:components]
+    deps: [_contracts:require-deployed, _build:components]
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
@@ -87,32 +99,37 @@ tasks:
   build:
     desc: Build all packages and compile/copy contracts
     cmds:
-      - task: _:build
+      - task: _contracts:compile
+      - task: _contracts:copy-zk-assets
+      - task: _contracts:copy-configs
+      - task: _build:webapp
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
+      - task: _build:server
+      - task: _build:typecheck-contracts
     requires:
       vars: [NETWORK_ID]
 
   build-all:
     desc: Typecheck all TypeScript packages (requires compiled contracts)
     cmds:
-      - task: _:build-all
+      - task: _build:build-all
 
   test:
     desc: Run tests
-    deps: [_:libs]
+    deps: [_build:libs]
     cmds:
       - bun run --if-present --filter '*' test
 
   check:
     desc: Lint and format check
-    deps: [_:install]
+    deps: [_build:install]
     cmds:
       - bun run check
 
   fix:
     desc: Lint and format fix
-    deps: [_:install]
+    deps: [_build:install]
     cmds:
       - bun run fix
 
