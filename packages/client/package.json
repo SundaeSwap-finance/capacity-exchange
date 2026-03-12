@@ -15,7 +15,7 @@
     }
   },
   "scripts": {
-    "clean": "rm -rf generated/dist generated/tsconfig.tsbuildinfo node_modules",
+    "clean": "rm -rf generated/dist generated/tsconfig.tsbuildinfo",
     "generate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true",
     "build": "bun run generate-client && bun run compile",
     "compile": "tsc -p tsconfig.json",

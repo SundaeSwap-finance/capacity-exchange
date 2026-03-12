@@ -8,7 +8,7 @@
     "./token-mint/out/contract/*": "./token-mint/out/contract/*"
   },
   "scripts": {
-    "clean": "rm -rf counter/out token-mint/out node_modules .midnight-private-state .wallet-state .contracts.*.json",
+    "clean": "rm -rf counter/out token-mint/out .midnight-private-state .wallet-state .contracts.*.json",
     "compile:counter": "\"$COMPACTC\" counter/counter.compact counter/out",
     "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
     "compile": "bun run compile:counter && bun run compile:token-mint",

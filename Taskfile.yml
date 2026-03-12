@@ -9,9 +9,6 @@ includes:
     vars:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
-  _dev:
-    taskfile: taskfiles/dev.yml
-    internal: true
   _example:
     taskfile: taskfiles/example.yml
     internal: true
@@ -74,9 +71,9 @@ tasks:
       - task: prompt-mnemonic
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-      - cp -n {{.CONTRACTS_DIR}}/.env.example {{.CONTRACTS_DIR}}/.env
-      - cp -n {{.ROOT_DIR}}/packages/server/.env.example {{.ROOT_DIR}}/packages/server/.env
-      - cp -n {{.WEBAPP_DIR}}/.env.example {{.WEBAPP_DIR}}/.env
+      - cp {{.CONTRACTS_DIR}}/.env.example {{.CONTRACTS_DIR}}/.env
+      - cp {{.ROOT_DIR}}/packages/server/.env.example {{.ROOT_DIR}}/packages/server/.env
+      - cp {{.WEBAPP_DIR}}/.env.example {{.WEBAPP_DIR}}/.env
 
   setup:
     desc: 'One-time setup: configure env, install, build, deploy'
@@ -102,9 +99,16 @@ tasks:
     desc: Start server and webapp with hot-reload
     deps: [_example:require-deployed, _example:require-price-config, _build:libs]
     cmds:
-      - task: _dev:all
+      - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
+          CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
+          NAMES: core,node,components,server,webapp
+          COLORS: blue,cyan,magenta,green,yellow
+          EXTRA: >-
+            "bun run --filter @capacity-exchange/components build:watch"
+            "bun run --filter @capacity-exchange/server dev"
+            "bun run --filter @capacity-exchange/example-webapp dev"
     requires:
       vars: [NETWORK_ID]
 
@@ -112,9 +116,12 @@ tasks:
     desc: Start the capacity exchange server with hot-reload
     deps: [_build:midnight-node, _example:require-price-config]
     cmds:
-      - task: _dev:server-only
+      - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
+          NAMES: core,node,server
+          COLORS: blue,cyan,green
+          EXTRA: '"bun run --filter @capacity-exchange/server dev"'
     requires:
       vars: [NETWORK_ID]
 
@@ -122,11 +129,31 @@ tasks:
     desc: Start the example webapp with hot-reload
     deps: [_example:require-deployed, _build:components]
     cmds:
-      - task: _dev:webapp-only
+      - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
+          NAMES: core,node,components,webapp
+          COLORS: blue,cyan,magenta,yellow
+          EXTRA: >-
+            "bun run --filter @capacity-exchange/components build:watch"
+            "bun run --filter @capacity-exchange/example-webapp dev"
     requires:
       vars: [NETWORK_ID]
+
+  _dev:run:
+    internal: true
+    env:
+      MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
+      PRICE_CONFIG_FILE: 'price-config.{{.NETWORK_ID}}.json'
+      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
+      VITE_CAPACITY_EXCHANGE_URL: '{{.CAPACITY_EXCHANGE_URL | default ""}}'
+    cmds:
+      - >-
+        bunx concurrently --kill-others
+        -n {{.NAMES}} -c {{.COLORS}}
+        "bun run --filter @capacity-exchange/midnight-core build:watch"
+        "bun run --filter @capacity-exchange/midnight-node build:watch"
+        {{.EXTRA}}
 
   build:
     desc: Build all packages and compile/copy contracts
@@ -166,7 +193,8 @@ tasks:
       - bun run fix
 
   clean:
-    desc: Clean build artifacts
+    desc: Clean build artifacts and generated files
     cmds:
-      - bun run --filter '*' clean
-      - rm -rf node_modules
+      - bun run --filter '*' clean || true
+      - find . -name node_modules -type d -prune -exec rm -rf {} +
+      - rm -f wallet-mnemonic.*.txt
