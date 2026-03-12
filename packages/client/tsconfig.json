@@ -4,7 +4,6 @@
     "module": "esnext",
     "lib": ["es2020", "dom", "DOM.Iterable", "esnext.disposable"],
     "declaration": true,
-    "composite": true,
     "rootDir": "./generated",
     "outDir": "./generated/dist",
     "strict": true,

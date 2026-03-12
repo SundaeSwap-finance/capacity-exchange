@@ -1,16 +1,10 @@
 {
   "priceFormulas": [
     {
-      "currency": "lovelace",
-      "basePrice": "1000000",
-      "rateNumerator": "100",
-      "rateDenominator": "1000000000000000"
-    },
-    {
-      "currency": "satoshi",
-      "basePrice": "1000",
-      "rateNumerator": "10",
-      "rateDenominator": "1000000000000000"
+      "currency": "<derived-token-color>",
+      "basePrice": "101",
+      "rateNumerator": "11",
+      "rateDenominator": "1000"
     }
   ],
   "fundedContracts": []
