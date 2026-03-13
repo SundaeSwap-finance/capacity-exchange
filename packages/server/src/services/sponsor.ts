@@ -88,7 +88,7 @@ export class SponsorService {
       return false;
     }
 
-    return Array.from(intents.values()).every(this.isIntentEligible);
+    return Array.from(intents.values()).every((intent) => this.isIntentEligible(intent));
   }
 
   private isIntentEligible<S extends Signaturish, P extends Proofish, B extends Bindingish>(
@@ -97,7 +97,7 @@ export class SponsorService {
     if (intent.actions.length === 0) {
       return false;
     }
-    return intent.actions.every(this.isActionEligible);
+    return intent.actions.every((action) => this.isActionEligible(action));
   }
 
   private isActionEligible(action: ContractAction<Proofish>): boolean {
