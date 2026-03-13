@@ -15,21 +15,17 @@
 
 import * as runtime from '../runtime';
 import type {
-  ApiFundPost200Response,
-  ApiFundPostRequest,
   ApiOffersPost201Response,
   ApiOffersPostRequest,
   ApiPricesGet200Response,
   ApiPricesGet400Response,
+  ApiSponsorPost200Response,
+  ApiSponsorPostRequest,
   Get200Response,
   HealthGet200Response,
   HealthReadyGet200Response,
 } from '../models/index';
 import {
-    ApiFundPost200ResponseFromJSON,
-    ApiFundPost200ResponseToJSON,
-    ApiFundPostRequestFromJSON,
-    ApiFundPostRequestToJSON,
     ApiOffersPost201ResponseFromJSON,
     ApiOffersPost201ResponseToJSON,
     ApiOffersPostRequestFromJSON,
@@ -38,6 +34,10 @@ import {
     ApiPricesGet200ResponseToJSON,
     ApiPricesGet400ResponseFromJSON,
     ApiPricesGet400ResponseToJSON,
+    ApiSponsorPost200ResponseFromJSON,
+    ApiSponsorPost200ResponseToJSON,
+    ApiSponsorPostRequestFromJSON,
+    ApiSponsorPostRequestToJSON,
     Get200ResponseFromJSON,
     Get200ResponseToJSON,
     HealthGet200ResponseFromJSON,
@@ -45,10 +45,6 @@ import {
     HealthReadyGet200ResponseFromJSON,
     HealthReadyGet200ResponseToJSON,
 } from '../models/index';
-
-export interface ApiFundPostOperationRequest {
-    apiFundPostRequest: ApiFundPostRequest;
-}
 
 export interface ApiOffersPostOperationRequest {
     apiOffersPostRequest: ApiOffersPostRequest;
@@ -58,47 +54,14 @@ export interface ApiPricesGetRequest {
     specks: string;
 }
 
+export interface ApiSponsorPostOperationRequest {
+    apiSponsorPostRequest: ApiSponsorPostRequest;
+}
+
 /**
  * 
  */
 export class DefaultApi extends runtime.BaseAPI {
-
-    /**
-     */
-    async apiFundPostRaw(requestParameters: ApiFundPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiFundPost200Response>> {
-        if (requestParameters['apiFundPostRequest'] == null) {
-            throw new runtime.RequiredError(
-                'apiFundPostRequest',
-                'Required parameter "apiFundPostRequest" was null or undefined when calling apiFundPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/fund`;
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ApiFundPostRequestToJSON(requestParameters['apiFundPostRequest']),
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiFundPost200ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async apiFundPost(requestParameters: ApiFundPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiFundPost200Response> {
-        const response = await this.apiFundPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
 
     /**
      */
@@ -172,6 +135,43 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async apiPricesGet(requestParameters: ApiPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiPricesGet200Response> {
         const response = await this.apiPricesGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiSponsorPostRaw(requestParameters: ApiSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiSponsorPost200Response>> {
+        if (requestParameters['apiSponsorPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiSponsorPostRequest',
+                'Required parameter "apiSponsorPostRequest" was null or undefined when calling apiSponsorPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/sponsor`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiSponsorPostRequestToJSON(requestParameters['apiSponsorPostRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiSponsorPost200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiSponsorPost(requestParameters: ApiSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiSponsorPost200Response> {
+        const response = await this.apiSponsorPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

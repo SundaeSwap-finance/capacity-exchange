@@ -38,7 +38,7 @@ export interface CapacityExchangeConfig {
   confirmOffer: ConfirmOffer;
 }
 
-export interface FundedContractsConfig {
+export interface SponsoredTransactionsConfig {
   walletProvider: WalletProvider;
   capacityExchangeUrl: string;
 }

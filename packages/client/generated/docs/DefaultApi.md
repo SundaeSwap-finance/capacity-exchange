@@ -4,81 +4,13 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**apiFundPost**](DefaultApi.md#apifundpostoperation) | **POST** /api/fund |  |
 | [**apiOffersPost**](DefaultApi.md#apiofferspostoperation) | **POST** /api/offers |  |
 | [**apiPricesGet**](DefaultApi.md#apipricesget) | **GET** /api/prices |  |
+| [**apiSponsorPost**](DefaultApi.md#apisponsorpostoperation) | **POST** /api/sponsor |  |
 | [**healthGet**](DefaultApi.md#healthget) | **GET** /health/ |  |
 | [**healthReadyGet**](DefaultApi.md#healthreadyget) | **GET** /health/ready |  |
 | [**rootGet**](DefaultApi.md#rootget) | **GET** / |  |
 
-
-
-## apiFundPost
-
-> ApiFundPost200Response apiFundPost(apiFundPostRequest)
-
-
-
-### Example
-
-```ts
-import {
-  Configuration,
-  DefaultApi,
-} from '';
-import type { ApiFundPostOperationRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new DefaultApi();
-
-  const body = {
-    // ApiFundPostRequest
-    apiFundPostRequest: ...,
-  } satisfies ApiFundPostOperationRequest;
-
-  try {
-    const data = await api.apiFundPost(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **apiFundPostRequest** | [ApiFundPostRequest](ApiFundPostRequest.md) |  | |
-
-### Return type
-
-[**ApiFundPost200Response**](ApiFundPost200Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: `application/json`
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | Default Response |  -  |
-| **422** | Default Response |  -  |
-| **500** | Default Response |  -  |
-| **503** | Default Response |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
 ## apiOffersPost
@@ -212,6 +144,74 @@ No authorization required
 | **200** | Default Response |  -  |
 | **400** | Default Response |  -  |
 | **500** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiSponsorPost
+
+> ApiSponsorPost200Response apiSponsorPost(apiSponsorPostRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiSponsorPostOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // ApiSponsorPostRequest
+    apiSponsorPostRequest: ...,
+  } satisfies ApiSponsorPostOperationRequest;
+
+  try {
+    const data = await api.apiSponsorPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **apiSponsorPostRequest** | [ApiSponsorPostRequest](ApiSponsorPostRequest.md) |  | |
+
+### Return type
+
+[**ApiSponsorPost200Response**](ApiSponsorPost200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Default Response |  -  |
+| **422** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **503** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
