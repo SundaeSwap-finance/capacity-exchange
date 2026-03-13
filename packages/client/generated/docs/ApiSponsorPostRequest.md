@@ -1,22 +1,22 @@
 
-# ApiFundPost200Response
+# ApiSponsorPostRequest
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`tx` | string
+`provenTx` | string
 
 ## Example
 
 ```typescript
-import type { ApiFundPost200Response } from ''
+import type { ApiSponsorPostRequest } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "tx": null,
-} satisfies ApiFundPost200Response
+  "provenTx": null,
+} satisfies ApiSponsorPostRequest
 
 console.log(example)
 
@@ -25,7 +25,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ApiFundPost200Response
+const exampleParsed = JSON.parse(exampleJSON) as ApiSponsorPostRequest
 console.log(exampleParsed)
 ```
 

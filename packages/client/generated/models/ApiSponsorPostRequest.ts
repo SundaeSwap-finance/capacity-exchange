@@ -16,30 +16,30 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface ApiFundPostRequest
+ * @interface ApiSponsorPostRequest
  */
-export interface ApiFundPostRequest {
+export interface ApiSponsorPostRequest {
     /**
      * 
      * @type {string}
-     * @memberof ApiFundPostRequest
+     * @memberof ApiSponsorPostRequest
      */
     provenTx: string;
 }
 
 /**
- * Check if a given object implements the ApiFundPostRequest interface.
+ * Check if a given object implements the ApiSponsorPostRequest interface.
  */
-export function instanceOfApiFundPostRequest(value: object): value is ApiFundPostRequest {
+export function instanceOfApiSponsorPostRequest(value: object): value is ApiSponsorPostRequest {
     if (!('provenTx' in value) || value['provenTx'] === undefined) return false;
     return true;
 }
 
-export function ApiFundPostRequestFromJSON(json: any): ApiFundPostRequest {
-    return ApiFundPostRequestFromJSONTyped(json, false);
+export function ApiSponsorPostRequestFromJSON(json: any): ApiSponsorPostRequest {
+    return ApiSponsorPostRequestFromJSONTyped(json, false);
 }
 
-export function ApiFundPostRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): ApiFundPostRequest {
+export function ApiSponsorPostRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): ApiSponsorPostRequest {
     if (json == null) {
         return json;
     }
@@ -49,11 +49,11 @@ export function ApiFundPostRequestFromJSONTyped(json: any, ignoreDiscriminator: 
     };
 }
 
-export function ApiFundPostRequestToJSON(json: any): ApiFundPostRequest {
-    return ApiFundPostRequestToJSONTyped(json, false);
+export function ApiSponsorPostRequestToJSON(json: any): ApiSponsorPostRequest {
+    return ApiSponsorPostRequestToJSONTyped(json, false);
 }
 
-export function ApiFundPostRequestToJSONTyped(value?: ApiFundPostRequest | null, ignoreDiscriminator: boolean = false): any {
+export function ApiSponsorPostRequestToJSONTyped(value?: ApiSponsorPostRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

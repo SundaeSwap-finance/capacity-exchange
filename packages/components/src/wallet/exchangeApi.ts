@@ -32,8 +32,8 @@ class WrappedDefaultApi extends DefaultApi {
     return wrapCesApi(() => super.apiOffersPost(requestParameters));
   }
 
-  async apiFundPost(requestParameters: Parameters<DefaultApi['apiFundPost']>[0]) {
-    return wrapCesApi(() => super.apiFundPost(requestParameters));
+  async apiSponsorPost(requestParameters: Parameters<DefaultApi['apiSponsorPost']>[0]) {
+    return wrapCesApi(() => super.apiSponsorPost(requestParameters));
   }
 }
 

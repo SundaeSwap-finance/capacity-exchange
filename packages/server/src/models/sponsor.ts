@@ -1,21 +1,21 @@
 import { Type } from '@sinclair/typebox';
 import { ErrorResponse } from './common.js';
 
-export const FundRequest = Type.Object({
+export const SponsorRequest = Type.Object({
   provenTx: Type.String(),
 });
 
-export const FundResponse = Type.Object({
+export const SponsorResponse = Type.Object({
   tx: Type.String(),
 });
 
-export const FundReply = Type.Union([FundResponse, ErrorResponse]);
+export const SponsorReply = Type.Union([SponsorResponse, ErrorResponse]);
 
-export const FundSchema = {
+export const SponsorSchema = {
   schema: {
-    body: FundRequest,
+    body: SponsorRequest,
     response: {
-      200: FundResponse,
+      200: SponsorResponse,
       422: ErrorResponse,
       500: ErrorResponse,
       503: ErrorResponse,

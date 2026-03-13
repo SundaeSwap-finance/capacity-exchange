@@ -14,18 +14,18 @@ const CircuitFilterSchema = Type.Union([
   Type.Object({ type: Type.Literal('subset'), circuitNames: Type.Array(Type.String()) }),
 ]);
 
-const FundedContractSchema = Type.Object({
+const SponsoredContractSchema = Type.Object({
   contractAddress: Type.String(),
   circuits: CircuitFilterSchema,
 });
 
 const PriceConfigSchema = Type.Object({
   priceFormulas: Type.Array(PriceFormulaSchema),
-  fundedContracts: Type.Array(FundedContractSchema),
+  sponsoredContracts: Type.Array(SponsoredContractSchema),
 });
 
 export type PriceFormula = Static<typeof PriceFormulaSchema>;
-export type FundedContract = Static<typeof FundedContractSchema>;
+export type SponsoredContract = Static<typeof SponsoredContractSchema>;
 export type PriceConfig = Static<typeof PriceConfigSchema>;
 
 /** Load and validate the price config JSON file. */
