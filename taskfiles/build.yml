@@ -74,9 +74,9 @@ tasks:
           esac
     preconditions:
       - sh: test '{{.ARCH}}' != 'unsupported'
-        msg: "Unsupported platform: $(uname -s) $(uname -m). Supported: macOS (ARM/Intel), Linux (x86_64)."
+        msg: 'Unsupported platform: $(uname -s) $(uname -m). Supported: macOS (ARM/Intel), Linux (x86_64).'
       - sh: test -f {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip
-        msg: "Compiler archive not found: {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip"
+        msg: 'Compiler archive not found: {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip'
     cmds:
       - mkdir -p {{.COMPACTC_DIR}}/bin
       - unzip -o {{.COMPACTC_DIR}}/compactc_v{{.COMPACTC_VERSION}}_{{.ARCH}}.zip -d {{.COMPACTC_DIR}}/bin

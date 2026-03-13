@@ -1,9 +1,4 @@
-import {
-  contractsConfigPath,
-  priceConfigPath,
-  readJsonFile,
-  requireFile,
-} from '../lib/paths.ts';
+import { contractsConfigPath, priceConfigPath, readJsonFile, requireFile } from '../lib/paths.ts';
 
 export function validate(networkId: string): void {
   const pricePath = priceConfigPath(networkId);
@@ -14,9 +9,7 @@ export function validate(networkId: string): void {
   const contracts = readJsonFile(contractsPath);
   const priceConfig = readJsonFile(pricePath);
 
-  const priceCurrencies = new Set(
-    (priceConfig.priceFormulas ?? []).map((pf: { currency: string }) => pf.currency),
-  );
+  const priceCurrencies = new Set((priceConfig.priceFormulas ?? []).map((pf: { currency: string }) => pf.currency));
   if (!priceCurrencies.has(contracts.tokenMint.derivedTokenColor)) {
     console.error(`Token color ${contracts.tokenMint.derivedTokenColor} not in priceFormulas`);
     console.error(`Regenerate: NETWORK_ID=${networkId} task deploy`);

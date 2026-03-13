@@ -23,7 +23,7 @@ export function findWalletMnemonicFile(network: string, startDir: string = proce
     if (parent === dir) {
       throw new Error(
         `Wallet mnemonic file not found: ${filename}. ` +
-          `Create it at the project root: echo 'your mnemonic' > ${filename}`,
+          `Create it at the project root: echo 'your mnemonic' > ${filename}`
       );
     }
     dir = parent;

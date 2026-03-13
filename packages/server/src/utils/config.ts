@@ -16,13 +16,19 @@ export const getWalletSeed = async (
 
   if (baseConfig.WALLET_MNEMONIC_FILE) {
     log.info(`Loading wallet from mnemonic file: ${baseConfig.WALLET_MNEMONIC_FILE}`);
-    const mnemonic = await readFileOrError(baseConfig.WALLET_MNEMONIC_FILE, 'Failed to read wallet mnemonic from');
+    const mnemonic = await readFileOrError(
+      baseConfig.WALLET_MNEMONIC_FILE,
+      'Failed to read wallet mnemonic from',
+    );
     return uint8ArrayToHex(parseMnemonic(mnemonic));
   }
 
   if (baseConfig.WALLET_SEED_FILE) {
     log.info(`Loading wallet from seed file: ${baseConfig.WALLET_SEED_FILE}`);
-    const seedStr = await readFileOrError(baseConfig.WALLET_SEED_FILE, 'Failed to read wallet seed from');
+    const seedStr = await readFileOrError(
+      baseConfig.WALLET_SEED_FILE,
+      'Failed to read wallet seed from',
+    );
     parseSeedHex(seedStr);
     return seedStr.trim();
   }
