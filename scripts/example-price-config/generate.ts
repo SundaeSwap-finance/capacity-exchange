@@ -1,18 +1,18 @@
 // Generates a price config for the server from deployed example-webapp contracts.
 // This is a dev/demo tool — it wires the example-webapp's token into the server's
 // price config so both can be run together locally.
-import * as fs from "fs";
+import * as fs from 'fs';
 import {
   contractsConfigPath,
   priceConfigExamplePath,
   priceConfigPath,
   readJsonFile,
   requireFile,
-} from "../lib/paths.ts";
+} from '../lib/paths.ts';
 
 export function generate(networkId: string): void {
   const contractsPath = contractsConfigPath(networkId);
-  requireFile(contractsPath, networkId, "contracts config");
+  requireFile(contractsPath, networkId, 'contracts config');
 
   const contracts = readJsonFile(contractsPath);
   const example = readJsonFile(priceConfigExamplePath());
@@ -22,15 +22,13 @@ export function generate(networkId: string): void {
       ...pf,
       currency: contracts.tokenMint.derivedTokenColor,
     })),
-    sponsoredContracts: example.sponsoredContracts.map((
-      sc: Record<string, Record<string, string[]>>,
-    ) => ({
+    sponsoredContracts: example.sponsoredContracts.map((sc: Record<string, Record<string, string[]>>) => ({
       ...sc,
       contractAddress: contracts.counter.contractAddress,
     })),
   };
 
   const outputPath = priceConfigPath(networkId);
-  fs.writeFileSync(outputPath, JSON.stringify(config, null, 2) + "\n");
+  fs.writeFileSync(outputPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`Generated ${outputPath}`);
 }

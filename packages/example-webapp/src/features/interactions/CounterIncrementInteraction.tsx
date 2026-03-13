@@ -29,7 +29,8 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
     walletInfo.status === 'ready' && tokenColor !== null && (walletInfo.data.shieldedBalances[tokenColor] ?? 0n) > 0n;
   const cesReady = cesReadiness.status === 'ready' && cesReadiness.hasCurrency;
   const isCesProcessing = ces.status !== 'idle' && ces.status !== 'success' && ces.status !== 'error';
-  const isSponsoredProcessing = sponsored.status !== 'idle' && sponsored.status !== 'success' && sponsored.status !== 'error';
+  const isSponsoredProcessing =
+    sponsored.status !== 'idle' && sponsored.status !== 'success' && sponsored.status !== 'error';
   const isProcessing = isCesProcessing || isSponsoredProcessing;
   const baseReady = walletConnected && contractAddress !== null && providers !== null && cesReady && !isProcessing;
   const canCesIncrement = baseReady && hasTokenBalance;
@@ -58,7 +59,12 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
 
         <CesTransactionFeedback ces={ces} />
 
-        <Button variant="purple" fullWidth onClick={sponsored.incrementCounter} disabled={!canSponsoredIncrement || isProcessing}>
+        <Button
+          variant="purple"
+          fullWidth
+          onClick={sponsored.incrementCounter}
+          disabled={!canSponsoredIncrement || isProcessing}
+        >
           {isSponsoredProcessing ? 'Processing...' : 'Increment Counter (Sponsored)'}
         </Button>
 

@@ -15,7 +15,7 @@ export interface UseSponsoredTransactionResult {
 
 export function useSponsoredTransaction(
   providers: ConnectedApiProviders | null,
-  contractAddress: string | null,
+  contractAddress: string | null
 ): UseSponsoredTransactionResult {
   const config = useNetworkConfig();
   const [status, setStatus] = useState<SponsoredFlowStatus>('idle');
