@@ -58,6 +58,12 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
+  require-proof-server-url:
+    internal: true
+    preconditions:
+      - sh: '[ "{{.NETWORK_ID}}" = "preview" ] || [ "{{.NETWORK_ID}}" = "undeployed" ] || [ -n "$PROOF_SERVER_URL" ]'
+        msg: 'PROOF_SERVER_URL is required for {{.NETWORK_ID}}. Usage: NETWORK_ID={{.NETWORK_ID}} PROOF_SERVER_URL=<url> task <task>'
+
   prompt-mnemonic:
     internal: true
     vars:
@@ -84,6 +90,7 @@ tasks:
 
   setup:example:
     desc: 'One-time setup for example webapp: configure env, install, build, deploy'
+    deps: [require-proof-server-url]
     cmds:
       - task: init-env
         vars:
@@ -104,7 +111,7 @@ tasks:
 
   dev:example:
     desc: Start server and example webapp with hot-reload
-    deps: [_example:require-deployed, _example:require-example-price-config, _build:libs]
+    deps: [require-proof-server-url, _example:require-deployed, _example:require-example-price-config, _build:libs]
     cmds:
       - task: _dev:run
         vars:
@@ -121,7 +128,7 @@ tasks:
 
   dev:server:
     desc: Start the capacity exchange server with hot-reload
-    deps: [_build:midnight-node]
+    deps: [require-proof-server-url, _build:midnight-node]
     cmds:
       - task: _dev:run
         vars:

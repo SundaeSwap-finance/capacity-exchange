@@ -42,3 +42,4 @@ tasks:
     run: once
     preconditions:
       - sh: 'bun {{.ROOT_DIR}}/scripts/example-price-config.ts validate {{.NETWORK_ID}}'
+        msg: "Example price config invalid or missing. Run 'NETWORK_ID={{.NETWORK_ID}} task setup:example' first."

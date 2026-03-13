@@ -18,7 +18,7 @@ export interface NetworkConfig {
 }
 
 export function resolveNetworkConfig(networkId: string): NetworkConfig {
-  const endpoints = resolveEndpoints(toNetworkIdEnum(networkId));
+  const endpoints = resolveEndpoints(toNetworkIdEnum(networkId), import.meta.env.VITE_PROOF_SERVER_URL);
 
   return {
     networkId,
