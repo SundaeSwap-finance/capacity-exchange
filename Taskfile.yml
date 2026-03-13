@@ -37,17 +37,24 @@ tasks:
     deps: [_build:extract-compactc]
     cmds:
       - task: _example:compile
+      - task: _build:compile-bridge-contracts
+
+  compile-bridge-contracts:
+    desc: Compile bridge vault Compact contracts
+    deps: [_build:extract-compactc]
+    cmds:
+      - task: _build:compile-bridge-contracts
 
   deploy:
     desc: Deploy contracts for a network
     deps: [_build:midnight-node, _example:require-compiled]
     preconditions:
       - sh: 'test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-        msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup to create it'
+        msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:example to create it'
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
       - task: _example:copy-configs
-      - bun {{.ROOT_DIR}}/scripts/price-config.ts generate {{.NETWORK_ID}}
+      - bun {{.ROOT_DIR}}/scripts/example-price-config.ts generate {{.NETWORK_ID}}
     requires:
       vars: [NETWORK_ID]
 
@@ -75,8 +82,8 @@ tasks:
       - cp {{.ROOT_DIR}}/packages/server/.env.example {{.ROOT_DIR}}/packages/server/.env
       - cp {{.WEBAPP_DIR}}/.env.example {{.WEBAPP_DIR}}/.env
 
-  setup:
-    desc: 'One-time setup: configure env, install, build, deploy'
+  setup:example:
+    desc: 'One-time setup for example webapp: configure env, install, build, deploy'
     cmds:
       - task: init-env
         vars:
@@ -91,13 +98,13 @@ tasks:
       - task: deploy
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-      - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev' to start."
+      - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev:example' to start."
     requires:
       vars: [NETWORK_ID]
 
-  dev:
-    desc: Start server and webapp with hot-reload
-    deps: [_example:require-deployed, _example:require-price-config, _build:libs]
+  dev:example:
+    desc: Start server and example webapp with hot-reload
+    deps: [_example:require-deployed, _example:require-example-price-config, _build:libs]
     cmds:
       - task: _dev:run
         vars:
@@ -114,7 +121,7 @@ tasks:
 
   dev:server:
     desc: Start the capacity exchange server with hot-reload
-    deps: [_build:midnight-node, _example:require-price-config]
+    deps: [_build:midnight-node]
     cmds:
       - task: _dev:run
         vars:
@@ -155,8 +162,8 @@ tasks:
         "bun run --filter @capacity-exchange/midnight-node build:watch"
         {{.EXTRA}}
 
-  build:
-    desc: Build all packages and compile/copy contracts
+  build:example:
+    desc: Build example webapp, server, and example contracts
     cmds:
       - task: _example:compile
       - task: _example:copy-zk-assets
@@ -165,7 +172,7 @@ tasks:
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
-      - task: _build:typecheck-contracts
+      - task: _build:typecheck-example-contracts
     requires:
       vars: [NETWORK_ID]
 
@@ -197,4 +204,3 @@ tasks:
     cmds:
       - bun run --filter '*' clean || true
       - find . -name node_modules -type d -prune -exec rm -rf {} +
-      - rm -f wallet-mnemonic.*.txt
