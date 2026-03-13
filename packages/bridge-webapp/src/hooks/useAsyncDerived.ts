@@ -15,7 +15,8 @@ export function useAsyncDerived<T, R>(input: T | null, derive: (input: T) => Pro
           setResult(r);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('useAsyncDerived error:', err);
         if (!cancelled) {
           setResult(null);
         }

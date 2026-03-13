@@ -6,24 +6,24 @@ export interface WalletState<T> {
   status: WalletStatus;
   data: T | null;
   error: string | null;
-  connect: () => Promise<void>;
+  connect: (fn: () => Promise<T>) => Promise<void>;
   disconnect: () => void;
 }
 
-export function useWallet<T>(connectFn: () => Promise<T>): WalletState<T> {
+export function useWallet<T>(): WalletState<T> {
   const [status, setStatus] = useState<WalletStatus>('disconnected');
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const versionRef = useRef(0);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (fn: () => Promise<T>) => {
     const version = ++versionRef.current;
     setStatus('connecting');
     setData(null);
     setError(null);
 
     try {
-      const result = await connectFn();
+      const result = await fn();
       if (version !== versionRef.current) {
         return;
       }
@@ -36,7 +36,7 @@ export function useWallet<T>(connectFn: () => Promise<T>): WalletState<T> {
       setError(err instanceof Error ? err.message : 'Unknown error');
       setStatus('error');
     }
-  }, [connectFn]);
+  }, []);
 
   const disconnect = useCallback(() => {
     versionRef.current++;

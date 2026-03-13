@@ -184,8 +184,9 @@ tasks:
       vars: [NETWORK_ID]
 
   build-all:
-    desc: Typecheck all TypeScript packages (requires compiled contracts)
+    desc: Typecheck all TypeScript packages (compiles contracts first)
     cmds:
+      - task: compile-contracts
       - task: _build:build-all
 
   test:

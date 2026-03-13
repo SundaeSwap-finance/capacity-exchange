@@ -16,26 +16,35 @@ export async function deriveCardanoDisplay(blaze: Blaze<Provider, Wallet>): Prom
 import { createBlockfrostProvider } from './blockfrost';
 
 interface Cip30Provider {
-  name?: string;
-  icon?: string;
-  enable?: () => Promise<CIP30Interface>;
+  name: string;
+  icon: string;
+  enable: () => Promise<CIP30Interface>;
 }
 
 export type DetectCardanoWalletResult =
-  | { ok: true; name: string; provider: Cip30Provider }
+  | { ok: true; provider: Cip30Provider }
   | { ok: false; reason: 'no-cardano' }
   | { ok: false; reason: 'no-compatible-wallet' };
 
 // TODO(SUNDAE-2355): Move to core alongside detectMidnightExtension
 // TODO(SUNDAE-2362): Return all compatible wallets and let the user choose
 export function detectCardanoExtension(): DetectCardanoWalletResult {
-  const cardano = (globalThis as { cardano?: Record<string, Cip30Provider> }).cardano;
+  const cardano = (globalThis as { cardano?: Record<string, unknown> }).cardano;
   if (!cardano) {
     return { ok: false, reason: 'no-cardano' };
   }
-  for (const [key, provider] of Object.entries(cardano)) {
-    if (provider && typeof provider === 'object' && typeof provider.enable === 'function' && provider.name) {
-      return { ok: true, name: key, provider };
+  for (const value of Object.values(cardano)) {
+    if (
+      value &&
+      typeof value === 'object' &&
+      'name' in value &&
+      typeof value.name === 'string' &&
+      'icon' in value &&
+      typeof value.icon === 'string' &&
+      'enable' in value &&
+      typeof value.enable === 'function'
+    ) {
+      return { ok: true, provider: value as Cip30Provider };
     }
   }
   return { ok: false, reason: 'no-compatible-wallet' };
@@ -45,12 +54,12 @@ export type ConnectBlazeResult = { ok: true; blaze: Blaze<Provider, Wallet> } | 
 
 export async function connectBlaze(): Promise<ConnectBlazeResult> {
   const detected = detectCardanoExtension();
-  if ('reason' in detected) {
+  if (!detected.ok) {
     return { ok: false, error: `No Cardano wallet detected (${detected.reason})` };
   }
 
   try {
-    const api = await detected.provider.enable!();
+    const api = await detected.provider.enable();
     const webWallet = new WebWallet(api);
     const { provider, network } = createBlockfrostProvider();
     await assertNetworkMatch(webWallet, network);
