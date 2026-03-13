@@ -9,9 +9,9 @@ import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger-v7';
 import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
-import { CompiledVaultContract, VaultContract, Vault } from './contract.js';
+import { CompiledVaultContract, VaultContract, Vault } from '../lib/contract.js';
 import { type KeyPair } from './schnorr.js';
-import { createPrivateState } from './witnesses.js';
+import { createPrivateState } from '../lib/witnesses.js';
 import { vaultSignMultisig } from './vault-signing.js';
 
 const logger = createLogger(import.meta);

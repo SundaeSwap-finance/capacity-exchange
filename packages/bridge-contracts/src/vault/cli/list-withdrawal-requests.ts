@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { runCli, withAppContext, requireNetworkId } from '@capacity-exchange/midnight-node';
-import { listWithdrawalRequests, WithdrawalEntry } from '../lib/list-withdrawal-requests.js';
+import { listWithdrawalRequests, WithdrawalEntry } from '../node/list-withdrawal-requests.js';
 
 function main(): Promise<WithdrawalEntry[]> {
   program

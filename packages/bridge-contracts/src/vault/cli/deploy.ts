@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import { runCli, withAppContext, requireNetworkId } from '@capacity-exchange/midnight-node';
-import { deploy, DeployOutput } from '../lib/deploy.js';
-import { loadKeyPairs } from '../lib/schnorr.js';
+import { deploy, DeployOutput } from '../node/deploy.js';
+import { loadKeyPairs } from '../node/schnorr.js';
 
 function main(): Promise<DeployOutput> {
   program

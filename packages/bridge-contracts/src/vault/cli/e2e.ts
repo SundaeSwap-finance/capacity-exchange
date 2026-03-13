@@ -2,11 +2,11 @@ import { program } from 'commander';
 import { runCli, withAppContext, requireNetworkId } from '@capacity-exchange/midnight-node';
 import { type TxResult } from '@capacity-exchange/midnight-core';
 import type { AppContext } from '@capacity-exchange/midnight-node';
-import { deploy, DeployOutput } from '../lib/deploy.js';
-import { deposit } from '../lib/deposit.js';
-import { requestWithdrawal } from '../lib/request-withdrawal.js';
-import { listWithdrawalRequests, WithdrawalEntry } from '../lib/list-withdrawal-requests.js';
-import { loadKeyPairs, type KeyPair } from '../lib/schnorr.js';
+import { deploy, DeployOutput } from '../node/deploy.js';
+import { deposit } from '../node/deposit.js';
+import { requestWithdrawal } from '../node/request-withdrawal.js';
+import { listWithdrawalRequests, WithdrawalEntry } from '../node/list-withdrawal-requests.js';
+import { loadKeyPairs, type KeyPair } from '../node/schnorr.js';
 
 interface E2EParams {
   keyPairs: KeyPair[];
