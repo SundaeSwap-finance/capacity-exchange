@@ -31,8 +31,9 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
   const isCesProcessing = ces.status !== 'idle' && ces.status !== 'success' && ces.status !== 'error';
   const isSponsoredProcessing = sponsored.status !== 'idle' && sponsored.status !== 'success' && sponsored.status !== 'error';
   const isProcessing = isCesProcessing || isSponsoredProcessing;
-  const canIncrement =
-    walletConnected && contractAddress !== null && providers !== null && cesReady && hasTokenBalance && !isProcessing;
+  const baseReady = walletConnected && contractAddress !== null && providers !== null && cesReady && !isProcessing;
+  const canCesIncrement = baseReady && hasTokenBalance;
+  const canSponsoredIncrement = baseReady;
 
   return (
     <Card title="Contract Interactions">
@@ -51,13 +52,13 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
           hasTokenBalance={hasTokenBalance}
         />
 
-        <Button variant="blue" fullWidth onClick={ces.incrementCounter} disabled={!canIncrement || isProcessing}>
+        <Button variant="blue" fullWidth onClick={ces.incrementCounter} disabled={!canCesIncrement || isProcessing}>
           {isCesProcessing ? 'Processing...' : 'Increment Counter (via CES)'}
         </Button>
 
         <CesTransactionFeedback ces={ces} />
 
-        <Button variant="purple" fullWidth onClick={sponsored.incrementCounter} disabled={!canIncrement || isProcessing}>
+        <Button variant="purple" fullWidth onClick={sponsored.incrementCounter} disabled={!canSponsoredIncrement || isProcessing}>
           {isSponsoredProcessing ? 'Processing...' : 'Increment Counter (Sponsored)'}
         </Button>
 
