@@ -1,5 +1,13 @@
 import { deriveTokenColor, hexToBytes } from '@capacity-exchange/midnight-core';
 
+function parseHex(hex: string, expectedBytes: number, label: string): Uint8Array {
+  const bytes = hexToBytes(hex);
+  if (bytes.length !== expectedBytes) {
+    throw new Error(`${label}: expected ${expectedBytes} bytes, got ${bytes.length}`);
+  }
+  return bytes;
+}
+
 export interface BuildWithdrawalArgsParams {
   contractAddress: string;
   amount: bigint;
@@ -20,6 +28,8 @@ export interface WithdrawalArgs {
 export function buildWithdrawalArgs(params: BuildWithdrawalArgsParams): WithdrawalArgs {
   const { contractAddress, amount, domainSep, cardanoAddress, coinNonce, datumHash } = params;
 
+  const domainSepBytes = parseHex(domainSep, 32, 'domainSep');
+  const cardanoAddressBytes = parseHex(cardanoAddress, 57, 'cardanoAddress');
   const derivedColor = deriveTokenColor(domainSep, contractAddress);
 
   const coin = {
@@ -30,10 +40,10 @@ export function buildWithdrawalArgs(params: BuildWithdrawalArgsParams): Withdraw
 
   return {
     coin,
-    domainSepBytes: hexToBytes(domainSep),
-    cardanoAddressBytes: hexToBytes(cardanoAddress),
+    domainSepBytes,
+    cardanoAddressBytes,
     maybeDatumHash: datumHash
-      ? { is_some: true, value: hexToBytes(datumHash) }
+      ? { is_some: true, value: parseHex(datumHash, 32, 'datumHash') }
       : { is_some: false, value: new Uint8Array(32) },
   };
 }
