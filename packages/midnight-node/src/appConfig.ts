@@ -23,8 +23,8 @@ function loadDotEnv(): Record<string, string> {
 
 export function getAppConfigById(network: string): AppConfig {
   const networkId = toNetworkIdEnum(network);
-  const endpoints = resolveEndpoints(networkId);
   const dotEnv = loadDotEnv();
+  const endpoints = resolveEndpoints(networkId, process.env.PROOF_SERVER_URL ?? dotEnv['PROOF_SERVER_URL']);
   const seed = loadWalletSeedFromFile(network);
   const walletStateDir = dotEnv['WALLET_STATE_DIR'];
   if (!walletStateDir) {

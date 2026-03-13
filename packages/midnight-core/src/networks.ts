@@ -67,13 +67,14 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   ],
 ]);
 
-export function resolveEndpoints(networkId: NetworkId.NetworkId): NetworkEndpoints {
+export function resolveEndpoints(networkId: NetworkId.NetworkId, proofServerUrl?: string): NetworkEndpoints {
   const defaults = NETWORK_DEFAULTS.get(networkId);
   if (!defaults) {
     throw new Error(`Unsupported network '${networkId}'. Supported: ${[...NETWORK_DEFAULTS.keys()].join(', ')}`);
   }
-  if (!defaults.proofServerUrl) {
+  const resolvedProofServerUrl = proofServerUrl ?? defaults.proofServerUrl;
+  if (!resolvedProofServerUrl) {
     throw new Error(`No proof server configured for '${networkId}'. Set PROOF_SERVER_URL in your .env file.`);
   }
-  return defaults as NetworkEndpoints;
+  return { ...defaults, proofServerUrl: resolvedProofServerUrl };
 }

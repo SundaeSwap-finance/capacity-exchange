@@ -26,6 +26,6 @@ function buildWalletConfig(networkId: NetworkId.NetworkId, endpoints: NetworkEnd
   };
 }
 
-export function resolveWalletConfig(networkId: NetworkId.NetworkId): WalletConfig {
-  return buildWalletConfig(networkId, resolveEndpoints(networkId));
+export function resolveWalletConfig(networkId: NetworkId.NetworkId, proofServerUrl?: string): WalletConfig {
+  return buildWalletConfig(networkId, resolveEndpoints(networkId, proofServerUrl));
 }

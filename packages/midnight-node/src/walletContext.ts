@@ -26,7 +26,7 @@ export async function createWalletContext(config: AppConfig): Promise<WalletCont
   const result = await createAndSyncWalletWithStore(
     {
       seedHex,
-      walletConfig: resolveWalletConfig(config.networkId),
+      walletConfig: resolveWalletConfig(config.networkId, config.endpoints.proofServerUrl),
       syncTimeoutMs: 120_000,
     },
     store
