@@ -93,13 +93,13 @@ export function createConnectedAPI(
       return { tx: uint8ArrayToHex(finalized.serialize()) };
     },
     async makeTransfer() {
-      throw new Error('makeTransfer not implemented');
+      throw new Error('makeTransfer is not supported for mnemonic-based wallets');
     },
     async makeIntent() {
-      throw new Error('makeIntent not implemented');
+      throw new Error('makeIntent is not supported for mnemonic-based wallets');
     },
     async signData() {
-      throw new Error('signData not implemented');
+      throw new Error('signData is not supported for mnemonic-based wallets');
     },
     async submitTransaction(txHex: string) {
       const txBytes = hexToBytes(txHex);
@@ -112,7 +112,7 @@ export function createConnectedAPI(
       await walletFacade.submitTransaction(tx);
     },
     async getProvingProvider() {
-      throw new Error('getProvingProvider not implemented');
+      throw new Error('getProvingProvider is not supported for mnemonic-based wallets');
     },
     async getConfiguration() {
       return {
