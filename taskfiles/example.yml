@@ -36,9 +36,9 @@ tasks:
     run: once
     preconditions:
       - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.json >/dev/null 2>&1'
-        msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup' first."
+        msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup:example' first."
 
-  require-price-config:
+  require-example-price-config:
     run: once
     preconditions:
-      - sh: 'bun {{.ROOT_DIR}}/scripts/price-config.ts validate {{.NETWORK_ID}}'
+      - sh: 'bun {{.ROOT_DIR}}/scripts/example-price-config.ts validate {{.NETWORK_ID}}'

@@ -18,14 +18,14 @@ You'll need a wallet mnemonic funded with tNIGHT on preview. Create one using th
 ```bash
 # One-time: install deps, compile contracts, build packages, deploy, generate price config
 # Prompts for your wallet mnemonic on first run
-NETWORK_ID=preview task setup
+NETWORK_ID=preview task setup:example
 ```
 
 ### 3. Run
 
 ```bash
 # Start capacity exchange server (port 3000) and webapp (port 5173) with hot-reload
-NETWORK_ID=preview task dev
+NETWORK_ID=preview task dev:example
 ```
 
 You can also run them independently:
@@ -35,7 +35,7 @@ NETWORK_ID=preview task dev:server   # CES server only
 NETWORK_ID=preview task dev:webapp   # webapp only
 ```
 
-## What `task setup` Does
+## What `task setup:example` Does
 
 1. **Prompts for wallet mnemonic** — saved to `wallet-mnemonic.preview.txt` at the project root
 2. **Copies `.env.example` files** — creates `.env` for server, webapp, and contracts packages
@@ -51,11 +51,11 @@ Run `task --list` to see all tasks. Key ones:
 
 | Task | Description |
 |------|-------------|
-| `setup` | One-time setup: configure env, install, build, deploy |
-| `dev` | Start server and webapp with hot-reload |
+| `setup:example` | One-time setup for example webapp: configure env, install, build, deploy |
+| `dev:example` | Start server and example webapp with hot-reload |
 | `dev:server` | Start the server only |
 | `dev:webapp` | Start the webapp only |
-| `build` | Build all packages and compile/copy contracts |
+| `build:example` | Build example webapp, server, and example contracts |
 | `deploy` | Deploy contracts for a network |
 | `compile-contracts` | Compile Compact contracts |
 | `test` | Run tests |
@@ -106,7 +106,7 @@ All packages resolve the wallet mnemonic from a shared file at the project root:
 wallet-mnemonic.{network}.txt   # e.g. wallet-mnemonic.preview.txt
 ```
 
-`task setup` prompts for your mnemonic and creates this file. Each package finds it by walking up the directory tree from its working directory, so you only configure it once.
+`task setup:example` prompts for your mnemonic and creates this file. Each package finds it by walking up the directory tree from its working directory, so you only configure it once.
 
 In production (mainnet), set `WALLET_MNEMONIC_FILE` or `WALLET_SEED_FILE` explicitly instead — the walk-up fallback is disabled on mainnet.
 
