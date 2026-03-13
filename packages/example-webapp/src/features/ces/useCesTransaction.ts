@@ -7,7 +7,7 @@ import {
   CapacityExchangeUserCancelledError,
   CapacityExchangeNoPricesAvailableError,
 } from '@capacity-exchange/components';
-import type { BrowserProviders } from './createBrowserProviders';
+import type { ConnectedApiProviders } from '@capacity-exchange/midnight-core';
 import type { CesFlowStatus, CurrencySelectionState, OfferConfirmationState } from './types';
 import { findAndIncrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
@@ -80,7 +80,7 @@ function createConfirmOffer(
 //
 // Flow: idle -> building -> selecting-currency -> fetching-offers -> confirming -> submitting -> success/error
 export function useCesTransaction(
-  providers: BrowserProviders | null,
+  providers: ConnectedApiProviders | null,
   contractAddress: string | null
 ): UseCesTransactionResult {
   const config = useNetworkConfig();

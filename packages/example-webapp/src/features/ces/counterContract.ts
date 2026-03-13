@@ -7,8 +7,8 @@ import {
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@capacity-exchange/components';
-import type { BrowserProviders } from './createBrowserProviders';
-import { buildContractProviders } from './contractProviders';
+import { buildMidnightProviders } from '@capacity-exchange/midnight-core';
+import type { ConnectedApiProviders } from '@capacity-exchange/midnight-core';
 import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';
 
@@ -41,19 +41,12 @@ export async function getCounterValue(contractAddress: string, config: NetworkCo
 }
 
 export async function findAndIncrementCounter(
-  providers: BrowserProviders,
+  providers: ConnectedApiProviders,
   contractAddress: string,
   promptForCurrency: PromptForCurrency,
   confirmOffer: ConfirmOffer,
   config: NetworkConfig
 ) {
-  const { contractProviders } = buildContractProviders<CounterCircuitId>(
-    providers.midnightProvider,
-    providers.walletProvider,
-    '/midnight/counter',
-    config
-  );
-
   const cesWalletProvider = capacityExchangeWalletProvider({
     walletProvider: providers.walletProvider,
     connectedAPI: providers.connectedAPI,
@@ -64,7 +57,12 @@ export async function findAndIncrementCounter(
     confirmOffer,
   });
 
-  contractProviders.walletProvider = cesWalletProvider;
+  const contractProviders = buildMidnightProviders<CounterCircuitId>(
+    cesWalletProvider,
+    providers.midnightProvider,
+    '/midnight/counter',
+    config
+  );
 
   await findDeployedContract(contractProviders, {
     compiledContract: compiledCounterContract,

@@ -2,7 +2,11 @@ import { useMemo, useState, useEffect } from 'react';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities, WalletInfoState } from '../wallet/types';
-import { createBrowserProviders, type BrowserProviders, type ShieldedAddressInfo } from '../ces/createBrowserProviders';
+import {
+  connectedApiProvidersAdapter,
+  type ConnectedApiProviders,
+  type ShieldedAddressInfo,
+} from '@capacity-exchange/midnight-core';
 import { createSeedWalletConnectedAPIAdapter } from '../ces/seedWalletConnectedApi';
 import { useNetworkConfig } from '../../config';
 
@@ -10,7 +14,7 @@ function buildSeedProviders(
   walletConnection: SeedWalletConnection,
   walletData: WalletInfoState & { status: 'ready' },
   config: ReturnType<typeof useNetworkConfig>
-): BrowserProviders {
+): ConnectedApiProviders {
   const shieldedAddress: ShieldedAddressInfo = {
     shieldedAddress: walletData.data.shieldedAddress,
     shieldedCoinPublicKey: walletConnection.shieldedSecretKeys.coinPublicKey,
@@ -25,22 +29,22 @@ function buildSeedProviders(
     walletData.data.dustAddress,
     config
   );
-  return createBrowserProviders(connectedAPI, shieldedAddress);
+  return connectedApiProvidersAdapter(connectedAPI, shieldedAddress);
 }
 
-// TODO: Make useBrowserProviders responsible for building the ConnectedAPI for both paths,
+// TODO: Make useConnectedApiProviders responsible for building the ConnectedAPI for both paths,
 // so WalletConnection doesn't need to expose raw connectedAPI.
 function buildExtensionProviders(
   walletConnection: ExtensionWalletConnection,
   shieldedAddressInfo: ShieldedAddressInfo
-): BrowserProviders {
-  return createBrowserProviders(walletConnection.connectedAPI, shieldedAddressInfo);
+): ConnectedApiProviders {
+  return connectedApiProvidersAdapter(walletConnection.connectedAPI, shieldedAddressInfo);
 }
 
-export function useBrowserProviders(
+export function useConnectedApiProviders(
   wallet: WalletCapabilities | null,
   walletConnection: WalletConnection | null
-): { providers: BrowserProviders | null; walletInfo: WalletInfoState } {
+): { providers: ConnectedApiProviders | null; walletInfo: WalletInfoState } {
   const config = useNetworkConfig();
   const walletInfo = useWalletInfo(wallet);
   // Fetched async from the browser extension; null until resolved.
@@ -59,7 +63,7 @@ export function useBrowserProviders(
       });
   }, [walletConnection, wallet]);
 
-  const providers = useMemo<BrowserProviders | null>(() => {
+  const providers = useMemo<ConnectedApiProviders | null>(() => {
     if (!walletConnection || walletInfo.status !== 'ready') {
       return null;
     }

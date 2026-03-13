@@ -3,7 +3,7 @@ import { useContractContext } from '../contract/ContractContext';
 import type { WalletCapabilities, WalletConnection } from '../wallet/types';
 import { useCesTransaction } from '../ces';
 import { useCesReadiness } from './useCesReadiness';
-import { useBrowserProviders } from './useBrowserProviders';
+import { useConnectedApiProviders } from './useConnectedApiProviders';
 import { ReadinessMessages } from './ReadinessMessages';
 import { CesTransactionFeedback } from './CesTransactionFeedback';
 
@@ -18,7 +18,7 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
   const tokenColor =
     contractContext.tokenMintContract?.derivedTokenColor || contractContext.tokenMintContract?.tokenColor || null;
   const cesReadiness = useCesReadiness(tokenColor);
-  const { providers, walletInfo } = useBrowserProviders(wallet, walletConnection);
+  const { providers, walletInfo } = useConnectedApiProviders(wallet, walletConnection);
   const ces = useCesTransaction(providers, contractAddress);
 
   const walletConnected = wallet !== null && walletConnection !== null;

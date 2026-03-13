@@ -3,7 +3,7 @@ import type { ZswapSecretKeys, DustSecretKey, SignatureEnabled, Proof, Binding }
 import { Transaction } from '@midnight-ntwrk/ledger-v7';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../config';
-import type { ShieldedAddressInfo } from './createBrowserProviders';
+import type { ShieldedAddressInfo } from '@capacity-exchange/midnight-core';
 import { hexToBytes, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;

@@ -3,7 +3,7 @@ import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { buildContractProviders } from './contractProviders';
+import { buildMidnightProviders } from '@capacity-exchange/midnight-core';
 import type { NetworkConfig } from '../../config';
 import * as TokenMint from '../../../contracts/token-mint/out/contract/index.js';
 
@@ -54,9 +54,9 @@ export async function findAndMintTokens(
   amount: bigint,
   config: NetworkConfig
 ): Promise<void> {
-  const { contractProviders } = buildContractProviders<TokenMintCircuitId>(
-    midnightProvider,
+  const contractProviders = buildMidnightProviders<TokenMintCircuitId>(
     walletProvider,
+    midnightProvider,
     '/midnight/token-mint',
     config
   );
