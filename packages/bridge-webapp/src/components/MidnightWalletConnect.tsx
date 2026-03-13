@@ -35,7 +35,11 @@ export function MidnightWalletConnect({ wallet, address, balance }: MidnightWall
       setViaMnemonic(true);
       wallet.connect(async () => {
         return createConnectedAPIFromMnemonic(
-          { mnemonic, networkId: requireBrowserEnv('VITE_NETWORK_ID') },
+          {
+            mnemonic,
+            networkId: requireBrowserEnv('VITE_NETWORK_ID'),
+            proofServerUrl: import.meta.env.VITE_PROOF_SERVER_URL,
+          },
           new LocalStorageStateStore()
         );
       });

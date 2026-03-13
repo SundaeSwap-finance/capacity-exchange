@@ -16,7 +16,7 @@ export async function createConnectedAPIFromMnemonic(
   store: StateStore
 ): Promise<ConnectedAPI> {
   const connection = await createWalletFromMnemonic(options, store);
-  return createConnectedAPI(connection, options.networkId);
+  return createConnectedAPI(connection, options.networkId, options.proofServerUrl);
 }
 
 /**
@@ -24,11 +24,15 @@ export async function createConnectedAPIFromMnemonic(
  * This lets mnemonic/seed-based wallets be used anywhere a browser extension wallet would be,
  * without consumers needing to know how the wallet was created.
  */
-export function createConnectedAPI(connection: WalletConnection, networkId: string): ConnectedAPI {
+export function createConnectedAPI(
+  connection: WalletConnection,
+  networkId: string,
+  proofServerUrl?: string
+): ConnectedAPI {
   const { walletFacade, keys } = connection;
   const { shieldedSecretKeys, dustSecretKey } = keys;
   const enumId = toNetworkIdEnum(networkId);
-  const endpoints = resolveEndpoints(enumId);
+  const endpoints = resolveEndpoints(enumId, proofServerUrl);
 
   return {
     async getShieldedBalances() {

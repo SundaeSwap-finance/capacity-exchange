@@ -84,6 +84,7 @@ export async function createAndSyncWalletWithStore(
 export interface CreateWalletFromMnemonicOptions {
   mnemonic: string;
   networkId: string;
+  proofServerUrl?: string;
   syncTimeoutMs?: number;
 }
 
@@ -95,7 +96,7 @@ export async function createWalletFromMnemonic(
   const seedBytes = parseMnemonic(options.mnemonic);
   const seedHex = uint8ArrayToHex(seedBytes);
   const enumId = toNetworkIdEnum(options.networkId);
-  const walletConfig = resolveWalletConfig(enumId);
+  const walletConfig = resolveWalletConfig(enumId, options.proofServerUrl);
 
   return createAndSyncWalletWithStore({ seedHex, walletConfig }, store, options.syncTimeoutMs);
 }
