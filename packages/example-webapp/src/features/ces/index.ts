@@ -18,7 +18,7 @@ export {
   ErrorModal,
 } from './modals';
 export { useCesTransaction, type UseCesTransactionResult } from './useCesTransaction';
-export { useFundedTransaction, type UseFundedTransactionResult } from './useFundedTransaction';
+export { useSponsoredTransaction, type UseSponsoredTransactionResult } from './useSponsoredTransaction';
 export { createBrowserProviders, type BrowserProviders, type ShieldedAddressInfo } from './createBrowserProviders';
 export { getCounterValue, incrementCounter, type GetCounterValueResult } from './counterContract';
 export { findAndMintTokens } from './tokenMintContract';

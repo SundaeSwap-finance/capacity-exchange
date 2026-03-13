@@ -1,24 +1,24 @@
 import { useState, useCallback } from 'react';
-import { fundedContractsWalletProvider } from '@capacity-exchange/components';
+import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/components';
 import type { BrowserProviders } from './createBrowserProviders';
 import { incrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
 
-export type FundedFlowStatus = 'idle' | 'building' | 'submitting' | 'success' | 'error';
+export type SponsoredFlowStatus = 'idle' | 'building' | 'submitting' | 'success' | 'error';
 
-export interface UseFundedTransactionResult {
-  status: FundedFlowStatus;
+export interface UseSponsoredTransactionResult {
+  status: SponsoredFlowStatus;
   error: string | null;
   incrementCounter: () => Promise<void>;
   dismiss: () => void;
 }
 
-export function useFundedTransaction(
+export function useSponsoredTransaction(
   providers: BrowserProviders | null,
   contractAddress: string | null,
-): UseFundedTransactionResult {
+): UseSponsoredTransactionResult {
   const config = useNetworkConfig();
-  const [status, setStatus] = useState<FundedFlowStatus>('idle');
+  const [status, setStatus] = useState<SponsoredFlowStatus>('idle');
   const [error, setError] = useState<string | null>(null);
 
   const dismiss = useCallback(() => {
@@ -36,7 +36,7 @@ export function useFundedTransaction(
     setError(null);
 
     try {
-      const walletProvider = fundedContractsWalletProvider({
+      const walletProvider = sponsoredTransactionsWalletProvider({
         walletProvider: providers.walletProvider,
         capacityExchangeUrl: config.capacityExchangeUrl,
       });
@@ -45,7 +45,7 @@ export function useFundedTransaction(
       await incrementCounter(providers, contractAddress, walletProvider, config);
       setStatus('success');
     } catch (err) {
-      console.error('[FundedTransaction] Error:', err);
+      console.error('[SponsoredTransaction] Error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setStatus('error');
     }

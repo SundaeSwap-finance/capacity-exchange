@@ -1,22 +1,22 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { FundedContractsConfig } from './types';
+import type { SponsoredTransactionsConfig } from './types';
 import { createCesApi } from './exchangeApi';
-import { requestFunding } from './funded-contracts-steps';
+import { requestSponsorship } from './sponsored-transactions-steps';
 
 /**
- * Creates a WalletProvider for the funded contracts flow.
+ * Creates a WalletProvider for the sponsored transactions flow.
  *
  * The returned WalletProvider delegates getCoinPublicKey and getEncryptionPublicKey
  * to the base provider, but replaces balanceTx with logic that sends the proven
- * transaction to the CES server for funding.
+ * transaction to the CES server for sponsorship.
  *
  * @param config - Configuration including the base provider and CES server URL
- * @returns A new WalletProvider with funded contracts integration
+ * @returns A new WalletProvider with sponsored transactions integration
  */
-export function fundedContractsWalletProvider({
+export function sponsoredTransactionsWalletProvider({
   walletProvider,
   capacityExchangeUrl,
-}: FundedContractsConfig): WalletProvider {
+}: SponsoredTransactionsConfig): WalletProvider {
   const exchangeApi = createCesApi(capacityExchangeUrl);
 
   return {
@@ -24,8 +24,8 @@ export function fundedContractsWalletProvider({
     getEncryptionPublicKey: () => walletProvider.getEncryptionPublicKey(),
 
     async balanceTx(tx, _ttl?) {
-      console.debug('[FundedContracts] balanceTx called');
-      return requestFunding(tx, exchangeApi);
+      console.debug('[SponsoredTransactions] balanceTx called');
+      return requestSponsorship(tx, exchangeApi);
     },
   };
 }

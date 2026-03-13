@@ -1,0 +1,28 @@
+import fp from 'fastify-plugin';
+import { FastifyInstance } from 'fastify';
+import { SponsorService } from '../services/sponsor.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    sponsorService: SponsorService;
+  }
+}
+
+export default fp(async (fastify: FastifyInstance) => {
+  if (!fastify.utxoService) {
+    throw new Error("SponsorService requires UtxoService to be init'd first");
+  }
+  if (!fastify.txService) {
+    throw new Error("SponsorService requires TxService to be init'd first");
+  }
+
+  const service = new SponsorService(
+    fastify.utxoService,
+    fastify.txService,
+    fastify.config.SPONSORED_CONTRACTS,
+    fastify.config.endpoints.indexerHttpUrl,
+    fastify.log,
+  );
+  fastify.decorate('sponsorService', service);
+  fastify.log.info("SponsorService init'd");
+});

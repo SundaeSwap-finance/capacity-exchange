@@ -26,12 +26,12 @@ The service can handle multiple trades at once so long as you set up your NIGHT 
 
 ## Configuration
 
-Price and funded contract configuration are defined in a JSON file (see `price-config.example.json` for a starting template).
+Price and sponsored contract configuration are defined in a JSON file (see `price-config.example.json` for a starting template).
 
 ```jsonc
 {
   "priceFormulas": [],
-  "fundedContracts": [],
+  "sponsoredContracts": [],
 }
 ```
 ###  Price Formulas
@@ -63,13 +63,13 @@ price = 4321 DUST * (1.1 ADA / 1000 DUST) + 0.2 ADA
       = 4,953,100 lovelace
 ```
 
-### Funded Contracts
+### Sponsored Contracts
 
-A funded contract is a contract, or some subset of circuits in a contract, that you allow users to request DUST for at no charge. For example:
+A sponsored contract is a contract, or some subset of circuits in a contract, that you allow users to request DUST for at no charge. For example:
 
 ```jsonc
 {
-  "fundedContracts": [
+  "sponsoredContracts": [
     {
       "contractAddress": "0000000000000000000000000000000000000000000000000000000000000000",
       "circuits": { "type": "all" }
@@ -82,7 +82,7 @@ A funded contract is a contract, or some subset of circuits in a contract, that 
 }
 ```
 
-In the above configuration, any circuit at the contractAddress `0000000000000000000000000000000000000000000000000000000000000000` would be eligible for funding, while only the circuits with the names "trade" and "deposit" at `0000000000000000000000000000000000000000000000000000000000000001` would be eligible for funding.
+In the above configuration, any circuit at the contractAddress `0000000000000000000000000000000000000000000000000000000000000000` would be eligible for sponsorship, while only the circuits with the names "trade" and "deposit" at `0000000000000000000000000000000000000000000000000000000000000001` would be eligible for sponsorship.
 
 ## API
 

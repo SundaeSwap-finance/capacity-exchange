@@ -13,37 +13,37 @@ import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
-import type { FundedContract } from '../models/config.js';
+import type { SponsoredContract } from '../models/config.js';
 
 const FEE_MARGIN_BLOCKS = 2;
 
-export type FundTxResult =
+export type SponsorTxResult =
   | { status: 'ok'; tx: FinalizedTransaction }
   | { status: 'ineligible' }
   | WalletUnavailableResult;
 
-export class FundService {
+export class SponsorService {
   private readonly utxoService: UtxoService;
   private readonly txService: TxService;
-  private readonly fundedContracts: FundedContract[];
+  private readonly sponsoredContracts: SponsoredContract[];
   private readonly indexerUrl: string;
   private readonly logger: FastifyBaseLogger;
 
   constructor(
     utxoService: UtxoService,
     txService: TxService,
-    fundedContracts: FundedContract[],
+    sponsoredContracts: SponsoredContract[],
     indexerUrl: string,
     logger: FastifyBaseLogger,
   ) {
     this.utxoService = utxoService;
     this.txService = txService;
-    this.fundedContracts = fundedContracts;
+    this.sponsoredContracts = sponsoredContracts;
     this.indexerUrl = indexerUrl;
     this.logger = logger;
   }
 
-  async fundTx(userTx: UnboundTransaction): Promise<FundTxResult> {
+  async sponsorTx(userTx: UnboundTransaction): Promise<SponsorTxResult> {
     if (!this.isEligible(userTx)) {
       return { status: 'ineligible' };
     }
@@ -52,7 +52,7 @@ export class FundService {
     const estimatedSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS);
     this.logger.debug(
       { estimatedSpecks: estimatedSpecks.toString() },
-      'Estimated dust cost for funded tx',
+      'Estimated dust cost for sponsored tx',
     );
 
     const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
@@ -75,10 +75,10 @@ export class FundService {
   }
 
   /**
-   * A transaction is eligible IFF:
+   * A transaction is eligible for sponsorship IFF:
    * 1. It has at least one intent
    * 2. Every intent has at least one contract action
-   * 3. Every contract action is a ContractCall to a funded contract/circuit
+   * 3. Every contract action is a ContractCall to a sponsored contract/circuit
    */
   private isEligible<S extends Signaturish, P extends Proofish, B extends Bindingish>(
     tx: Transaction<S, P, B>,
@@ -110,20 +110,20 @@ export class FundService {
         ? new TextDecoder().decode(action.entryPoint)
         : action.entryPoint;
 
-    return this.fundedContracts.some((fc) => {
-      if (fc.contractAddress !== action.address) {
+    return this.sponsoredContracts.some((sc) => {
+      if (sc.contractAddress !== action.address) {
         return false;
       }
-      if (fc.circuits.type === 'all') {
+      if (sc.circuits.type === 'all') {
         return true;
       }
-      if (fc.circuits.type === 'subset') {
-        return fc.circuits.circuitNames.includes(entryPoint);
+      if (sc.circuits.type === 'subset') {
+        return sc.circuits.circuitNames.includes(entryPoint);
       }
 
       // This ensures that if we modify the circuits schema, we have a compile time error
 
-      const _exhaustive: never = fc.circuits;
+      const _exhaustive: never = sc.circuits;
 
       return false;
     });

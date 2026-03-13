@@ -19,17 +19,17 @@ const CircuitFilterSchema = Type.Union([
   Type.Object({ type: Type.Literal('subset'), circuitNames: Type.Array(Type.String()) }),
 ]);
 
-const FundedContractSchema = Type.Object({
+const SponsoredContractSchema = Type.Object({
   contractAddress: Type.String(),
   circuits: CircuitFilterSchema,
 });
 
-export type FundedContract = Static<typeof FundedContractSchema>;
+export type SponsoredContract = Static<typeof SponsoredContractSchema>;
 
 // I think we may need a better name than PriceConfig
 export const PriceConfigSchema = Type.Object({
   priceFormulas: Type.Array(PriceFormulaSchema),
-  fundedContracts: Type.Array(FundedContractSchema),
+  sponsoredContracts: Type.Array(SponsoredContractSchema),
 });
 
 export type PriceConfig = Static<typeof PriceConfigSchema>;
@@ -50,7 +50,7 @@ export interface AppConfig extends BaseConfig {
   endpoints: NetworkEndpoints;
   WALLET_SEED: string;
   PRICE_FORMULAS: PriceFormula[];
-  FUNDED_CONTRACTS: FundedContract[];
+  SPONSORED_CONTRACTS: SponsoredContract[];
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
 }

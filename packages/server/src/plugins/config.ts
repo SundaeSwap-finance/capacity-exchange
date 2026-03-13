@@ -66,7 +66,7 @@ export default fp(async (fastify: FastifyInstance) => {
     endpoints,
     WALLET_SEED: walletSeed,
     PRICE_FORMULAS: priceConfig.priceFormulas,
-    FUNDED_CONTRACTS: priceConfig.fundedContracts,
+    SPONSORED_CONTRACTS: priceConfig.sponsoredContracts,
     walletConnection,
     walletStateStore,
   };
