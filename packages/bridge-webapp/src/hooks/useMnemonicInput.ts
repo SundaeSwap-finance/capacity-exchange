@@ -1,9 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 const WORD_COUNT = 24;
+const CACHE_KEY = 'cached-mnemonic';
+
+function loadCachedWords(): string[] {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsed = cached.split(' ');
+      if (parsed.length === WORD_COUNT && parsed.every((w) => w.length > 0)) {
+        return parsed;
+      }
+    }
+  } catch {
+    // localStorage unavailable
+  }
+  return Array(WORD_COUNT).fill('');
+}
 
 export function useMnemonicInput() {
-  const [words, setWords] = useState<string[]>(Array(WORD_COUNT).fill(''));
+  const [words, setWords] = useState<string[]>(loadCachedWords);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -56,6 +72,16 @@ export function useMnemonicInput() {
   const filledCount = words.filter((w) => w.length > 0).length;
   const allFilled = filledCount === WORD_COUNT;
   const mnemonic = words.join(' ');
+
+  useEffect(() => {
+    try {
+      if (allFilled) {
+        localStorage.setItem(CACHE_KEY, mnemonic);
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, [allFilled, mnemonic]);
 
   return {
     words,
