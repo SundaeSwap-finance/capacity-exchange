@@ -29,7 +29,7 @@ export function ConnectDropdown({ label, error, options }: ConnectDropdownProps)
   return (
     <div className="relative" ref={menuRef}>
       <div className="flex items-center gap-2">
-        <button onClick={handleToggle} className="btn">
+        <button type="button" onClick={handleToggle} className="btn">
           Connect {label} Wallet
         </button>
         {error && <p className="text-red-400 text-xs max-w-xs">{error}</p>}
@@ -66,6 +66,7 @@ function DropdownItem({
 
   return (
     <button
+      type="button"
       className={`w-full text-left px-4 py-2 text-sm text-dark-200 hover:bg-dark-700 ${
         isFirst ? 'rounded-t-lg' : ''
       } ${isLast ? 'rounded-b-lg' : ''}`}
