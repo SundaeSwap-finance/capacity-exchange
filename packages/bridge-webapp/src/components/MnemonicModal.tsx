@@ -65,6 +65,8 @@ export function MnemonicModal({ onSubmit, onClose }: MnemonicModalProps) {
           ))}
         </div>
 
+        <p className="text-dark-500 text-xs mb-3">Pasting a mnemonic will clear your clipboard for security.</p>
+
         <div className="flex items-center justify-between">
           <button type="button" onClick={pasteFromClipboard} className="btn-sm text-xs">
             Paste from clipboard &amp; clear

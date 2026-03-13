@@ -30,7 +30,7 @@ export function useMnemonicInput() {
       }
       return next;
     });
-    navigator.clipboard.writeText('').catch(() => {});
+    navigator.clipboard?.writeText('').catch(() => {});
     return true;
   }, []);
 
