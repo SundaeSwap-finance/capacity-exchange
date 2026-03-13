@@ -96,7 +96,7 @@ The example webapp setup (preview) depends on these services:
 
 For other networks (preprod, mainnet), you must provide your own proof server via `PROOF_SERVER_URL` in the server's `.env`. Network endpoints are configured in `packages/midnight-core/src/networks.ts`.
 
-The bridge webapp additionally requires a [Blockfrost](https://blockfrost.io/) API key (`VITE_BLOCKFROST_PROJECT_ID`).
+The bridge webapp additionally requires a [Blockfrost](https://blockfrost.io/) API key (`VITE_BLOCKFROST_PROJECT_ID`). After running the rest of setup, you should provide this in `packages/bridge-contracts/.env.example`.
 
 ## Wallet Configuration
 
