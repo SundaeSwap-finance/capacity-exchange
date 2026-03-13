@@ -19,7 +19,12 @@ export function WordInput({ index, word, isLast, inputRef, onChange, onPaste, on
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === ' ' || e.key === 'Tab') {
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (!e.shiftKey && !isLast) {
+          onAdvance(index);
+        }
+      } else if (e.key === 'Tab') {
         if (!e.shiftKey && !isLast) {
           e.preventDefault();
           onAdvance(index);
