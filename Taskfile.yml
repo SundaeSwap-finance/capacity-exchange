@@ -1,7 +1,8 @@
 version: '3'
 
 vars:
-  CONTRACTS_DIR: packages/example-webapp/contracts
+  EXAMPLE_CONTRACTS_DIR: packages/example-webapp/contracts
+  BRIDGE_CONTRACTS_DIR: packages/bridge-contracts
   WEBAPP_DIR: packages/example-webapp
 
 tasks:
@@ -20,7 +21,7 @@ tasks:
     internal: true
     run: once
     preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out || (test -n "${COMPACTC:-}" && test -f "$COMPACTC")
+      - sh: test -d {{.EXAMPLE_CONTRACTS_DIR}}/counter/out || (test -n "${COMPACTC:-}" && test -f "$COMPACTC")
         msg: |
           Compiled contracts not found. Either:
             1. Set COMPACTC to a valid compactc binary path (contracts will be compiled automatically)
@@ -84,7 +85,8 @@ tasks:
   compile-contracts:
     desc: Compile Compact contracts (skipped if already compiled)
     status:
-      - test -d {{.CONTRACTS_DIR}}/counter/out
+      - test -d {{.EXAMPLE_CONTRACTS_DIR}}/counter/out
+      - test -d {{.BRIDGE_CONTRACTS_DIR}}/vault/out
     preconditions:
       - sh: test -n "${COMPACTC:-}"
         msg: |
@@ -98,7 +100,8 @@ tasks:
       - sh: '"$COMPACTC" --version | grep -q "0.28.0"'
         msg: 'Error: COMPACTC version mismatch. Required: 0.28.0'
     cmds:
-      - bun run --cwd {{.CONTRACTS_DIR}} compile
+      - bun run --cwd {{.EXAMPLE_CONTRACTS_DIR}} compile
+      - bun run --cwd {{.BRIDGE_CONTRACTS_DIR}} compile
 
   copy-zk-assets:
     internal: true
@@ -110,7 +113,7 @@ tasks:
     internal: true
     cmds:
       - mkdir -p {{.WEBAPP_DIR}}/public/contracts
-      - cp {{.CONTRACTS_DIR}}/.contracts.*.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
+      - cp {{.EXAMPLE_CONTRACTS_DIR}}/.contracts.*.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
 
   # --- High-level targets ---
 
@@ -118,9 +121,9 @@ tasks:
     internal: true
     deps: [build-components]
     preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
+      - sh: test -d {{.EXAMPLE_CONTRACTS_DIR}}/counter/out && test -d {{.EXAMPLE_CONTRACTS_DIR}}/token-mint/out
         msg: "Compiled contract output not found. Run 'task compile-contracts' first."
-      - sh: test -d packages/bridge-contracts/vault/out
+      - sh: test -d {{.BRIDGE_CONTRACTS_DIR}}/vault/out
         msg: "Compiled vault contract output not found. Run 'task compile-contracts' first."
     cmds:
       - bun run --filter @capacity-exchange/example-contracts build
@@ -187,12 +190,12 @@ tasks:
     desc: Deploy all contracts for a network
     deps: [build-midnight-node]
     preconditions:
-      - sh: test -d {{.CONTRACTS_DIR}}/counter/out
+      - sh: test -d {{.EXAMPLE_CONTRACTS_DIR}}/counter/out
         msg: "Compiled contracts not found. Run 'task compile-contracts' first."
-      - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED=|^${UPPER}_MNEMONIC=" {{.CONTRACTS_DIR}}/.env 2>/dev/null'
-        msg: 'Missing <NETWORK_ID>_SEED or <NETWORK_ID>_MNEMONIC in {{.CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
+      - sh: 'UPPER=$(echo "{{.NETWORK_ID}}" | tr "[:lower:]" "[:upper:]") && grep -qE "^${UPPER}_SEED=|^${UPPER}_MNEMONIC=" {{.EXAMPLE_CONTRACTS_DIR}}/.env 2>/dev/null'
+        msg: 'Missing <NETWORK_ID>_SEED or <NETWORK_ID>_MNEMONIC in {{.EXAMPLE_CONTRACTS_DIR}}/.env (NETWORK_ID={{.NETWORK_ID}})'
     cmds:
-      - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
+      - bun run --cwd {{.EXAMPLE_CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
       - task: copy-contract-configs
     requires:
       vars: [NETWORK_ID]
