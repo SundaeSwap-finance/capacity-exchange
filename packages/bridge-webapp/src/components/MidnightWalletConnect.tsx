@@ -3,6 +3,7 @@ import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import {
   requireBrowserEnv,
   createConnectedAPIFromMnemonic,
+  encodeShieldedAddress,
   LocalStorageStateStore,
 } from '@capacity-exchange/midnight-core';
 import type { WalletState } from '../hooks/useWallet';
@@ -12,11 +13,25 @@ import { MnemonicModal } from './MnemonicModal';
 
 interface MidnightWalletConnectProps {
   wallet: WalletState<ConnectedAPI>;
-  address?: string;
-  balance?: string;
 }
 
-export function MidnightWalletConnect({ wallet, address, balance }: MidnightWalletConnectProps) {
+const deriveAddress = async (connectedApi: ConnectedAPI) => {
+  const networkId = requireBrowserEnv('VITE_NETWORK_ID');
+  const raw = await connectedApi.getShieldedAddresses();
+  const encoded = encodeShieldedAddress(networkId, raw.shieldedCoinPublicKey, raw.shieldedEncryptionPublicKey);
+  if (!encoded.ok) {
+    throw new Error(encoded.error);
+  }
+  return encoded.address;
+};
+
+const deriveBalance = async (connectedApi: ConnectedAPI) => {
+  const unshielded = await connectedApi.getUnshieldedBalances();
+  const night = Object.values(unshielded).reduce((sum, v) => sum + v, 0n);
+  return `${(night / 1_000_000n).toLocaleString()} NIGHT`;
+};
+
+export function MidnightWalletConnect({ wallet }: MidnightWalletConnectProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [viaMnemonic, setViaMnemonic] = useState(false);
 
@@ -63,8 +78,8 @@ export function MidnightWalletConnect({ wallet, address, balance }: MidnightWall
         connectingLabel={viaMnemonic ? 'Syncing Midnight wallet…' : 'Connecting Midnight…'}
         wallet={wallet}
         connectOptions={connectOptions}
-        address={address}
-        balance={balance}
+        deriveAddress={deriveAddress}
+        deriveBalance={deriveBalance}
       />
       {modalOpen && <MnemonicModal onSubmit={handleMnemonicSubmit} onClose={handleModalClose} />}
     </>

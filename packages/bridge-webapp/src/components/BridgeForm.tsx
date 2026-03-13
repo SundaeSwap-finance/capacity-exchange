@@ -1,9 +1,9 @@
 import { ActionButton } from './ActionButton';
 
 interface BridgeFormProps {
-  onSubmit: () => void;
+  action: (formData: FormData) => void;
   disabledReasons: string[];
-  loading: boolean;
+  isPending: boolean;
   submitLabel: string;
   loadingLabel: string;
   result?: React.ReactNode;
@@ -12,9 +12,9 @@ interface BridgeFormProps {
 }
 
 export function BridgeForm({
-  onSubmit,
+  action,
   disabledReasons,
-  loading,
+  isPending,
   submitLabel,
   loadingLabel,
   result,
@@ -23,20 +23,14 @@ export function BridgeForm({
 }: BridgeFormProps) {
   return (
     <>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit();
-        }}
-        className="space-y-4"
-      >
+      <form action={action} className="space-y-4">
         {children}
 
         <ActionButton
           type="submit"
           label={submitLabel}
           loadingLabel={loadingLabel}
-          loading={loading}
+          loading={isPending}
           disabled={disabledReasons.length > 0}
         />
         {disabledReasons.length > 0 && (

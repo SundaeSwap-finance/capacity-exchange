@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import type { Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
 import { deposit } from '@capacity-exchange/components';
 import { adaToLovelace } from '@capacity-exchange/midnight-core';
 import { getBridgeDepositAddress } from '../lib/blockfrost';
 import { saveDeposit } from '../lib/depositStore';
-import { useAsyncAction } from '../hooks/useAsyncAction';
+import { useFormAction } from '../hooks/useFormAction';
 import { BridgeCard } from './BridgeCard';
 import { BridgeForm } from './BridgeForm';
 import { FormField } from './FormField';
@@ -26,7 +26,7 @@ export function DepositForm({ blaze, midnightAddress }: DepositFormProps) {
     !(amount > 0) && 'Enter an ADA amount greater than 0',
   ].filter(Boolean) as string[];
 
-  const action = useCallback(async () => {
+  const [{ result, error }, formAction, isPending] = useFormAction(async () => {
     const res = await deposit(blaze!, {
       depositAddress,
       shieldedMidnightAddress: midnightAddress!,
@@ -40,8 +40,7 @@ export function DepositForm({ blaze, midnightAddress }: DepositFormProps) {
       status: 'unconfirmed',
     });
     return res;
-  }, [blaze, midnightAddress, amount, depositAddress]);
-  const { result, error, loading, run } = useAsyncAction(action);
+  });
 
   return (
     <BridgeCard
@@ -49,9 +48,9 @@ export function DepositForm({ blaze, midnightAddress }: DepositFormProps) {
       description="Cardano → Midnight. Lock ADA on Cardano and receive mADA on the Midnight network."
     >
       <BridgeForm
-        onSubmit={run}
+        action={formAction}
         disabledReasons={disabledReasons}
-        loading={loading}
+        isPending={isPending}
         submitLabel="Submit Deposit"
         loadingLabel="Submitting…"
         result={result && <div className="alert-success">Transaction submitted: {result.txHash}</div>}

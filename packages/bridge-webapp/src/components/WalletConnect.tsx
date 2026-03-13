@@ -1,5 +1,7 @@
 // TODO: Move to shared frontend package (SUNDAE-2355)
 import type { WalletState } from '../hooks/useWallet';
+import { useAsyncDerived } from '../hooks/useAsyncDerived';
+import { truncateAddress } from '../lib/format';
 import { ConnectDropdown, type ConnectOption } from './ConnectDropdown';
 
 export type { ConnectOption };
@@ -9,8 +11,8 @@ interface WalletConnectProps<T> {
   connectingLabel?: string;
   wallet: WalletState<T>;
   connectOptions: ConnectOption[];
-  address?: string;
-  balance?: string;
+  deriveAddress: (data: T) => Promise<string>;
+  deriveBalance: (data: T) => Promise<string>;
 }
 
 export function WalletConnect<T>({
@@ -18,9 +20,12 @@ export function WalletConnect<T>({
   connectingLabel,
   wallet,
   connectOptions,
-  address,
-  balance,
+  deriveAddress,
+  deriveBalance,
 }: WalletConnectProps<T>) {
+  const address = useAsyncDerived(wallet.data, deriveAddress);
+  const balance = useAsyncDerived(wallet.data, deriveBalance);
+
   if (wallet.status === 'connecting') {
     return (
       <div className="chip gap-2">
@@ -38,7 +43,7 @@ export function WalletConnect<T>({
           {address && (
             <>
               <span className="separator">|</span>
-              <span className="text-muted-xs font-mono">{address}</span>
+              <span className="text-muted-xs font-mono">{truncateAddress(address)}</span>
             </>
           )}
           {balance && (
