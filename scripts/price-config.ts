@@ -3,9 +3,7 @@ import { generate } from './price-config/generate.ts';
 import { validate } from './price-config/validate.ts';
 
 function main() {
-  program
-    .name('price-config')
-    .description('Generate and validate price configs from deployed contracts');
+  program.name('price-config').description('Generate and validate price configs from deployed contracts');
 
   program
     .command('generate')

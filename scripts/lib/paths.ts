@@ -15,7 +15,7 @@ export function priceConfigExamplePath(): string {
   return path.join(rootDir, 'packages', 'server', 'price-config.example.json');
 }
 
-export function readJsonFile(filePath: string): Record<string, any> {
+export function readJsonFile(filePath: string): Record<string, unknown> {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 

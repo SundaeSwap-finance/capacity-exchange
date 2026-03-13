@@ -25,12 +25,7 @@ export class WalletStateStore {
   #pendingFacade: WalletFacade | null = null;
   #timeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(
-    base: StateStore,
-    networkId: string,
-    coinPublicKey: string,
-    options?: WalletStateStoreOptions,
-  ) {
+  constructor(base: StateStore, networkId: string, coinPublicKey: string, options?: WalletStateStoreOptions) {
     this.#store = withPrefix(base, `${networkId}-${coinPublicKey}`);
     this.#debounceMs = options?.debounceMs ?? 0;
     this.#onFlushError = options?.onFlushError ?? (() => {});
@@ -38,7 +33,7 @@ export class WalletStateStore {
 
   async loadWalletState(): Promise<SavedWalletState> {
     const [savedShieldedState, savedUnshieldedState, savedDustState] = await Promise.all(
-      WALLET_STATE_KEYS.map((k) => this.#store.load(k)),
+      WALLET_STATE_KEYS.map((k) => this.#store.load(k))
     );
     return { savedShieldedState, savedUnshieldedState, savedDustState };
   }
@@ -66,7 +61,9 @@ export class WalletStateStore {
       this.#timeout = null;
     }
     const facade = this.#pendingFacade;
-    if (!facade) return;
+    if (!facade) {
+      return;
+    }
     this.#pendingFacade = null;
     await this.#doSave(facade);
   }
@@ -78,9 +75,7 @@ export class WalletStateStore {
       facade.dust.serializeState(),
     ]);
     await Promise.all(
-      [shieldedState, unshieldedState, dustState].map((data, i) =>
-        this.#store.save(WALLET_STATE_KEYS[i], data),
-      ),
+      [shieldedState, unshieldedState, dustState].map((data, i) => this.#store.save(WALLET_STATE_KEYS[i], data))
     );
   }
 

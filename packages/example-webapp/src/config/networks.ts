@@ -1,4 +1,4 @@
-import { resolveEndpoints, requireBrowserEnv, toNetworkIdEnum, type NetworkEndpoints } from '@capacity-exchange/midnight-core';
+import { resolveEndpoints, requireBrowserEnv, toNetworkIdEnum } from '@capacity-exchange/midnight-core';
 
 export function requireEnvOneOf(name: string, allowedValues: readonly string[]): string {
   const value = requireBrowserEnv(name);
