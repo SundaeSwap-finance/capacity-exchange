@@ -49,3 +49,9 @@ export { getLedgerParameters } from './getLedgerParameters.js';
 export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';
+export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
+export {
+  connectedApiProvidersAdapter,
+  type ConnectedApiProviders,
+  type ShieldedAddressInfo,
+} from './connectedApiProviders.js';
