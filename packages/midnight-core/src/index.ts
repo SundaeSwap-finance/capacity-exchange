@@ -1,5 +1,5 @@
 export { requireBrowserEnv } from './envBrowser.js';
-export { hexToBytes, uint8ArrayToHex } from './hex.js';
+export { hexToBytes, parseHex, uint8ArrayToHex } from './hex.js';
 export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';

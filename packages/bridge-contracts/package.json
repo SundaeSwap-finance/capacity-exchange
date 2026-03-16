@@ -16,7 +16,7 @@
   },
   "exports": {
     "./vault/out/contract/*": "./vault/out/contract/*",
-    "./vault/lib/*": "./src/vault/lib/*"
+    "./vault/core/*": "./src/vault/core/*"
   },
   "keywords": [
     "midnight",

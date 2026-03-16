@@ -1,12 +1,4 @@
-import { deriveTokenColor, hexToBytes } from '@capacity-exchange/midnight-core';
-
-function parseHex(hex: string, expectedBytes: number, label: string): Uint8Array {
-  const bytes = hexToBytes(hex);
-  if (bytes.length !== expectedBytes) {
-    throw new Error(`${label}: expected ${expectedBytes} bytes, got ${bytes.length}`);
-  }
-  return bytes;
-}
+import { deriveTokenColor, hexToBytes, parseHex } from '@capacity-exchange/midnight-core';
 
 export interface BuildWithdrawalArgsParams {
   contractAddress: string;

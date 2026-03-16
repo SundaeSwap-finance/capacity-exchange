@@ -2,9 +2,9 @@ import * as crypto from 'crypto';
 import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
-import { CompiledVaultContract, VaultContract } from '../lib/contract.js';
-import { createPrivateState } from '../lib/witnesses.js';
-import { buildWithdrawalArgs } from '../lib/withdrawal-args.js';
+import { CompiledVaultContract, VaultContract } from '../core/contract.js';
+import { createPrivateState } from '../core/witnesses.js';
+import { buildWithdrawalArgs } from '../core/withdrawal-args.js';
 
 const logger = createLogger(import.meta);
 
