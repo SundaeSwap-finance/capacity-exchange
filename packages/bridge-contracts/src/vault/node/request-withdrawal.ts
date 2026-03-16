@@ -1,9 +1,10 @@
 import * as crypto from 'crypto';
 import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
-import { toTxResult, type TxResult, deriveTokenColor } from '@capacity-exchange/midnight-core';
+import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
-import { CompiledVaultContract, VaultContract } from './contract.js';
-import { createPrivateState } from './witnesses.js';
+import { CompiledVaultContract, VaultContract } from '../core/contract.js';
+import { createPrivateState } from '../core/witnesses.js';
+import { buildWithdrawalArgs } from '../core/withdrawal-args.js';
 
 const logger = createLogger(import.meta);
 
@@ -34,23 +35,20 @@ export async function requestWithdrawal(ctx: AppContext, params: RequestWithdraw
     ])
   );
 
-  const derivedColor = deriveTokenColor(domainSep, contractAddress);
-  const coin = {
-    nonce: crypto.randomBytes(32),
-    color: Buffer.from(derivedColor, 'hex'),
-    value: amount,
-  };
+  const { coin, domainSepBytes, cardanoAddressBytes, maybeDatumHash } = buildWithdrawalArgs({
+    contractAddress,
+    amount,
+    domainSep,
+    cardanoAddress,
+    coinNonce: crypto.randomBytes(32),
+  });
+
   const result = await submitStatefulCallTxDirect<VaultContract, 'requestWithdrawal'>(providers, {
     contractAddress,
     compiledContract: CompiledVaultContract,
     circuitId: 'requestWithdrawal',
     privateStateId,
-    args: [
-      coin,
-      Buffer.from(domainSep, 'hex'),
-      Buffer.from(cardanoAddress, 'hex'),
-      { is_some: false, value: new Uint8Array(32) },
-    ],
+    args: [coin, domainSepBytes, cardanoAddressBytes, maybeDatumHash],
   });
 
   logger.info(`Withdrawal request submitted in block ${result.public.blockHeight}`);

@@ -69,7 +69,7 @@ struct SchnorrSignature {
 
 struct Withdrawal {
   amount: Uint<128>,
-  address: Bytes<112>,
+  address: Bytes<57>,
   domainSep: Bytes<32>,
   datumHash: Maybe<Bytes<32>>,
 }
@@ -163,7 +163,7 @@ circuit verifySchnorrSignature(
 circuit requestWithdrawal(
           coin: ShieldedCoinInfo,
           domainSep: Bytes<32>,
-          cardanoAddress: Bytes<112>,
+          cardanoAddress: Bytes<57>,
           maybeDatumHash: Maybe<Bytes<32>>
           ): [] {
   const expectedColor = tokenType(domainSep, kernel.self());
@@ -173,7 +173,7 @@ circuit requestWithdrawal(
   sendImmediateShielded(disclose(coin), disclose(shieldedBurnAddress()), disclose(coin.value));
 
   const withdrawalKey =
-          persistentHash<[ShieldedCoinInfo, Bytes<112>, Maybe<Bytes<32>>]>(
+          persistentHash<[ShieldedCoinInfo, Bytes<57>, Maybe<Bytes<32>>]>(
             [coin, cardanoAddress, maybeDatumHash]
             );
 

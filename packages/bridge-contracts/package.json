@@ -15,7 +15,8 @@
     "vault:e2e": "bun src/vault/cli/e2e.ts"
   },
   "exports": {
-    "./vault/out/contract/*": "./vault/out/contract/*"
+    "./vault/out/contract/*": "./vault/out/contract/*",
+    "./vault/core/*": "./src/vault/core/*"
   },
   "keywords": [
     "midnight",

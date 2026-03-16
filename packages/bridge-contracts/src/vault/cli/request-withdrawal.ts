@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import { runCli, withAppContext, requireNetworkId } from '@capacity-exchange/midnight-node';
 import { type TxResult } from '@capacity-exchange/midnight-core';
-import { requestWithdrawal } from '../lib/request-withdrawal.js';
+import { requestWithdrawal } from '../node/request-withdrawal.js';
 
 function main(): Promise<TxResult> {
   program

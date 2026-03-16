@@ -1,8 +1,8 @@
 import { program } from 'commander';
 import { runCli, withAppContext, requireNetworkId } from '@capacity-exchange/midnight-node';
 import { type TxResult } from '@capacity-exchange/midnight-core';
-import { deposit } from '../lib/deposit.js';
-import { loadKeyPairs } from '../lib/schnorr.js';
+import { deposit } from '../node/deposit.js';
+import { loadKeyPairs } from '../node/schnorr.js';
 
 function main(): Promise<TxResult> {
   program

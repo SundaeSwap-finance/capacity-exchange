@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext, buildProviders } from '@capacity-exchange/midnight-node';
-import { CompiledVaultContract, VaultContract } from './contract.js';
-import { createPrivateState, NativePoint } from './witnesses.js';
+import { CompiledVaultContract, VaultContract } from '../core/contract.js';
+import { createPrivateState, NativePoint } from '../core/witnesses.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
 
 const logger = createLogger(import.meta);

@@ -1,5 +1,5 @@
 import { AppContext, buildProviders } from '@capacity-exchange/midnight-node';
-import { Vault, VaultContract } from './contract.js';
+import { Vault, VaultContract } from '../core/contract.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
 
 const logger = createLogger(import.meta);

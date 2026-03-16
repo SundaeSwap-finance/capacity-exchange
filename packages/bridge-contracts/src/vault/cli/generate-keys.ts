@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { program } from 'commander';
 import { runCli } from '@capacity-exchange/midnight-node';
-import { generateKeyPair } from '../lib/schnorr.js';
+import { generateKeyPair } from '../node/schnorr.js';
 
 interface GenerateKeysOutput {
   file: string;
