@@ -3,20 +3,25 @@ import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import {
   requireBrowserEnv,
   createConnectedAPIFromMnemonic,
+  getNightBalance,
+  specksToNight,
   LocalStorageStateStore,
 } from '@capacity-exchange/midnight-core';
 import type { WalletState } from '../hooks/useWallet';
-import { connectMidnightWallet } from '../lib/midnight';
+import { connectMidnightWallet, deriveShieldedAddress } from '../lib/midnight';
 import { WalletConnect, type ConnectOption } from './WalletConnect';
 import { MnemonicModal } from './MnemonicModal';
 
 interface MidnightWalletConnectProps {
   wallet: WalletState<ConnectedAPI>;
-  address?: string;
-  balance?: string;
 }
 
-export function MidnightWalletConnect({ wallet, address, balance }: MidnightWalletConnectProps) {
+const deriveBalance = async (connectedApi: ConnectedAPI) => {
+  const balances = await connectedApi.getUnshieldedBalances();
+  return `${specksToNight(getNightBalance(balances))} NIGHT`;
+};
+
+export function MidnightWalletConnect({ wallet }: MidnightWalletConnectProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [viaMnemonic, setViaMnemonic] = useState(false);
 
@@ -63,8 +68,8 @@ export function MidnightWalletConnect({ wallet, address, balance }: MidnightWall
         connectingLabel={viaMnemonic ? 'Syncing Midnight wallet…' : 'Connecting Midnight…'}
         wallet={wallet}
         connectOptions={connectOptions}
-        address={address}
-        balance={balance}
+        deriveAddress={deriveShieldedAddress}
+        deriveBalance={deriveBalance}
       />
       {modalOpen && <MnemonicModal onSubmit={handleMnemonicSubmit} onClose={handleModalClose} />}
     </>

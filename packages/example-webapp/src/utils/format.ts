@@ -1,10 +1,5 @@
-const NIGHT_DECIMALS = 1_000_000n;
 const SPECK_PER_DUST = 10n ** 15n;
 const SUBSCRIPT_DIGITS = '₀₁₂₃₄₅₆₇₈₉';
-
-export function formatNight(value: bigint): string {
-  return (value / NIGHT_DECIMALS).toLocaleString();
-}
 
 // Formats a speck amount as DUST (1 DUST = 10^15 speck).
 // For very small fractional values, elides leading zeros with a subscript count:

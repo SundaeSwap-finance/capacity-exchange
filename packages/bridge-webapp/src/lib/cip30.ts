@@ -1,18 +1,6 @@
 import { Blaze, WebWallet } from '@blaze-cardano/sdk';
 import type { CIP30Interface, Provider, Wallet } from '@blaze-cardano/sdk';
-import { lovelaceToAda, type CardanoNetwork } from '@capacity-exchange/midnight-core';
-
-export interface CardanoDisplayInfo {
-  address: string;
-  balanceAda: string;
-}
-
-export async function deriveCardanoDisplay(blaze: Blaze<Provider, Wallet>): Promise<CardanoDisplayInfo> {
-  return {
-    address: (await blaze.wallet.getChangeAddress()).toBech32(),
-    balanceAda: lovelaceToAda((await blaze.wallet.getBalance()).coin()),
-  };
-}
+import type { CardanoNetwork } from '@capacity-exchange/midnight-core';
 import { createBlockfrostProvider } from './blockfrost';
 
 interface Cip30Provider {
@@ -27,7 +15,6 @@ export type DetectCardanoWalletResult =
   | { ok: false; reason: 'no-compatible-wallet' };
 
 // TODO(SUNDAE-2355): Move to core alongside detectMidnightExtension
-// TODO(SUNDAE-2362): Return all compatible wallets and let the user choose
 export function detectCardanoExtension(): DetectCardanoWalletResult {
   const cardano = (globalThis as { cardano?: Record<string, unknown> }).cardano;
   if (!cardano) {
