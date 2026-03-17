@@ -11,7 +11,7 @@ export interface NetworkConfig {
 export function getNetworkConfig(): NetworkConfig {
   const networkId = requireBrowserEnv('VITE_NETWORK_ID');
   const enumId = toNetworkIdEnum(networkId);
-  const proofServerOverride = requireBrowserEnv('VITE_PROOF_SERVER_URL');
+  const proofServerOverride = import.meta.env.VITE_PROOF_SERVER_URL;
   const endpoints = resolveEndpoints(enumId, proofServerOverride);
   return {
     networkId,

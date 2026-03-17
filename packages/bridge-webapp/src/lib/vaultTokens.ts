@@ -20,15 +20,15 @@ interface VaultInfo {
  * correspond to bridged-recognized tokens.
  */
 export function buildColorToVaultMap(): Map<string, VaultInfo> {
+  const { contractAddress, tokenTypes } = getVaultConfig();
   const map = new Map<string, VaultInfo>();
-  try {
-    const { contractAddress, tokenTypes } = getVaultConfig();
-    for (const tt of tokenTypes) {
+  for (const tt of tokenTypes) {
+    try {
       const color = deriveTokenColor(tt.domainSep, contractAddress);
       map.set(color, { label: tt.label, domainSep: tt.domainSep });
+    } catch (err) {
+      throw new Error(`Failed to derive token color for "${tt.label}" (domainSep=${tt.domainSep}): ${err}`);
     }
-  } catch {
-    // vault config not available
   }
   return map;
 }

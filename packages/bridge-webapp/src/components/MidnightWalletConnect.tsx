@@ -3,11 +3,12 @@ import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import {
   requireBrowserEnv,
   createConnectedAPIFromMnemonic,
-  encodeShieldedAddress,
+  getNightBalance,
+  specksToNight,
   LocalStorageStateStore,
 } from '@capacity-exchange/midnight-core';
 import type { WalletState } from '../hooks/useWallet';
-import { connectMidnightWallet } from '../lib/midnight';
+import { connectMidnightWallet, deriveShieldedAddress } from '../lib/midnight';
 import { WalletConnect, type ConnectOption } from './WalletConnect';
 import { MnemonicModal } from './MnemonicModal';
 
@@ -15,20 +16,9 @@ interface MidnightWalletConnectProps {
   wallet: WalletState<ConnectedAPI>;
 }
 
-const deriveAddress = async (connectedApi: ConnectedAPI) => {
-  const networkId = requireBrowserEnv('VITE_NETWORK_ID');
-  const raw = await connectedApi.getShieldedAddresses();
-  const encoded = encodeShieldedAddress(networkId, raw.shieldedCoinPublicKey, raw.shieldedEncryptionPublicKey);
-  if (!encoded.ok) {
-    throw new Error(encoded.error);
-  }
-  return encoded.address;
-};
-
 const deriveBalance = async (connectedApi: ConnectedAPI) => {
-  const unshielded = await connectedApi.getUnshieldedBalances();
-  const night = Object.values(unshielded).reduce((sum, v) => sum + v, 0n);
-  return `${(night / 1_000_000n).toLocaleString()} NIGHT`;
+  const balances = await connectedApi.getUnshieldedBalances();
+  return `${specksToNight(getNightBalance(balances))} NIGHT`;
 };
 
 export function MidnightWalletConnect({ wallet }: MidnightWalletConnectProps) {
@@ -78,7 +68,7 @@ export function MidnightWalletConnect({ wallet }: MidnightWalletConnectProps) {
         connectingLabel={viaMnemonic ? 'Syncing Midnight wallet…' : 'Connecting Midnight…'}
         wallet={wallet}
         connectOptions={connectOptions}
-        deriveAddress={deriveAddress}
+        deriveAddress={deriveShieldedAddress}
         deriveBalance={deriveBalance}
       />
       {modalOpen && <MnemonicModal onSubmit={handleMnemonicSubmit} onClose={handleModalClose} />}

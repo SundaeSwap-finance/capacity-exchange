@@ -39,7 +39,7 @@ export function BridgeForm({
       </form>
 
       {result}
-      {error && <div className="alert-error">{error}</div>}
+      {error && !isPending && <div className="alert-error">{error}</div>}
     </>
   );
 }
