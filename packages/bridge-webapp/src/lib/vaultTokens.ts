@@ -1,3 +1,4 @@
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { deriveTokenColor } from '@capacity-exchange/midnight-core';
 import { getVaultConfig } from './config';
 
@@ -47,4 +48,10 @@ export function matchVaultTokens(
       const vault = colorToVault.get(color)!;
       return { color, balance, vaultLabel: vault.label, domainSep: vault.domainSep };
     });
+}
+
+/** Fetch shielded balances from the wallet and filter to tokens recognized by the vault config. */
+export async function fetchVaultTokens(wallet: ConnectedAPI): Promise<ShieldedToken[]> {
+  const balances = await wallet.getShieldedBalances();
+  return matchVaultTokens(balances, buildColorToVaultMap());
 }

@@ -13,3 +13,4 @@ wallet-mnemonic*.txt
 .wallet-state
 keys.json
 .env
+**/public/midnight/
