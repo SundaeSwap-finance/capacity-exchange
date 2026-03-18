@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import type { Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
@@ -15,20 +14,18 @@ import { DepositForm } from './components/DepositForm';
 import { WithdrawForm } from './components/WithdrawForm';
 import { DepositList } from './components/DepositList';
 
+setNetworkId(requireBrowserEnv('VITE_NETWORK_ID'));
+
 function App() {
-  const networkId = requireBrowserEnv('VITE_NETWORK_ID');
-  useEffect(() => {
-    setNetworkId(networkId);
-  }, [networkId]);
 
   const cardanoWallet = useWallet<Blaze<Provider, Wallet>>();
   const midnightWallet = useWallet<ConnectedAPI>();
-  const midnightAddress = useAsyncDerived(midnightWallet.data, deriveShieldedAddress) ?? undefined;
+  const midnightAddress = useAsyncDerived(midnightWallet.data, deriveShieldedAddress).data ?? undefined;
   const blaze = cardanoWallet.data ?? undefined;
   const cardanoAddrs = useAsyncDerived(blaze ?? null, async (b) => {
     const addr = await b.wallet.getChangeAddress();
     return { bech32: addr.toBech32(), hex: addr.toBytes() };
-  });
+  }).data;
   const coinPublicKey = useCoinPublicKey(midnightAddress);
 
   const deposits = useUserDeposits({ coinPublicKey });

@@ -26,12 +26,12 @@ function getDisabledReasons(
   ].filter(Boolean) as string[];
 }
 
-function TokenSelectPlaceholder({ message }: { message: string }) {
+function TokenSelectPlaceholder({ message, loading }: { message: string; loading?: boolean }) {
   return (
     <div>
       <label className="label">Shielded tokens</label>
       <div className="input bg-dark-800/50 text-dark-400 flex items-center gap-2">
-        {message === 'Loading balances...' && <span className="spinner" />} {message}
+        {loading && <span className="spinner" />} {message}
       </div>
     </div>
   );
@@ -48,8 +48,9 @@ export function WithdrawForm({ midnightWallet, midnightAddress, cardanoAddress, 
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<ShieldedToken | null>(null);
 
-  const tokens = useAsyncDerived(midnightWallet ?? null, fetchVaultTokens);
+  const { data: tokens, error: tokensError } = useAsyncDerived(midnightWallet ?? null, fetchVaultTokens);
 
+  // TODO(SUNDAE-2473): Convert from human-readable format to atomic units once token decimals are configured
   const parsedAmount = parseFloat(amount);
   const disabledReasons = getDisabledReasons(
     midnightWallet,
@@ -90,7 +91,7 @@ export function WithdrawForm({ midnightWallet, midnightAddress, cardanoAddress, 
           id="withdraw-midnight-address"
           label="Midnight shielded address (your Midnight address)"
           value={midnightAddress ?? ''}
-          onChange={() => {}}
+          onChange={() => { }}
           placeholder="Connect your Midnight wallet to populate"
           readOnly
         />
@@ -98,14 +99,16 @@ export function WithdrawForm({ midnightWallet, midnightAddress, cardanoAddress, 
           id="withdraw-cardano-address"
           label="Cardano address (your Cardano wallet)"
           value={cardanoAddress ?? ''}
-          onChange={() => {}}
+          onChange={() => { }}
           placeholder="Connect your Cardano wallet to populate"
           readOnly
         />
         {!midnightWallet ? (
           <TokenSelectPlaceholder message="Connect your Midnight wallet" />
-        ) : tokens === null ? (
-          <TokenSelectPlaceholder message="Loading balances..." />
+        ) : tokensError ? (
+          <TokenSelectPlaceholder message={`Error: ${tokensError}`} />
+        ) : !tokens ? (
+          <TokenSelectPlaceholder message="Loading balances..." loading />
         ) : (
           <ShieldedTokenSelect
             tokens={tokens}
