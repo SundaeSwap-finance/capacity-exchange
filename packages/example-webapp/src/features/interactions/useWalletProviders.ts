@@ -33,8 +33,6 @@ function buildSeedWalletProviders(
     shieldedCoinPublicKey: walletConnection.shieldedSecretKeys.coinPublicKey,
     shieldedEncryptionPublicKey: walletConnection.shieldedSecretKeys.encryptionPublicKey,
   };
-  // TODO: Replace connectedApiProvidersAdapter with direct wallet provider building
-  // once the ConnectedAPI roundtrip removal refactor is done.
   const connectedAPI = createSeedWalletConnectedAPIAdapter(
     walletConnection.walletFacade,
     walletConnection.shieldedSecretKeys,
