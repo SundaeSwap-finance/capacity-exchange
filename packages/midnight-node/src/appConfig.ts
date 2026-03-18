@@ -10,6 +10,8 @@ export interface AppConfig {
   endpoints: NetworkEndpoints;
   seed: Uint8Array;
   walletStateDir: string;
+  /** Wallet sync timeout in milliseconds. Defaults to 120_000 (2 minutes). */
+  walletSyncTimeoutMs?: number;
 }
 
 function loadDotEnv(): Record<string, string> {

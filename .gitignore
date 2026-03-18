@@ -11,5 +11,6 @@ vendor
 wallet-seed.hex
 wallet-mnemonic*.txt
 .wallet-state
+.midnight-private-state
 keys.json
 .env

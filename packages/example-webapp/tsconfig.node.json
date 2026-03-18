@@ -9,7 +9,8 @@
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
   },
-  "include": ["vite.config.ts", "server/**/*.ts"]
+  "include": ["vite.config.ts", "server/**/*.ts", "cli/**/*.ts", "contracts/src/**/*.ts"],
 }

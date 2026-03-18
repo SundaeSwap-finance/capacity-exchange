@@ -22,6 +22,7 @@ export interface WalletContext {
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
   const seedHex = uint8ArrayToHex(config.seed);
   const store = new FileStateStore(config.walletStateDir, logger);
+  const timeoutMs = config.walletSyncTimeoutMs ?? 120_000;
 
   logger.info('Creating and syncing wallets...');
   const { walletFacade, keys } = await createAndSyncWalletWithStore(
@@ -30,7 +31,7 @@ export async function createWalletContext(config: AppConfig): Promise<WalletCont
       walletConfig: resolveWalletConfig(config.networkId, config.endpoints.proofServerUrl),
     },
     store,
-    120_000
+    timeoutMs
   );
   logger.info('Wallets synced');
 
