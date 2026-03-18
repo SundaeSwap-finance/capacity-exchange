@@ -7,7 +7,8 @@ import {
   CapacityExchangeUserCancelledError,
   CapacityExchangeNoPricesAvailableError,
 } from '@capacity-exchange/components';
-import type { ConnectedApiProviders } from '@capacity-exchange/midnight-core';
+import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { BalanceSealedTx } from '@capacity-exchange/components';
 import type { CesFlowStatus, CurrencySelectionState, OfferConfirmationState } from './types';
 import { findAndIncrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
@@ -80,7 +81,9 @@ function createConfirmOffer(
 //
 // Flow: idle -> building -> selecting-currency -> fetching-offers -> confirming -> submitting -> success/error
 export function useCesTransaction(
-  providers: ConnectedApiProviders | null,
+  walletProvider: WalletProvider | null,
+  midnightProvider: MidnightProvider | null,
+  balanceSealedTx: BalanceSealedTx | null,
   contractAddress: string | null
 ): UseCesTransactionResult {
   const config = useNetworkConfig();
@@ -127,7 +130,7 @@ export function useCesTransaction(
   }, []);
 
   const incrementCounter = useCallback(async () => {
-    if (!providers || !contractAddress) {
+    if (!walletProvider || !midnightProvider || !balanceSealedTx || !contractAddress) {
       setError('Providers or contract address not available');
       return;
     }
@@ -139,7 +142,15 @@ export function useCesTransaction(
     const confirmOffer = createConfirmOffer(setStatus, setCurrencySelection, setOfferConfirmation, offerResolverRef);
 
     try {
-      await findAndIncrementCounter(providers, contractAddress, promptForCurrency, confirmOffer, config);
+      await findAndIncrementCounter(
+        walletProvider,
+        midnightProvider,
+        balanceSealedTx,
+        contractAddress,
+        promptForCurrency,
+        confirmOffer,
+        config
+      );
       setStatus('success');
     } catch (err) {
       setCurrencySelection(null);
@@ -155,7 +166,7 @@ export function useCesTransaction(
         setStatus('error');
       }
     }
-  }, [providers, contractAddress, config]);
+  }, [walletProvider, midnightProvider, balanceSealedTx, contractAddress, config]);
 
   return {
     status,

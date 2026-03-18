@@ -1,5 +1,5 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { CoinPublicKey, EncPublicKey, FinalizedTransaction } from '@midnight-ntwrk/ledger-v7';
 import type { CesApi } from './exchangeApi';
 
 export const DEFAULT_MARGIN = 3;
@@ -28,9 +28,12 @@ export type PromptForCurrency = (prices: ExchangePrice[], dustRequired: bigint) 
 
 export type ConfirmOffer = (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 
+export type BalanceSealedTx = (tx: FinalizedTransaction) => Promise<FinalizedTransaction>;
+
 export interface CapacityExchangeConfig {
-  walletProvider: WalletProvider;
-  connectedAPI: ConnectedAPI;
+  coinPublicKey: CoinPublicKey;
+  encryptionPublicKey: EncPublicKey;
+  balanceSealedTx: BalanceSealedTx;
   indexerUrl: string;
   capacityExchangeUrls: string[];
   margin: number;

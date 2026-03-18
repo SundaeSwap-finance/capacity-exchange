@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/components';
-import type { ConnectedApiProviders } from '@capacity-exchange/midnight-core';
+import type { WalletProviders } from '../interactions/useWalletProviders';
 import { incrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
 
@@ -14,7 +14,7 @@ export interface UseSponsoredTransactionResult {
 }
 
 export function useSponsoredTransaction(
-  providers: ConnectedApiProviders | null,
+  providers: WalletProviders | null,
   contractAddress: string | null
 ): UseSponsoredTransactionResult {
   const config = useNetworkConfig();

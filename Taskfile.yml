@@ -115,11 +115,12 @@ tasks:
   dev:example:
     desc: Start server and example webapp with hot-reload
     deps: [require-proof-server-url, _example:require-deployed, _example:require-example-price-config, _build:libs]
+    env:
+      VITE_CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
     cmds:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
           NAMES: core,node,components,server,webapp
           COLORS: blue,cyan,magenta,green,yellow
           EXTRA: >-
@@ -189,7 +190,6 @@ tasks:
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
       PRICE_CONFIG_FILE: 'price-config.{{.NETWORK_ID}}.json'
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
-      VITE_CAPACITY_EXCHANGE_URL: '{{.CAPACITY_EXCHANGE_URL | default ""}}'
     cmds:
       - >-
         bunx concurrently --kill-others
