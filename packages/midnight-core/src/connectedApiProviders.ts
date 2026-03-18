@@ -12,16 +12,14 @@ import type {
 import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import { uint8ArrayToHex, hexToBytes } from './hex.js';
 
-export interface ConnectedApiProviders {
-  connectedAPI: ConnectedAPI;
+export interface BaseProviders {
   walletProvider: WalletProvider;
   midnightProvider: MidnightProvider;
 }
 
-export interface ShieldedAddressInfo {
-  shieldedAddress: string;
-  shieldedCoinPublicKey: string;
-  shieldedEncryptionPublicKey: string;
+export interface WalletIdentity {
+  coinPublicKey: CoinPublicKey;
+  encryptionPublicKey: EncPublicKey;
 }
 
 /**
@@ -33,14 +31,14 @@ export interface ShieldedAddressInfo {
  */
 export function connectedApiProvidersAdapter(
   connectedAPI: ConnectedAPI,
-  shieldedAddress: ShieldedAddressInfo
-): ConnectedApiProviders {
+  identity: WalletIdentity
+): BaseProviders {
   const walletProvider: WalletProvider = {
     getCoinPublicKey(): CoinPublicKey {
-      return shieldedAddress.shieldedCoinPublicKey as CoinPublicKey;
+      return identity.coinPublicKey;
     },
     getEncryptionPublicKey(): EncPublicKey {
-      return shieldedAddress.shieldedEncryptionPublicKey as EncPublicKey;
+      return identity.encryptionPublicKey;
     },
     async balanceTx(tx: UnboundTransaction): Promise<FinalizedTransaction> {
       const serialized = uint8ArrayToHex(tx.serialize());
@@ -61,5 +59,5 @@ export function connectedApiProvidersAdapter(
     },
   };
 
-  return { connectedAPI, walletProvider, midnightProvider };
+  return { walletProvider, midnightProvider };
 }
