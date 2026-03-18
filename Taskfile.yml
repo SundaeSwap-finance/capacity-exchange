@@ -158,11 +158,12 @@ tasks:
   # TODO: Add setup:bridge-dev task that deploys vault, deposits test tokens,
   # and writes the contract address to bridge-webapp .env
   setup:bridge:
-    desc: 'One-time setup for bridge webapp: compile contracts, copy ZK assets'
+    desc: 'One-time setup for bridge webapp: compile contracts, copy ZK assets, init env'
     cmds:
       - task: install
       - task: compile-bridge-contracts
       - task: _bridge:copy-zk-assets
+      - task: _bridge:init-env
       - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev:bridge' to start."
     requires:
       vars: [NETWORK_ID]

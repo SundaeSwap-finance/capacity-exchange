@@ -15,10 +15,16 @@ tasks:
     run: once
     preconditions:
       - sh: test -d {{.ROOT_DIR}}/packages/bridge-webapp/public/midnight/vault/keys
-        msg: 'Bridge webapp ZK assets not found. Run "NETWORK_ID={{.NETWORK_ID}} task dev:bridge" to set up.'
+        msg: 'Bridge webapp ZK assets not found. Run "NETWORK_ID={{.NETWORK_ID}} task setup:bridge" first.'
+
+  init-env:
+    status:
+      - test -f {{.ROOT_DIR}}/packages/bridge-webapp/.env
+    cmds:
+      - cp {{.ROOT_DIR}}/packages/bridge-webapp/.env.example {{.ROOT_DIR}}/packages/bridge-webapp/.env
 
   require-env:
     run: once
     preconditions:
       - sh: test -f {{.ROOT_DIR}}/packages/bridge-webapp/.env
-        msg: 'Bridge webapp .env not found. Copy .env.example and configure it.'
+        msg: 'Bridge webapp .env not found. Run "NETWORK_ID={{.NETWORK_ID}} task setup:bridge" first.'

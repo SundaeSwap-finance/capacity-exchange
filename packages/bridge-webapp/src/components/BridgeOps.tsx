@@ -14,11 +14,11 @@ interface BridgeOpsProps {
 }
 
 export function BridgeOps({ blaze, midnightWallet }: BridgeOpsProps) {
-  const midnightAddress = useAsyncDerived(midnightWallet ?? null, deriveShieldedAddress) ?? undefined;
+  const midnightAddress = useAsyncDerived(midnightWallet ?? null, deriveShieldedAddress).data ?? undefined;
   const cardanoAddrs = useAsyncDerived(blaze ?? null, async (b) => {
     const addr = await b.wallet.getChangeAddress();
     return { bech32: addr.toBech32(), hex: addr.toBytes() };
-  });
+  }).data;
   const coinPublicKey = useCoinPublicKey(midnightAddress);
   const deposits = useUserDeposits({ coinPublicKey });
 

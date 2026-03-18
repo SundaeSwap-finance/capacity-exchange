@@ -1,3 +1,4 @@
+import type { MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
 import { AppContext, buildProviders } from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
@@ -20,7 +21,7 @@ export async function requestWithdrawal(ctx: AppContext, params: RequestWithdraw
   const providers = buildProviders<VaultContract>(ctx, './vault/out');
 
   const result = await submitWithdrawalTx({
-    providers,
+    providers: providers as MidnightProviders<'requestWithdrawal'>,
     contractAddress,
     amount,
     domainSep,

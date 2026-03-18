@@ -1,4 +1,5 @@
 import type { MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
+import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { createUnprovenCallTx, submitTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 import { CompiledVaultContract } from './contract.js';
@@ -6,7 +7,7 @@ import { createPrivateState } from './witnesses.js';
 import { buildWithdrawalArgs } from './withdrawal-args.js';
 
 export interface SubmitWithdrawalTxParams {
-  providers: MidnightProviders<string>;
+  providers: MidnightProviders<'requestWithdrawal'>;
   contractAddress: string;
   amount: bigint;
   domainSep: string;
@@ -57,8 +58,14 @@ export async function submitWithdrawalTx(params: SubmitWithdrawalTxParams) {
     args: [coin, domainSepBytes, cardanoAddressBytes, maybeDatumHash],
   });
 
-  return submitTx(providers, {
+  const result = await submitTx(providers, {
     unprovenTx: callTxData.private.unprovenTx,
     circuitId: 'requestWithdrawal' as const,
   });
+
+  if (result.status !== SucceedEntirely) {
+    throw new Error(`Withdrawal transaction failed with status: ${result.status}`);
+  }
+
+  return result;
 }
