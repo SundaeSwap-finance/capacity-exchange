@@ -10,7 +10,8 @@ import {
   deriveWalletKeys,
 } from '@capacity-exchange/midnight-core';
 import { AppConfig, BaseConfig, schema } from '../models/config.js';
-import { getPriceConfig, getWalletSeed } from '../utils/config.js';
+import { loadPriceConfig } from '../config/prices.js';
+import { getWalletSeed } from '../utils/config.js';
 import { FileStateStore } from '@capacity-exchange/midnight-node';
 
 declare module 'fastify' {
@@ -50,7 +51,7 @@ export default fp(async (fastify: FastifyInstance) => {
   );
 
   const [priceConfig, saved] = await Promise.all([
-    getPriceConfig(baseConfig.PRICE_CONFIG_FILE),
+    loadPriceConfig(baseConfig.PRICE_CONFIG_FILE),
     walletStateStore.loadWalletState(),
   ]);
 

@@ -1,4 +1,4 @@
-import type { PriceFormula } from '../models/config';
+import type { PriceFormula } from '../config/prices.js';
 
 export interface Price {
   amount: string;
