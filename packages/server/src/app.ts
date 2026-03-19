@@ -1,7 +1,6 @@
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
 import cors from '@fastify/cors';
-import configPlugin from './plugins/config.js';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import walletPlugin from './plugins/wallet-utxo.js';
@@ -13,12 +12,23 @@ import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/offers.js';
 import priceRoutes from './routes/prices.js';
+import type { AppConfig } from './loadConfig.js';
 import { readFileSync } from 'fs';
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
-export async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
+declare module 'fastify' {
+  interface FastifyInstance {
+    config: AppConfig;
+  }
+}
+
+export async function buildApp(
+  config: AppConfig,
+  opts: FastifyServerOptions = {},
+): Promise<FastifyInstance> {
   const app = Fastify(opts).withTypeProvider<TypeBoxTypeProvider>();
+  app.decorate('config', config);
   app.register(cors, { origin: '*' });
   await app.register(swagger, {
     openapi: {
@@ -32,7 +42,6 @@ export async function buildApp(opts: FastifyServerOptions = {}): Promise<Fastify
     routePrefix: '/docs',
   });
   await app.register(errorHandler);
-  await app.register(configPlugin);
   await app.register(walletPlugin);
   await app.register(txPlugin);
   await app.register(pricesPlugin);
