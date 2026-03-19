@@ -13,7 +13,7 @@ import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
-import type { FundedContract } from '../models/config.js';
+import type { FundedContract } from '../config/prices.js';
 
 const FEE_MARGIN_BLOCKS = 2;
 

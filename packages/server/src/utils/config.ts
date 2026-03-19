@@ -1,10 +1,8 @@
 import { FastifyBaseLogger } from 'fastify';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { parseSeedHex, parseMnemonic, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 import { loadWalletSeedFromFile } from '@capacity-exchange/midnight-node';
-import { BaseConfig, PriceConfig, PriceConfigSchema } from '../models/config.js';
-import { Value } from '@sinclair/typebox/value';
+import { BaseConfig } from '../models/config.js';
+import { readFileOrError } from '../config/files.js';
 
 export const getWalletSeed = async (
   baseConfig: BaseConfig,
@@ -39,28 +37,4 @@ export const getWalletSeed = async (
 
   log.info(`Loading wallet via wallet-mnemonic.${baseConfig.MIDNIGHT_NETWORK}.txt (walk-up)`);
   return uint8ArrayToHex(loadWalletSeedFromFile(baseConfig.MIDNIGHT_NETWORK));
-};
-
-export const getPriceConfig = async (priceConfigFile: string): Promise<PriceConfig> => {
-  const raw = await readFileOrError(
-    priceConfigFile,
-    'Failed to read config price config data from',
-  );
-
-  try {
-    return Value.Decode(PriceConfigSchema, JSON.parse(raw));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid price config in ${priceConfigFile}: ${message}`);
-  }
-};
-
-const readFileOrError = async (filePath: string, errorMessagePrefix: string): Promise<string> => {
-  try {
-    const fullPath = path.resolve(process.cwd(), filePath);
-    return await fs.readFile(fullPath, 'utf-8');
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`${errorMessagePrefix} ${filePath}: ${message}`);
-  }
 };
