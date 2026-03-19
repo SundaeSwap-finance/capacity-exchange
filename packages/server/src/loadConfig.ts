@@ -8,18 +8,12 @@ import { resolveNetwork } from './config/network.js';
 import { createWalletResources } from './config/wallet.js';
 
 export interface AppConfig {
-  MIDNIGHT_NETWORK: string;
-  WALLET_SEED_FILE?: string;
-  WALLET_MNEMONIC_FILE?: string;
-  PRICE_CONFIG_FILE: string;
-  PORT: number;
-  LOG_LEVEL: string;
-  OFFER_TTL_SECONDS: number;
-  PROOF_SERVER_URL?: string;
-  WALLET_STATE_DIR: string;
+  networkId: string;
+  port: number;
+  offerTtlSeconds: number;
   endpoints: NetworkEndpoints;
-  PRICE_FORMULAS: PriceFormula[];
-  FUNDED_CONTRACTS: FundedContract[];
+  priceFormulas: PriceFormula[];
+  fundedContracts: FundedContract[];
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
 }
@@ -34,18 +28,20 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   loadDotenv({ path: process.env.DOTENV_CONFIG_PATH });
   const logger = createServerLogger();
   const env = parseAppEnv();
-  const network = resolveNetwork(env.MIDNIGHT_NETWORK, env.PROOF_SERVER_URL);
+  const network = resolveNetwork(env.networkId, env.proofServerUrl);
 
   const [priceConfig, wallet] = await Promise.all([
-    loadPriceConfig(env.PRICE_CONFIG_FILE),
+    loadPriceConfig(env.priceConfigFile),
     createWalletResources(env, network, logger),
   ]);
 
   const config: AppConfig = {
-    ...env,
+    networkId: env.networkId,
+    port: env.port,
+    offerTtlSeconds: env.offerTtlSeconds,
     endpoints: network.endpoints,
-    PRICE_FORMULAS: priceConfig.priceFormulas,
-    FUNDED_CONTRACTS: priceConfig.fundedContracts,
+    priceFormulas: priceConfig.priceFormulas,
+    fundedContracts: priceConfig.fundedContracts,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
   };

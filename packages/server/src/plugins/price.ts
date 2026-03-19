@@ -9,10 +9,10 @@ declare module 'fastify' {
 }
 
 export default fp((fastify: FastifyInstance) => {
-  const { PRICE_FORMULAS } = fastify.config;
+  const { priceFormulas } = fastify.config;
 
   // TODO: Enforce that the price formulas have hex-strings that identify the
   // midnight-contract-minted token
-  const priceService = new PriceService(PRICE_FORMULAS);
+  const priceService = new PriceService(priceFormulas);
   fastify.decorate('priceService', priceService);
 });

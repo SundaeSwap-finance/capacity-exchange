@@ -9,9 +9,9 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  const { MIDNIGHT_NETWORK, endpoints, walletConnection } = fastify.config;
+  const { networkId, endpoints, walletConnection } = fastify.config;
   const txService = new TxService(
-    MIDNIGHT_NETWORK,
+    networkId,
     walletConnection.keys.shieldedSecretKeys,
     endpoints.proofServerUrl,
   );
