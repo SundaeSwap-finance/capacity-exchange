@@ -100,12 +100,16 @@ export class WalletService {
     if (!state) {
       throw new Error('dust wallet not synced');
     }
-    const [[spend]] = state.state.spendCoins(
+    const result = state.state.spendCoins(
       this.walletConnection.keys.dustSecretKey,
       [{ token: utxo.token, value: amount }],
       new Date(),
     );
-
+    console.log('[WalletService] spendCoins result:', result);
+    console.log('[WalletService] spendCoins result[0]:', result[0]);
+    console.log('[WalletService] spendCoins result[0][0]:', result[0][0]);
+    console.log('[WalletService] spend toString:', result[0][0]?.toString?.());
+    const [[spend]] = result;
     return spend;
   }
 

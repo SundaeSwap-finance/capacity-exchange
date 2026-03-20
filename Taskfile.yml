@@ -45,12 +45,15 @@ tasks:
     cmds:
       - task: _build:compile-bridge-contracts
 
+  require-wallet-file:
+    internal: true
+    preconditions:
+      - sh: 'test -f {{.ROOT_DIR}}/wallet-seed.{{.NETWORK_ID}}.hex || test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
+        msg: 'Missing wallet-seed.{{.NETWORK_ID}}.hex or wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:example to create it'
+
   deploy:
     desc: Deploy contracts for a network
-    deps: [_build:midnight-node, _example:require-compiled]
-    preconditions:
-      - sh: 'test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-        msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:example to create it'
+    deps: [_build:midnight-node, _example:require-compiled, require-wallet-file]
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}}
       - task: _example:copy-configs
@@ -66,17 +69,15 @@ tasks:
 
   prompt-mnemonic:
     internal: true
-    vars:
-      MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
     status:
-      - test -f {{.MNEMONIC_FILE}}
+      - test -f {{.ROOT_DIR}}/wallet-seed.{{.NETWORK_ID}}.hex || test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt
     cmds:
-      - echo "Enter your wallet mnemonic for {{.NETWORK_ID}}:" && read MNEMONIC < /dev/tty && echo "$MNEMONIC" > {{.MNEMONIC_FILE}}
+      - echo "Enter your wallet mnemonic for {{.NETWORK_ID}}:" && read MNEMONIC < /dev/tty && echo "$MNEMONIC" > {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt
 
   init-env:
     internal: true
     status:
-      - test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt
+      - test -f {{.ROOT_DIR}}/wallet-seed.{{.NETWORK_ID}}.hex || test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt
       - test -f {{.CONTRACTS_DIR}}/.env
       - test -f {{.ROOT_DIR}}/packages/server/.env
       - test -f {{.WEBAPP_DIR}}/.env

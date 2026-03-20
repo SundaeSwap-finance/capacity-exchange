@@ -4,15 +4,16 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { findWalletMnemonicFile, requireNodeEnv } from '@capacity-exchange/midnight-node';
+import { loadWalletSeedFromFile, requireNodeEnv } from '@capacity-exchange/midnight-node';
+import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
   const networkId = requireNodeEnv('NETWORK_ID');
   process.env.VITE_NETWORK_ID = networkId;
   process.env.VITE_CAPACITY_EXCHANGE_URL ??= `https://capacity-exchange.${networkId}.sundae.fi`;
-  const mnemonic = fs.readFileSync(findWalletMnemonicFile(networkId), 'utf-8').trim();
-  process.env.VITE_SERVER_MNEMONIC = mnemonic;
+  const seedBytes = loadWalletSeedFromFile(networkId);
+  process.env.VITE_SERVER_SEED = uint8ArrayToHex(seedBytes);
   return {
     define: {
       global: 'globalThis',

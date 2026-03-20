@@ -1,5 +1,6 @@
 import {
   DustActions,
+  DustSpend,
   Intent,
   PreProof,
   ShieldedCoinInfo,
@@ -50,7 +51,10 @@ export class TxService {
       'pre-proof',
       new Date(),
       [dust],
+      [],
     );
+    console.log('[TxService] DustActions.spends.length:', intent.dustActions.spends.length);
+    console.log('[TxService] dust instanceof DustSpend:', dust instanceof DustSpend);
     return intent;
   }
 

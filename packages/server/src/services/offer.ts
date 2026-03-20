@@ -50,10 +50,12 @@ export class OfferService {
 
     const result = this.utxoService.lockUtxo(specks);
     if (result.status !== 'ok') {
+      this.logger.info({ status: result.status }, 'lockUtxo failed');
       return result;
     }
 
     const lockedInfo = result.value;
+    this.logger.info({ id: lockedInfo.id, expiresAtMillis: lockedInfo.expiresAtMillis }, 'Locked UTXO');
     const getPriceResult = this.priceService.getPrice(request.offerCurrency, specks);
     if (getPriceResult.status === 'unsupported-currency') {
       return {
@@ -61,6 +63,8 @@ export class OfferService {
         currency: request.offerCurrency,
       };
     }
+
+    this.logger.info({ price: getPriceResult.price.toString(), currency: request.offerCurrency }, 'Price calculated');
 
     // Create Offer
     const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
@@ -71,6 +75,9 @@ export class OfferService {
       expiration,
       request.segmentId,
     );
+
+    this.logger.info({ txBytes: tx.serialize().length }, 'Offer tx created');
+    this.logger.info({ txDump: tx.toString() }, 'Offer tx details');
 
     const offer: OfferResponse = {
       offerId: lockedInfo.id,

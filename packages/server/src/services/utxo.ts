@@ -94,6 +94,13 @@ export class UtxoService {
     this.lockedUtxos.set(key, expiresAt);
     this.logger.info({ id: key, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
 
+    this.logger.info({
+      selectedUtxoGeneratedNow: selectedUtxo.generatedNow.toString(),
+      selectedUtxoMaxCap: selectedUtxo.maxCap.toString(),
+      selectedUtxoRate: selectedUtxo.rate.toString(),
+      requestedSpecks: specks.toString(),
+    }, 'Selected UTXO for dust spend');
+
     const spend = this.walletService.spend(selectedUtxo, specks);
 
     return {
