@@ -73,15 +73,16 @@ export class UtxoService {
     }
 
     const utxos = walletState.availableCoinsWithFullInfo(new Date());
-    this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
+    this.logger.info({ utxoCount: utxos.length, lockedCount: this.lockedUtxos.size }, 'UTXO selection: available vs locked');
 
     const now = Date.now();
     const selectedUtxo = utxos.find((utxoInfo) => {
       const key = this.getLockId(utxoInfo);
-      if (this.isLocked(key, now)) {
+      const locked = this.isLocked(key, now);
+      if (locked) {
+        this.logger.info({ id: key }, 'UTXO skipped: locked');
         return false;
       }
-      // generatedNow is the calculated specks available on the UTxO
       return utxoInfo.generatedNow >= specks;
     });
 
@@ -92,7 +93,12 @@ export class UtxoService {
     const expiresAt = now + this.utxoLockTtlSeconds * 1000;
     const key = this.getLockId(selectedUtxo);
     this.lockedUtxos.set(key, expiresAt);
-    this.logger.info({ id: key, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
+    this.logger.info({
+      id: key,
+      seq: selectedUtxo.token.seq,
+      mtIndex: selectedUtxo.token.mtIndex,
+      expiresAt: new Date(expiresAt).toISOString(),
+    }, 'Locked UTxO');
 
     const spend = this.walletService.spend(selectedUtxo, specks);
 
