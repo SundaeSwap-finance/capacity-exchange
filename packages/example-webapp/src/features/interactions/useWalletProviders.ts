@@ -82,17 +82,23 @@ export function useWalletProviders(
       setExtensionIdentity(null);
       return;
     }
+    let cancelled = false;
     wallet
       .getShieldedAddresses()
-      .then((addr) =>
-        setExtensionIdentity({
-          coinPublicKey: addr.shieldedCoinPublicKey as CoinPublicKey,
-          encryptionPublicKey: addr.shieldedEncryptionPublicKey as EncPublicKey,
-        })
-      )
+      .then((addr) => {
+        if (!cancelled) {
+          setExtensionIdentity({
+            coinPublicKey: addr.shieldedCoinPublicKey as CoinPublicKey,
+            encryptionPublicKey: addr.shieldedEncryptionPublicKey as EncPublicKey,
+          });
+        }
+      })
       .catch((err) => {
-        console.error('Failed to fetch shielded addresses from extension:', err);
+        if (!cancelled) {
+          console.error('Failed to fetch shielded addresses from extension:', err);
+        }
       });
+    return () => { cancelled = true; };
   }, [walletConnection, wallet]);
 
   const providers = useMemo<WalletProviders | null>(() => {
