@@ -3,36 +3,9 @@ import {
   WalletConnection,
   type WalletStateStore,
 } from '@capacity-exchange/midnight-core';
-import { Static, Type } from '@sinclair/typebox';
+import type { PriceFormula, FundedContract } from '../config/prices.js';
 
-export const PriceFormulaSchema = Type.Object({
-  currency: Type.String(),
-  basePrice: Type.String(),
-  rateNumerator: Type.String(),
-  rateDenominator: Type.String(),
-});
-
-export type PriceFormula = Static<typeof PriceFormulaSchema>;
-
-const CircuitFilterSchema = Type.Union([
-  Type.Object({ type: Type.Literal('all') }),
-  Type.Object({ type: Type.Literal('subset'), circuitNames: Type.Array(Type.String()) }),
-]);
-
-const FundedContractSchema = Type.Object({
-  contractAddress: Type.String(),
-  circuits: CircuitFilterSchema,
-});
-
-export type FundedContract = Static<typeof FundedContractSchema>;
-
-// I think we may need a better name than PriceConfig
-export const PriceConfigSchema = Type.Object({
-  priceFormulas: Type.Array(PriceFormulaSchema),
-  fundedContracts: Type.Array(FundedContractSchema),
-});
-
-export type PriceConfig = Static<typeof PriceConfigSchema>;
+export type { PriceFormula, FundedContract, PriceConfig } from '../config/prices.js';
 
 export interface BaseConfig {
   MIDNIGHT_NETWORK: string;

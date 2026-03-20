@@ -10,7 +10,8 @@ import {
   deriveWalletKeys,
 } from '@capacity-exchange/midnight-core';
 import { AppConfig, BaseConfig, schema } from '../models/config.js';
-import { getPriceConfig, getWalletSeed } from '../utils/config.js';
+import { loadPriceConfig } from '../config/prices.js';
+import { loadWalletSeed } from '../config/wallet.js';
 import { FileStateStore } from '@capacity-exchange/midnight-node';
 
 declare module 'fastify' {
@@ -37,7 +38,7 @@ export default fp(async (fastify: FastifyInstance) => {
   const endpoints = resolveEndpoints(networkId, baseConfig.PROOF_SERVER_URL);
   fastify.log.debug({ baseConfig, endpoints });
 
-  const walletSeed = await getWalletSeed(baseConfig, fastify.log);
+  const walletSeed = loadWalletSeed(baseConfig, fastify.log);
   const keys = deriveWalletKeys(walletSeed, networkId);
   const walletStateStore = new WalletStateStore(
     new FileStateStore(baseConfig.WALLET_STATE_DIR, fastify.log.child({ service: 'StateStore' })),
@@ -50,7 +51,7 @@ export default fp(async (fastify: FastifyInstance) => {
   );
 
   const [priceConfig, saved] = await Promise.all([
-    getPriceConfig(baseConfig.PRICE_CONFIG_FILE),
+    loadPriceConfig(baseConfig.PRICE_CONFIG_FILE),
     walletStateStore.loadWalletState(),
   ]);
 
