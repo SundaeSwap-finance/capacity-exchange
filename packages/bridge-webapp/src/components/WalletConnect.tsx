@@ -23,8 +23,8 @@ export function WalletConnect<T>({
   deriveAddress,
   deriveBalance,
 }: WalletConnectProps<T>) {
-  const address = useAsyncDerived(wallet.data, deriveAddress);
-  const balance = useAsyncDerived(wallet.data, deriveBalance);
+  const address = useAsyncDerived(wallet.data, deriveAddress).data;
+  const balance = useAsyncDerived(wallet.data, deriveBalance).data;
 
   if (wallet.status === 'connecting') {
     return (

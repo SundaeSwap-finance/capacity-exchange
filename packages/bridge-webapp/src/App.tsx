@@ -1,5 +1,7 @@
 import type { Blaze, Provider, Wallet } from '@blaze-cardano/sdk';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { requireBrowserEnv } from '@capacity-exchange/midnight-core';
 import { useWallet } from './hooks/useWallet';
 import { useAsyncDerived } from './hooks/useAsyncDerived';
 import { useUserDeposits } from './hooks/useUserDeposits';
@@ -8,15 +10,22 @@ import { deriveShieldedAddress } from './lib/midnight';
 import { CardanoWalletConnect } from './components/CardanoWalletConnect';
 import { MidnightWalletConnect } from './components/MidnightWalletConnect';
 import { NetworkRibbon } from './components/NetworkRibbon';
-import { BridgeCard } from './components/BridgeCard';
 import { DepositForm } from './components/DepositForm';
+import { WithdrawForm } from './components/WithdrawForm';
 import { DepositList } from './components/DepositList';
 
+setNetworkId(requireBrowserEnv('VITE_NETWORK_ID'));
+
 function App() {
+
   const cardanoWallet = useWallet<Blaze<Provider, Wallet>>();
   const midnightWallet = useWallet<ConnectedAPI>();
-  const midnightAddress = useAsyncDerived(midnightWallet.data, deriveShieldedAddress) ?? undefined;
+  const midnightAddress = useAsyncDerived(midnightWallet.data, deriveShieldedAddress).data ?? undefined;
   const blaze = cardanoWallet.data ?? undefined;
+  const cardanoAddrs = useAsyncDerived(blaze ?? null, async (b) => {
+    const addr = await b.wallet.getChangeAddress();
+    return { bech32: addr.toBech32(), hex: addr.toBytes() };
+  }).data;
   const coinPublicKey = useCoinPublicKey(midnightAddress);
 
   const deposits = useUserDeposits({ coinPublicKey });
@@ -36,9 +45,11 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DepositForm blaze={blaze} midnightAddress={midnightAddress} />
-            <BridgeCard
-              title="Withdraw"
-              description="Midnight → Cardano. Burn mADA on the Midnight network and reclaim ADA on Cardano."
+            <WithdrawForm
+              midnightWallet={midnightWallet.data ?? undefined}
+              midnightAddress={midnightAddress}
+              cardanoAddress={cardanoAddrs?.bech32}
+              cardanoAddressHex={cardanoAddrs?.hex}
             />
           </div>
 
