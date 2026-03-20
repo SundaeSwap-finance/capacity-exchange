@@ -16,6 +16,9 @@ includes:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
       COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
+  _bridge:
+    taskfile: taskfiles/bridge.yml
+    internal: true
 
 vars:
   CONTRACTS_DIR: '{{.ROOT_DIR}}/packages/example-webapp/contracts'
@@ -136,6 +139,32 @@ tasks:
           NAMES: core,node,server
           COLORS: blue,cyan,green
           EXTRA: '"bun run --filter @capacity-exchange/server dev"'
+    requires:
+      vars: [NETWORK_ID]
+
+  dev:bridge:
+    desc: Start the bridge webapp with hot-reload
+    deps: [_bridge:require-env, _bridge:require-zk-assets, _build:libs]
+    cmds:
+      - task: _dev:run
+        vars:
+          NETWORK_ID: '{{.NETWORK_ID}}'
+          NAMES: core,node,bridge
+          COLORS: blue,cyan,yellow
+          EXTRA: '"bun run --filter @capacity-exchange/bridge-webapp dev"'
+    requires:
+      vars: [NETWORK_ID]
+
+  # TODO: Add setup:bridge-dev task that deploys vault, deposits test tokens,
+  # and writes the contract address to bridge-webapp .env
+  setup:bridge:
+    desc: 'One-time setup for bridge webapp: compile contracts, copy ZK assets, init env'
+    cmds:
+      - task: install
+      - task: compile-bridge-contracts
+      - task: _bridge:copy-zk-assets
+      - task: _bridge:init-env
+      - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev:bridge' to start."
     requires:
       vars: [NETWORK_ID]
 
