@@ -10,7 +10,7 @@ const rootRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       name: packageJson.name,
       version: packageJson.version,
       env: {
-        network: fastify.config.MIDNIGHT_NETWORK,
+        network: fastify.config.networkId,
         node_url: fastify.config.endpoints.nodeUrl,
         node_ws_url: fastify.config.endpoints.nodeUrl,
         indexer_url: fastify.config.endpoints.indexerHttpUrl,

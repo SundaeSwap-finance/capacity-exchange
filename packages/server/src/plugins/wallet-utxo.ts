@@ -12,12 +12,12 @@ declare module 'fastify' {
 
 // TODO: Wrt wallet and offer, we can split-up this plugin later
 export default fp(async (fastify: FastifyInstance) => {
-  const { walletConnection, walletStateStore, OFFER_TTL_SECONDS } = fastify.config;
+  const { walletConnection, walletStateStore, offerTtlSeconds } = fastify.config;
 
   const walletService = new WalletService(walletConnection, fastify.log, walletStateStore);
   await walletService.start();
 
-  const utxoService = new UtxoService(walletService, fastify.log, OFFER_TTL_SECONDS);
+  const utxoService = new UtxoService(walletService, fastify.log, offerTtlSeconds);
 
   fastify.decorate('walletService', walletService);
   fastify.decorate('utxoService', utxoService);

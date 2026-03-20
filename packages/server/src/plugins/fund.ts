@@ -19,7 +19,7 @@ export default fp(async (fastify: FastifyInstance) => {
   const service = new FundService(
     fastify.utxoService,
     fastify.txService,
-    fastify.config.FUNDED_CONTRACTS,
+    fastify.config.fundedContracts,
     fastify.config.endpoints.indexerHttpUrl,
     fastify.log,
   );
