@@ -44,7 +44,6 @@ function buildSeedWalletProviders(
   );
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, shieldedAddress);
 
-  // Build balanceSealedTx directly from walletFacade — no hex roundtrip.
   const { walletFacade, shieldedSecretKeys, dustSecretKey } = walletConnection;
   const balanceSealedTx: BalanceSealedTx = async (tx) => {
     const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
