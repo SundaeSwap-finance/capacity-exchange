@@ -4,7 +4,7 @@ import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-
 import {
   DustWalletProvider,
   parseMnemonic,
-  requireBrowserEnv,
+  parseSeedHex,
   uint8ArrayToHex,
   type WalletKeys,
 } from '@capacity-exchange/midnight-core';
@@ -33,9 +33,22 @@ interface ServerWalletReady {
   midnightProvider: MidnightProvider;
 }
 
+function resolveServerSeedHex(networkId: string): string {
+  const networkKey = networkId.toUpperCase();
+  const seedEnv = import.meta.env[`VITE_SERVER_${networkKey}_SEED`];
+  if (seedEnv) {
+    parseSeedHex(seedEnv);
+    return seedEnv.trim();
+  }
+  const mnemonicEnv = import.meta.env[`VITE_SERVER_${networkKey}_MNEMONIC`];
+  if (mnemonicEnv) {
+    return uint8ArrayToHex(parseMnemonic(mnemonicEnv));
+  }
+  throw new Error(`No server wallet configured. Set VITE_SERVER_${networkKey}_SEED or VITE_SERVER_${networkKey}_MNEMONIC`);
+}
+
 async function initServerWallet(config: NetworkConfig): Promise<ServerWalletReady> {
-  const seed = parseMnemonic(requireBrowserEnv('VITE_SERVER_MNEMONIC'));
-  const seedHex = uint8ArrayToHex(seed);
+  const seedHex = resolveServerSeedHex(config.networkId);
   const connection = await connectSeedWallet(seedHex, config);
   const { walletFacade, keys } = connection;
 

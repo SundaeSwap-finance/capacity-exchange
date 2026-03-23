@@ -1,5 +1,5 @@
 export { requireNodeEnv } from './envNode.js';
-export { findWalletMnemonicFile, loadWalletSeedFromFile } from './walletFile.js';
+export { findWalletSeedFile, findWalletMnemonicFile, loadWalletSeed } from './walletFile.js';
 export { FileStateStore } from './fileStateStore.js';
 export { type AppConfig, getAppConfigById } from './appConfig.js';
 export { createLogger } from './createLogger.js';

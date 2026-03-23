@@ -10,7 +10,7 @@ import {
   type WalletConnection,
 } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { FileStateStore, loadWalletSeedFromFile } from '@capacity-exchange/midnight-node';
+import { FileStateStore, loadWalletSeed as loadWalletSeedFromFile } from '@capacity-exchange/midnight-node';
 import type { AppEnv } from './env.js';
 import { readFileOrError } from './files.js';
 
