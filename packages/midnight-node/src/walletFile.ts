@@ -22,7 +22,9 @@ function findFileUp(filename: string, startDir: string): string | null {
       return candidate;
     }
     const parent = path.dirname(dir);
-    if (parent === dir) {return null;}
+    if (parent === dir) {
+      return null;
+    }
     dir = parent;
   }
 }
@@ -33,7 +35,7 @@ export function findWalletSeedFile(network: string, startDir: string = process.c
   if (!found) {
     throw new Error(
       `Wallet seed file not found: ${filename}. ` +
-        `Create it at the project root with a 64-char hex seed.`
+        `Create it at the project root with a hex-encoded seed.`
     );
   }
   return found;

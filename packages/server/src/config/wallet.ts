@@ -10,11 +10,11 @@ import {
   type WalletConnection,
 } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { FileStateStore, loadWalletSeed as loadWalletSeedFromFile } from '@capacity-exchange/midnight-node';
+import { FileStateStore, loadWalletSeed } from '@capacity-exchange/midnight-node';
 import type { AppEnv } from './env.js';
 import { readFileOrError } from './files.js';
 
-function loadWalletSeed(env: AppEnv, log: pino.Logger): string {
+function resolveWalletSeedHex(env: AppEnv, log: pino.Logger): string {
   if (env.WALLET_SEED_FILE && env.WALLET_MNEMONIC_FILE) {
     throw new Error("Can't specify both WALLET_SEED_FILE and WALLET_MNEMONIC_FILE");
   }
@@ -32,8 +32,8 @@ function loadWalletSeed(env: AppEnv, log: pino.Logger): string {
   if (env.MIDNIGHT_NETWORK.toLowerCase() === 'mainnet') {
     throw new Error('WALLET_MNEMONIC_FILE or WALLET_SEED_FILE is required on mainnet');
   }
-  log.info(`Loading wallet via wallet-mnemonic.${env.MIDNIGHT_NETWORK}.txt (walk-up)`);
-  return uint8ArrayToHex(loadWalletSeedFromFile(env.MIDNIGHT_NETWORK));
+  log.info(`Loading wallet via convention file (walk-up from cwd)`);
+  return uint8ArrayToHex(loadWalletSeed(env.MIDNIGHT_NETWORK));
 }
 
 export interface WalletResources {
@@ -47,7 +47,7 @@ export async function createWalletResources(
   networkId: NetworkId.NetworkId,
   logger: pino.Logger,
 ): Promise<WalletResources> {
-  const walletSeed = loadWalletSeed(env, logger);
+  const walletSeed = resolveWalletSeedHex(env, logger);
   const keys = deriveWalletKeys(walletSeed, networkId);
 
   const walletStateStore = new WalletStateStore(
