@@ -10,14 +10,14 @@ import {
   ZswapOffer,
   ZswapOutput,
   ZswapSecretKeys,
-} from '@midnight-ntwrk/ledger-v7';
+} from '@midnight-ntwrk/ledger-v8';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import {
   ProofProvider,
   ZKConfigProvider,
   type UnboundTransaction,
 } from '@midnight-ntwrk/midnight-js-types';
-import { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 
 // The server's dust-spend txs don't take zk config / circuit artifacts.
 class EmptyZKConfigProvider extends ZKConfigProvider<never> {

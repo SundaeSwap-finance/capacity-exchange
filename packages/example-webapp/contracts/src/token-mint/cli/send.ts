@@ -1,6 +1,7 @@
 import { program } from 'commander';
 import { deriveTokenColor, sendShieldedTokens } from '@capacity-exchange/midnight-core';
 import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
+import { MidnightBech32m, ShieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 
 function main() {
   program
@@ -19,7 +20,7 @@ function main() {
 
   return withAppContext(networkId, (ctx) =>
     sendShieldedTokens(ctx.walletContext.walletFacade, ctx.walletContext.keys, [
-      { type: derivedTokenColor, receiverAddress: recipientAddress, amount },
+      { type: derivedTokenColor, receiverAddress: MidnightBech32m.parse(recipientAddress).decode(ShieldedAddress, networkId), amount },
     ])
   );
 }

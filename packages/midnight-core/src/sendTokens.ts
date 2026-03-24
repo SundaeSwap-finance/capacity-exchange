@@ -1,33 +1,25 @@
-import type { WalletFacade, TokenTransfer, BalancingRecipe } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade, TokenTransfer, BalancingRecipe, ShieldedTokenTransfer, UnshieldedTokenTransfer } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { ShieldedAddress, UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { WalletKeys } from './keys.js';
 
 export const DEFAULT_TTL_MS = 5 * 60 * 1000;
 
-/**
- * Sends tokens to one or more outputs. Unshielded transfers are signed with the unshielded keystore.
- *
- * @returns The transaction hash.
- */
-export async function sendTokens(
+async function executeTransfer(
   walletFacade: WalletFacade,
   keys: WalletKeys,
-  type: 'shielded' | 'unshielded',
-  outputs: TokenTransfer[]
+  transfers: (ShieldedTokenTransfer | UnshieldedTokenTransfer)[],
+  sign: boolean,
 ): Promise<string> {
-  if (outputs.length === 0) {
-    throw new Error('outputs must not be empty');
-  }
-
   const { shieldedSecretKeys, dustSecretKey } = keys;
   const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
 
   let recipe: BalancingRecipe = await walletFacade.transferTransaction(
-    [{ type, outputs }],
+    transfers,
     { shieldedSecretKeys, dustSecretKey },
     { ttl }
   );
 
-  if (type === 'unshielded') {
+  if (sign) {
     recipe = await walletFacade.signRecipe(recipe, (payload: Uint8Array) => keys.unshieldedKeystore.signData(payload));
   }
 
@@ -39,16 +31,17 @@ export async function sendTokens(
 export function sendShieldedTokens(
   walletFacade: WalletFacade,
   keys: WalletKeys,
-  outputs: TokenTransfer[]
+  outputs: TokenTransfer<ShieldedAddress>[]
 ): Promise<string> {
-  return sendTokens(walletFacade, keys, 'shielded', outputs);
+  return executeTransfer(walletFacade, keys, [{ type: 'shielded', outputs }], false);
 }
 
 /** Sends unshielded tokens to one or more outputs, signing with the unshielded keystore. */
 export function sendUnshieldedTokens(
   walletFacade: WalletFacade,
   keys: WalletKeys,
-  outputs: TokenTransfer[]
+  outputs: TokenTransfer<UnshieldedAddress>[]
 ): Promise<string> {
-  return sendTokens(walletFacade, keys, 'unshielded', outputs);
+  return executeTransfer(walletFacade, keys, [{ type: 'unshielded', outputs }], true);
 }
+

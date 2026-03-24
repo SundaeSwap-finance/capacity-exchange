@@ -61,7 +61,7 @@ export async function createWalletResources(
   );
 
   const saved = await walletStateStore.loadWalletState();
-  const walletConnection = createWallet({
+  const walletConnection = await createWallet({
     seedHex: walletSeed,
     walletConfig: resolveWalletConfig(networkId, env.PROOF_SERVER_URL),
     ...saved,

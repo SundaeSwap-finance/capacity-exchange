@@ -4,7 +4,7 @@ import {
   EncPublicKey,
   FinalizedTransaction,
   ZswapSecretKeys,
-} from '@midnight-ntwrk/ledger-v7';
+} from '@midnight-ntwrk/ledger-v8';
 import { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 

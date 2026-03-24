@@ -1,6 +1,6 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { SignatureEnabled, Proof, PreBinding, Binding } from '@midnight-ntwrk/ledger-v7';
-import { Transaction } from '@midnight-ntwrk/ledger-v7';
+import type { SignatureEnabled, Proof, PreBinding, Binding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { hexToBytes, uint8ArrayToHex } from './hex.js';
 import { toNetworkIdEnum, resolveEndpoints } from './networks.js';
@@ -45,7 +45,7 @@ export function createConnectedAPI(
     },
     async getDustBalance() {
       const state = await walletFacade.dust.waitForSyncedState();
-      return { balance: state.walletBalance(new Date()), cap: 0n };
+      return { balance: state.balance(new Date()), cap: 0n };
     },
     async getShieldedAddresses() {
       const state = await walletFacade.shielded.waitForSyncedState();
@@ -61,7 +61,7 @@ export function createConnectedAPI(
     },
     async getDustAddress() {
       const state = await walletFacade.dust.waitForSyncedState();
-      return { dustAddress: state.dustAddress };
+      return { dustAddress: MidnightBech32m.encode(networkId, state.address).asString() };
     },
     async getTxHistory(): Promise<never[]> {
       return [];

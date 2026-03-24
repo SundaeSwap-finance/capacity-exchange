@@ -54,11 +54,11 @@ function main(): Promise<BalancesOutput> {
 
     const result = {
       addresses: {
-        dust: state.dust.dustAddress,
+        dust: MidnightBech32m.encode(networkId, state.dust.address).asString(),
         shielded: MidnightBech32m.encode(networkId, state.shielded.address).asString(),
         unshielded: MidnightBech32m.encode(networkId, state.unshielded.address).asString(),
       },
-      dust: state.dust.walletBalance(new Date()).toString(),
+      dust: state.dust.balance(new Date()).toString(),
       shielded: bigintBalances(state.shielded.balances),
       unshielded: bigintBalances(state.unshielded.balances),
       unshieldedUtxos: state.unshielded.availableCoins.map((coin) => ({

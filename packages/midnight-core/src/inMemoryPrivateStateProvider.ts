@@ -1,21 +1,35 @@
 import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js-types';
 
 export function inMemoryPrivateStateProvider(): PrivateStateProvider {
-  const states = new Map<string, unknown>();
+  const statesByContract = new Map<string, Map<string, unknown>>();
   const signingKeys = new Map<string, string>();
+  let currentContract: string | undefined;
+
+  function getContractStates(): Map<string, unknown> {
+    const key = currentContract ?? '';
+    let m = statesByContract.get(key);
+    if (!m) {
+      m = new Map();
+      statesByContract.set(key, m);
+    }
+    return m;
+  }
 
   return {
+    setContractAddress(address) {
+      currentContract = address as string;
+    },
     async set(id, state) {
-      states.set(id, state);
+      getContractStates().set(id as string, state);
     },
     async get(id) {
-      return states.get(id) ?? null;
+      return getContractStates().get(id as string) ?? null;
     },
     async remove(id) {
-      states.delete(id);
+      getContractStates().delete(id as string);
     },
     async clear() {
-      states.clear();
+      getContractStates().clear();
     },
     async setSigningKey(address, key) {
       signingKeys.set(address as string, key);
@@ -28,6 +42,18 @@ export function inMemoryPrivateStateProvider(): PrivateStateProvider {
     },
     async clearSigningKeys() {
       signingKeys.clear();
+    },
+    async exportPrivateStates() {
+      throw new Error('exportPrivateStates not implemented for in-memory provider');
+    },
+    async importPrivateStates() {
+      throw new Error('importPrivateStates not implemented for in-memory provider');
+    },
+    async exportSigningKeys() {
+      throw new Error('exportSigningKeys not implemented for in-memory provider');
+    },
+    async importSigningKeys() {
+      throw new Error('importSigningKeys not implemented for in-memory provider');
     },
   };
 }

@@ -6,8 +6,8 @@ import {
   ecMulGenerator,
   transientHash,
   CompactTypeField,
-  CompactTypeNativePoint,
-  type NativePoint,
+  CompactTypeJubjubPoint,
+  type JubjubPoint,
 } from '@midnight-ntwrk/compact-runtime';
 
 // The embedded curve's prime-order subgroup order (r). ecMulGenerator and ecMul operate on
@@ -25,25 +25,25 @@ import {
 //       https://github.com/zkcrypto/jubjub/blob/main/src/fr.rs
 export const EMBEDDED_CURVE_ORDER = 6554484396890773809930967563523245729705921265872317281365359162392183254199n;
 
-// Tuple descriptor for [NativePoint, NativePoint, Field], matching the layout used by
-// transientHash<[NativePoint, NativePoint, Field]>([R, pubKey, message]) in the Vault contract.
+// Tuple descriptor for [JubjubPoint, JubjubPoint, Field], matching the layout used by
+// transientHash<[JubjubPoint, JubjubPoint, Field]>([R, pubKey, message]) in the Vault contract.
 const schnorrHashDescriptor = {
   alignment() {
-    return CompactTypeNativePoint.alignment().concat(
-      CompactTypeNativePoint.alignment().concat(CompactTypeField.alignment())
+    return CompactTypeJubjubPoint.alignment().concat(
+      CompactTypeJubjubPoint.alignment().concat(CompactTypeField.alignment())
     );
   },
   // Required by CompactType interface but unused — transientHash only calls toValue/alignment.
-  fromValue(value: Uint8Array[]): [NativePoint, NativePoint, bigint] {
+  fromValue(value: Uint8Array[]): [JubjubPoint, JubjubPoint, bigint] {
     return [
-      CompactTypeNativePoint.fromValue(value),
-      CompactTypeNativePoint.fromValue(value),
+      CompactTypeJubjubPoint.fromValue(value),
+      CompactTypeJubjubPoint.fromValue(value),
       CompactTypeField.fromValue(value),
     ];
   },
-  toValue(value: [NativePoint, NativePoint, bigint]) {
-    return CompactTypeNativePoint.toValue(value[0]).concat(
-      CompactTypeNativePoint.toValue(value[1]).concat(CompactTypeField.toValue(value[2]))
+  toValue(value: [JubjubPoint, JubjubPoint, bigint]) {
+    return CompactTypeJubjubPoint.toValue(value[0]).concat(
+      CompactTypeJubjubPoint.toValue(value[1]).concat(CompactTypeField.toValue(value[2]))
     );
   },
 };
@@ -53,13 +53,13 @@ export interface KeyPair {
   /** Random scalar in [1, EMBEDDED_CURVE_ORDER) — must be kept secret. */
   secretKey: bigint;
   /** sk·G — safe to share publicly. */
-  publicKey: NativePoint;
+  publicKey: JubjubPoint;
 }
 
 /** A Schnorr signature proving knowledge of a secret key for a given message. */
 export interface SchnorrSignature {
   /** R = k·G — a curve point derived from the random nonce k */
-  r: NativePoint;
+  r: JubjubPoint;
   /** s = k + e·sk — combines the nonce with the secret key, bound to the message via e */
   s: bigint;
 }
@@ -96,7 +96,7 @@ export interface SignResult {
 }
 
 /** Sign a message, producing a standard Schnorr signature. */
-export function sign(sk: bigint, pk: NativePoint, message: bigint): SignResult {
+export function sign(sk: bigint, pk: JubjubPoint, message: bigint): SignResult {
   const k = randomScalar();
   const R = ecMulGenerator(k);
   const e = transientHash(schnorrHashDescriptor, [R, pk, message]);

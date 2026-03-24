@@ -5,7 +5,7 @@ import {
   CompactTypeBytes,
   CompactTypeUnsignedInteger,
 } from '@midnight-ntwrk/compact-runtime';
-import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger-v7';
+import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger-v8';
 import { AppContext, buildProviders, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { createLogger } from '@capacity-exchange/midnight-node';
@@ -99,6 +99,7 @@ export async function deposit(ctx: AppContext, params: DepositParams): Promise<T
   logger.info(`Depositing ${amount} to vault ${contractAddress}...`);
 
   const providers = buildProviders<VaultContract>(ctx, './vault/out');
+  providers.privateStateProvider.setContractAddress(contractAddress);
 
   const privateStateId = crypto.randomBytes(32).toString('hex');
   const publicKeys = keyPairs.map((kp) => kp.publicKey);

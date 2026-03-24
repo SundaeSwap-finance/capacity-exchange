@@ -8,7 +8,7 @@ import {
   type Bindingish,
   type Transaction,
   Intent,
-} from '@midnight-ntwrk/ledger-v7';
+} from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';

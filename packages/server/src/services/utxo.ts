@@ -1,10 +1,10 @@
-import { DustTokenFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { FastifyBaseLogger } from 'fastify';
 import { WalletService } from './wallet.js';
 
 export interface UtxoLockInfo {
   id: string;
-  utxo: DustTokenFullInfo;
+  utxo: DustFullInfo;
   spend: UnprovenDustSpend;
   expiresAtMillis: number;
 }
@@ -50,7 +50,7 @@ export class UtxoService {
     return false;
   }
 
-  private getLockId(utxoInfo: DustTokenFullInfo): string {
+  private getLockId(utxoInfo: DustFullInfo): string {
     // TODO: Determine the best key for a UTxO Lock Id
     return `${utxoInfo.token.backingNight}#${utxoInfo.token.mtIndex}`;
   }

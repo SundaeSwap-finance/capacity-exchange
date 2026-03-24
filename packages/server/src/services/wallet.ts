@@ -1,11 +1,10 @@
 import {
-  DustTokenFullInfo,
   DustWalletState,
-  UnprovenDustSpend,
 } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+import { CoreWallet, type UnprovenDustSpend, type DustFullInfo } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
-import { nativeToken } from '@midnight-ntwrk/ledger-v7';
+import { nativeToken } from '@midnight-ntwrk/ledger-v8';
 import { WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
 
 export type WalletSyncState =
@@ -95,25 +94,26 @@ export class WalletService {
     }
   }
 
-  spend(utxo: DustTokenFullInfo, amount: bigint): UnprovenDustSpend {
+  spend(utxo: DustFullInfo, amount: bigint): UnprovenDustSpend {
     const state = this.lastDustWalletState;
     if (!state) {
       throw new Error('dust wallet not synced');
     }
-    const [[spend]] = state.state.spendCoins(
+    const [spends] = CoreWallet.spendCoins(
+      state.state,
       this.walletConnection.keys.dustSecretKey,
       [{ token: utxo.token, value: amount }],
       new Date(),
     );
 
-    return spend;
+    return spends[0];
   }
 
   public async getBalances() {
     const state = await firstValueFrom(this.walletConnection.walletFacade.state());
     const unshielded = state.unshielded?.balances[nativeToken().raw] ?? 0n;
     const shielded = state.shielded?.balances[nativeToken().raw] ?? 0n;
-    const dust = state.dust?.walletBalance(new Date()) ?? 0n;
+    const dust = state.dust?.balance(new Date()) ?? 0n;
     return { unshielded, shielded, dust };
   }
 

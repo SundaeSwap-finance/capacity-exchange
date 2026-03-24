@@ -1,5 +1,5 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { CoinPublicKey, EncPublicKey, FinalizedTransaction } from '@midnight-ntwrk/ledger-v7';
+import type { CoinPublicKey, EncPublicKey, FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi';
 
 export const DEFAULT_MARGIN = 3;

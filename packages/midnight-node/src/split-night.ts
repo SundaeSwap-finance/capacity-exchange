@@ -1,6 +1,6 @@
 import * as Rx from 'rxjs';
-import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { type WalletFacade, type FacadeState, type TokenTransfer } from '@midnight-ntwrk/wallet-sdk-facade';
+import { MidnightBech32m, type UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { WalletKeys } from '@capacity-exchange/midnight-core';
 import { sendUnshieldedTokens, waitForState } from '@capacity-exchange/midnight-core';
 import { createLogger } from './createLogger.js';
@@ -28,8 +28,8 @@ function getNightBalance(state: FacadeState): bigint {
 function buildSplitOutputs(
   balance: bigint,
   count: number,
-  address: string
-): { amountPerUtxo: bigint; outputs: TokenTransfer[] } {
+  address: UnshieldedAddress
+): { amountPerUtxo: bigint; outputs: TokenTransfer<UnshieldedAddress>[] } {
   const amountPerUtxo = balance / BigInt(count);
   if (amountPerUtxo <= 0n) {
     throw new Error(`Balance ${balance} too small to split into ${count} UTxOs`);
@@ -73,9 +73,9 @@ export async function splitAndRegister(
 
   // Split NIGHT into N UTxOs
   const balance = getNightBalance(state);
-  const address = MidnightBech32m.encode(networkId, state.unshielded.address).asString();
+  const address = state.unshielded.address;
   const { amountPerUtxo, outputs } = buildSplitOutputs(balance, count, address);
-  logger.info(`Splitting: ${outputs.length} explicit outputs of ${amountPerUtxo} + remainder as change at ${address}`);
+  logger.info(`Splitting: ${outputs.length} explicit outputs of ${amountPerUtxo} + remainder as change at ${MidnightBech32m.encode(networkId, address).asString()}`);
   const splitTxHash = await sendUnshieldedTokens(walletFacade, keys, outputs);
   logger.info(`Split transaction submitted: ${splitTxHash}`);
   state = await waitForState(state$, hasUtxoCount(count));

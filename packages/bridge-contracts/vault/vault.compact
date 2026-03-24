@@ -1,4 +1,4 @@
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.22.0;
 
 import CompactStandardLibrary;
 
@@ -6,7 +6,7 @@ module Multisig<#n> {
   circuit verifySchnorrMultisig(
             msg: Field,
             signatures: Vector<n, SchnorrSignature>,
-            pks: Vector<n, NativePoint>,
+            pks: Vector<n, JubjubPoint>,
             challengeQuotients: Vector<n, Field>
             ): [] {
     assert(hashKeys<n>(pks) == aggregatePkh, "public keys do not match");
@@ -21,7 +21,7 @@ module Multisig<#n> {
   }
 
   export circuit deposit(signatures: Vector<n, SchnorrSignature>,
-                         publicKeys: Vector<n, NativePoint>,
+                         publicKeys: Vector<n, JubjubPoint>,
                          challengeQuotients: Vector<n, Field>,
                          domainSep: Bytes<32>,
                          mintAmount: Uint<64>,
@@ -44,7 +44,7 @@ module Multisig<#n> {
 
   export circuit acknowledgeWithdrawal(
                    signatures: Vector<n, SchnorrSignature>,
-                   publicKeys: Vector<n, NativePoint>,
+                   publicKeys: Vector<n, JubjubPoint>,
                    challengeQuotients: Vector<n, Field>,
                    withdrawalNonce: Bytes<32>
                    ): [] {
@@ -63,7 +63,7 @@ module Multisig<#n> {
 import Multisig<3>;
 
 struct SchnorrSignature {
-  r: NativePoint, // R = k·G (nonce point)
+  r: JubjubPoint, // R = k·G (nonce point)
   s: Field // s = k + e·sk
 }
 
@@ -80,7 +80,7 @@ export ledger mintNonce: Counter;
 
 export ledger withdrawals: Map<Bytes<32>, Withdrawal>;
 
-witness getRequiredKeys(): Vector<3, NativePoint>;
+witness getRequiredKeys(): Vector<3, JubjubPoint>;
 
 constructor() {
   const keys = getRequiredKeys();
@@ -88,8 +88,8 @@ constructor() {
 }
 
 // This can't seem to live inside our module, since it's called in the constructor...
-circuit hashKeys<#n>(pks: Vector<n, NativePoint>): Field {
-  return transientHash<[Bytes<32>, Vector<n, NativePoint>]>([pad(32, "capex:pkhs"), pks]);
+circuit hashKeys<#n>(pks: Vector<n, JubjubPoint>): Field {
+  return transientHash<[Bytes<32>, Vector<n, JubjubPoint>]>([pad(32, "capex:pkhs"), pks]);
 }
 
 // Security Note:
@@ -127,11 +127,11 @@ circuit hashKeys<#n>(pks: Vector<n, NativePoint>): Field {
 circuit verifySchnorrSignature(
           message: Field,
           sig: SchnorrSignature,
-          pubKey: NativePoint,
+          pubKey: JubjubPoint,
           challengeQuotient: Field
           ): Boolean {
   // e = H(R || P || m)
-  const e = transientHash<[NativePoint, NativePoint, Field]>([sig.r, pubKey, message]);
+  const e = transientHash<[JubjubPoint, JubjubPoint, Field]>([sig.r, pubKey, message]);
 
   // The embedded curve's prime-order subgroup order (r). ecMulGenerator and ecMul operate
   // on this curve, so scalars must be in [0, EMBEDDED_CURVE_ORDER).
@@ -153,11 +153,13 @@ circuit verifySchnorrSignature(
   const eReduced = e - challengeQuotient * EMBEDDED_CURVE_ORDER;
 
   // s*G == R + eReduced*P
+  // Compare via transientHash because compact 0.30.0 has a codegen bug where
+  // JubjubPoint == JubjubPoint generates reference equality (===) in JS.
   const sG = ecMulGenerator(sig.s);
   const eP = ecMul(pubKey, eReduced);
   const rhs = ecAdd(sig.r, eP);
 
-  return sG == rhs;
+  return transientHash<JubjubPoint>(sG) == transientHash<JubjubPoint>(rhs);
 }
 
 circuit requestWithdrawal(

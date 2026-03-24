@@ -4,7 +4,7 @@ import {
   type Proof,
   type Binding,
   type FinalizedTransaction,
-} from '@midnight-ntwrk/ledger-v7';
+} from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { hexToBytes } from '@capacity-exchange/midnight-core';
 import type { CesApi } from './exchangeApi';

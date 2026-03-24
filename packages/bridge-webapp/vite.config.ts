@@ -24,6 +24,6 @@ export default defineConfig({
     target: 'esnext',
   },
   optimizeDeps: {
-    exclude: ['@midnight-ntwrk/ledger-v7'],
+    exclude: ['@midnight-ntwrk/ledger-v8'],
   },
 });

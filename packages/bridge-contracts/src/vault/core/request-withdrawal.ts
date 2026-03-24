@@ -24,6 +24,7 @@ export interface SubmitWithdrawalTxParams {
  */
 export async function submitWithdrawalTx(params: SubmitWithdrawalTxParams) {
   const { providers, contractAddress, amount, domainSep, cardanoAddress, datumHash } = params;
+  providers.privateStateProvider.setContractAddress(contractAddress);
 
   // Seed dummy private state — requestWithdrawal doesn't use witnesses, but
   // createUnprovenCallTx requires privateStateId for any Contract.Any.

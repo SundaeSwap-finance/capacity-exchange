@@ -1,4 +1,5 @@
 import { type WalletFacade, FacadeState } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { DustAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { WalletKeys } from '@capacity-exchange/midnight-core';
 import { DEFAULT_TTL_MS, waitForState } from '@capacity-exchange/midnight-core';
 import { createLogger } from './createLogger.js';
@@ -7,7 +8,7 @@ const logger = createLogger(import.meta);
 
 async function registerCoinsForDust(
   coins: FacadeState['unshielded']['availableCoins'],
-  dustAddress: string,
+  dustAddress: DustAddress,
   walletFacade: WalletFacade,
   keys: WalletKeys
 ): Promise<void> {
@@ -39,8 +40,8 @@ export async function registerAllForDust(
     return;
   }
 
-  const dustAddress = state.dust.dustAddress;
-  logger.info(`Registering ${nightUtxos.length} NIGHT UTXO(s) for dust generation to ${dustAddress}...`);
+  const dustAddress = state.dust.address;
+  logger.info(`Registering ${nightUtxos.length} NIGHT UTXO(s) for dust generation...`);
   await registerCoinsForDust(nightUtxos, dustAddress, walletFacade, keys);
   logger.info('Registration submitted');
 }
@@ -59,7 +60,7 @@ export async function registerEachForDust(
 
   // Register one UTxO at a time to avoid consolidation (the registration tx
   // spends+recreates UTxOs, so batching merges them together).
-  const dustAddress = state.dust.dustAddress;
+  const dustAddress = state.dust.address;
   for (let i = 0; i < unregistered.length; i++) {
     logger.info(`Registering UTxO ${i + 1}/${unregistered.length} for dust generation...`);
     await registerCoinsForDust([unregistered[i]], dustAddress, walletFacade, keys);
@@ -70,7 +71,7 @@ export async function registerEachForDust(
 /** Wait for the wallet's dust balance to become positive. Returns the synced state. */
 export async function waitForDustBalance(walletFacade: WalletFacade): Promise<FacadeState> {
   logger.info('Waiting for dust to generate...');
-  const state = await waitForState(walletFacade.state(), (s) => s.dust.walletBalance(new Date()) > 0n);
+  const state = await waitForState(walletFacade.state(), (s) => s.dust.balance(new Date()) > 0n);
   logger.info('Dust tokens available');
   return state;
 }
