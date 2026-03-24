@@ -1,4 +1,4 @@
-import { DustParameters } from '@midnight-ntwrk/ledger-v7';
+import { DustParameters } from '@midnight-ntwrk/ledger-v8';
 
 // Dust wallet parameters from spec:
 // https://github.com/midnightntwrk/midnight-ledger/blob/main/spec/dust.md#initial-dust-parameters

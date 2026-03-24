@@ -4,7 +4,7 @@ version: '3'
 # Included by root Taskfile.yml under the _build namespace.
 
 vars:
-  COMPACTC_VERSION: 0.28.0
+  COMPACTC_VERSION: 0.30.0
   COMPACTC_DIR: '{{.ROOT_DIR}}/tools/compactc'
   COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
 

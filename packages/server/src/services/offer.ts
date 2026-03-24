@@ -2,7 +2,7 @@ import { FastifyBaseLogger } from 'fastify';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
-import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v7';
+import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
 
 export interface CreateOfferRequest {
   specks: string;

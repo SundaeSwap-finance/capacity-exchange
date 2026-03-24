@@ -8,8 +8,8 @@ import type {
   SignatureEnabled,
   Proof,
   Binding,
-} from '@midnight-ntwrk/ledger-v7';
-import { Transaction } from '@midnight-ntwrk/ledger-v7';
+} from '@midnight-ntwrk/ledger-v8';
+import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import { uint8ArrayToHex, hexToBytes } from './hex.js';
 
 export interface ConnectedApiProviders {

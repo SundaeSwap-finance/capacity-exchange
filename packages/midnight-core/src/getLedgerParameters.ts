@@ -1,4 +1,4 @@
-import { LedgerParameters } from '@midnight-ntwrk/ledger-v7';
+import { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
 
 const query = `
     query BlockQuery {

@@ -1,5 +1,5 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v7';
+import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v8';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 
 export interface BalanceData {

@@ -16,8 +16,8 @@ vi.mock('@capacity-exchange/midnight-core', async () => {
   };
 });
 
-vi.mock('@midnight-ntwrk/ledger-v7', async () => {
-  const actual = await vi.importActual('@midnight-ntwrk/ledger-v7');
+vi.mock('@midnight-ntwrk/ledger-v8', async () => {
+  const actual = await vi.importActual('@midnight-ntwrk/ledger-v8');
   return {
     ...actual,
     Transaction: {

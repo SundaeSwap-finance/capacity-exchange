@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { FinalizedTransaction, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v7';
-import { Transaction } from '@midnight-ntwrk/ledger-v7';
+import type { FinalizedTransaction, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import type { BalanceSealedTx } from '@capacity-exchange/components';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';

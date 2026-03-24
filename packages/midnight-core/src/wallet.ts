@@ -46,7 +46,7 @@ export async function createAndSyncWallet(
   options: CreateWalletOptions,
   syncTimeoutMs?: number
 ): Promise<WalletConnection> {
-  const connection = createWallet(options);
+  const connection = await createWallet(options);
   await startAndSyncWallet(connection, syncTimeoutMs);
   return connection;
 }
