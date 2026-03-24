@@ -3,7 +3,7 @@ import * as path from 'path';
 import { parse as parseDotenv } from 'dotenv';
 import { resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { loadWalletSeedFromFile } from './walletFile.js';
+import { loadWalletSeed } from './walletFile.js';
 
 export interface AppConfig {
   networkId: NetworkId.NetworkId;
@@ -25,7 +25,7 @@ export function getAppConfigById(network: string): AppConfig {
   const networkId = toNetworkIdEnum(network);
   const dotEnv = loadDotEnv();
   const endpoints = resolveEndpoints(networkId, process.env.PROOF_SERVER_URL ?? dotEnv['PROOF_SERVER_URL']);
-  const seed = loadWalletSeedFromFile(network);
+  const seed = loadWalletSeed(network);
   const walletStateDir = dotEnv['WALLET_STATE_DIR'];
   if (!walletStateDir) {
     throw new Error('Missing WALLET_STATE_DIR in .env');

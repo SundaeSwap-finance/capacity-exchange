@@ -18,7 +18,7 @@ import { useServerWallet } from './features/faucet';
 function App() {
   const [walletMode, setWalletMode] = useState<WalletMode | null>(null);
 
-  const networkId = requireEnvOneOf('VITE_NETWORK_ID', ['preview', 'preprod']);
+  const networkId = requireEnvOneOf('VITE_NETWORK_ID', ['undeployed', 'preview', 'preprod']);
   useEffect(() => {
     setMidnightNetworkId(networkId);
   }, [networkId]);
