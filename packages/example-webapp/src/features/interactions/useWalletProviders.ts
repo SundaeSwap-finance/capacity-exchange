@@ -1,20 +1,33 @@
 import { useMemo, useState, useEffect } from 'react';
+import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { FinalizedTransaction, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v7';
+import { Transaction } from '@midnight-ntwrk/ledger-v7';
+import type { BalanceSealedTx } from '@capacity-exchange/components';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities, WalletInfoState } from '../wallet/types';
 import {
   connectedApiProvidersAdapter,
-  type ConnectedApiProviders,
   type ShieldedAddressInfo,
+  hexToBytes,
+  uint8ArrayToHex,
 } from '@capacity-exchange/midnight-core';
 import { createSeedWalletConnectedAPIAdapter } from '../ces/seedWalletConnectedApi';
 import { useNetworkConfig } from '../../config';
 
-function buildSeedProviders(
+const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
+
+export interface WalletProviders {
+  walletProvider: WalletProvider;
+  midnightProvider: MidnightProvider;
+  balanceSealedTx: BalanceSealedTx;
+}
+
+function buildSeedWalletProviders(
   walletConnection: SeedWalletConnection,
   walletData: WalletInfoState & { status: 'ready' },
   config: ReturnType<typeof useNetworkConfig>
-): ConnectedApiProviders {
+): WalletProviders {
   const shieldedAddress: ShieldedAddressInfo = {
     shieldedAddress: walletData.data.shieldedAddress,
     shieldedCoinPublicKey: walletConnection.shieldedSecretKeys.coinPublicKey,
@@ -29,25 +42,49 @@ function buildSeedProviders(
     walletData.data.dustAddress,
     config
   );
-  return connectedApiProvidersAdapter(connectedAPI, shieldedAddress);
+  const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, shieldedAddress);
+
+  const { walletFacade, shieldedSecretKeys, dustSecretKey } = walletConnection;
+  const balanceSealedTx: BalanceSealedTx = async (tx) => {
+    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
+    const recipe = await walletFacade.balanceFinalizedTransaction(
+      tx,
+      { shieldedSecretKeys, dustSecretKey },
+      { ttl, tokenKindsToBalance: ['shielded'] }
+    );
+    return walletFacade.finalizeRecipe(recipe);
+  };
+
+  return { walletProvider, midnightProvider, balanceSealedTx };
 }
 
-// TODO: Make useConnectedApiProviders responsible for building the ConnectedAPI for both paths,
-// so WalletConnection doesn't need to expose raw connectedAPI.
-function buildExtensionProviders(
+function buildExtensionWalletProviders(
   walletConnection: ExtensionWalletConnection,
   shieldedAddressInfo: ShieldedAddressInfo
-): ConnectedApiProviders {
-  return connectedApiProvidersAdapter(walletConnection.connectedAPI, shieldedAddressInfo);
+): WalletProviders {
+  const { connectedAPI } = walletConnection;
+  const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, shieldedAddressInfo);
+
+  const balanceSealedTx: BalanceSealedTx = async (tx) => {
+    const serialized = uint8ArrayToHex(tx.serialize());
+    const result = await connectedAPI.balanceSealedTransaction(serialized);
+    return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+      'signature',
+      'proof',
+      'binding',
+      hexToBytes(result.tx)
+    ).bind() as unknown as FinalizedTransaction;
+  };
+
+  return { walletProvider, midnightProvider, balanceSealedTx };
 }
 
-export function useConnectedApiProviders(
+export function useWalletProviders(
   wallet: WalletCapabilities | null,
   walletConnection: WalletConnection | null
-): { providers: ConnectedApiProviders | null; walletInfo: WalletInfoState } {
+): { providers: WalletProviders | null; walletInfo: WalletInfoState } {
   const config = useNetworkConfig();
   const walletInfo = useWalletInfo(wallet);
-  // Fetched async from the browser extension; null until resolved.
   const [extensionAddressInfo, setExtensionAddressInfo] = useState<ShieldedAddressInfo | null>(null);
 
   useEffect(() => {
@@ -63,20 +100,20 @@ export function useConnectedApiProviders(
       });
   }, [walletConnection, wallet]);
 
-  const providers = useMemo<ConnectedApiProviders | null>(() => {
+  const providers = useMemo<WalletProviders | null>(() => {
     if (!walletConnection || walletInfo.status !== 'ready') {
       return null;
     }
 
     if (walletConnection.type === 'seed') {
-      return buildSeedProviders(walletConnection, walletInfo, config);
+      return buildSeedWalletProviders(walletConnection, walletInfo, config);
     }
 
     if (walletConnection.type === 'extension') {
       if (!extensionAddressInfo) {
         return null;
       }
-      return buildExtensionProviders(walletConnection, extensionAddressInfo);
+      return buildExtensionWalletProviders(walletConnection, extensionAddressInfo);
     }
 
     return null;

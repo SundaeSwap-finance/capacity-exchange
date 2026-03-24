@@ -49,20 +49,24 @@ async function confirmOfferWithUser(
 /**
  * Creates a WalletProvider with Capacity Exchange functionality.
  *
- * The returned WalletProvider delegates getCoinPublicKey and getEncryptionPublicKey
- * to the base provider, but replaces balanceTx with logic that acquires DUST
- * through the Capacity Exchange server.
- *
- * @param config - Configuration including the base provider and callbacks
- * @returns A new WalletProvider with Capacity Exchange integration
+ * The returned WalletProvider uses the provided identity keys and replaces
+ * balanceTx with logic that acquires DUST through the Capacity Exchange server.
  */
 export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
-  const { walletProvider, connectedAPI, capacityExchangeUrls, indexerUrl, margin, promptForCurrency, confirmOffer } =
-    config;
+  const {
+    coinPublicKey,
+    encryptionPublicKey,
+    balanceSealedTx,
+    capacityExchangeUrls,
+    indexerUrl,
+    margin,
+    promptForCurrency,
+    confirmOffer,
+  } = config;
 
   return {
-    getCoinPublicKey: () => walletProvider.getCoinPublicKey(),
-    getEncryptionPublicKey: () => walletProvider.getEncryptionPublicKey(),
+    getCoinPublicKey: () => coinPublicKey,
+    getEncryptionPublicKey: () => encryptionPublicKey,
 
     async balanceTx(tx, _ttl?) {
       console.debug('[CapacityExchange] balanceTx called');
@@ -75,7 +79,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
         const result = await confirmOfferWithUser(offer, specksRequired, confirmOffer);
 
         if (result === 'confirmed') {
-          return processTransactionWithOffer(tx, offer, connectedAPI);
+          return processTransactionWithOffer(tx, offer, balanceSealedTx);
         }
       }
     },

@@ -1,16 +1,14 @@
-import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import {
   Transaction,
   type SignatureEnabled,
   type Proof,
   type PreBinding,
-  type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v7';
-import type { ExchangePrice, Offer } from './types';
+import type { ExchangePrice, Offer, BalanceSealedTx } from './types';
 import { isOfferExpired } from './utils';
-import { getLedgerParameters, hexToBytes, uint8ArrayToHex } from '@capacity-exchange/midnight-core';
+import { getLedgerParameters, hexToBytes } from '@capacity-exchange/midnight-core';
 import { createCesApis } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@capacity-exchange/client';
@@ -89,7 +87,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice, specksRequir
 export async function processTransactionWithOffer(
   tx: UnboundTransaction,
   offer: Offer,
-  connectedAPI: ConnectedAPI
+  balanceSealedTx: BalanceSealedTx
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToBytes(offer.serializedTx);
@@ -104,20 +102,11 @@ export async function processTransactionWithOffer(
   console.debug('[CESSteps] Binding and merging transactions');
   const boundTx = tx.bind();
   const mergedTx = boundTx.merge(dustTx);
-  const serializedStr = uint8ArrayToHex(mergedTx.serialize());
   console.debug('[CESSteps] Transactions merged, calling wallet to balance and seal');
 
-  const result = await connectedAPI.balanceSealedTransaction(serializedStr);
+  const result = await balanceSealedTx(mergedTx);
   console.debug('[CESSteps] Wallet balanced and sealed transaction');
 
-  const resultBytes = hexToBytes(result.tx);
-  const transaction = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-    'signature',
-    'proof',
-    'binding',
-    resultBytes
-  ).bind();
-
   console.debug('[CESSteps] Transaction processing complete');
-  return transaction;
+  return result;
 }

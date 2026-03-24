@@ -1,15 +1,15 @@
 import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
   DEFAULT_MARGIN,
+  type BalanceSealedTx,
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@capacity-exchange/components';
 import { buildMidnightProviders } from '@capacity-exchange/midnight-core';
-import type { ConnectedApiProviders } from '@capacity-exchange/midnight-core';
 import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';
 
@@ -46,7 +46,7 @@ export async function getCounterValue(contractAddress: string, config: NetworkCo
  * using the provided wallet provider for balancing.
  */
 export async function incrementCounter(
-  providers: ConnectedApiProviders,
+  providers: { midnightProvider: MidnightProvider },
   contractAddress: string,
   walletProvider: WalletProvider,
   config: NetworkConfig
@@ -73,15 +73,18 @@ export async function incrementCounter(
  * Convenience wrapper that builds a CES wallet provider and increments the counter.
  */
 export async function findAndIncrementCounter(
-  providers: ConnectedApiProviders,
+  walletProvider: WalletProvider,
+  midnightProvider: MidnightProvider,
+  balanceSealedTx: BalanceSealedTx,
   contractAddress: string,
   promptForCurrency: PromptForCurrency,
   confirmOffer: ConfirmOffer,
   config: NetworkConfig
 ) {
   const cesWalletProvider = capacityExchangeWalletProvider({
-    walletProvider: providers.walletProvider,
-    connectedAPI: providers.connectedAPI,
+    coinPublicKey: walletProvider.getCoinPublicKey(),
+    encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
+    balanceSealedTx,
     indexerUrl: config.indexerUrl,
     capacityExchangeUrls: [config.capacityExchangeUrl],
     margin: DEFAULT_MARGIN,
@@ -89,5 +92,20 @@ export async function findAndIncrementCounter(
     confirmOffer,
   });
 
-  return incrementCounter(providers, contractAddress, cesWalletProvider, config);
+  const contractProviders = buildMidnightProviders<CounterCircuitId>(
+    cesWalletProvider,
+    midnightProvider,
+    '/midnight/counter',
+    config
+  );
+
+  await findDeployedContract(contractProviders, {
+    compiledContract: compiledCounterContract,
+    contractAddress,
+  });
+  await submitCallTx(contractProviders, {
+    compiledContract: compiledCounterContract,
+    contractAddress,
+    circuitId: 'increment' as CounterCircuitId,
+  });
 }

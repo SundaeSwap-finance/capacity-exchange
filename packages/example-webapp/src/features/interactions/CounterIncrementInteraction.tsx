@@ -4,7 +4,7 @@ import type { WalletCapabilities, WalletConnection } from '../wallet/types';
 import { useCesTransaction } from '../ces';
 import { useSponsoredTransaction } from '../ces/useSponsoredTransaction';
 import { useCesReadiness } from './useCesReadiness';
-import { useConnectedApiProviders } from './useConnectedApiProviders';
+import { useWalletProviders } from './useWalletProviders';
 import { ReadinessMessages } from './ReadinessMessages';
 import { CesTransactionFeedback } from './CesTransactionFeedback';
 import { SponsoredTransactionFeedback } from './SponsoredTransactionFeedback';
@@ -20,8 +20,13 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
   const tokenColor =
     contractContext.tokenMintContract?.derivedTokenColor || contractContext.tokenMintContract?.tokenColor || null;
   const cesReadiness = useCesReadiness(tokenColor);
-  const { providers, walletInfo } = useConnectedApiProviders(wallet, walletConnection);
-  const ces = useCesTransaction(providers, contractAddress);
+  const { providers, walletInfo } = useWalletProviders(wallet, walletConnection);
+  const ces = useCesTransaction(
+    providers?.walletProvider ?? null,
+    providers?.midnightProvider ?? null,
+    providers?.balanceSealedTx ?? null,
+    contractAddress
+  );
   const sponsored = useSponsoredTransaction(providers, contractAddress);
 
   const walletConnected = wallet !== null && walletConnection !== null;

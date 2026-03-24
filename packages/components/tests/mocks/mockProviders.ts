@@ -1,7 +1,5 @@
-import { vi } from 'vitest';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { LedgerParameters } from '@midnight-ntwrk/ledger-v7';
 
 export function createMockWalletProvider(): WalletProvider {
@@ -12,26 +10,6 @@ export function createMockWalletProvider(): WalletProvider {
       throw new Error('balanceTx should be replaced by withCapacityExchange');
     },
   };
-}
-
-export function createMockConnectedAPI(): ConnectedAPI {
-  return {
-    balanceSealedTransaction: vi.fn().mockResolvedValue({
-      tx: '0a0b0c0d0e0f',
-    }),
-    submitTransaction: vi.fn().mockResolvedValue(undefined),
-    getShieldedAddresses: vi.fn().mockResolvedValue({
-      shieldedAddress: 'mock-address',
-      shieldedCoinPublicKey: 'mock-coin-key',
-      shieldedEncryptionPublicKey: 'mock-enc-key',
-    }),
-    getConfiguration: vi.fn().mockResolvedValue({
-      networkId: 'test-network',
-      indexerUri: 'http://localhost:8080',
-      indexerWsUri: 'ws://localhost:8080',
-      substrateNodeUri: 'ws://localhost:9944',
-    }),
-  } as any;
 }
 
 export function createMockUnboundTransaction(dustRequired: bigint = 50000n): UnboundTransaction {
