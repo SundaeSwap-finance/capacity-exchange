@@ -1,6 +1,6 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { ZswapSecretKeys, DustSecretKey, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v7';
-import { Transaction } from '@midnight-ntwrk/ledger-v7';
+import type { ZswapSecretKeys, DustSecretKey, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../config';
 import type { ShieldedAddressInfo } from '@capacity-exchange/midnight-core';
@@ -36,7 +36,7 @@ export function createSeedWalletConnectedAPIAdapter(
 
     async getDustBalance() {
       const state = await walletFacade.dust.waitForSyncedState();
-      const balance = state.walletBalance(new Date());
+      const balance = state.balance(new Date());
       return { balance, cap: 0n };
     },
 

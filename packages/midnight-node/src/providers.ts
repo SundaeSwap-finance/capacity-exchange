@@ -20,8 +20,8 @@ import { AppContext } from './appContext.js';
 export function buildProviders<C extends Contract.Any>(
   ctx: AppContext,
   zkConfigDir: string
-): MidnightProviders<Contract.ImpureCircuitId<C>> {
-  const zkConfigProvider = new NodeZkConfigProvider<Contract.ImpureCircuitId<C>>(zkConfigDir);
+): MidnightProviders<Contract.ProvableCircuitId<C>> {
+  const zkConfigProvider = new NodeZkConfigProvider<Contract.ProvableCircuitId<C>>(zkConfigDir);
   return {
     midnightProvider: ctx.midnightProvider,
     privateStateProvider: ctx.privateStateProvider,
@@ -33,7 +33,7 @@ export function buildProviders<C extends Contract.Any>(
 }
 
 // Prove, balance, submit, and check status of an unproven call transaction.
-async function finalizeCallTx<C extends Contract.Any, ICK extends Contract.ImpureCircuitId<C>>(
+async function finalizeCallTx<C extends Contract.Any, ICK extends Contract.ProvableCircuitId<C>>(
   providers: ContractProviders<C>,
   callTxData: UnsubmittedCallTxData<C, ICK>,
   circuitId: ICK
@@ -56,7 +56,7 @@ async function finalizeCallTx<C extends Contract.Any, ICK extends Contract.Impur
   };
 }
 
-export async function submitCallTxDirect<C extends Contract<undefined>, ICK extends Contract.ImpureCircuitId<C>>(
+export async function submitCallTxDirect<C extends Contract<undefined>, ICK extends Contract.ProvableCircuitId<C>>(
   providers: ContractProviders<C>,
   options: CallTxOptionsBase<C, ICK>
 ): Promise<FinalizedCallTxData<C, ICK>> {
@@ -66,7 +66,7 @@ export async function submitCallTxDirect<C extends Contract<undefined>, ICK exte
 
 // Same as submitCallTxDirect but for contracts with private state.
 // Updates the private state store on success.
-export async function submitStatefulCallTxDirect<C extends Contract.Any, ICK extends Contract.ImpureCircuitId<C>>(
+export async function submitStatefulCallTxDirect<C extends Contract.Any, ICK extends Contract.ProvableCircuitId<C>>(
   providers: ContractProviders<C>,
   options: CallTxOptionsWithPrivateStateId<C, ICK>
 ): Promise<FinalizedCallTxData<C, ICK>> {

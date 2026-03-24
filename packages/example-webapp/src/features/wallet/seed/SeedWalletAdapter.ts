@@ -17,12 +17,12 @@ export class SeedWalletAdapter implements WalletCapabilities {
 
   async getDustAddress(): Promise<{ dustAddress: string }> {
     const state = await this.#walletFacade.dust.waitForSyncedState();
-    return { dustAddress: state.dustAddress };
+    return { dustAddress: MidnightBech32m.encode(this.#networkId, state.address).asString() };
   }
 
   async getDustBalance(): Promise<{ balance: bigint }> {
     const state = await this.#walletFacade.dust.waitForSyncedState();
-    const balance = state.walletBalance(new Date());
+    const balance = state.balance(new Date());
     return { balance };
   }
 
@@ -67,7 +67,7 @@ export class SeedWalletAdapter implements WalletCapabilities {
         callback({
           status: 'success',
           data: {
-            dustBalance: dustState.walletBalance(new Date()),
+            dustBalance: dustState.balance(new Date()),
             nightBalances: unshieldedState.balances,
             shieldedBalances: shieldedState.balances,
           },

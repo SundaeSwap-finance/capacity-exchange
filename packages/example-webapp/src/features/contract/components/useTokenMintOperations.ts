@@ -5,6 +5,7 @@ import { useSubmit } from '../../../lib/hooks/useSubmit';
 import { useNetworkConfig } from '../../../config';
 import type { TokenMintConfig } from '../hooks/useContractsConfig';
 import type { WalletCapabilities } from '../../wallet/types';
+import { MidnightBech32m, ShieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { ServerWallet } from '../../faucet';
 
 export function useTokenMintOperations(
@@ -64,7 +65,7 @@ export function useTokenMintOperations(
       'Sending',
       () =>
         sendShieldedTokens(serverWallet.walletFacade!, serverWallet.keys!, [
-          { type: derivedColor, receiverAddress: shieldedAddress, amount: BigInt(sendAmount) },
+          { type: derivedColor, receiverAddress: MidnightBech32m.parse(shieldedAddress).decode(ShieldedAddress, networkConfig.networkId), amount: BigInt(sendAmount) },
         ]),
       setSendTxHash
     );

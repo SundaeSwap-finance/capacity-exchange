@@ -6,7 +6,7 @@ import {
 } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
 import { DustWallet, type DustWallet as DustWalletType } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v7';
+import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v8';
 import { deriveWalletKeys, type WalletKeys } from './keys.js';
 import { DUST_PARAMS } from './params.js';
 import type { WalletConfig } from './walletConfig.js';
@@ -29,7 +29,7 @@ export interface WalletConnection {
  * Derive keys from a seed and construct a WalletFacade with shielded,
  * unshielded, and dust wallets. Does not start or sync.
  */
-export function createWallet(options: CreateWalletOptions): WalletConnection {
+export async function createWallet(options: CreateWalletOptions): Promise<WalletConnection> {
   const { seedHex, walletConfig, savedShieldedState, savedUnshieldedState, savedDustState } = options;
 
   const keys = deriveWalletKeys(seedHex, walletConfig.networkId);
@@ -38,7 +38,13 @@ export function createWallet(options: CreateWalletOptions): WalletConnection {
   const unshieldedWallet = createUnshieldedWallet(walletConfig, keys.unshieldedKeystore, savedUnshieldedState);
   const dustWallet = createDustWallet(walletConfig, keys.dustSecretKey, savedDustState);
 
-  const walletFacade = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
+  // TODO: Move wallet creation into the factory functions
+  const walletFacade = await WalletFacade.init({
+    configuration: { ...walletConfig, txHistoryStorage: new NoOpTransactionHistoryStorage() },
+    shielded: () => shieldedWallet,
+    unshielded: () => unshieldedWallet,
+    dust: () => dustWallet,
+  });
 
   return { walletFacade, keys };
 }
