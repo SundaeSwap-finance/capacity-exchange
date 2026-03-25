@@ -18,11 +18,33 @@ export interface CurrencyPromptOptions {
   getTokenBalance?: GetTokenBalance;
 }
 
-/**
- * Creates a PromptForCurrency callback that auto-selects if a currency flag is set,
- * otherwise shows an interactive select prompt.
- * If getTokenBalance is provided, verifies the wallet holds enough of the selected token.
- */
+function findByFlag(prices: ExchangePrice[], flag: string): ExchangePrice {
+  const match = prices.find(
+    (ep) => ep.price.currency.toLowerCase() === flag.toLowerCase(),
+  );
+  if (!match) {
+    const available = prices.map((ep) => ep.price.currency).join(", ");
+    throw new Error(
+      `Currency '${flag}' not available. Available: ${available}`,
+    );
+  }
+  return match;
+}
+
+async function assertSufficientBalance(
+  selected: ExchangePrice,
+  getTokenBalance: GetTokenBalance,
+): Promise<void> {
+  const balance = await getTokenBalance(selected.price.currency);
+  const required = BigInt(selected.price.amount);
+  if (balance < required) {
+    throw new Error(
+      `Insufficient ${selected.price.currency} balance. ` +
+        `Required: ${selected.price.amount}, available: ${balance.toString()}`,
+    );
+  }
+}
+
 export function createCurrencyPrompt(
   opts: CurrencyPromptOptions = {},
 ): PromptForCurrency {
@@ -35,16 +57,7 @@ export function createCurrencyPrompt(
     let selected: ExchangePrice;
 
     if (currencyFlag) {
-      const match = prices.find(
-        (ep) => ep.price.currency.toLowerCase() === currencyFlag.toLowerCase(),
-      );
-      if (!match) {
-        const available = prices.map((ep) => ep.price.currency).join(", ");
-        throw new Error(
-          `Currency '${currencyFlag}' not available. Available: ${available}`,
-        );
-      }
-      selected = match;
+      selected = findByFlag(prices, currencyFlag);
     } else {
       if (isJsonMode()) {
         throw new Error(
@@ -75,14 +88,7 @@ export function createCurrencyPrompt(
     }
 
     if (getTokenBalance) {
-      const balance = await getTokenBalance(selected.price.currency);
-      const required = BigInt(selected.price.amount);
-      if (balance < required) {
-        throw new Error(
-          `Insufficient ${selected.price.currency} balance. ` +
-            `Required: ${selected.price.amount}, available: ${balance.toString()}`,
-        );
-      }
+      await assertSufficientBalance(selected, getTokenBalance);
     }
 
     return { status: "selected", exchangePrice: selected };
