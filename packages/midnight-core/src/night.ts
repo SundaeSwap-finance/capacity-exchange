@@ -1,8 +1,11 @@
 export const SPECKS_PER_NIGHT = 1_000_000n;
-export const NIGHT_TOKEN_TYPE = '0000000000000000000000000000000000000000000000000000000000000000';
+export const NIGHT_TOKEN_TYPE =
+  "0000000000000000000000000000000000000000000000000000000000000000";
 
 /** Extract the native NIGHT balance from an unshielded balances record. */
-export function getNightBalance(unshieldedBalances: Record<string, bigint>): bigint {
+export function getNightBalance(
+  unshieldedBalances: Record<string, bigint>,
+): bigint {
   return unshieldedBalances[NIGHT_TOKEN_TYPE] ?? 0n;
 }
 
@@ -16,26 +19,15 @@ export interface TokenBalance {
 }
 
 /**
- * Extract structured balances from a Map-like balance object (as returned by ConnectedAPI).
- * Returns the NIGHT balance (empty-string key) and a list of other token balances.
+ * Extract structured balances from a balance record.
+ * Returns the NIGHT balance and a list of other token balances.
  */
-export function extractBalances(balances: unknown): { night: bigint; tokens: TokenBalance[] } {
-  let night = 0n;
-  const tokens: TokenBalance[] = [];
-
-  if (!balances) return { night, tokens };
-
-  const map = balances as Map<string, bigint>;
-  if (typeof map.forEach !== 'function') return { night, tokens };
-
-  map.forEach((amount, color) => {
-    const amountBigInt = BigInt(amount);
-    if (color === '') {
-      night = amountBigInt;
-    } else {
-      tokens.push({ color, amount: amountBigInt });
-    }
-  });
-
-  return { night, tokens };
+export function extractBalances(
+  balances: Record<string, bigint>,
+): { night: bigint; tokens: TokenBalance[] } {
+  const { [NIGHT_TOKEN_TYPE]: night = 0n, ...rest } = balances;
+  return {
+    night,
+    tokens: Object.entries(rest).map(([color, amount]) => ({ color, amount })),
+  };
 }
