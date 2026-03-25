@@ -1,6 +1,6 @@
 export { requireBrowserEnv } from './envBrowser.js';
 export { hexToBytes, parseHex, uint8ArrayToHex } from './hex.js';
-export { SPECKS_PER_NIGHT, getNightBalance, specksToNight, extractBalances, type TokenBalance } from './night.js';
+export { SPECKS_PER_NIGHT, getNightBalance, specksToNight, formatDust, formatElapsed, formatTimeRemaining, extractBalances, type TokenBalance } from './night.js';
 export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';

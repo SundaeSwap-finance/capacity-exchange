@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { formatElapsed } from '../../utils/format';
+import { formatElapsed } from '@capacity-exchange/midnight-core';
 
 type SpinnerSize = 'sm' | 'md';
 

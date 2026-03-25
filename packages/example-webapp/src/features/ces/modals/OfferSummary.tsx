@@ -1,6 +1,6 @@
 import React from 'react';
 import { LabelValue } from '../../../shared/ui';
-import { formatDust } from '../../../utils/format';
+import { formatDust } from '@capacity-exchange/midnight-core';
 import type { Offer } from '../types';
 
 export function BoxedLabelValue({ label, children }: { label: string; children: React.ReactNode }) {

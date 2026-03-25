@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Modal } from '../../../shared/ui';
-import { formatDust } from '../../../utils/format';
+import { formatDust } from '@capacity-exchange/midnight-core';
 import type { ExchangePrice, CurrencySelectionResult } from '../types';
 
 function CurrencyOption({ exchangePrice, onSelect }: { exchangePrice: ExchangePrice; onSelect: () => void }) {

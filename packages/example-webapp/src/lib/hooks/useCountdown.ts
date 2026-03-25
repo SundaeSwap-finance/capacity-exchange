@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { formatTimeRemaining } from '../../utils/format';
+import { formatTimeRemaining } from '@capacity-exchange/midnight-core';
 
 export function useCountdown(expiresAt: Date) {
   const [timeRemaining, setTimeRemaining] = useState(formatTimeRemaining(expiresAt));

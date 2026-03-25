@@ -1,7 +1,6 @@
 import React from 'react';
-import { getNightBalance, specksToNight } from '@capacity-exchange/midnight-core';
+import { getNightBalance, specksToNight, formatDust } from '@capacity-exchange/midnight-core';
 import { LabelValue } from '../../../shared/ui';
-import { formatDust } from '../../../utils/format';
 
 interface BalanceGridProps {
   dustBalance: bigint;

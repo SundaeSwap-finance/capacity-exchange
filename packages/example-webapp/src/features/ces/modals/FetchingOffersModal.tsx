@@ -1,6 +1,6 @@
 import React from 'react';
 import { LoadingSpinner, Modal } from '../../../shared/ui';
-import { formatDust } from '../../../utils/format';
+import { formatDust } from '@capacity-exchange/midnight-core';
 
 interface FetchingOffersModalProps {
   specksRequired: bigint;

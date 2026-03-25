@@ -1,23 +1,14 @@
-import * as p from '@clack/prompts';
+import * as p from "@clack/prompts";
 import type {
+  ConfirmOffer,
+  CurrencySelectionResult,
   ExchangePrice,
   Offer,
-  CurrencySelectionResult,
   OfferConfirmationResult,
   PromptForCurrency,
-  ConfirmOffer,
-} from '@capacity-exchange/components';
+} from "@capacity-exchange/components";
+import { formatDust, formatTimeRemaining } from "@capacity-exchange/midnight-core";
 import { isJsonMode } from "./output.ts";
-
-function formatSpecks(specks: bigint): string {
-  return specks.toLocaleString();
-}
-
-function formatTimeUntil(date: Date): string {
-  const seconds = Math.max(0, Math.round((date.getTime() - Date.now()) / 1000));
-  if (seconds <= 0) return 'expired';
-  return `~${seconds}s`;
-}
 
 /** Returns the wallet balance for a given token color. */
 export type GetTokenBalance = (tokenColor: string) => Promise<bigint>;
@@ -32,39 +23,52 @@ export interface CurrencyPromptOptions {
  * otherwise shows an interactive select prompt.
  * If getTokenBalance is provided, verifies the wallet holds enough of the selected token.
  */
-export function createCurrencyPrompt(opts: CurrencyPromptOptions = {}): PromptForCurrency {
+export function createCurrencyPrompt(
+  opts: CurrencyPromptOptions = {},
+): PromptForCurrency {
   const { currencyFlag, getTokenBalance } = opts;
 
-  return async (prices: ExchangePrice[], dustRequired: bigint): Promise<CurrencySelectionResult> => {
+  return async (
+    prices: ExchangePrice[],
+    dustRequired: bigint,
+  ): Promise<CurrencySelectionResult> => {
     let selected: ExchangePrice;
 
     if (currencyFlag) {
       const match = prices.find(
-        (ep) => ep.price.currency.toLowerCase() === currencyFlag.toLowerCase()
+        (ep) => ep.price.currency.toLowerCase() === currencyFlag.toLowerCase(),
       );
       if (!match) {
-        const available = prices.map((ep) => ep.price.currency).join(', ');
-        throw new Error(`Currency '${currencyFlag}' not available. Available: ${available}`);
+        const available = prices.map((ep) => ep.price.currency).join(", ");
+        throw new Error(
+          `Currency '${currencyFlag}' not available. Available: ${available}`,
+        );
       }
       selected = match;
     } else {
       if (isJsonMode()) {
-        throw new Error('Currency selection required in JSON mode. Provide --currency flag.');
+        throw new Error(
+          "Currency selection required in JSON mode. Provide --currency flag.",
+        );
       }
 
       const options = prices.map((ep) => ({
         value: ep,
         label: ep.price.currency,
-        hint: `${ep.price.amount} ${ep.price.currency} for ${formatSpecks(dustRequired)} specks`,
+        hint: `${ep.price.amount} ${ep.price.currency} for ${
+          formatDust(dustRequired)
+        } specks`,
       }));
 
       const result = await p.select({
-        message: `Select payment currency (for ${formatSpecks(dustRequired)} specks DUST):`,
+        message: `Select payment currency (for ${
+          formatDust(dustRequired)
+        } specks DUST):`,
         options,
       });
 
       if (p.isCancel(result)) {
-        return { status: 'cancelled' };
+        return { status: "cancelled" };
       }
 
       selected = result;
@@ -76,12 +80,12 @@ export function createCurrencyPrompt(opts: CurrencyPromptOptions = {}): PromptFo
       if (balance < required) {
         throw new Error(
           `Insufficient ${selected.price.currency} balance. ` +
-          `Required: ${selected.price.amount}, available: ${balance.toString()}`
+            `Required: ${selected.price.amount}, available: ${balance.toString()}`,
         );
       }
     }
 
-    return { status: 'selected', exchangePrice: selected };
+    return { status: "selected", exchangePrice: selected };
   };
 }
 
@@ -90,36 +94,43 @@ export function createCurrencyPrompt(opts: CurrencyPromptOptions = {}): PromptFo
  * otherwise shows offer details and prompts for confirmation.
  */
 export function createOfferConfirm(autoConfirm?: boolean): ConfirmOffer {
-  return async (offer: Offer, dustRequired: bigint): Promise<OfferConfirmationResult> => {
+  return async (
+    offer: Offer,
+    dustRequired: bigint,
+  ): Promise<OfferConfirmationResult> => {
     const offerLines = [
       `Currency:  ${offer.offerCurrency}`,
       `Amount:    ${offer.offerAmount} ${offer.offerCurrency}`,
-      `DUST:      ${formatSpecks(dustRequired)} specks`,
-      `Expires:   ${offer.expiresAt.toLocaleTimeString()} (${formatTimeUntil(offer.expiresAt)})`,
+      `DUST:      ${formatDust(dustRequired)} specks`,
+      `Expires:   ${offer.expiresAt.toLocaleTimeString()} (${
+        formatTimeRemaining(offer.expiresAt)
+      })`,
       `Offer ID:  ${offer.offerId}`,
-    ].join('\n');
+    ].join("\n");
 
     if (autoConfirm) {
       if (!isJsonMode()) {
-        p.note(offerLines, 'Offer (auto-confirmed)');
+        p.note(offerLines, "Offer (auto-confirmed)");
       }
-      return { status: 'confirmed' };
+      return { status: "confirmed" };
     }
 
     if (isJsonMode()) {
-      throw new Error('Offer confirmation required in JSON mode. Provide --auto-confirm flag.');
+      throw new Error(
+        "Offer confirmation required in JSON mode. Provide --auto-confirm flag.",
+      );
     }
 
-    p.note(offerLines, 'Offer received');
+    p.note(offerLines, "Offer received");
 
     const confirmed = await p.confirm({
-      message: 'Confirm this offer?',
+      message: "Confirm this offer?",
     });
 
     if (p.isCancel(confirmed)) {
-      return { status: 'cancelled' };
+      return { status: "cancelled" };
     }
 
-    return confirmed ? { status: 'confirmed' } : { status: 'back' };
+    return confirmed ? { status: "confirmed" } : { status: "back" };
   };
 }
