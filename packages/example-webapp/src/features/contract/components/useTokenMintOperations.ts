@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { deriveTokenColor, getShieldedBalance, sendShieldedTokens } from '@capacity-exchange/midnight-core';
+import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/components';
 import { findAndMintTokens } from '../../ces/tokenMintContract';
 import { useSubmit } from '../../../lib/hooks/useSubmit';
 import { useNetworkConfig } from '../../../config';
@@ -28,10 +29,15 @@ export function useTokenMintOperations(
       return;
     }
 
+    const walletProvider = sponsoredTransactionsWalletProvider({
+      walletProvider: serverWallet.walletProvider!,
+      capacityExchangeUrl: networkConfig.capacityExchangeUrl,
+    });
+
     await run('Minting', () =>
       findAndMintTokens(
         serverWallet.midnightProvider!,
-        serverWallet.walletProvider!,
+        walletProvider,
         config.contractAddress,
         BigInt(mintAmount),
         networkConfig

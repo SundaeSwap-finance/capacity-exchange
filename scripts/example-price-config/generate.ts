@@ -22,10 +22,16 @@ export function generate(networkId: string): void {
       ...pf,
       currency: contracts.tokenMint.derivedTokenColor,
     })),
-    sponsoredContracts: example.sponsoredContracts.map((sc: Record<string, Record<string, string[]>>) => ({
-      ...sc,
-      contractAddress: contracts.counter.contractAddress,
-    })),
+    sponsoredContracts: [
+      {
+        contractAddress: contracts.counter.contractAddress,
+        circuits: { type: 'subset', circuitNames: ['increment'] },
+      },
+      {
+        contractAddress: contracts.tokenMint.contractAddress,
+        circuits: { type: 'subset', circuitNames: ['mint_test_tokens'] },
+      },
+    ],
   };
 
   const outputPath = priceConfigPath(networkId);
