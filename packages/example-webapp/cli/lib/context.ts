@@ -1,17 +1,13 @@
-import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import {
-  createAppContext,
+  withAppContext,
   type AppContext,
   type AppConfig,
-  createLogger,
 } from '@capacity-exchange/midnight-node';
 import { toNetworkIdEnum, parseMnemonic, createConnectedAPI } from '@capacity-exchange/midnight-core';
 import { loadWalletSeedFromFile } from '@capacity-exchange/midnight-node';
 import type { CliConfig } from './config';
 import { resolveMnemonic } from './wallet';
-
-const logger = createLogger(import.meta);
 
 /**
  * Build an AppConfig for the CLI, supporting mnemonic from flag/env/prompt
@@ -44,7 +40,6 @@ async function resolveAppConfig(config: CliConfig, mnemonicFlag?: string): Promi
 
 /**
  * Create a ConnectedAPI from an AppContext.
- * Avoids repeating the walletFacade/keys extraction in every command.
  */
 export function createConnectedAPIFromContext(ctx: AppContext, config: CliConfig): ConnectedAPI {
   return createConnectedAPI(
@@ -55,7 +50,8 @@ export function createConnectedAPIFromContext(ctx: AppContext, config: CliConfig
 }
 
 /**
- * CLI version of withAppContext that supports flexible mnemonic resolution.
+ * Resolve CLI-specific config (mnemonic from flag/env/prompt) then
+ * delegate to midnight-node's withAppContext.
  */
 export async function withCliContext<T>(
   config: CliConfig,
@@ -63,8 +59,5 @@ export async function withCliContext<T>(
   fn: (ctx: AppContext) => T | Promise<T>
 ): Promise<T> {
   const appConfig = await resolveAppConfig(config, mnemonicFlag);
-  logger.info(`Network: ${config.networkId}, PID: ${process.pid}`);
-  setNetworkId(appConfig.networkId);
-  const ctx = await createAppContext(appConfig);
-  return fn(ctx);
+  return withAppContext(appConfig, fn);
 }
