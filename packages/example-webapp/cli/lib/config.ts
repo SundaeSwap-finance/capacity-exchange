@@ -1,6 +1,7 @@
 import { resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from '@capacity-exchange/midnight-core';
 
 export interface CliConfig {
+  json: boolean;
   networkId: string;
   endpoints: NetworkEndpoints;
   capacityExchangeUrl: string;
@@ -19,6 +20,7 @@ function env(name: string): string | undefined {
  * Throws if proof server is not configured.
  */
 export function resolveCliConfig(opts: {
+  json?: boolean;
   network?: string;
   exchangeUrl?: string;
 }): CliConfig {
@@ -29,7 +31,7 @@ export function resolveCliConfig(opts: {
   );
   const capacityExchangeUrl =
     opts.exchangeUrl ?? env('CAPACITY_EXCHANGE_URL') ?? '';
-  return { networkId, endpoints, capacityExchangeUrl };
+  return { json: opts.json ?? false, networkId, endpoints, capacityExchangeUrl };
 }
 
 /**
@@ -37,14 +39,15 @@ export function resolveCliConfig(opts: {
  * Does not require proof server to be configured.
  */
 export function resolveCesOnlyConfig(opts: {
+  json?: boolean;
   network?: string;
   exchangeUrl?: string;
-}): { networkId: string; capacityExchangeUrl: string } {
+}): { json: boolean; networkId: string; capacityExchangeUrl: string } {
   const networkId = opts.network ?? env('NETWORK_ID') ?? 'preprod';
   const capacityExchangeUrl =
     opts.exchangeUrl ?? env('CAPACITY_EXCHANGE_URL');
   if (!capacityExchangeUrl) {
     throw new Error('CES exchange URL required. Set --exchange-url or CAPACITY_EXCHANGE_URL env var.');
   }
-  return { networkId, capacityExchangeUrl };
+  return { json: opts.json ?? false, networkId, capacityExchangeUrl };
 }

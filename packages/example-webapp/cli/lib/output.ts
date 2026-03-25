@@ -1,15 +1,5 @@
 import * as p from "@clack/prompts";
 
-let jsonMode = false;
-
-export function setJsonMode(enabled: boolean): void {
-  jsonMode = enabled;
-}
-
-export function isJsonMode(): boolean {
-  return jsonMode;
-}
-
 export function printJson(data: unknown): void {
   const replacer = (_key: string, value: unknown) =>
     typeof value === "bigint" ? value.toString() : value;
@@ -23,8 +13,8 @@ export function printJsonError(message: string): void {
 /**
  * Creates a spinner that works in human mode, no-ops in JSON mode.
  */
-export function createSpinner() {
-  if (jsonMode) {
+export function createSpinner(json: boolean) {
+  if (json) {
     return {
       start(_msg?: string) {},
       stop(_msg?: string) {},
@@ -34,20 +24,20 @@ export function createSpinner() {
   return p.spinner();
 }
 
-export function printHeader(title: string): void {
-  if (!jsonMode) {
+export function printHeader(json: boolean, title: string): void {
+  if (!json) {
     p.intro(title);
   }
 }
 
-export function printSuccess(message: string): void {
-  if (!jsonMode) {
+export function printSuccess(json: boolean, message: string): void {
+  if (!json) {
     p.outro(message);
   }
 }
 
-export function printNote(message: string, title?: string): void {
-  if (!jsonMode) {
+export function printNote(json: boolean, message: string, title?: string): void {
+  if (!json) {
     p.note(message, title);
   }
 }

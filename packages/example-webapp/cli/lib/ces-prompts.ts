@@ -8,12 +8,12 @@ import type {
   PromptForCurrency,
 } from "@capacity-exchange/components";
 import { formatDust, formatTimeRemaining } from "@capacity-exchange/midnight-core";
-import { isJsonMode } from "./output.ts";
 
 /** Returns the wallet balance for a given token color. */
 export type GetTokenBalance = (tokenColor: string) => Promise<bigint>;
 
 export interface CurrencyPromptOptions {
+  json?: boolean;
   currencyFlag?: string;
   getTokenBalance?: GetTokenBalance;
 }
@@ -48,7 +48,7 @@ async function assertSufficientBalance(
 export function createCurrencyPrompt(
   opts: CurrencyPromptOptions = {},
 ): PromptForCurrency {
-  const { currencyFlag, getTokenBalance } = opts;
+  const { json, currencyFlag, getTokenBalance } = opts;
 
   return async (
     prices: ExchangePrice[],
@@ -59,7 +59,7 @@ export function createCurrencyPrompt(
     if (currencyFlag) {
       selected = findByFlag(prices, currencyFlag);
     } else {
-      if (isJsonMode()) {
+      if (json) {
         throw new Error(
           "Currency selection required in JSON mode. Provide --currency flag.",
         );
@@ -99,7 +99,8 @@ export function createCurrencyPrompt(
  * Creates a ConfirmOffer callback that auto-confirms if the flag is set,
  * otherwise shows offer details and prompts for confirmation.
  */
-export function createOfferConfirm(autoConfirm?: boolean): ConfirmOffer {
+export function createOfferConfirm(opts: { json?: boolean; autoConfirm?: boolean } = {}): ConfirmOffer {
+  const { json, autoConfirm } = opts;
   return async (
     offer: Offer,
     dustRequired: bigint,
@@ -115,13 +116,13 @@ export function createOfferConfirm(autoConfirm?: boolean): ConfirmOffer {
     ].join("\n");
 
     if (autoConfirm) {
-      if (!isJsonMode()) {
+      if (!json) {
         p.note(offerLines, "Offer (auto-confirmed)");
       }
       return { status: "confirmed" };
     }
 
-    if (isJsonMode()) {
+    if (json) {
       throw new Error(
         "Offer confirmation required in JSON mode. Provide --auto-confirm flag.",
       );

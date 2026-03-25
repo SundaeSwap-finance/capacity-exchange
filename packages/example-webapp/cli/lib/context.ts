@@ -10,7 +10,6 @@ import { toNetworkIdEnum, parseMnemonic, createConnectedAPI } from '@capacity-ex
 import { loadWalletSeedFromFile } from '@capacity-exchange/midnight-node';
 import type { CliConfig } from './config';
 import { resolveMnemonic } from './wallet';
-import { isJsonMode } from './output';
 
 const logger = createLogger(import.meta);
 
@@ -31,7 +30,7 @@ async function resolveAppConfig(config: CliConfig, mnemonicFlag?: string): Promi
     try {
       seed = loadWalletSeedFromFile(config.networkId);
     } catch {
-      seed = await resolveMnemonic(undefined, isJsonMode());
+      seed = await resolveMnemonic(undefined, config.json);
     }
   }
 
