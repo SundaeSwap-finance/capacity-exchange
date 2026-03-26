@@ -9,10 +9,17 @@
   ],
   "sponsoredContracts": [
     {
-      "contractAddress": "<contract-address>",
+      "contractAddress": "<counter-contract-address>",
       "circuits": {
         "type": "subset",
         "circuitNames": ["increment"]
+      }
+    },
+    {
+      "contractAddress": "<token-mint-contract-address>",
+      "circuits": {
+        "type": "subset",
+        "circuitNames": ["mint_test_tokens"]
       }
     }
   ]
