@@ -12,7 +12,6 @@
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
     "balances": "bun src/cli/balances.ts",
-    "split-night": "bun src/cli/split-night.ts",
     "register-dust": "bun src/cli/register-dust.ts"
   },
   "dependencies": {
