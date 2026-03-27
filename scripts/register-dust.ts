@@ -88,7 +88,12 @@ function decodeDustAddress(bech32Addr: string): string {
 
   // Convert from 5-bit groups to 8-bit bytes (no witness version for mn_dust)
   const bytes = convertBits(bits5, 5, 8, false);
-  return Buffer.from(bytes).toString('hex');
+  const hex = Buffer.from(bytes).toString('hex');
+
+  if (bytes.length === 32) {
+    return '73' + hex;
+  }
+  return hex;
 }
 
 // Build the registration datum:
