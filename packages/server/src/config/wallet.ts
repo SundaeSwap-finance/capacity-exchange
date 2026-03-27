@@ -13,10 +13,19 @@ import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { FileStateStore, loadWalletSeed } from '@capacity-exchange/midnight-node';
 import type { AppEnv } from './env.js';
 import { readFileOrError } from './files.js';
+import { fetchSecret } from './secrets.js';
 
-function resolveWalletSeedHex(env: AppEnv, log: pino.Logger): string {
-  if (env.WALLET_SEED_FILE && env.WALLET_MNEMONIC_FILE) {
-    throw new Error("Can't specify both WALLET_SEED_FILE and WALLET_MNEMONIC_FILE");
+const WALLET_SOURCE_VARS = ['WALLET_SEED_FILE', 'WALLET_MNEMONIC_FILE', 'WALLET_MNEMONIC_ARN'] as const;
+
+async function resolveWalletSeedHex(env: AppEnv, log: pino.Logger): Promise<string> {
+  const specified = WALLET_SOURCE_VARS.filter((k) => env[k]);
+  if (specified.length > 1) {
+    throw new Error(`Only one wallet source allowed, but multiple were set: ${specified.join(', ')}`);
+  }
+  if (env.WALLET_MNEMONIC_ARN) {
+    log.info(`Loading wallet mnemonic from AWS Secrets Manager: ${env.WALLET_MNEMONIC_ARN}`);
+    const mnemonic = await fetchSecret(env.WALLET_MNEMONIC_ARN);
+    return uint8ArrayToHex(parseMnemonic(mnemonic));
   }
   if (env.WALLET_MNEMONIC_FILE) {
     log.info(`Loading wallet from mnemonic file: ${env.WALLET_MNEMONIC_FILE}`);
@@ -30,7 +39,7 @@ function resolveWalletSeedHex(env: AppEnv, log: pino.Logger): string {
     return seedStr.trim();
   }
   if (env.MIDNIGHT_NETWORK.toLowerCase() === 'mainnet') {
-    throw new Error('WALLET_MNEMONIC_FILE or WALLET_SEED_FILE is required on mainnet');
+    throw new Error('WALLET_MNEMONIC_FILE, WALLET_SEED_FILE, or WALLET_MNEMONIC_ARN is required on mainnet');
   }
   log.info(`Loading wallet via convention file (walk-up from cwd)`);
   return uint8ArrayToHex(loadWalletSeed(env.MIDNIGHT_NETWORK));
@@ -47,7 +56,7 @@ export async function createWalletResources(
   networkId: NetworkId.NetworkId,
   logger: pino.Logger,
 ): Promise<WalletResources> {
-  const walletSeed = resolveWalletSeedHex(env, logger);
+  const walletSeed = await resolveWalletSeedHex(env, logger);
   const keys = deriveWalletKeys(walletSeed, networkId);
 
   const walletStateStore = new WalletStateStore(
