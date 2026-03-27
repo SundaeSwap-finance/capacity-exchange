@@ -236,6 +236,14 @@ tasks:
     cmds:
       - bun run fix
 
+  register-dust:
+    desc: Register all unshielded NIGHT UTXOs for dust generation
+    deps: [_build:midnight-node]
+    cmds:
+      - bun packages/midnight-node/src/cli/register-dust.ts {{.NETWORK_ID}}
+    requires:
+      vars: [NETWORK_ID]
+
   clean:
     desc: Clean build artifacts and generated files
     cmds:

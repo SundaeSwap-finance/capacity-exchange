@@ -4,6 +4,7 @@ import {
   DustWalletProvider,
   uint8ArrayToHex,
   type WalletKeys,
+  type StateStore,
 } from '@capacity-exchange/midnight-core';
 import { FileStateStore } from './fileStateStore.js';
 import { createLogger } from './createLogger.js';
@@ -11,6 +12,12 @@ import type { AppConfig } from './appConfig.js';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 
 const logger = createLogger(import.meta);
+
+const noopStore: StateStore = {
+  save: async () => {},
+  load: async () => undefined,
+  clear: async () => {},
+};
 
 // TODO: Remove WalletContext — use WalletConnection directly and construct DustWalletProvider at call sites
 export interface WalletContext {
@@ -21,7 +28,7 @@ export interface WalletContext {
 
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
   const seedHex = uint8ArrayToHex(config.seed);
-  const store = new FileStateStore(config.walletStateDir, logger);
+  const store = config.walletStateDir ? new FileStateStore(config.walletStateDir, logger) : noopStore;
   const timeoutMs = config.walletSyncTimeoutMs ?? 120_000;
 
   logger.info('Creating and syncing wallets...');

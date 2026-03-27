@@ -9,7 +9,7 @@ export interface AppConfig {
   networkId: NetworkId.NetworkId;
   endpoints: NetworkEndpoints;
   seed: Uint8Array;
-  walletStateDir: string;
+  walletStateDir?: string;
   /** Wallet sync timeout in milliseconds. Defaults to 120_000 (2 minutes). */
   walletSyncTimeoutMs?: number;
 }
@@ -28,9 +28,6 @@ export function getAppConfigById(network: string): AppConfig {
   const dotEnv = loadDotEnv();
   const endpoints = resolveEndpoints(networkId, process.env.PROOF_SERVER_URL ?? dotEnv['PROOF_SERVER_URL']);
   const seed = loadWalletSeed(network);
-  const walletStateDir = dotEnv['WALLET_STATE_DIR'];
-  if (!walletStateDir) {
-    throw new Error('Missing WALLET_STATE_DIR in .env');
-  }
+  const walletStateDir = dotEnv['WALLET_STATE_DIR'] || undefined;
   return { networkId, endpoints, seed, walletStateDir };
 }
