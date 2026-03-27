@@ -32,8 +32,7 @@ export function useActiveWallet(
           ? {
               type: 'seed' as const,
               walletFacade: seedWallet.internals.walletFacade,
-              shieldedSecretKeys: seedWallet.internals.keys.shieldedSecretKeys,
-              dustSecretKey: seedWallet.internals.keys.dustSecretKey,
+              keys: seedWallet.internals.keys,
             }
           : null,
       };

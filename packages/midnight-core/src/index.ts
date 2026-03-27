@@ -53,6 +53,6 @@ export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConn
 export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
 export {
   connectedApiProvidersAdapter,
-  type ConnectedApiProviders,
-  type ShieldedAddressInfo,
+  type BaseProviders,
+  type WalletIdentity,
 } from './connectedApiProviders.js';
