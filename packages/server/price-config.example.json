@@ -7,6 +7,7 @@
       "rateDenominator": "1000"
     }
   ],
+  "sponsorAll": false,
   "sponsoredContracts": [
     {
       "contractAddress": "<contract-address>",

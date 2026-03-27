@@ -31,6 +31,7 @@ Price and sponsored contract configuration are defined in a JSON file (see `pric
 ```jsonc
 {
   "priceFormulas": [],
+  "sponsorAll": false,
   "sponsoredContracts": [],
 }
 ```
@@ -63,12 +64,28 @@ price = 4321 DUST * (1.1 ADA / 1000 DUST) + 0.2 ADA
       = 4,953,100 lovelace
 ```
 
-### Sponsored Contracts
+### Sponsored Transactions
 
-A sponsored contract is a contract, or some subset of circuits in a contract, that you allow users to request DUST for at no charge. For example:
+You can configure which transactions the service will sponsor (provide DUST for at no charge).
+
+#### Sponsor all transactions
+
+Set `sponsorAll` to `true` to sponsor every transaction submitted to the server, regardless of which contract or circuit it targets:
 
 ```jsonc
 {
+  "sponsorAll": true,
+  "sponsoredContracts": []
+}
+```
+
+#### Sponsor specific contracts
+
+When `sponsorAll` is `false` (or omitted), only transactions targeting contracts in the `sponsoredContracts` allowlist are eligible:
+
+```jsonc
+{
+  "sponsorAll": false,
   "sponsoredContracts": [
     {
       "contractAddress": "0000000000000000000000000000000000000000000000000000000000000000",

@@ -13,6 +13,7 @@ export interface AppConfig {
   offerTtlSeconds: number;
   endpoints: NetworkEndpoints;
   priceFormulas: PriceFormula[];
+  sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
@@ -40,6 +41,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     offerTtlSeconds: env.OFFER_TTL_SECONDS,
     endpoints,
     priceFormulas: priceConfig.priceFormulas,
+    sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
