@@ -1,6 +1,6 @@
 # Balances CLI
 
-View your Midnight wallet addresses and balances.
+View your Midnight wallet addresses and balances. The examples below use `preview` but the CLI supports `undeployed`, `preprod`, and `mainnet` as well.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ bun run --filter @capacity-exchange/midnight-core build
 **2. Create a wallet mnemonic file**
 
 ```bash
-echo "your mnemonic" > packages/midnight-node/wallet-mnemonic.mainnet.txt
+echo "your mnemonic" > packages/midnight-node/wallet-mnemonic.preview.txt
 ```
 
 **3. Create `.env`**
@@ -32,5 +32,5 @@ printf "WALLET_STATE_DIR=./.wallet-state\nPROOF_SERVER_URL=https://your-proof-se
 ## Run
 
 ```bash
-bun run --filter @capacity-exchange/midnight-node balances mainnet
+bun run --filter @capacity-exchange/midnight-node balances preview
 ```
