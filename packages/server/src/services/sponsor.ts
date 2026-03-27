@@ -25,6 +25,7 @@ export type SponsorTxResult =
 export class SponsorService {
   private readonly utxoService: UtxoService;
   private readonly txService: TxService;
+  private readonly sponsorAll: boolean;
   private readonly sponsoredContracts: SponsoredContract[];
   private readonly indexerUrl: string;
   private readonly logger: FastifyBaseLogger;
@@ -32,12 +33,14 @@ export class SponsorService {
   constructor(
     utxoService: UtxoService,
     txService: TxService,
+    sponsorAll: boolean,
     sponsoredContracts: SponsoredContract[],
     indexerUrl: string,
     logger: FastifyBaseLogger,
   ) {
     this.utxoService = utxoService;
     this.txService = txService;
+    this.sponsorAll = sponsorAll;
     this.sponsoredContracts = sponsoredContracts;
     this.indexerUrl = indexerUrl;
     this.logger = logger;
@@ -76,13 +79,17 @@ export class SponsorService {
 
   /**
    * A transaction is eligible for sponsorship IFF:
-   * 1. It has at least one intent
-   * 2. Every intent has at least one contract action
-   * 3. Every contract action is a ContractCall to a sponsored contract/circuit
+   * 1. sponsorAll is true, OR
+   * 2. It has at least one intent, every intent has at least one contract action,
+   *    and every contract action is a ContractCall to a sponsored contract/circuit
    */
   private isEligible<S extends Signaturish, P extends Proofish, B extends Bindingish>(
     tx: Transaction<S, P, B>,
   ): boolean {
+    if (this.sponsorAll) {
+      return true;
+    }
+
     const intents = tx.intents;
     if (!intents || intents.size === 0) {
       return false;

@@ -21,6 +21,7 @@ const SponsoredContractSchema = Type.Object({
 
 const PriceConfigSchema = Type.Object({
   priceFormulas: Type.Array(PriceFormulaSchema),
+  sponsorAll: Type.Optional(Type.Boolean()),
   sponsoredContracts: Type.Array(SponsoredContractSchema),
 });
 

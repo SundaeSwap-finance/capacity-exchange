@@ -19,6 +19,7 @@ export default fp(async (fastify: FastifyInstance) => {
   const service = new SponsorService(
     fastify.utxoService,
     fastify.txService,
+    fastify.config.sponsorAll ?? false,
     fastify.config.sponsoredContracts,
     fastify.config.endpoints.indexerHttpUrl,
     fastify.log,

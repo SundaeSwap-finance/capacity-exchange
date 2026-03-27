@@ -22,6 +22,7 @@ export function generate(networkId: string): void {
       ...pf,
       currency: contracts.tokenMint.derivedTokenColor,
     })),
+    sponsorAll: example.sponsorAll ?? false,
     sponsoredContracts: example.sponsoredContracts.map((sc: Record<string, Record<string, string[]>>) => ({
       ...sc,
       contractAddress: contracts.counter.contractAddress,
