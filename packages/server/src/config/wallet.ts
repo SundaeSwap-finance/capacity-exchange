@@ -15,16 +15,21 @@ import type { AppEnv } from './env.js';
 import { readFileOrError } from './files.js';
 import { fetchSecret } from './secrets.js';
 
-const WALLET_SOURCE_VARS = ['WALLET_SEED_FILE', 'WALLET_MNEMONIC_FILE', 'WALLET_MNEMONIC_ARN'] as const;
+const WALLET_SOURCE_VARS = ['WALLET_SEED_FILE', 'WALLET_MNEMONIC_FILE', 'WALLET_MNEMONIC_ARN', 'WALLET_MNEMONIC_SECRET_NAME'] as const;
 
-async function resolveWalletSeedHex(env: AppEnv, log: pino.Logger): Promise<string> {
-  const specified = WALLET_SOURCE_VARS.filter((k) => env[k]);
+async function resolveWalletSeedHex(
+  env: AppEnv,
+  log: pino.Logger,
+  secretsFetcher: typeof fetchSecret = fetchSecret,
+): Promise<string> {
+  const specified = WALLET_SOURCE_VARS.filter((k) => env[k] !== undefined);
   if (specified.length > 1) {
     throw new Error(`Only one wallet source allowed, but multiple were set: ${specified.join(', ')}`);
   }
-  if (env.WALLET_MNEMONIC_ARN) {
-    log.info(`Loading wallet mnemonic from AWS Secrets Manager: ${env.WALLET_MNEMONIC_ARN}`);
-    const mnemonic = await fetchSecret(env.WALLET_MNEMONIC_ARN);
+  const secretId = env.WALLET_MNEMONIC_ARN ?? env.WALLET_MNEMONIC_SECRET_NAME;
+  if (secretId) {
+    log.info(`Loading wallet mnemonic from AWS Secrets Manager: ${secretId}`);
+    const mnemonic = await secretsFetcher(secretId);
     return uint8ArrayToHex(parseMnemonic(mnemonic));
   }
   if (env.WALLET_MNEMONIC_FILE) {
@@ -39,7 +44,7 @@ async function resolveWalletSeedHex(env: AppEnv, log: pino.Logger): Promise<stri
     return seedStr.trim();
   }
   if (env.MIDNIGHT_NETWORK.toLowerCase() === 'mainnet') {
-    throw new Error('WALLET_MNEMONIC_FILE, WALLET_SEED_FILE, or WALLET_MNEMONIC_ARN is required on mainnet');
+    throw new Error('WALLET_MNEMONIC_FILE, WALLET_SEED_FILE, WALLET_MNEMONIC_ARN, or WALLET_MNEMONIC_SECRET_NAME is required on mainnet');
   }
   log.info(`Loading wallet via convention file (walk-up from cwd)`);
   return uint8ArrayToHex(loadWalletSeed(env.MIDNIGHT_NETWORK));
