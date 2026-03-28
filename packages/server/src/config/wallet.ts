@@ -28,7 +28,7 @@ async function resolveWalletSeedHex(
   }
   const secretId = env.WALLET_MNEMONIC_ARN ?? env.WALLET_MNEMONIC_SECRET_NAME;
   if (secretId) {
-    log.info(`Loading wallet mnemonic from AWS Secrets Manager: ${secretId}`);
+    log.info('Loading wallet mnemonic from AWS Secrets Manager');
     const mnemonic = await secretsFetcher(secretId);
     return uint8ArrayToHex(parseMnemonic(mnemonic));
   }
