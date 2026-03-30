@@ -168,8 +168,17 @@ body {
     -8px 8px 24px rgba(0,0,0,0.2);
 }
 
+.ces-inventory-center {
+  transform: perspective(600px) rotateX(2deg);
+  transform-origin: center center;
+  box-shadow:
+    0 4px 0 rgba(0,0,0,0.15),
+    0 8px 24px rgba(0,0,0,0.2);
+}
+
 .ces-inventory-left:hover,
-.ces-inventory-right:hover {
+.ces-inventory-right:hover,
+.ces-inventory-center:hover {
   transform: perspective(600px) rotateY(0deg) rotate(0deg) scale(1.02);
   box-shadow: 0 8px 32px rgba(74, 227, 181, 0.12);
 }

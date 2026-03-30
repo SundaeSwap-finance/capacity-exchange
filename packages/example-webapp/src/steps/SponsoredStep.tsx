@@ -142,8 +142,8 @@ function SponsoredMintAction({
         </p>
       </NarrativeCard>
 
-      <div className="flex justify-end">
-        <TokenBalanceCard balance={tokenBalance} tokenLabel="Minted Token" freeze={isTransacting} />
+      <div className="max-w-[240px] mx-auto">
+        <TokenBalanceCard balance={tokenBalance} tokenLabel="Minted Token" freeze={isTransacting} centered />
       </div>
 
       {status === 'idle' && (

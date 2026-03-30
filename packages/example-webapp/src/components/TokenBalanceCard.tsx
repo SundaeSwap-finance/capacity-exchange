@@ -4,11 +4,12 @@ interface TokenBalanceCardProps {
   balance: bigint;
   tokenLabel?: string;
   freeze?: boolean;
+  centered?: boolean;
 }
 
-export function TokenBalanceCard({ balance, tokenLabel = 'Tokens', freeze }: TokenBalanceCardProps) {
+export function TokenBalanceCard({ balance, tokenLabel = 'Tokens', freeze, centered }: TokenBalanceCardProps) {
   return (
-    <div className="ces-inventory-card ces-inventory-right">
+    <div className={`ces-inventory-card ${centered ? 'ces-inventory-center' : 'ces-inventory-right'}`}>
       <div className="text-[10px] uppercase tracking-widest text-ces-text-muted/60 mb-1">
         Wallet
       </div>
