@@ -14,6 +14,7 @@ import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/offers.js';
 import sponsorRoutes from './routes/sponsor.js';
 import priceRoutes from './routes/prices.js';
+import metricsRoutes from './routes/metrics.js';
 import type { AppConfig } from './loadConfig.js';
 import { readFileSync } from 'fs';
 
@@ -54,5 +55,6 @@ export async function buildApp(
   app.register(priceRoutes, { prefix: '/api' });
   app.register(offerRoutes, { prefix: '/api' });
   app.register(sponsorRoutes, { prefix: '/api' });
+  app.register(metricsRoutes, { prefix: '/api' });
   return app;
 }
