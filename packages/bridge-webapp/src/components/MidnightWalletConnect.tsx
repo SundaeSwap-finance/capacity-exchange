@@ -4,7 +4,7 @@ import {
   requireBrowserEnv,
   createConnectedAPIFromMnemonic,
   getNightBalance,
-  specksToNight,
+  starsToNight,
   LocalStorageStateStore,
 } from '@capacity-exchange/midnight-core';
 import type { WalletState } from '../hooks/useWallet';
@@ -18,7 +18,7 @@ interface MidnightWalletConnectProps {
 
 const deriveBalance = async (connectedApi: ConnectedAPI) => {
   const balances = await connectedApi.getUnshieldedBalances();
-  return `${specksToNight(getNightBalance(balances))} NIGHT`;
+  return `${starsToNight(getNightBalance(balances))} NIGHT`;
 };
 
 export function MidnightWalletConnect({ wallet }: MidnightWalletConnectProps) {

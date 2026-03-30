@@ -1,3 +1,4 @@
+import { specksToDust } from '@capacity-exchange/midnight-core';
 import { useMetrics, type Metrics } from './useMetrics';
 
 function formatUptime(seconds: number): string {
@@ -14,12 +15,7 @@ function formatUptime(seconds: number): string {
 }
 
 function formatDust(specks: string): string {
-  const n = BigInt(specks);
-  if (n === 0n) return '0 DUST';
-  const whole = n / 1_000_000_000n;
-  const frac = n % 1_000_000_000n;
-  if (frac === 0n) return `${whole.toLocaleString()} DUST`;
-  return `${whole.toLocaleString()}.${frac.toString().padStart(9, '0').replace(/0+$/, '')} DUST`;
+  return `${specksToDust(BigInt(specks))} DUST`;
 }
 
 function formatContention(data: Metrics['contention']): string {
