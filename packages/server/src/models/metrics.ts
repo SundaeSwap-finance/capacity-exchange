@@ -2,6 +2,7 @@ import { Type } from '@sinclair/typebox';
 import { WalletStatus } from './health.js';
 
 const DustUsageSchema = Type.Object({
+  availableBalance: Type.String(),
   totalSpecksConsumed: Type.String(),
   specksLastHour: Type.String(),
   locksLastHour: Type.Number(),

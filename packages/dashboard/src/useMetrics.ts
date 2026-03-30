@@ -10,6 +10,21 @@ export interface Metrics {
   health: {
     wallet: { status: string };
   };
+  dustUsage: {
+    availableBalance: string;
+    totalSpecksConsumed: string;
+    specksLastHour: string;
+    locksLastHour: number;
+  };
+  revenue: {
+    byCurrency: Record<string, string>;
+  };
+  contention: {
+    lockedUtxos: number;
+    totalUtxos: number;
+    lockedSpecks: string;
+    ratio: number;
+  };
 }
 
 interface MetricsState {
