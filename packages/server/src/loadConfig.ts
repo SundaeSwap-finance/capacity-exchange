@@ -1,4 +1,5 @@
 import type pino from 'pino';
+import { SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 import { config as loadDotenv } from 'dotenv';
 import { toNetworkIdEnum, resolveEndpoints, type NetworkEndpoints, type WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
@@ -34,6 +35,10 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   const priceConfig = loadPriceConfig(env.PRICE_CONFIG_FILE);
   const wallet = await createWalletResources(env, networkId, logger);
 
+  const secretsManager = new SecretsManagerClient({});
+  // todo: fetch secrets here and pass them to wallet resources? To get dust keys?
+  // todo: or what parts of the app need them? 
+  // or just pass the secrets manager instance?
   const config: AppConfig = {
     networkId,
     port: env.PORT,

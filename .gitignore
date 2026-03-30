@@ -1,3 +1,4 @@
+.aws/
 *.log
 *.tsbuildinfo
 *.bak
