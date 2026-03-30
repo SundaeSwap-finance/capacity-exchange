@@ -18,11 +18,15 @@ export default fp(async (fastify: FastifyInstance) => {
   if (!fastify.priceService) {
     throw new Error("OfferService requires PriceService to be init'd first");
   }
+  if (!fastify.metricsService) {
+    throw new Error("OfferService requires MetricsService to be init'd first");
+  }
 
   const service = new OfferService(
     fastify.utxoService,
     fastify.txService,
     fastify.priceService,
+    fastify.metricsService,
     fastify.log,
   );
   fastify.decorate('offerService', service);
