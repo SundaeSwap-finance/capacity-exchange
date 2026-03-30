@@ -13,6 +13,8 @@ interface RevenueEntry {
 }
 
 export interface DustUsageSnapshot {
+  /** Total DUST balance available in the wallet. */
+  availableBalance: string;
   totalSpecksConsumed: string;
   specksLastHour: string;
   locksLastHour: number;
@@ -80,7 +82,11 @@ export class MetricsService {
       specksLastHour += e.specks;
     }
 
+    const walletState = this.walletService.state;
+    const availableBalance = walletState ? walletState.balance(new Date()).toString() : '0';
+
     return {
+      availableBalance,
       totalSpecksConsumed: this.totalSpecksConsumed.toString(),
       specksLastHour: specksLastHour.toString(),
       locksLastHour: this.dustEvents.length,

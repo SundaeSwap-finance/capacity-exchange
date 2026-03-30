@@ -1,4 +1,4 @@
-import { useMetrics } from './useMetrics';
+import { useMetrics, type Metrics } from './useMetrics';
 
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400);
@@ -11,6 +11,28 @@ function formatUptime(seconds: number): string {
   if (m) parts.push(`${m}m`);
   parts.push(`${s}s`);
   return parts.join(' ');
+}
+
+function formatDust(specks: string): string {
+  const n = BigInt(specks);
+  if (n === 0n) return '0 DUST';
+  const whole = n / 1_000_000_000n;
+  const frac = n % 1_000_000_000n;
+  if (frac === 0n) return `${whole.toLocaleString()} DUST`;
+  return `${whole.toLocaleString()}.${frac.toString().padStart(9, '0').replace(/0+$/, '')} DUST`;
+}
+
+function formatContention(data: Metrics['contention']): string {
+  return `${(data.ratio * 100).toFixed(1)}%`;
+}
+
+function formatRevenue(byCurrency: Record<string, string>): string {
+  const entries = Object.entries(byCurrency);
+  if (entries.length === 0) return '—';
+  return entries.map(([currency, amount]) => {
+    const label = currency.length > 16 ? `${currency.slice(0, 8)}...${currency.slice(-6)}` : currency;
+    return `${BigInt(amount).toLocaleString()} ${label}`;
+  }).join(', ');
 }
 
 const statusColor: Record<string, string> = {
@@ -46,17 +68,27 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl p-6">
+      <main className="px-12 py-6">
         <Section title="Server">
           <Card label="Uptime" value={data ? formatUptime(data.server.uptime) : '—'} />
           <Card label="Wallet Status" value={walletStatus} />
         </Section>
 
-        <Section title="Metrics">
-          <Card label="Dust Usage Rate" placeholder />
-          <Card label="Fill Rate" placeholder />
-          <Card label="Revenue" placeholder />
-          <Card label="Contention" placeholder />
+        <Section title="Dust Usage">
+          <Card label="Available Balance" value={data ? formatDust(data.dustUsage.availableBalance) : '—'} />
+          <Card label="Total Consumed" value={data ? formatDust(data.dustUsage.totalSpecksConsumed) : '—'} />
+          <Card label="Last Hour" value={data ? formatDust(data.dustUsage.specksLastHour) : '—'} />
+          <Card label="Locks (Last Hour)" value={data?.dustUsage.locksLastHour.toString() ?? '—'} />
+        </Section>
+
+        <Section title="Revenue">
+          <Card label="Total" value={data ? formatRevenue(data.revenue.byCurrency) : '—'} />
+        </Section>
+
+        <Section title="Contention">
+          <Card label="Locked / Total UTxOs" value={data ? `${data.contention.lockedUtxos} / ${data.contention.totalUtxos}` : '—'} />
+          <Card label="Locked Specks" value={data ? formatDust(data.contention.lockedSpecks) : '—'} />
+          <Card label="Contention Ratio" value={data ? formatContention(data.contention) : '—'} />
         </Section>
       </main>
     </div>
@@ -74,12 +106,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Card({ label, value, placeholder }: { label: string; value?: string; placeholder?: boolean }) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900 p-5">
+    <div className="rounded-lg border border-gray-800 bg-gray-900 p-5 overflow-hidden">
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</div>
       {placeholder ? (
         <div className="flex h-10 items-center text-sm italic text-gray-600">coming soon</div>
       ) : (
-        <div className="text-2xl font-bold tabular-nums text-white">{value}</div>
+        <div className="text-2xl font-bold tabular-nums text-white break-all">{value}</div>
       )}
     </div>
   );
