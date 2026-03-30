@@ -236,6 +236,26 @@ tasks:
     cmds:
       - bun run fix
 
+  dust:register:
+    desc: Build an unsigned dust registration transaction
+    preconditions:
+      - sh: '[ -n "$BLOCKFROST_PROJECT_ID" ]'
+        msg: 'BLOCKFROST_PROJECT_ID is required'
+      - sh: '[ -n "$CARDANO_NETWORK" ]'
+        msg: 'CARDANO_NETWORK is required (mainnet, preprod, preview)'
+    cmds:
+      - bun run {{.ROOT_DIR}}/scripts/dust-registration/register.ts {{.CLI_ARGS}}
+
+  dust:deregister:
+    desc: Build an unsigned dust deregistration transaction
+    preconditions:
+      - sh: '[ -n "$BLOCKFROST_PROJECT_ID" ]'
+        msg: 'BLOCKFROST_PROJECT_ID is required'
+      - sh: '[ -n "$CARDANO_NETWORK" ]'
+        msg: 'CARDANO_NETWORK is required (mainnet, preprod, preview)'
+    cmds:
+      - bun run {{.ROOT_DIR}}/scripts/dust-registration/deregister.ts {{.CLI_ARGS}}
+
   clean:
     desc: Clean build artifacts and generated files
     cmds:
