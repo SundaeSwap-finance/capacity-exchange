@@ -23,6 +23,7 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.decorate('utxoService', utxoService);
 
   fastify.addHook('onClose', (instance, done) => {
+    instance.utxoService.stop();
     instance.walletService.stop();
     done();
   });
