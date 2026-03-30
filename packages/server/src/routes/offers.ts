@@ -6,7 +6,19 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     Body: typeof CreateOfferRequest.static;
     Reply: typeof OfferReply.static;
   }>('/offers', OfferSchema, async (request, reply) => {
-    const result = await fastify.offerService.createOffer(request.body);
+    const quoteResult = fastify.quoteService.getQuote(request.body.quoteId);
+    if (quoteResult.status === 'invalid') {
+      return reply.badRequest('Invalid quote ID');
+    }
+    if (quoteResult.status === 'expired') {
+      return reply.gone('Quote has expired. Please request a new price quote.');
+    }
+
+    const result = await fastify.offerService.createOffer({
+      quoteId: request.body.quoteId,
+      specks: quoteResult.quote.specks,
+      offerCurrency: request.body.offerCurrency,
+    });
 
     switch (result.status) {
       case 'ok':
