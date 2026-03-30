@@ -1,4 +1,4 @@
-import { createHmac, randomBytes } from 'crypto';
+import { createHmac } from 'crypto';
 import type { Price } from './price.js';
 
 export interface Quote {
