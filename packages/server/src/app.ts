@@ -9,6 +9,7 @@ import sponsorPlugin from './plugins/sponsor.js';
 import pricesPlugin from './plugins/price.js';
 import quotePlugin from './plugins/quote.js';
 import txPlugin from './plugins/tx.js';
+import metricsPlugin from './plugins/metrics.js';
 import errorHandler from './plugins/error-handler.js';
 import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
@@ -50,6 +51,7 @@ export async function buildApp(
   await app.register(txPlugin);
   await app.register(pricesPlugin);
   await app.register(quotePlugin);
+  await app.register(metricsPlugin);
   await app.register(offerPlugin);
   await app.register(sponsorPlugin);
   app.register(rootRoutes);

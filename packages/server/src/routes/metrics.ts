@@ -8,6 +8,8 @@ const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.get('/metrics', MetricsSchema, async (_request, _reply) => {
     const walletSyncState = fastify.walletService.syncState;
 
+    const businessMetrics = fastify.metricsService.getMetrics();
+
     return {
       server: {
         name: packageJson.name,
@@ -18,6 +20,7 @@ const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       health: {
         wallet: walletSyncState,
       },
+      ...businessMetrics,
     };
   });
 };
