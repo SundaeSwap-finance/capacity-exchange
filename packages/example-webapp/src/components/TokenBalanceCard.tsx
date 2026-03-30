@@ -17,7 +17,7 @@ export function TokenBalanceCard({ balance, tokenLabel = 'Tokens', freeze, cente
       <AnimatedNumber
         value={Number(balance)}
         freeze={freeze}
-        flash="red"
+        flash="auto"
         duration={800}
         className="font-display font-bold text-4xl tabular-nums text-ces-gold ces-balance-value"
       />

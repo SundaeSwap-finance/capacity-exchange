@@ -17,7 +17,7 @@ export function CounterCard({ value, freeze }: CounterCardProps) {
       <AnimatedNumber
         value={Number(value)}
         freeze={freeze}
-        flash="green"
+        flash="auto"
         duration={800}
         className="font-display font-bold text-4xl tabular-nums text-ces-text ces-counter-value"
       />
