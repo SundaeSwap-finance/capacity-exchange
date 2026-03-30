@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NarrativeCard } from '../components/NarrativeCard';
 import { CounterCard } from '../components/CounterCard';
 import { TokenBalanceCard } from '../components/TokenBalanceCard';
@@ -89,11 +90,19 @@ function PlaygroundAction({
 }) {
   const isActive = status !== 'idle' && status !== 'success' && status !== 'error';
 
+  // Auto-reset on success/error so the action is immediately available again
+  useEffect(() => {
+    if (status === 'success' || status === 'error') {
+      const t = setTimeout(onReset, status === 'success' ? 1500 : 3000);
+      return () => clearTimeout(t);
+    }
+  }, [status, onReset]);
+
   return (
     <div className="ces-card p-4">
-      {status === 'idle' && (
-        <button onClick={onAction} className={`${variant === 'accent' ? 'ces-btn-primary' : 'ces-btn-secondary'} w-full`}>
-          {label}
+      {(status === 'idle' || status === 'success') && (
+        <button onClick={onAction} disabled={status === 'success'} className={`${variant === 'accent' ? 'ces-btn-primary' : 'ces-btn-secondary'} w-full`}>
+          {status === 'success' ? 'Done!' : label}
         </button>
       )}
 
@@ -106,21 +115,9 @@ function PlaygroundAction({
         </div>
       )}
 
-      {status === 'success' && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-ces-accent">Done!</span>
-          <button onClick={onReset} className="ces-btn-ghost text-xs">
-            Again
-          </button>
-        </div>
-      )}
-
       {status === 'error' && (
         <div className="space-y-2">
           <p className="text-sm text-ces-danger">{error}</p>
-          <button onClick={onReset} className="ces-btn-ghost text-xs">
-            Retry
-          </button>
         </div>
       )}
     </div>
@@ -133,11 +130,18 @@ function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransact
 
   const isActive = !['idle', 'success', 'error'].includes(status);
 
+  useEffect(() => {
+    if (status === 'success' || status === 'error') {
+      const t = setTimeout(dismissOffer, status === 'success' ? 1500 : 3000);
+      return () => clearTimeout(t);
+    }
+  }, [status, dismissOffer]);
+
   return (
     <div className="ces-card p-4 space-y-3">
-      {status === 'idle' && (
-        <button onClick={incrementCounter} className="ces-btn-secondary w-full">
-          Increment Counter (Pay with Tokens)
+      {(status === 'idle' || status === 'success') && (
+        <button onClick={incrementCounter} disabled={status === 'success'} className="ces-btn-secondary w-full">
+          {status === 'success' ? 'Counter incremented!' : 'Increment Counter (Pay with Tokens)'}
         </button>
       )}
 
@@ -193,21 +197,9 @@ function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransact
         </>
       )}
 
-      {status === 'success' && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-ces-accent">Counter incremented!</span>
-          <button onClick={dismissOffer} className="ces-btn-ghost text-xs">
-            Again
-          </button>
-        </div>
-      )}
-
       {status === 'error' && (
         <div className="space-y-2">
           <p className="text-sm text-ces-danger">{error}</p>
-          <button onClick={dismissOffer} className="ces-btn-ghost text-xs">
-            Retry
-          </button>
         </div>
       )}
     </div>
