@@ -65,18 +65,8 @@ export function PlaygroundStep({
           variant="accent"
         />
 
-        {/* Sponsored Counter */}
-        <PlaygroundAction
-          label="Increment Counter (Sponsored)"
-          status={sponsoredTransaction.status}
-          error={sponsoredTransaction.error}
-          onAction={sponsoredTransaction.incrementCounter}
-          onReset={sponsoredTransaction.dismiss}
-          variant="accent"
-        />
-
         {/* CES Counter */}
-        <CesPlaygroundAction cesTransaction={cesTransaction} />
+        <CesPlaygroundAction cesTransaction={cesTransaction} shieldedBalances={walletData?.shieldedBalances ?? {}} />
       </div>
     </div>
   );
@@ -137,7 +127,7 @@ function PlaygroundAction({
   );
 }
 
-function CesPlaygroundAction({ cesTransaction }: { cesTransaction: UseCesTransactionResult }) {
+function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransaction: UseCesTransactionResult; shieldedBalances: Record<string, bigint> }) {
   const { status, error, currencySelection, offerConfirmation, onCurrencySelected, onOfferConfirmed, incrementCounter, dismissOffer } =
     cesTransaction;
 
@@ -170,18 +160,30 @@ function CesPlaygroundAction({ cesTransaction }: { cesTransaction: UseCesTransac
 
           {status === 'selecting-currency' && currencySelection && (
             <div className="space-y-2 pt-2 border-t border-ces-border">
-              {currencySelection.prices.map((ep, i) => (
+              {[...currencySelection.prices].sort((a, b) => {
+                const balA = shieldedBalances[a.price.currency] ?? 0n;
+                const balB = shieldedBalances[b.price.currency] ?? 0n;
+                const canA = balA >= BigInt(a.price.amount);
+                const canB = balB >= BigInt(b.price.amount);
+                if (canA && !canB) return -1;
+                if (!canA && canB) return 1;
+                return 0;
+              }).map((ep, i) => {
+                const balance = shieldedBalances[ep.price.currency] ?? 0n;
+                const canAfford = balance >= BigInt(ep.price.amount);
+                return (
                 <button
                   key={`${ep.price.currency}-${i}`}
                   onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
-                  className="w-full p-2 rounded-lg border border-ces-border hover:bg-ces-surface-raised text-left transition-colors text-sm"
+                  disabled={!canAfford}
+                  className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-border hover:bg-ces-surface-raised' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
                 >
                   <div className="flex justify-between">
                     <span className="text-ces-text-muted font-mono truncate max-w-[70%] text-xs">{ep.price.currency}</span>
                     <span className="text-ces-gold font-semibold">{ep.price.amount}</span>
                   </div>
                 </button>
-              ))}
+              );})}
             </div>
           )}
 

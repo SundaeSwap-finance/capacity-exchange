@@ -216,6 +216,16 @@ function InlineCurrencySelection({
   shieldedBalances: Record<string, bigint>;
   onSelect: (result: CurrencySelectionResult) => void;
 }) {
+  const sortedPrices = [...prices].sort((a, b) => {
+    const balA = shieldedBalances[a.price.currency] ?? 0n;
+    const balB = shieldedBalances[b.price.currency] ?? 0n;
+    const canAffordA = balA >= BigInt(a.price.amount);
+    const canAffordB = balB >= BigInt(b.price.amount);
+    if (canAffordA && !canAffordB) return -1;
+    if (!canAffordA && canAffordB) return 1;
+    return 0;
+  });
+
   return (
     <div className="space-y-2 pt-2 border-t border-ces-border">
       <p className="text-sm text-ces-text-muted">
@@ -223,7 +233,7 @@ function InlineCurrencySelection({
         (<span className="font-mono">{specksRequired.toString()}</span> specks).
         Pick a currency to pay with:
       </p>
-      {prices.map((ep, i) => {
+      {sortedPrices.map((ep, i) => {
         const balance = shieldedBalances[ep.price.currency] ?? 0n;
         const cost = BigInt(ep.price.amount);
         const canAfford = balance >= cost;
