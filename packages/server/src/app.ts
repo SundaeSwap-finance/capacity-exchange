@@ -7,6 +7,7 @@ import walletPlugin from './plugins/wallet-utxo.js';
 import offerPlugin from './plugins/offer.js';
 import sponsorPlugin from './plugins/sponsor.js';
 import pricesPlugin from './plugins/price.js';
+import quotePlugin from './plugins/quote.js';
 import txPlugin from './plugins/tx.js';
 import errorHandler from './plugins/error-handler.js';
 import healthRoutes from './routes/health.js';
@@ -47,6 +48,7 @@ export async function buildApp(
   await app.register(walletPlugin);
   await app.register(txPlugin);
   await app.register(pricesPlugin);
+  await app.register(quotePlugin);
   await app.register(offerPlugin);
   await app.register(sponsorPlugin);
   app.register(rootRoutes);
