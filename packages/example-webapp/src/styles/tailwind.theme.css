@@ -1,0 +1,20 @@
+/* Tailwind v3 theme bridge.
+   tailwind.config.js reads these variables to keep utility classes semantic. */
+
+:root {
+  --tw-ces-void: var(--ces-color-void);
+  --tw-ces-surface: var(--ces-color-surface);
+  --tw-ces-surface-solid: var(--ces-color-surface-solid);
+  --tw-ces-surface-raised: var(--ces-color-surface-raised);
+  --tw-ces-text: var(--ces-color-text);
+  --tw-ces-text-muted: var(--ces-color-text-muted);
+  --tw-ces-accent: var(--ces-color-accent);
+  --tw-ces-accent-hover: var(--ces-color-accent-hover);
+  --tw-ces-gold: var(--ces-color-gold);
+  --tw-ces-danger: var(--ces-color-danger);
+  --tw-ces-border: var(--ces-color-border);
+
+  --tw-ces-font-sans: var(--ces-font-sans);
+  --tw-ces-font-display: var(--ces-font-display);
+  --tw-ces-font-mono: var(--ces-font-mono);
+}

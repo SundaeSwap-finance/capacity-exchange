@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
+
 interface ProgressStep {
-  label: string;
+  label: ReactNode;
   status: 'waiting' | 'active' | 'done';
 }
 
@@ -9,13 +11,13 @@ interface TransactionProgressProps {
 
 export function TransactionProgress({ steps }: TransactionProgressProps) {
   return (
-    <div className="space-y-0">
+    <div className="ces-compact-stack">
       {steps.map((step, i) => (
         <div key={i} className="flex items-start gap-3 relative">
           {/* Vertical line connector */}
           {i < steps.length - 1 && (
             <div
-              className={`absolute left-[9px] top-[22px] w-0.5 h-[calc(100%-2px)] ${
+              className={`absolute left-[8px] top-[20px] w-0.5 h-[calc(100%-12px)] ${
                 step.status === 'done' ? 'bg-ces-accent/40' : 'bg-ces-border'
               }`}
             />

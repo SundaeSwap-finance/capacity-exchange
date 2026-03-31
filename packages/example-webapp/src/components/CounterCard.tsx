@@ -3,17 +3,24 @@ import { AnimatedNumber } from './AnimatedNumber';
 interface CounterCardProps {
   value: string | null;
   freeze?: boolean;
+  eyebrow?: string;
+  label?: string;
 }
 
-export function CounterCard({ value, freeze }: CounterCardProps) {
+export function CounterCard({
+  value,
+  freeze,
+  eyebrow = 'Underlying Contract State',
+  label = 'User Registrations',
+}: CounterCardProps) {
   if (value === null) return null;
 
   return (
     <div className="ces-inventory-card ces-inventory-left">
-      <div className="text-[10px] uppercase tracking-widest text-ces-text-muted/60 mb-1">
-        Contract State
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-ces-text-muted/60">
+        {eyebrow}
       </div>
-      <div className="text-xs text-ces-text-muted mb-3">Counter</div>
+      <div className="mb-2 text-xs text-ces-text-muted">{label}</div>
       <AnimatedNumber
         value={Number(value)}
         freeze={freeze}

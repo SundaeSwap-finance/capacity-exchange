@@ -12,9 +12,9 @@ export function NarrativeCard({ heading, children, variant = 'default', action }
 
   return (
     <div className={boxClass}>
-      <h2 className="ces-heading text-xl mb-3">{heading}</h2>
-      <div className="text-ces-text-muted text-sm leading-relaxed space-y-3">{children}</div>
-      {action && <div className="mt-6">{action}</div>}
+      <h2 className="ces-heading mb-2.5 text-2xl">{heading}</h2>
+      <div className="ces-section-stack text-sm leading-relaxed text-ces-text-muted">{children}</div>
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }

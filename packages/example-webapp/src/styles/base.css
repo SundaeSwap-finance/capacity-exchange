@@ -1,0 +1,412 @@
+/* Base and component primitives for the example app. */
+
+@layer base {
+  :root {
+    color: rgb(var(--ces-color-text));
+    background-color: rgb(var(--ces-color-void));
+    font-family: var(--ces-font-sans);
+  }
+
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply m-0 min-h-screen min-w-[320px] font-sans antialiased;
+    background: rgb(var(--ces-color-void));
+    color: rgb(var(--ces-color-text));
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  * {
+    @apply border-ces-border;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .ces-page-artifacts {
+    position: relative;
+  }
+
+  .ces-page-artifacts::before,
+  .ces-page-artifacts::after {
+    content: '';
+    position: fixed;
+    bottom: calc(var(--ces-pixel-size) * 0.5);
+    width: calc(var(--ces-pixel-size) * 6);
+    height: calc(var(--ces-pixel-size) * 5);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.34;
+  }
+
+  .ces-page-artifacts::before {
+    left: calc(var(--ces-pixel-size) * 0.5);
+    background:
+      linear-gradient(rgb(var(--ces-white) / 0.22) 0 0) calc(var(--ces-pixel-size) * 1) 0 / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.1) 0 0) calc(var(--ces-pixel-size) * 4) 0 / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.16) 0 0) 0 calc(var(--ces-pixel-size) * 1) / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.08) 0 0) calc(var(--ces-pixel-size) * 3)
+        calc(var(--ces-pixel-size) * 1) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.24) 0 0) calc(var(--ces-pixel-size) * 5)
+        calc(var(--ces-pixel-size) * 1) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.14) 0 0) calc(var(--ces-pixel-size) * 2)
+        calc(var(--ces-pixel-size) * 2) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.18) 0 0) calc(var(--ces-pixel-size) * 1)
+        calc(var(--ces-pixel-size) * 3) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.06) 0 0) calc(var(--ces-pixel-size) * 4)
+        calc(var(--ces-pixel-size) * 3) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.2) 0 0) 0 calc(var(--ces-pixel-size) * 4) / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.12) 0 0) calc(var(--ces-pixel-size) * 3)
+        calc(var(--ces-pixel-size) * 4) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat;
+  }
+
+  .ces-page-artifacts::after {
+    right: calc(var(--ces-pixel-size) * 0.5);
+    background:
+      linear-gradient(rgb(var(--ces-white) / 0.18) 0 0) calc(var(--ces-pixel-size) * 2) 0 / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.08) 0 0) calc(var(--ces-pixel-size) * 5) 0 / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.24) 0 0) 0 calc(var(--ces-pixel-size) * 1) / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.12) 0 0) calc(var(--ces-pixel-size) * 3)
+        calc(var(--ces-pixel-size) * 1) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.16) 0 0) calc(var(--ces-pixel-size) * 1)
+        calc(var(--ces-pixel-size) * 2) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.06) 0 0) calc(var(--ces-pixel-size) * 4)
+        calc(var(--ces-pixel-size) * 2) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.2) 0 0) calc(var(--ces-pixel-size) * 2) calc(var(--ces-pixel-size) * 3) /
+        var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.1) 0 0) calc(var(--ces-pixel-size) * 5) calc(var(--ces-pixel-size) * 3) /
+        var(--ces-pixel-size) var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.14) 0 0) 0 calc(var(--ces-pixel-size) * 4) / var(--ces-pixel-size)
+        var(--ces-pixel-size) no-repeat,
+      linear-gradient(rgb(var(--ces-white) / 0.22) 0 0) calc(var(--ces-pixel-size) * 3)
+        calc(var(--ces-pixel-size) * 4) / var(--ces-pixel-size) var(--ces-pixel-size) no-repeat;
+  }
+
+  .ces-page-artifacts > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ces-heading {
+    @apply font-display font-normal tracking-tight;
+    color: rgb(var(--ces-color-text));
+  }
+
+  .ces-step-stack {
+    display: grid;
+    gap: var(--ces-space-step);
+  }
+
+  .ces-section-stack {
+    display: grid;
+    gap: var(--ces-space-section);
+  }
+
+  .ces-compact-stack {
+    display: grid;
+    gap: var(--ces-space-compact);
+  }
+
+  .ces-inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ces-space-step);
+  }
+
+  .ces-main-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 1;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='table' tableValues='0 0.92'/%3E%3CfeFuncG type='table' tableValues='0 0.92'/%3E%3CfeFuncB type='table' tableValues='0 0.92'/%3E%3CfeFuncA type='table' tableValues='0 0.2'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, rgb(var(--ces-black-950)), rgb(var(--ces-black-950)));
+    background-size: 180px 180px, auto;
+    background-repeat: repeat, no-repeat;
+    mix-blend-mode: screen;
+    filter: contrast(1.1) brightness(0.60);
+    z-index: 0;
+  }
+
+  .ces-main-stage > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ces-unicorn-backdrop :is(a, button)[href*='unicorn'],
+  .ces-unicorn-backdrop :is(a, button)[aria-label*='Unicorn'],
+  .ces-unicorn-backdrop :is(a, button)[title*='Unicorn'],
+  .ces-unicorn-backdrop :is(a, button)[class*='unicorn'],
+  .ces-unicorn-backdrop :is(a, button)[id*='unicorn'] {
+    display: none !important;
+  }
+
+  .ces-btn,
+  .ces-btn-primary {
+    @apply relative inline-flex items-center overflow-hidden border uppercase transition-[transform,filter,box-shadow] duration-150 disabled:pointer-events-none disabled:opacity-40;
+    --ces-button-fill: var(--ces-color-accent);
+    --ces-button-ink: var(--ces-white);
+    --ces-btn-pad-x: 1rem;
+    --ces-btn-pad-y: 1rem;
+    --ces-btn-font-size: 1.9rem;
+    --ces-btn-arrow-w: 4.75rem;
+    --ces-btn-arrow-h: 1.9rem;
+    --ces-btn-icon-size: 1.35rem;
+    appearance: none;
+    border-width: 0;
+    border-radius: 0;
+    background:
+      linear-gradient(180deg, rgb(var(--ces-white) / 0.12), transparent 18%),
+      rgb(var(--ces-button-fill));
+    color: rgb(var(--ces-button-ink));
+    padding: var(--ces-btn-pad-y) calc(var(--ces-btn-icon-size) + 2rem) var(--ces-btn-pad-y) var(--ces-btn-pad-x);
+    font-family: var(--ces-font-display);
+    font-size: var(--ces-btn-font-size);
+    font-weight: 700;
+    letter-spacing: -0.08em;
+    line-height: 0.78;
+    text-align: left;
+    text-transform: uppercase;
+    box-shadow: 6px 6px 0 rgb(var(--ces-black) / 0.26);
+  }
+
+  .ces-btn::after,
+  .ces-btn-primary::after,
+  .ces-btn-primary-mono::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    width: var(--ces-btn-icon-size, 1.35rem);
+    height: var(--ces-btn-icon-size, 1.35rem);
+    transform: translateY(-50%);
+    background: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 6H8V3L15 8L8 13V10H1Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 6H8V3L15 8L8 13V10H1Z'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
+
+  .ces-btn-primary-mono {
+    @apply relative inline-flex items-center justify-center overflow-hidden border uppercase transition-[transform,filter,box-shadow] duration-150 disabled:pointer-events-none disabled:opacity-40;
+    --ces-button-fill: var(--ces-color-accent);
+    --ces-button-ink: var(--ces-white);
+    --ces-btn-icon-size: 1rem;
+    appearance: none;
+    border-width: 0;
+    border-radius: 0;
+    background:
+      linear-gradient(180deg, rgb(var(--ces-white) / 0.12), transparent 18%),
+      rgb(var(--ces-button-fill));
+    color: rgb(var(--ces-button-ink));
+    padding: 1.15rem calc(var(--ces-btn-icon-size) + 2rem) 1.15rem 1.25rem;
+    font-family: var(--ces-font-mono);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.15;
+    text-align: center;
+    text-transform: uppercase;
+    box-shadow: 6px 6px 0 rgb(var(--ces-black) / 0.26);
+  }
+
+  .ces-btn-secondary::after {
+    content: '';
+    position: absolute;
+    right: 0.95rem;
+    top: 50%;
+    width: var(--ces-btn-icon-size, 1.5rem);
+    height: var(--ces-btn-icon-size, 1.5rem);
+    transform: translateY(-50%);
+    background: currentColor;
+    clip-path: polygon(
+      42% 0,
+      58% 0,
+      58% 42%,
+      100% 42%,
+      100% 58%,
+      58% 58%,
+      58% 100%,
+      42% 100%,
+      42% 58%,
+      0 58%,
+      0 42%,
+      42% 42%
+    );
+  }
+
+  .ces-btn:hover,
+  .ces-btn-primary:hover,
+  .ces-btn-primary-mono:hover,
+  .ces-btn-secondary:hover {
+    transform: translate(2px, 2px);
+    filter: brightness(1.04);
+    box-shadow: 4px 4px 0 rgb(var(--ces-black) / 0.24);
+  }
+
+  .ces-btn:active,
+  .ces-btn-primary:active,
+  .ces-btn-primary-mono:active,
+  .ces-btn-secondary:active {
+    transform: translate(4px, 4px);
+    box-shadow: 2px 2px 0 rgb(var(--ces-black) / 0.24);
+  }
+
+  .ces-btn-secondary {
+    @apply relative inline-flex items-center overflow-hidden border uppercase transition-[transform,filter,box-shadow] duration-150 disabled:pointer-events-none disabled:opacity-40;
+    --ces-button-fill: var(--ces-color-surface-solid);
+    --ces-button-ink: var(--ces-color-text);
+    --ces-button-border: var(--ces-color-accent);
+    --ces-btn-pad-x: 1rem;
+    --ces-btn-pad-y: 0.8rem;
+    --ces-btn-font-size: 1.9rem;
+    --ces-btn-arrow-w: 4.75rem;
+    --ces-btn-arrow-h: 1.9rem;
+    --ces-btn-icon-size: 1.5rem;
+    appearance: none;
+    border-width: 2px;
+    border-radius: 0;
+    border-color: rgb(var(--ces-button-border));
+    background:
+      linear-gradient(180deg, rgb(var(--ces-white) / 0.08), transparent 20%),
+      rgb(var(--ces-button-fill));
+    color: rgb(var(--ces-button-ink));
+    padding: var(--ces-btn-pad-y) calc(var(--ces-btn-icon-size) + 2.2rem) var(--ces-btn-pad-y) var(--ces-btn-pad-x);
+    font-family: var(--ces-font-display);
+    font-size: var(--ces-btn-font-size);
+    font-weight: 700;
+    letter-spacing: -0.08em;
+    line-height: 0.78;
+    text-align: left;
+    text-transform: uppercase;
+    box-shadow: 6px 6px 0 rgb(var(--ces-color-accent) / 0.18);
+  }
+
+  .ces-btn-ghost {
+    @apply inline-flex items-center justify-center border uppercase transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40;
+    appearance: none;
+    border-width: 1px;
+    border-radius: 0;
+    border-color: rgb(var(--ces-color-border));
+    background: transparent;
+    color: rgb(var(--ces-color-text-muted));
+    padding: 0.7rem 1rem;
+    font-family: var(--ces-font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+  }
+
+  .ces-btn-ghost:hover {
+    background: rgb(var(--ces-color-surface-solid));
+    color: rgb(var(--ces-color-text));
+  }
+
+  .ces-card {
+    @apply overflow-hidden border;
+    background: rgb(var(--ces-color-surface));
+    padding: var(--ces-space-card);
+    border-radius: var(--ces-radius-card);
+    border-color: rgb(var(--ces-color-border));
+    box-shadow: var(--ces-shadow-card);
+  }
+
+  .ces-card-solid {
+    @apply overflow-hidden;
+    background: rgb(var(--ces-color-surface-solid));
+    padding: var(--ces-space-card);
+    border-radius: var(--ces-radius-card);
+  }
+
+  .ces-highlight-box {
+    background: rgb(var(--ces-color-surface-solid));
+    padding: var(--ces-space-card);
+    border-radius: var(--ces-radius-card);
+  }
+
+  .ces-gold-box {
+    background: rgb(var(--ces-color-surface-solid));
+    padding: var(--ces-space-card);
+    border-radius: var(--ces-radius-card);
+  }
+
+  .ces-dot {
+    @apply h-2 w-2 rounded-full transition-all duration-200;
+    background: rgb(var(--ces-color-border));
+  }
+
+  .ces-dot-active {
+    @apply h-2 w-6 rounded-full transition-all duration-200;
+    background: rgb(var(--ces-color-accent));
+  }
+
+  .ces-dot-completed {
+    @apply h-2 w-2 rounded-full transition-all duration-200;
+    background: rgb(var(--ces-color-accent) / 0.4);
+  }
+
+  .ces-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background: rgb(var(--ces-overlay-backdrop) / 0.88);
+    backdrop-filter: blur(12px);
+  }
+
+  .ces-inventory-card {
+    @apply border;
+    background: rgb(var(--ces-color-surface));
+    padding: var(--ces-space-card);
+    border-radius: var(--ces-radius-card);
+    border-color: rgb(var(--ces-neutral-400) / 0.28);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .ces-inventory-left {
+    transform: none;
+    box-shadow: var(--ces-shadow-inventory-a);
+  }
+
+  .ces-inventory-right {
+    transform: none;
+    box-shadow: var(--ces-shadow-inventory-b);
+  }
+
+  .ces-inventory-center {
+    transform: none;
+    box-shadow: var(--ces-shadow-inventory-center);
+  }
+
+  .ces-pill-badge {
+    @apply inline-flex items-center whitespace-nowrap border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.14em];
+    background: rgb(var(--ces-color-surface-solid));
+    border-color: rgb(var(--ces-color-border));
+    color: rgb(var(--ces-color-text-muted));
+    border-radius: var(--ces-radius-pill);
+  }
+}
+
+@layer utilities {
+  .ces-mono {
+    @apply font-mono text-sm;
+  }
+}

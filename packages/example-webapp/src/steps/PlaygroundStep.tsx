@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { NarrativeCard } from '../components/NarrativeCard';
 import { CounterCard } from '../components/CounterCard';
+import { RotatingStatusText } from '../components/RotatingStatusText';
 import { TokenBalanceCard } from '../components/TokenBalanceCard';
 import type { WalletData } from '../features/wallet/types';
 import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
@@ -20,7 +21,10 @@ interface PlaygroundStepProps {
   counterAddress: string | null;
   counterValue: string | null;
   config: NetworkConfig;
+  allowMockMintWithoutContractAddress?: boolean;
 }
+
+const MOCK_TOKEN_MINT_ADDRESS = 'mock-token-mint-address';
 
 export function PlaygroundStep({
   walletData,
@@ -31,6 +35,7 @@ export function PlaygroundStep({
   counterAddress,
   counterValue,
   config,
+  allowMockMintWithoutContractAddress = false,
 }: PlaygroundStepProps) {
   const anyTransacting =
     sponsoredMint.status === 'building' || sponsoredMint.status === 'submitting' ||
@@ -38,30 +43,35 @@ export function PlaygroundStep({
     sponsoredTransaction.status === 'building' || sponsoredTransaction.status === 'submitting';
 
   return (
-    <div className="space-y-4">
+    <div className="ces-step-stack">
       <NarrativeCard heading="Playground">
         <p>
-          You've seen both modes — <strong className="text-ces-accent">sponsored</strong> and{' '}
-          <strong className="text-ces-gold">paid exchange</strong>. Now explore freely.
+          You&apos;ve seen both DUST-handling modes - <strong className="text-ces-accent">sponsored</strong> and{' '}
+          <strong className="text-ces-gold">user-paid through exchange</strong>. Now explore both flows freely.
         </p>
+        <p>This keeps the underlying Midnight and Cardano steps visible while still showing the cleaner product experience you want for end users.</p>
       </NarrativeCard>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="ces-inventory-grid">
         <CounterCard value={counterValue} freeze={anyTransacting} />
         <TokenBalanceCard
           balance={walletData ? Object.values(walletData.shieldedBalances).reduce((a, b) => a + b, 0n) : 0n}
-          tokenLabel="Minted Token"
-          freeze={anyTransacting}
+          tokenLabel="Tokens"
         />
       </div>
 
-      <div className="space-y-3">
+      <div className="ces-section-stack">
         {/* Sponsored Mint */}
         <PlaygroundAction
-          label="Mint 1,000 Tokens (Sponsored)"
+          label="Mint 1,000 Tokens (App Pays DUST)"
           status={sponsoredMint.status}
           error={sponsoredMint.error}
-          onAction={() => tokenMintAddress && sponsoredMint.mint(tokenMintAddress, 1000n)}
+          onAction={() => {
+            const resolvedTokenMintAddress =
+              tokenMintAddress ?? (allowMockMintWithoutContractAddress ? MOCK_TOKEN_MINT_ADDRESS : null);
+            if (!resolvedTokenMintAddress) return;
+            sponsoredMint.mint(resolvedTokenMintAddress, 1000n);
+          }}
           onReset={sponsoredMint.reset}
           variant="accent"
         />
@@ -101,22 +111,44 @@ function PlaygroundAction({
   return (
     <div className="ces-card p-4">
       {(status === 'idle' || status === 'success') && (
-        <button onClick={onAction} disabled={status === 'success'} className={`${variant === 'accent' ? 'ces-btn-primary' : 'ces-btn-secondary'} w-full`}>
+        <button
+          onClick={onAction}
+          disabled={status === 'success'}
+          className={`${variant === 'accent' ? 'ces-btn-primary' : 'ces-btn-secondary'} w-full`}
+        >
           {status === 'success' ? 'Done!' : label}
         </button>
       )}
 
       {isActive && (
-        <div className="flex items-center gap-3">
-          <div className="ces-spinner-sm" />
-          <span className="text-sm text-ces-text-muted">
-            {status === 'building' ? 'Building proof...' : 'Submitting...'}
-          </span>
+        <div className="ces-compact-stack">
+          <div className="flex items-center gap-3">
+            <div className="ces-spinner-sm" />
+            <span className="text-sm text-ces-text-muted">
+              {status === 'building' ? 'Building proof...' : 'Submitting...'}
+            </span>
+          </div>
+          <RotatingStatusText
+            active
+            messages={
+              status === 'building'
+                ? [
+                    'Preparing the sponsored Midnight transaction.',
+                    'Capacity Exchange will attach DUST sponsorship after the proof is ready.',
+                    'This keeps onboarding simple for the end user while the demo exposes the hidden work.',
+                  ]
+                : [
+                    'Submitting sponsored settlement through Cardano.',
+                    'Waiting for confirmation before the Midnight state update lands.',
+                    'The app is still covering DUST here, even though the user never sees that burden.',
+                  ]
+            }
+          />
         </div>
       )}
 
       {status === 'error' && (
-        <div className="space-y-2">
+        <div className="ces-compact-stack">
           <p className="text-sm text-ces-danger">{error}</p>
         </div>
       )}
@@ -138,10 +170,10 @@ function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransact
   }, [status, dismissOffer]);
 
   return (
-    <div className="ces-card p-4 space-y-3">
+    <div className="ces-card ces-section-stack p-4">
       {(status === 'idle' || status === 'success') && (
         <button onClick={incrementCounter} disabled={status === 'success'} className="ces-btn-secondary w-full">
-          {status === 'success' ? 'Counter incremented!' : 'Increment Counter (Pay with Tokens)'}
+          {status === 'success' ? 'Demo user registered!' : 'Register User (Pay with Tokens)'}
         </button>
       )}
 
@@ -151,19 +183,52 @@ function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransact
             <div className="ces-spinner-sm" />
             <span className="text-sm text-ces-text-muted">
               {status === 'building'
-                ? 'Building proof...'
+                ? 'Building registration proof...'
                 : status === 'selecting-currency'
-                  ? 'Select currency...'
+                  ? 'Choose asset for DUST...'
                   : status === 'fetching-offers'
-                    ? 'Fetching offers...'
+                    ? 'Fetching live quote...'
                     : status === 'confirming'
-                      ? 'Confirm offer...'
-                      : 'Submitting...'}
+                      ? 'Confirm registration...'
+                      : 'Submitting settlement...'}
             </span>
           </div>
 
+          {status === 'building' && (
+            <RotatingStatusText
+              active
+              messages={[
+                'Preparing the private registration payload.',
+                'Calculating the DUST requirement for this contract call.',
+                'The selected asset will be exchanged so the user never has to hold DUST directly.',
+              ]}
+            />
+          )}
+
+          {status === 'fetching-offers' && (
+            <RotatingStatusText
+              active
+              messages={[
+                'Requesting a fresh quote from Capacity Exchange.',
+                'Translating the DUST requirement into a user-facing asset price.',
+                'This is the bridge between Midnight fees and a simpler app experience.',
+              ]}
+            />
+          )}
+
+          {status === 'submitting' && (
+            <RotatingStatusText
+              active
+              messages={[
+                'Submitting Cardano settlement now.',
+                'Waiting for confirmation before the Midnight state update is finalized.',
+                'The next demo registration number will appear when the flow completes.',
+              ]}
+            />
+          )}
+
           {status === 'selecting-currency' && currencySelection && (
-            <div className="space-y-2 pt-2 border-t border-ces-border">
+            <div className="ces-compact-stack border-t border-ces-border pt-2">
               {[...currencySelection.prices].sort((a, b) => {
                 const balA = shieldedBalances[a.price.currency] ?? 0n;
                 const balB = shieldedBalances[b.price.currency] ?? 0n;
@@ -198,7 +263,7 @@ function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransact
       )}
 
       {status === 'error' && (
-        <div className="space-y-2">
+        <div className="ces-compact-stack">
           <p className="text-sm text-ces-danger">{error}</p>
         </div>
       )}
@@ -218,7 +283,7 @@ function CompactOfferConfirmation({
   const { timeRemaining, isExpired } = useCountdown(offer.expiresAt);
 
   return (
-    <div className="space-y-2 pt-2 border-t border-ces-border">
+    <div className="ces-compact-stack border-t border-ces-border pt-2">
       <div className="flex justify-between text-xs">
         <span className="text-ces-text-muted">Pay {offer.offerAmount} for {formatDust(specksRequired)} DUST</span>
         <span className={isExpired ? 'text-ces-danger' : 'text-ces-text-muted'}>{timeRemaining}</span>

@@ -1,7 +1,7 @@
 import type { TutorialStep } from '../hooks/useTutorialState';
 
 const STEPS: TutorialStep[] = [0, 1, 2, 3];
-const LABELS = ['Connect', 'Sponsor', 'Exchange', 'Explore'];
+const LABELS = ['WALLET', 'SPONSOR', 'REGISTER', 'PLAYGROUND'];
 
 interface StepIndicatorProps {
   currentStep: TutorialStep;
@@ -11,7 +11,7 @@ interface StepIndicatorProps {
 
 export function StepIndicator({ currentStep, completedSteps, onStepClick }: StepIndicatorProps) {
   return (
-    <div className="flex items-center gap-3 justify-center">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {STEPS.map((step) => {
         const isCurrent = step === currentStep;
         const isCompleted = completedSteps.has(step);
@@ -22,19 +22,31 @@ export function StepIndicator({ currentStep, completedSteps, onStepClick }: Step
             key={step}
             onClick={isClickable ? () => onStepClick(step) : undefined}
             disabled={!isClickable}
-            className="flex items-center gap-1.5 group disabled:cursor-default"
+            className={`group inline-flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors disabled:cursor-default ${
+              isClickable ? 'hover:bg-ces-accent' : ''
+            }`}
           >
-            <div className={isCurrent ? 'ces-dot-active' : isCompleted ? 'ces-dot-completed' : 'ces-dot'} />
             <span
-              className={`text-xs font-medium transition-colors ${
+              className={`font-mono text-[9px] uppercase tracking-[0.26em] transition-colors ${
                 isCurrent
-                  ? 'text-ces-accent'
+                  ? 'text-ces-text'
                   : isCompleted
-                    ? 'text-ces-accent/40 group-hover:text-ces-accent/60'
+                    ? 'text-ces-text group-hover:text-white'
                     : 'text-ces-text-muted/40'
               }`}
             >
               {LABELS[step]}
+            </span>
+            <span
+              className={`font-mono text-[9px] leading-none tracking-[0.2em] transition-colors ${
+                isCurrent
+                  ? 'text-ces-text'
+                  : isCompleted
+                    ? 'text-ces-text-muted group-hover:text-white'
+                    : 'text-ces-text-muted/25'
+              }`}
+            >
+              [0{step + 1}]
             </span>
           </button>
         );
