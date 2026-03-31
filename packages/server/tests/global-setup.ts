@@ -30,7 +30,7 @@ export async function setup() {
   serverProcess.stderr?.pipe(logStream);
 
   // Wait for readiness
-  const maxRetries = 600;
+  const maxRetries = 60;
   for (let i = 0; i < maxRetries; i++) {
     try {
       const res = await fetch(`${BASE_URL}/health/ready`);
