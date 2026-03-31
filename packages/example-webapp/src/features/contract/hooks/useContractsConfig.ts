@@ -5,7 +5,6 @@ export interface TokenMintConfig {
   txHash: string;
   tokenColor: string;
   derivedTokenColor: string;
-  privateStateId: string;
 }
 
 export interface CounterConfig {
@@ -37,7 +36,7 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
   const fetchConfig = async () => {
     setState({ status: 'loading' });
     try {
-      const response = await fetch(`/contracts/.contracts.${networkId}.json`);
+      const response = await fetch(`/contracts/.contracts.${networkId}.public.json`);
       if (response.status === 404) {
         setState({ status: 'not-deployed' });
         return;

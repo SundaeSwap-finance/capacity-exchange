@@ -24,7 +24,7 @@ tasks:
   copy-configs:
     cmds:
       - mkdir -p {{.WEBAPP_DIR}}/public/contracts
-      - cp {{.CONTRACTS_DIR}}/.contracts.*.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
+      - cp {{.CONTRACTS_DIR}}/.contracts.*.public.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
 
   # --- Preconditions ---
 
@@ -35,7 +35,7 @@ tasks:
   require-deployed:
     run: once
     preconditions:
-      - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.json >/dev/null 2>&1'
+      - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.public.json >/dev/null 2>&1'
         msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup:example' first."
 
   require-example-price-config:

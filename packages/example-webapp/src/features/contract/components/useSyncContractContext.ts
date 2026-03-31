@@ -12,7 +12,6 @@ export function useSyncContractContext(loadedConfig: ContractsConfig | null) {
         contractAddress: loadedConfig.tokenMint.contractAddress,
         tokenColor: loadedConfig.tokenMint.tokenColor,
         derivedTokenColor: loadedConfig.tokenMint.derivedTokenColor,
-        privateStateId: loadedConfig.tokenMint.privateStateId,
       });
     } else {
       setCounterContract(null);

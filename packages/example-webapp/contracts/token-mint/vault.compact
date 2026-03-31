@@ -15,6 +15,12 @@ export ledger tokens_held: Uint<128>;
 // Internal balances per user (keyed by persistent hash of their secret)
 export ledger balances: Map<Bytes<32>, Uint<128>>;
 
+// Maximum allowed depositors (admin-adjustable; 0 = deposits disabled)
+export ledger max_depositors: Uint<64>;
+
+// Admin key hash (can prune entries and update max_depositors)
+export ledger admin_key_hash: Bytes<32>;
+
 // Nonce management for unique coins
 ledger counter: Counter;
 ledger nonce: Bytes<32>;
@@ -25,11 +31,16 @@ ledger contract_coin: ShieldedCoinInfo;
 // Witness for user's secret key
 witness local_secret_key(): Bytes<32>;
 
-constructor(color: Bytes<32>, initial_nonce: Bytes<32>) {
+// Witness for admin's secret key
+witness admin_secret_key(): Bytes<32>;
+
+constructor(color: Bytes<32>, initial_nonce: Bytes<32>, admin_key: Bytes<32>, depositor_cap: Uint<64>) {
     token_color = disclose(color);
     tokens_held = 0;
     nonce = disclose(initial_nonce);
     contract_coin = default<ShieldedCoinInfo>;
+    admin_key_hash = disclose(admin_key);
+    max_depositors = disclose(depositor_cap);
 }
 
 // Get user's identity key (hidden via persistent hash, but disclosed for ledger ops)
@@ -58,12 +69,18 @@ export circuit get_token_color(): Bytes<32> {
     return token_color;
 }
 
+// Verify admin identity
+circuit require_admin(): [] {
+    assert(disclose(persistentHash<Bytes<32>>(admin_secret_key())) == admin_key_hash, "not admin");
+}
+
 // First deposit when contract has no tokens yet
 // User provides tokens, contract receives them
 export circuit first_deposit(amount: Uint<64>): [] {
     assert(tokens_held == 0, "not first deposit");
 
     const key = owner_key();
+    assert(balances.size() < max_depositors as Uint<128>, "depositor cap reached");
 
     incr_nonce();
 
@@ -96,6 +113,11 @@ export circuit deposit(
 ): [] {
     const key = owner_key();
     const current_balance = balances.lookup(key);
+
+    // Enforce cap for new depositors
+    if (!balances.member(key)) {
+        assert(balances.size() < max_depositors as Uint<128>, "depositor cap reached");
+    }
 
     incr_nonce();
 
@@ -175,4 +197,16 @@ export circuit mint_test_tokens(amount: Uint<64>): ShieldedCoinInfo {
         nonce,
         left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey())
     );
+}
+
+// Admin: remove an entry from the balances map
+export circuit admin_prune(key: Bytes<32>): [] {
+    require_admin();
+    balances.remove(disclose(key));
+}
+
+// Admin: update the depositor cap (set to 0 to disable new deposits)
+export circuit admin_set_max_depositors(new_cap: Uint<64>): [] {
+    require_admin();
+    max_depositors = disclose(new_cap);
 }

@@ -18,12 +18,14 @@ type TokenMintCircuitId =
 
 interface CircuitPrivateState {
   secret_key: Uint8Array;
+  admin_key: Uint8Array;
 }
 
 type TokenMintContract = TokenMint.Contract<CircuitPrivateState>;
 
 const witnesses: TokenMint.Witnesses<CircuitPrivateState> = {
   local_secret_key: ({ privateState }) => [privateState, privateState.secret_key],
+  admin_secret_key: ({ privateState }) => [privateState, privateState.admin_key],
 };
 
 const compiledTokenMintContract = CompiledContract.make<TokenMintContract>('TokenMint', TokenMint.Contract).pipe(
@@ -34,7 +36,7 @@ const compiledTokenMintContract = CompiledContract.make<TokenMintContract>('Toke
 function createPrivateState(): CircuitPrivateState {
   const secretKey = new Uint8Array(32);
   crypto.getRandomValues(secretKey);
-  return { secret_key: secretKey };
+  return { secret_key: secretKey, admin_key: new Uint8Array(32) };
 }
 
 function generateRandomBytes(length: number): Uint8Array {

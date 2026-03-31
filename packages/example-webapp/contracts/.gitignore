@@ -1,4 +1,5 @@
 .contracts.*.json
+.admin-key.json
 .midnight-private-state/
 .wallet-state/
 counter/out/

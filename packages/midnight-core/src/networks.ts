@@ -53,6 +53,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
     NetworkId.NetworkId.PreProd,
     {
       nodeUrl: 'wss://rpc.preprod.midnight.network/ws',
+      proofServerUrl: 'https://proof.capacity-exchange.preprod.sundae.fi',
       indexerHttpUrl: 'https://indexer.preprod.midnight.network/api/v3/graphql',
       indexerWsUrl: 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
     },
@@ -60,8 +61,9 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   [
     NetworkId.NetworkId.MainNet,
     {
-      nodeUrl: 'wss://rpc.mainnet.midnight.network/ws',
+      nodeUrl: 'wss://rpc.mainnet.midnight.foundation/v1/mk_802538e87cf035e155ab2f673a102dba',
       indexerHttpUrl: 'https://indexer.mainnet.midnight.network/api/v3/graphql',
+      proofServerUrl: 'https://proof.capacity-exchange.sundae.fi',
       indexerWsUrl: 'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
     },
   ],
