@@ -202,7 +202,7 @@ function TutorialInner({
     consumeLogEvents: mockState?.consumeLogEvents,
   });
 
-  const handleWalletConnect = () => {
+  const handleWalletConnect = async () => {
     if (isWalletConnected || isWalletConnecting) {
       return;
     }
@@ -212,8 +212,8 @@ function TutorialInner({
       return;
     }
 
-    const wallet = createWallet();
-    seedWallet.connect(wallet.seedHex);
+    const { secrets } = await createWallet();
+    seedWallet.connect(secrets.seedHex);
   };
 
   return (

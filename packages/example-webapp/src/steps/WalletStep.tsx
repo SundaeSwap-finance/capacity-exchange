@@ -4,7 +4,7 @@ import type { SeedWalletState } from '../features/wallet/seed/types';
 import type { ExtensionWalletState } from '../features/wallet/extension/useExtensionWallet';
 import type { WalletInfoState } from '../features/wallet/types';
 import type { SubWalletProgress } from '../features/wallet/seed/walletService';
-import type { StoredWallet } from '../hooks/useWalletStore';
+import type { StoredWalletMeta } from '../hooks/useWalletStore';
 import { useWalletStore } from '../hooks/useWalletStore';
 import { UnpixelatedText } from '../shared/ui';
 
@@ -21,27 +21,21 @@ function progressPercent(p: SubWalletProgress): number {
   return Number((p.appliedIndex * 100n) / p.targetIndex);
 }
 
-function truncateSeed(hex: string): string {
-  return `${hex.slice(0, 8)}...${hex.slice(-6)}`;
-}
-
 export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onConnected }: WalletStepProps) {
-  const { wallets, createWallet, removeWallet } = useWalletStore();
-  // Extension wallet support disabled until wallets are more stable
-  // const extensionAvailable = extensionWallet.status !== 'unavailable';
+  const { wallets, storageMode, unlocking, createWallet, unlockWallet, removeWallet, enablePasskey } = useWalletStore();
   const [showConnect, setShowConnect] = useState(false);
   const [activeMnemonic, setActiveMnemonic] = useState<string | null>(null);
   const [showExportSeed, setShowExportSeed] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
+  const [activeWalletIsPasskey, setActiveWalletIsPasskey] = useState(false);
 
   const isConnecting = seedWallet.status === 'connecting' || extensionWallet.status === 'connecting';
   const isConnected = seedWallet.status === 'connected' || extensionWallet.status === 'connected';
   const isSynced = walletInfoState.status === 'ready';
-  const error = seedWallet.error || extensionWallet.error;
+  const error = walletError || seedWallet.error || extensionWallet.error;
 
   const sp = seedWallet.syncProgress;
   const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status === 'disconnected';
-
-  // (User clicks Continue on the "Wallet Ready" screen to advance)
 
   // Skip intro if already connecting/connected
   useEffect(() => {
@@ -50,15 +44,50 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     }
   }, [isConnecting, isConnected]);
 
-  const handleGenerateAndConnect = () => {
-    const wallet = createWallet();
-    setActiveMnemonic(wallet.mnemonic);
-    seedWallet.connect(wallet.seedHex);
+  const [passkeyFailed, setPasskeyFailed] = useState(false);
+
+  const handleCreatePasskeyWallet = async () => {
+    setWalletError(null);
+    setPasskeyFailed(false);
+    try {
+      // Always ensure passkey is set up and unlocked before creating
+      const ok = await enablePasskey();
+      if (!ok) {
+        setPasskeyFailed(true);
+        return;
+      }
+      const { meta, secrets } = await createWallet();
+      setActiveWalletIsPasskey(meta.mode === 'passkey');
+      setActiveMnemonic(secrets.mnemonic);
+      seedWallet.connect(secrets.seedHex);
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : 'Failed to create wallet');
+    }
   };
 
-  const handleConnectSaved = (saved: StoredWallet) => {
-    setActiveMnemonic(saved.mnemonic);
-    seedWallet.connect(saved.seedHex);
+  const handleCreatePlaintextWallet = async () => {
+    setWalletError(null);
+    setPasskeyFailed(false);
+    try {
+      const { secrets } = await createWallet();
+      setActiveWalletIsPasskey(false);
+      setActiveMnemonic(secrets.mnemonic);
+      seedWallet.connect(secrets.seedHex);
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : 'Failed to create wallet');
+    }
+  };
+
+  const handleConnectSaved = async (saved: StoredWalletMeta) => {
+    setWalletError(null);
+    try {
+      setActiveWalletIsPasskey(saved.mode === 'passkey');
+      const secrets = await unlockWallet(saved.id);
+      setActiveMnemonic(secrets.mnemonic);
+      seedWallet.connect(secrets.seedHex);
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : 'Failed to unlock wallet');
+    }
   };
 
   const showSpinner = isConnecting || (isConnected && !isSynced);
@@ -113,13 +142,33 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
         <NarrativeCard heading="Syncing Wallet">
           {isSeedWalletSyncing ? (
             <>
-              <p>
-                You&apos;ve generated a new wallet in your browser for this test, and are now
-                loading relevant data directly from the Midnight Blockchain.
-              </p>
-              <p>
-                This might take a while, and will get faster with future updates.
-              </p>
+              {activeWalletIsPasskey ? (
+                <>
+                  <p>
+                    You&apos;ve generated a <strong className="text-ces-accent">secure passkey wallet</strong>.
+                    Depending on your device, this is likely secured
+                    by <strong className="text-ces-text">biometrics</strong>,{' '}
+                    a <strong className="text-ces-text">pin</strong>, or
+                    your <strong className="text-ces-text">password manager</strong>.
+                    Your wallet is secure even from malicious browser extensions, as any
+                    attempt to access it will <strong className="text-ces-text">prompt you for approval</strong>.
+                  </p>
+                  <p>
+                    Now, we&apos;re loading relevant data directly from the Midnight Blockchain.
+                    This might take a while, and will get faster with future updates.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    You&apos;ve generated a new wallet in your browser for this test, and are now
+                    loading relevant data directly from the Midnight Blockchain.
+                  </p>
+                  <p>
+                    This might take a while, and will get faster with future updates.
+                  </p>
+                </>
+              )}
               {activeMnemonic && (
                 <p>
                   There should be no need to keep this wallet, but if you&apos;d like to,
@@ -193,9 +242,13 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
                   key={w.id}
                   className="flex items-center gap-2 p-3 border border-ces-border bg-ces-surface hover:bg-ces-surface-raised transition-colors"
                 >
-                  <button onClick={() => handleConnectSaved(w)} className="flex-1 text-left">
+                  <button onClick={() => handleConnectSaved(w)} disabled={unlocking} className="flex-1 text-left flex items-center gap-2">
+                    {w.mode === 'passkey' && (
+                      <svg className="w-3.5 h-3.5 text-ces-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    )}
                     <span className="text-sm text-ces-text font-medium">{w.label}</span>
-                    <span className="text-[10px] text-ces-text-muted/50 font-mono ml-2">{truncateSeed(w.seedHex)}</span>
                   </button>
                   <button
                     onClick={(e) => {
@@ -215,17 +268,40 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
           )}
 
           <button
-            onClick={handleGenerateAndConnect}
-            className={`${wallets.length > 0 ? 'ces-btn-secondary' : 'ces-btn-primary'} w-full py-4`}
+            onClick={handleCreatePasskeyWallet}
+            disabled={unlocking}
+            className="ces-btn-primary w-full py-4 flex items-center justify-center gap-2"
           >
-            <UnpixelatedText text="Create Wallet" />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <UnpixelatedText text="Create Passkey Wallet" />
           </button>
 
-          {wallets.length === 0 && (
-            <p className="text-center text-ces-text-muted text-xs">
-              We&apos;ll generate a temporary wallet so the demo can
-              show how DUST handling works.
-            </p>
+          {passkeyFailed && (
+            <div className="ces-card ces-section-stack p-4">
+              <p className="text-sm text-ces-text-muted">
+                Passkeys are not supported on this device, or the setup was cancelled.
+                You can still create a wallet stored in your browser.
+              </p>
+              <button
+                onClick={handleCreatePlaintextWallet}
+                disabled={unlocking}
+                className="ces-btn-secondary w-full"
+              >
+                Create Browser Wallet
+              </button>
+            </div>
+          )}
+
+          {!passkeyFailed && (
+            <button
+              onClick={handleCreatePlaintextWallet}
+              disabled={unlocking}
+              className="ces-btn-ghost w-full text-xs"
+            >
+              Create without passkey
+            </button>
           )}
       </div>
 
