@@ -43,9 +43,11 @@ async function main() {
     .description('Build an unsigned transaction to deregister (clean up) dust registrations on Cardano')
     .requiredOption('--address <addr>', 'Cardano base address (receives reclaimed ADA, provides collateral)')
     .requiredOption('--utxo <ref...>', 'UTxO reference(s) to deregister, format: <txHash>#<index>')
+    .option('--lock-utxo <ref...>', 'UTxO reference(s) to exclude from coin selection, format: <txHash>#<index>')
     .parse();
 
-  const opts = program.opts<{ address: string; utxo: string[] }>();
+  const opts = program.opts<{ address: string; utxo: string[]; lockUtxo?: string[] }>();
+  const lockedRefs = new Set(opts.lockUtxo ?? []);
 
   const network = requireEnv('CARDANO_NETWORK') as CardanoNetwork;
   const blockfrostProjectId = requireEnv('BLOCKFROST_PROJECT_ID');
@@ -60,9 +62,16 @@ async function main() {
   });
 
   const params = await provider.getParameters();
-  const walletUtxos = await provider.getUnspentOutputs(walletAddress);
+  const allWalletUtxos = await provider.getUnspentOutputs(walletAddress);
+  const walletUtxos = allWalletUtxos.filter((u) => {
+    const ref = `${u.input().transactionId()}#${u.input().index()}`;
+    return !lockedRefs.has(ref);
+  });
+  if (lockedRefs.size > 0) {
+    console.error(`Excluded ${allWalletUtxos.length - walletUtxos.length} locked UTxO(s) from coin selection`);
+  }
   if (walletUtxos.length === 0) {
-    throw new Error('No UTxOs found at the provided address');
+    throw new Error('No UTxOs found at the provided address (after excluding locked UTxOs)');
   }
 
   const txBuilder = new TxBuilder(params);
