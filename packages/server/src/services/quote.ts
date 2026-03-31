@@ -62,19 +62,23 @@ export class QuoteService {
       return { status: 'invalid' };
     }
 
-    const payload: QuotePayload = JSON.parse(
-      Buffer.from(encodedPayload, 'base64url').toString(),
-    );
-    if (Date.now() > payload.exp) {
-      return { status: 'expired' };
-    }
+    try {
+      const payload: QuotePayload = JSON.parse(
+        Buffer.from(encodedPayload, 'base64url').toString(),
+      );
+      if (Date.now() > payload.exp) {
+        return { status: 'expired' };
+      }
 
-    return {
-      status: 'ok',
-      quote: {
-        specks: BigInt(payload.specks),
-        prices: payload.prices,
-      },
-    };
+      return {
+        status: 'ok',
+        quote: {
+          specks: BigInt(payload.specks),
+          prices: payload.prices,
+        },
+      };
+    } catch {
+      return { status: 'invalid' };
+    }
   }
 }

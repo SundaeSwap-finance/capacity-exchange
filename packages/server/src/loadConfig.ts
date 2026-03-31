@@ -16,6 +16,7 @@ export interface AppConfig {
   priceFormulas: PriceFormula[];
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
+  quoteSecretFile: string;
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
 }
@@ -43,6 +44,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     offerTtlSeconds: env.OFFER_TTL_SECONDS,
     endpoints,
     priceFormulas: priceConfig.priceFormulas,
+    quoteSecretFile: env.QUOTE_SECRET_FILE,
     sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,
     walletConnection: wallet.walletConnection,
