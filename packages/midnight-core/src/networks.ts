@@ -61,7 +61,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   [
     NetworkId.NetworkId.MainNet,
     {
-      nodeUrl: 'wss://rpc.mainnet.midnight.foundation/v1/mk_802538e87cf035e155ab2f673a102dba',
+      nodeUrl: 'wss://rpc.mainnet.midnight.network/ws',
       indexerHttpUrl: 'https://indexer.mainnet.midnight.network/api/v3/graphql',
       proofServerUrl: 'https://proof.capacity-exchange.sundae.fi',
       indexerWsUrl: 'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
