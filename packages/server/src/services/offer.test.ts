@@ -3,6 +3,7 @@ import { OfferService } from './offer.js';
 import type { UtxoService } from './utxo.js';
 import type { TxService } from './tx.js';
 import type { PriceService } from './price.js';
+import type { MetricsService } from './metrics.js';
 import pino from 'pino';
 
 const logger = pino({ level: 'silent' });
@@ -31,7 +32,12 @@ function createMockDeps() {
     getPrice: vi.fn(() => ({ status: 'ok' as const, price: 1000n })),
   } as unknown as PriceService;
 
-  return { utxoService, txService, priceService };
+  const metricsService = {
+    recordDustUsage: vi.fn(),
+    recordRevenue: vi.fn(),
+  } as unknown as MetricsService;
+
+  return { utxoService, txService, priceService, metricsService };
 }
 
 describe('OfferService', () => {
@@ -44,7 +50,7 @@ describe('OfferService', () => {
 
   it('returns cached offer on retry with same quoteId + currency', async () => {
     deps = createMockDeps();
-    service = new OfferService(deps.utxoService, deps.txService, deps.priceService, 60, logger);
+    service = new OfferService(deps.utxoService, deps.txService, deps.priceService, deps.metricsService, 60, logger);
 
     const request = { quoteId: 'q1', specks: 1000n, offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0' };
 
@@ -69,7 +75,7 @@ describe('OfferService', () => {
         resolveProve = () => resolve({ serialize: () => new Uint8Array([0xde, 0xad]) });
       }),
     );
-    service = new OfferService(deps.utxoService, deps.txService, deps.priceService, 60, logger);
+    service = new OfferService(deps.utxoService, deps.txService, deps.priceService, deps.metricsService, 60, logger);
 
     const request = { quoteId: 'q-coal', specks: 1000n, offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0' };
 
@@ -95,7 +101,7 @@ describe('OfferService', () => {
     (deps.txService.createOfferTx as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new Error('proof server down'),
     );
-    service = new OfferService(deps.utxoService, deps.txService, deps.priceService, 60, logger);
+    service = new OfferService(deps.utxoService, deps.txService, deps.priceService, deps.metricsService, 60, logger);
 
     const request = { quoteId: 'q2', specks: 1000n, offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0' };
 

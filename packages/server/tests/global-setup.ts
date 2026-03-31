@@ -20,8 +20,9 @@ export async function setup() {
     env: {
       ...process.env,
       LOG_LEVEL: 'debug',
-      // Speed-up expiry
       OFFER_TTL_SECONDS: '2',
+      QUOTE_TTL_SECONDS: '300',
+      QUOTE_SECRET_FILE: '.quote-secret.test.key',
     },
   });
   serverProcess.on('error', (err) => {

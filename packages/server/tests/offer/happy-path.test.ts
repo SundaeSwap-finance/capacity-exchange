@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { CLIENT, DEFAULT_REQUEST } from '../utils.js';
+import { CLIENT, getQuoteId } from '../utils.js';
 import { CreateOfferResponse } from '../client.js';
 
-// TODO: Add a test case for the minimal amount of DUST requested, that an offer price is >0
 describe('Offer API - Happy Path', () => {
   it('creates an offer successfully', async () => {
-    const res = await CLIENT.createOffer(DEFAULT_REQUEST);
+    const { quoteId, currency } = await getQuoteId('1000');
+    const res = await CLIENT.createOffer({ quoteId, offerCurrency: currency });
     expect(res.status).toBe(201);
 
     const offer = res.data as typeof CreateOfferResponse.static;

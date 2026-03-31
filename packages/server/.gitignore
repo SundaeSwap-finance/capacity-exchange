@@ -15,3 +15,4 @@ wallet-seed.hex
 midnight-level-db/
 .wallet-state/
 wallet-state/
+*.key

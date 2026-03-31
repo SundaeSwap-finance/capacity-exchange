@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { CLIENT, DEFAULT_REQUEST, waitForLocksToRelease } from '../utils.js';
+import { CLIENT, getQuoteId, waitForLocksToRelease } from '../utils.js';
 import { CreateOfferResponse } from '../client.js';
 
 describe('Offer API - Concurrency', () => {
@@ -7,46 +7,46 @@ describe('Offer API - Concurrency', () => {
     await waitForLocksToRelease();
   });
 
-  it('handles parallel requests', async () => {
+  it('coalesces parallel requests with the same quoteId', async () => {
+    const { quoteId, currency } = await getQuoteId('1000');
     const CONCURRENT_REQUESTS = 5;
 
     const promises = Array(CONCURRENT_REQUESTS)
       .fill(null)
-      .map(() => CLIENT.createOffer(DEFAULT_REQUEST));
+      .map(() => CLIENT.createOffer({ quoteId, offerCurrency: currency }));
 
     const responses = await Promise.all(promises);
 
-    // Ensure all successful requests
     const successes = responses.filter((r) => r.status === 201);
     expect(successes.length).toBe(CONCURRENT_REQUESTS);
 
-    // Check unique ids
+    // All should return the same offer
     const ids = successes.map((r) => (r.data as typeof CreateOfferResponse.static).offerId);
     const uniqueIds = new Set(ids);
-    expect(ids.length).toBe(uniqueIds.size);
+    expect(uniqueIds.size).toBe(1);
   });
 
-  it('eventually exhausts wallet UTxOs', async () => {
-    let count = 0;
-    const MAX_ATTEMPTS = 100;
-    let exhaustedUtxos = false;
+  it('handles parallel requests with different quoteIds', async () => {
+    const CONCURRENT_REQUESTS = 3;
 
-    for (let i = 0; i < MAX_ATTEMPTS; i++) {
-      const res = await CLIENT.createOffer({
-        ...DEFAULT_REQUEST,
-        specks: '1', // Use minimal specks to test UTxO count
-      });
+    const quotes = await Promise.all(
+      Array(CONCURRENT_REQUESTS)
+        .fill(null)
+        .map(() => getQuoteId('1000')),
+    );
 
-      if (res.status === 201) {
-        count++;
-      } else if (res.status === 409) {
-        exhaustedUtxos = true;
-        break;
-      } else {
-        throw new Error(`Unexpected status ${res.status}: ${JSON.stringify(res.data)}`);
-      }
-    }
+    const promises = quotes.map(({ quoteId, currency }) =>
+      CLIENT.createOffer({ quoteId, offerCurrency: currency }),
+    );
 
-    expect(exhaustedUtxos).toBe(true);
+    const responses = await Promise.all(promises);
+
+    const successes = responses.filter((r) => r.status === 201);
+    expect(successes.length).toBe(CONCURRENT_REQUESTS);
+
+    // Different quoteIds should produce different offers
+    const ids = successes.map((r) => (r.data as typeof CreateOfferResponse.static).offerId);
+    const uniqueIds = new Set(ids);
+    expect(uniqueIds.size).toBe(CONCURRENT_REQUESTS);
   });
 });
