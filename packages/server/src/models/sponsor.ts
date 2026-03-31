@@ -2,7 +2,7 @@ import { Type } from '@sinclair/typebox';
 import { ErrorResponse } from './common.js';
 
 export const SponsorRequest = Type.Object({
-  provenTx: Type.String(),
+  provenTx: Type.String({ minLength: 1, pattern: '^[0-9a-fA-F]+$' }),
 });
 
 export const SponsorResponse = Type.Object({
