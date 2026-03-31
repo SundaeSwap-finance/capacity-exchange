@@ -40,8 +40,7 @@ function isMockDemoEnabled() {
 
 function App() {
   const mockDemoEnabled = isMockDemoEnabled();
-  const networkId = requireEnvOneOf('VITE_NETWORK_ID', ['undeployed', 'preview', 'preprod']);
-
+  const networkId = requireEnvOneOf('VITE_NETWORK_ID', ['undeployed', 'preview', 'preprod', 'mainnet']);
   useEffect(() => {
     setMidnightNetworkId(networkId);
   }, [networkId]);
