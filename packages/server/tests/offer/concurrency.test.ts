@@ -49,4 +49,32 @@ describe('Offer API - Concurrency', () => {
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(CONCURRENT_REQUESTS);
   });
+
+  it('eventually exhausts wallet UTxOs', async () => {
+    const CONCURRENT_REQUESTS = 20;
+    let exhaustedUtxos = false;
+
+    const quotes = await Promise.all(
+      Array(CONCURRENT_REQUESTS)
+        .fill(null)
+        .map((_, i) => getQuoteId(i.toString())),
+    );
+
+    const promises = quotes.map(({ quoteId, currency }) =>
+      CLIENT.createOffer({ quoteId, offerCurrency: currency }),
+    );
+
+    const results = await Promise.allSettled(promises);
+    for (const result of results) {
+      if (result.status === "rejected") {
+        continue;
+      }
+      if (result.value.status === 409) {
+        exhaustedUtxos = true;
+        break;
+      }
+    }
+
+    expect(exhaustedUtxos).toBe(true);
+  });
 });
