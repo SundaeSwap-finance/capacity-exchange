@@ -29,6 +29,7 @@ export interface ContentionSnapshot {
   totalUtxos: number;
   lockedSpecks: string;
   ratio: number;
+  averageRatioLastHour: number;
 }
 
 export interface BusinessMetrics {
@@ -47,6 +48,7 @@ export class MetricsService {
   private dustEvents: DustEvent[] = [];
   private revenueByurrency = new Map<string, bigint>();
   private revenueEvents: RevenueEntry[] = [];
+  private contentionSamples: { ratio: number; timestamp: number }[] = [];
 
   constructor(utxoService: UtxoService, walletService: WalletService) {
     this.utxoService = utxoService;
@@ -106,11 +108,22 @@ export class MetricsService {
     const totalUtxos = this.utxoService.getTotalUtxoCount();
     const ratio = totalUtxos > 0 ? locked.count / totalUtxos : 0;
 
+    const now = Date.now();
+    const cutoff = now - ONE_HOUR_MS;
+    this.contentionSamples.push({ ratio, timestamp: now });
+    this.contentionSamples = this.contentionSamples.filter((s) => s.timestamp > cutoff);
+
+    const avgRatio =
+      this.contentionSamples.length > 0
+        ? this.contentionSamples.reduce((sum, s) => sum + s.ratio, 0) / this.contentionSamples.length
+        : 0;
+
     return {
       lockedUtxos: locked.count,
       totalUtxos,
       lockedSpecks: locked.totalSpecks.toString(),
-      ratio: Math.round(ratio * 10000) / 10000,
+      ratio,
+      averageRatioLastHour: avgRatio,
     };
   }
 }
