@@ -27,7 +27,8 @@ function truncateSeed(hex: string): string {
 
 export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onConnected }: WalletStepProps) {
   const { wallets, createWallet, removeWallet } = useWalletStore();
-  const extensionAvailable = extensionWallet.status !== 'unavailable';
+  // Extension wallet support disabled until wallets are more stable
+  // const extensionAvailable = extensionWallet.status !== 'unavailable';
   const [showConnect, setShowConnect] = useState(false);
   const [activeMnemonic, setActiveMnemonic] = useState<string | null>(null);
   const [showExportSeed, setShowExportSeed] = useState(false);
@@ -58,10 +59,6 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const handleConnectSaved = (saved: StoredWallet) => {
     setActiveMnemonic(saved.mnemonic);
     seedWallet.connect(saved.seedHex);
-  };
-
-  const handleConnectExtension = () => {
-    extensionWallet.connect();
   };
 
   const showSpinner = isConnecting || (isConnected && !isSynced);
@@ -187,12 +184,6 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       </NarrativeCard>
 
       <div className="ces-section-stack">
-          {extensionAvailable && (
-            <button onClick={handleConnectExtension} className="ces-btn-primary w-full py-4">
-              Connect Lace
-            </button>
-          )}
-
           {/* Saved wallets */}
           {wallets.length > 0 && (
             <div className="ces-compact-stack">
@@ -225,15 +216,15 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
 
           <button
             onClick={handleGenerateAndConnect}
-            className={`${extensionAvailable || wallets.length > 0 ? 'ces-btn-secondary' : 'ces-btn-primary'} w-full py-4`}
+            className={`${wallets.length > 0 ? 'ces-btn-secondary' : 'ces-btn-primary'} w-full py-4`}
           >
             <UnpixelatedText text="Create Wallet" />
           </button>
 
-          {!extensionAvailable && wallets.length === 0 && (
+          {wallets.length === 0 && (
             <p className="text-center text-ces-text-muted text-xs">
-              No browser extension detected. We&apos;ll create a temporary
-              wallet so the demo can still show how DUST handling works.
+              We&apos;ll generate a temporary wallet so the demo can
+              show how DUST handling works.
             </p>
           )}
       </div>
