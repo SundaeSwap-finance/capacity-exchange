@@ -164,7 +164,7 @@
     --ces-button-ink: var(--ces-white);
     --ces-btn-pad-x: 1rem;
     --ces-btn-pad-y: 1rem;
-    --ces-btn-font-size: 1.9rem;
+    --ces-btn-font-size: clamp(1.1rem, 5vw, 1.9rem);
     --ces-btn-arrow-w: 4.75rem;
     --ces-btn-arrow-h: 1.9rem;
     --ces-btn-icon-size: 1.35rem;
