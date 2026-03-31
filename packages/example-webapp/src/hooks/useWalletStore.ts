@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
+import { generateMnemonic, mnemonicToSeedHex } from '@capacity-exchange/midnight-core';
 
 const STORAGE_KEY = 'ces-demo-wallets';
 
 export interface StoredWallet {
   id: string;
   seedHex: string;
+  mnemonic: string;
   label: string;
   createdAt: number;
 }
@@ -22,22 +24,16 @@ function saveWallets(wallets: StoredWallet[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(wallets));
 }
 
-function generateRandomSeed(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 export function useWalletStore() {
   const [wallets, setWallets] = useState<StoredWallet[]>(loadWallets);
 
   const createWallet = useCallback((): StoredWallet => {
     const existing = loadWallets();
+    const mnemonic = generateMnemonic();
     const wallet: StoredWallet = {
       id: crypto.randomUUID(),
-      seedHex: generateRandomSeed(),
+      seedHex: mnemonicToSeedHex(mnemonic),
+      mnemonic,
       label: `Wallet ${existing.length + 1}`,
       createdAt: Date.now(),
     };

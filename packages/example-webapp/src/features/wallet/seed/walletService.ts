@@ -1,16 +1,13 @@
-import {
-  createWallet,
-  COST_PARAMS,
-  LocalStorageStateStore,
-  WalletStateStore,
-  deriveWalletKeys,
-  type WalletKeys,
-  type WalletConnection,
-} from '@capacity-exchange/midnight-core';
+import type { WalletKeys, WalletConnection } from '@capacity-exchange/midnight-core';
 export type { WalletKeys } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../../config';
+
+// Lazy-load the heavy midnight-core module (pulls in 10MB+ WASM) only when needed
+async function loadMidnightCore() {
+  return import('@capacity-exchange/midnight-core');
+}
 
 export interface SeedWalletConnection {
   walletFacade: WalletFacade;
@@ -42,6 +39,14 @@ export async function connectSeedWallet(
   config: NetworkConfig,
   onSyncProgress?: SyncProgressCallback
 ): Promise<SeedWalletConnection> {
+  const {
+    createWallet,
+    COST_PARAMS,
+    LocalStorageStateStore,
+    WalletStateStore,
+    deriveWalletKeys,
+  } = await loadMidnightCore();
+
   const walletConfig = {
     networkId: config.networkId as NetworkId.NetworkId,
     costParameters: COST_PARAMS,

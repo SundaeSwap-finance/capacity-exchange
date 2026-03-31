@@ -246,7 +246,7 @@ function TutorialInner({
             tokenMintAddress={activeContractsConfig?.tokenMint.contractAddress ?? null}
             mintedTokenColor={activeContractsConfig?.tokenMint.derivedTokenColor ?? null}
             allowMockMintWithoutContractAddress={mockDemoEnabled}
-            autoAdvanceOnSuccess={!mockDemoEnabled}
+            autoAdvanceOnSuccess={false}
             successAutoAdvanceDelayMs={mockDemoEnabled ? 2200 : 900}
             onMintSuccess={advance}
           />
@@ -257,6 +257,7 @@ function TutorialInner({
             walletData={activeWalletData}
             cesTransaction={activeCesTransaction}
             counterValue={activeCounterValue}
+            mintedTokenColor={activeContractsConfig?.tokenMint.derivedTokenColor ?? null}
             onCesSuccess={advance}
           />
         )}
@@ -268,6 +269,7 @@ function TutorialInner({
             cesTransaction={activeCesTransaction}
             sponsoredTransaction={activeSponsoredTransaction}
             tokenMintAddress={activeContractsConfig.tokenMint.contractAddress}
+            mintedTokenColor={activeContractsConfig.tokenMint.derivedTokenColor}
             counterAddress={activeContractsConfig.counter.contractAddress}
             counterValue={activeCounterValue}
             config={config}

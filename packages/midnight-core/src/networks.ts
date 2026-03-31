@@ -44,7 +44,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
     NetworkId.NetworkId.Preview,
     {
       nodeUrl: 'wss://rpc.preview.midnight.network/ws',
-      proofServerUrl: 'https://lace-proof-pub.preview.midnight.network',
+      proofServerUrl: 'https://proof.capacity-exchange.preview.sundae.fi',
       indexerHttpUrl: 'https://indexer.preview.midnight.network/api/v3/graphql',
       indexerWsUrl: 'wss://indexer.preview.midnight.network/api/v3/graphql/ws',
     },

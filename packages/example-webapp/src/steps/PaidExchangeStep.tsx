@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { NarrativeCard } from '../components/NarrativeCard';
 import { RotatingStatusText } from '../components/RotatingStatusText';
 import { CounterCard } from '../components/CounterCard';
@@ -8,11 +9,13 @@ import { formatDust } from '../utils/format';
 import type { WalletData } from '../features/wallet/types';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { ExchangePrice, CurrencySelectionResult, OfferConfirmationResult } from '../features/ces/types';
+import { resolveTokenLabel } from '../utils/tokenLabels';
 
 interface PaidExchangeStepProps {
   walletData: WalletData | null;
   cesTransaction: UseCesTransactionResult;
   counterValue: string | null;
+  mintedTokenColor: string | null;
   onCesSuccess: () => void;
 }
 
@@ -22,14 +25,22 @@ function getTokenBalance(walletData: WalletData | null): bigint {
   return balances.length > 0 ? balances.reduce((a, b) => a + b, 0n) : 0n;
 }
 
-function InventoryStrip({ counterValue, walletData, freeze }: { counterValue: string | null; walletData: WalletData | null; freeze?: boolean }) {
+function InventoryStrip({
+  counterValue,
+  walletData,
+  freeze,
+}: {
+  counterValue: string | null;
+  walletData: WalletData | null;
+  freeze?: boolean;
+}) {
   const tokenBalance = getTokenBalance(walletData);
   if (counterValue === null && tokenBalance === 0n) return null;
 
   return (
     <div className="ces-inventory-grid">
       <CounterCard value={counterValue} freeze={freeze} />
-      <TokenBalanceCard balance={tokenBalance} tokenLabel="Tokens" />
+      <TokenBalanceCard balance={tokenBalance} tokenLabel="Tutorial Tokens" />
     </div>
   );
 }
@@ -38,88 +49,111 @@ export function PaidExchangeStep({
   walletData,
   cesTransaction,
   counterValue,
+  mintedTokenColor,
   onCesSuccess,
 }: PaidExchangeStepProps) {
-  return <CesCounterAction cesTransaction={cesTransaction} walletData={walletData} counterValue={counterValue} onSuccess={onCesSuccess} />;
+  return (
+    <CesCounterAction
+      cesTransaction={cesTransaction}
+      walletData={walletData}
+      counterValue={counterValue}
+      mintedTokenColor={mintedTokenColor}
+      onSuccess={onCesSuccess}
+    />
+  );
 }
 
 function CesCounterAction({
   cesTransaction,
   walletData,
   counterValue,
+  mintedTokenColor,
   onSuccess,
 }: {
   cesTransaction: UseCesTransactionResult;
   walletData: WalletData | null;
   counterValue: string | null;
+  mintedTokenColor: string | null;
   onSuccess: () => void;
 }) {
-  const { status, error, currencySelection, offerConfirmation, onCurrencySelected, onOfferConfirmed, incrementCounter, dismissOffer } =
-    cesTransaction;
+  const {
+    status,
+    error,
+    currencySelection,
+    offerConfirmation,
+    onCurrencySelected,
+    onOfferConfirmed,
+    incrementCounter,
+    dismissOffer,
+  } = cesTransaction;
 
   const isTransacting = !['idle', 'success', 'error'].includes(status);
+
+  // Freeze the displayed balance while a transaction is in flight so the
+  // wallet SDK's optimistic deduction doesn't confuse the user.
+  const frozenWalletDataRef = useRef<WalletData | null>(null);
+  useEffect(() => {
+    if (isTransacting && !frozenWalletDataRef.current) {
+      frozenWalletDataRef.current = walletData;
+    } else if (!isTransacting) {
+      frozenWalletDataRef.current = null;
+    }
+  }, [isTransacting, walletData]);
+  const displayWalletData = frozenWalletDataRef.current ?? walletData;
 
   const progressSteps = [
     {
       label: 'Prepare private registration payload',
-      status: (
-        status === 'building'
-          ? 'active'
-          : ['selecting-currency', 'fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
-            ? 'done'
-            : 'waiting'
-      ) as 'active' | 'done' | 'waiting',
+      status: (status === 'building'
+        ? 'active'
+        : ['selecting-currency', 'fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
+          ? 'done'
+          : 'waiting') as 'active' | 'done' | 'waiting',
     },
     {
       label: 'Choose asset to satisfy DUST',
-      status: (
-        status === 'selecting-currency'
-          ? 'active'
-          : ['fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
-            ? 'done'
-            : 'waiting'
-      ) as 'active' | 'done' | 'waiting',
+      status: (status === 'selecting-currency'
+        ? 'active'
+        : ['fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
+          ? 'done'
+          : 'waiting') as 'active' | 'done' | 'waiting',
     },
     {
       label: 'Request live exchange quote',
-      status: (
-        status === 'fetching-offers'
-          ? 'active'
-          : ['confirming', 'submitting', 'success'].includes(status)
-            ? 'done'
-            : 'waiting'
-      ) as 'active' | 'done' | 'waiting',
+      status: (status === 'fetching-offers'
+        ? 'active'
+        : ['confirming', 'submitting', 'success'].includes(status)
+          ? 'done'
+          : 'waiting') as 'active' | 'done' | 'waiting',
     },
     {
       label: 'Confirm & register user',
-      status: (
-        status === 'confirming' || status === 'submitting'
-          ? 'active'
-          : status === 'success'
-            ? 'done'
-            : 'waiting'
-      ) as 'active' | 'done' | 'waiting',
+      status: (status === 'confirming' || status === 'submitting'
+        ? 'active'
+        : status === 'success'
+          ? 'done'
+          : 'waiting') as 'active' | 'done' | 'waiting',
     },
   ];
 
   return (
     <div className="ces-step-stack">
       <NarrativeCard heading="Register This User" variant="accent">
+        <p>Popular dApps may not have enough DUST to cover every transaction.</p>
         <p>
-          Sponsorship is great for onboarding, but apps may not want to cover every transaction forever.
+          The Capacity Exchange also lets users pay themselves with{' '}
+          <strong className="text-ces-text">any other asset</strong> accepted by the marketplace.
         </p>
         <p>
-          Capacity Exchange lets the app <strong className="text-ces-text">price the DUST requirement in another accepted asset</strong>, including the
-          tokens you just minted.
+          Let's register that you graduated this tutorial, paying the transaction fees with the token you just minted.
         </p>
-        <p>We&apos;re about to claim the next user number for this demo app, and you&apos;ll cover that DUST requirement with those tokens.</p>
       </NarrativeCard>
 
-      <InventoryStrip counterValue={counterValue} walletData={walletData} freeze={isTransacting} />
+      <InventoryStrip counterValue={counterValue} walletData={displayWalletData} freeze={isTransacting} />
 
       {status === 'idle' && (
         <button onClick={incrementCounter} className="ces-btn-primary w-full">
-          Register User (Pay with Tokens)
+          Register Graduation (Pay with Tutorial Tokens)
         </button>
       )}
 
@@ -131,7 +165,8 @@ function CesCounterAction({
             <InlineCurrencySelection
               prices={currencySelection.prices}
               specksRequired={currencySelection.specksRequired}
-              shieldedBalances={walletData?.shieldedBalances ?? {}}
+              shieldedBalances={displayWalletData?.shieldedBalances ?? {}}
+              mintedTokenColor={mintedTokenColor}
               onSelect={onCurrencySelected}
             />
           )}
@@ -148,9 +183,9 @@ function CesCounterAction({
             <RotatingStatusText
               active
               messages={[
-                'Building the private registration transaction. This is real Midnight proof work, not a fake loading screen.',
+                'Building the private registration transaction.',
                 'The app is calculating how much DUST this contract action requires.',
-                'Once that is ready, the user can choose which accepted asset should cover the DUST requirement.',
+                'Once that is ready, you can choose which asset to pay with.',
               ]}
             />
           )}
@@ -161,7 +196,7 @@ function CesCounterAction({
               messages={[
                 'Requesting a live Capacity Exchange quote for the DUST requirement.',
                 'The app is checking what the selected asset will cost for this registration.',
-                'This is where the product replaces direct DUST handling with a quoted exchange step.',
+                'This is where youselect an asset and a DUST liquidity provider.',
               ]}
             />
           )}
@@ -170,9 +205,9 @@ function CesCounterAction({
             <RotatingStatusText
               active
               messages={[
-                'Submitting the settlement flow to Cardano now.',
-                'Waiting for confirmation before the Midnight registration state can be updated.',
-                'When this completes, the next demo user number will be claimed.',
+                'Submitting the transaction to Midnight now.',
+                'Waiting for the transaction to be included in a block.',
+                'When this completes, your graduation will be recorded!',
               ]}
             />
           )}
@@ -182,13 +217,19 @@ function CesCounterAction({
       {status === 'success' && (
         <div className="ces-card text-center py-6">
           <div className="w-12 h-12 rounded-full bg-ces-accent/20 flex items-center justify-center mx-auto mb-3">
-            <svg className="w-6 h-6 text-ces-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="w-6 h-6 text-ces-accent"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <p className="text-ces-text font-display font-semibold text-lg">Registration Complete</p>
           <p className="mt-1 text-sm text-ces-text-muted">
-            The user satisfied the Midnight DUST requirement <strong className="text-ces-gold">using their own tokens</strong>, without managing DUST directly.
+            You've registered your graduation without ever requiring DUST.
           </p>
           <button onClick={onSuccess} className="ces-btn-primary mt-4">
             Continue to Playground
@@ -198,7 +239,9 @@ function CesCounterAction({
 
       {status === 'error' && (
         <div className="ces-card ces-section-stack">
-          <div className="p-3 rounded-lg bg-ces-danger/10 border border-ces-danger/20 text-ces-danger text-sm">{error}</div>
+          <div className="p-3 rounded-lg bg-ces-danger/10 border border-ces-danger/20 text-ces-danger text-sm">
+            {error}
+          </div>
           <button onClick={dismissOffer} className="ces-btn-secondary w-full">
             Try Again
           </button>
@@ -212,11 +255,13 @@ function InlineCurrencySelection({
   prices,
   specksRequired,
   shieldedBalances,
+  mintedTokenColor,
   onSelect,
 }: {
   prices: ExchangePrice[];
   specksRequired: bigint;
   shieldedBalances: Record<string, bigint>;
+  mintedTokenColor: string | null;
   onSelect: (result: CurrencySelectionResult) => void;
 }) {
   const sortedPrices = [...prices].sort((a, b) => {
@@ -232,14 +277,15 @@ function InlineCurrencySelection({
   return (
     <div className="ces-compact-stack border-t border-ces-border pt-2">
       <p className="text-sm text-ces-text-muted">
-        This transaction needs <span className="text-ces-text font-mono">{formatDust(specksRequired)}</span> DUST
-        (<span className="font-mono">{specksRequired.toString()}</span> specks).
-        Pick which accepted asset should cover it:
+        This transaction needs <span className="text-ces-text font-mono">{formatDust(specksRequired)}</span> DUST (
+        <span className="font-mono">{specksRequired.toString()}</span> specks). Pick which accepted asset should cover
+        it:
       </p>
       {sortedPrices.map((ep, i) => {
         const balance = shieldedBalances[ep.price.currency] ?? 0n;
         const cost = BigInt(ep.price.amount);
         const canAfford = balance >= cost;
+        const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);
 
         return (
           <button
@@ -253,12 +299,10 @@ function InlineCurrencySelection({
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="text-ces-text-muted text-xs font-mono truncate max-w-[60%]">{ep.price.currency}</span>
+              <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
               <div className="text-right">
                 <span className="text-ces-gold font-display font-semibold">{ep.price.amount}</span>
-                <span className="text-ces-text-muted/50 text-[10px] ml-1.5">
-                  (bal: {balance.toString()})
-                </span>
+                <span className="text-ces-text-muted/50 text-[10px] ml-1.5">(bal: {balance.toString()})</span>
               </div>
             </div>
           </button>

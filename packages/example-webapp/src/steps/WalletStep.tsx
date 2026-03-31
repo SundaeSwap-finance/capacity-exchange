@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { NarrativeCard } from '../components/NarrativeCard';
 import type { SeedWalletState } from '../features/wallet/seed/types';
 import type { ExtensionWalletState } from '../features/wallet/extension/useExtensionWallet';
@@ -28,7 +28,9 @@ function truncateSeed(hex: string): string {
 export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onConnected }: WalletStepProps) {
   const { wallets, createWallet, removeWallet } = useWalletStore();
   const extensionAvailable = extensionWallet.status !== 'unavailable';
-  const hasScheduledAdvanceRef = useRef(false);
+  const [showConnect, setShowConnect] = useState(false);
+  const [activeMnemonic, setActiveMnemonic] = useState<string | null>(null);
+  const [showExportSeed, setShowExportSeed] = useState(false);
 
   const isConnecting = seedWallet.status === 'connecting' || extensionWallet.status === 'connecting';
   const isConnected = seedWallet.status === 'connected' || extensionWallet.status === 'connected';
@@ -36,29 +38,25 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const error = seedWallet.error || extensionWallet.error;
 
   const sp = seedWallet.syncProgress;
+  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status === 'disconnected';
 
-  // Auto-advance once wallet info is ready
+  // (User clicks Continue on the "Wallet Ready" screen to advance)
+
+  // Skip intro if already connecting/connected
   useEffect(() => {
-    if (!isConnected || !isSynced) {
-      hasScheduledAdvanceRef.current = false;
-      return;
+    if (isConnecting || isConnected) {
+      setShowConnect(true);
     }
-
-    if (hasScheduledAdvanceRef.current) {
-      return;
-    }
-
-    hasScheduledAdvanceRef.current = true;
-    const timer = window.setTimeout(onConnected, 600);
-    return () => window.clearTimeout(timer);
-  }, [isConnected, isSynced, onConnected]);
+  }, [isConnecting, isConnected]);
 
   const handleGenerateAndConnect = () => {
     const wallet = createWallet();
+    setActiveMnemonic(wallet.mnemonic);
     seedWallet.connect(wallet.seedHex);
   };
 
   const handleConnectSaved = (saved: StoredWallet) => {
+    setActiveMnemonic(saved.mnemonic);
     seedWallet.connect(saved.seedHex);
   };
 
@@ -68,23 +66,29 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
 
   const showSpinner = isConnecting || (isConnected && !isSynced);
 
-  return (
-    <div className="ces-step-stack">
-      <NarrativeCard heading="Welcome to Midnight">
-        <p>
-          On Midnight, users need a wallet and <strong className="text-ces-text">DUST</strong> to send transactions.
-        </p>
-        <p>
-          This demo keeps that dependency visible on purpose so you can see what the <strong className="text-ces-text">Capacity Exchange</strong>{' '}
-          is abstracting away for end users.
-        </p>
-        <p>
-          First, connect a wallet or create one. Then we&apos;ll show both
-          paths: app-sponsored onboarding and user-paid exchange.
-        </p>
-      </NarrativeCard>
+  if (!showConnect) {
+    return (
+      <div className="ces-step-stack">
+        <NarrativeCard heading="Welcome to Midnight">
+          <p>
+            On most blockchains, users need a token to pay network fees.
+            This makes it very difficult to onboard new users.
+          </p>
+          <p>
+            The <strong className="text-ces-text">Capacity Exchange</strong> solves this.
+          </p>
+        </NarrativeCard>
 
-      {isSynced ? (
+        <button onClick={() => setShowConnect(true)} className="ces-btn-primary w-full">
+          Next
+        </button>
+      </div>
+    );
+  }
+
+  if (isSynced) {
+    return (
+      <div className="ces-step-stack">
         <div className="ces-card text-center py-8 ces-fade-in">
           <div className="w-12 h-12 rounded-full bg-ces-accent/20 flex items-center justify-center mx-auto mb-3">
             <svg
@@ -102,13 +106,42 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
             Continue
           </button>
         </div>
-      ) : showSpinner ? (
-        <div className="ces-card ces-section-stack py-5">
-          <div className="text-center">
-            <p className="text-ces-text font-display font-semibold">Syncing Midnight Wallet</p>
-            <p className="mt-1 text-xs text-ces-text-muted">Loading balances, addresses, and DUST context for the demo.</p>
-          </div>
+      </div>
+    );
+  }
 
+  if (showSpinner) {
+    return (
+      <div className="ces-step-stack">
+        <NarrativeCard heading="Syncing Wallet">
+          {isSeedWalletSyncing ? (
+            <>
+              <p>
+                You&apos;ve generated a new wallet in your browser for this test, and are now
+                loading relevant data directly from the Midnight Blockchain.
+              </p>
+              <p>
+                This might take a while, and will get faster with future updates.
+              </p>
+              {activeMnemonic && (
+                <p>
+                  There should be no need to keep this wallet, but if you&apos;d like to,
+                  you can export the seed phrase{' '}
+                  <button
+                    onClick={() => setShowExportSeed(true)}
+                    className="text-ces-accent underline underline-offset-2 hover:text-ces-text transition-colors"
+                  >
+                    here
+                  </button>.
+                </p>
+              )}
+            </>
+          ) : (
+            <p>Loading balances, addresses, and DUST context.</p>
+          )}
+        </NarrativeCard>
+
+        <div className="ces-card ces-section-stack py-5">
           {sp ? (
             <div className="ces-section-stack px-2">
               <SyncBar label="Shielded" progress={sp.shielded} />
@@ -127,8 +160,33 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
             </div>
           )}
         </div>
-      ) : (
-        <div className="ces-section-stack">
+
+        {showExportSeed && activeMnemonic && (
+          <SeedExportModal mnemonic={activeMnemonic} onClose={() => setShowExportSeed(false)} />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ces-step-stack">
+      <NarrativeCard heading="Connect a Wallet">
+        <p>
+          Transaction fees on Midnight are paid in <strong className="text-ces-text">DUST</strong>.
+          DUST is generated by NIGHT.
+          Through the Capacity Exchange, dApps can use their own DUST to pay for
+          users&apos; transactions, removing onboarding friction.
+        </p>
+        <p>
+          New users don&apos;t even need a new wallet, as we can generate one
+          securely right in the browser.
+        </p>
+        <p>
+          If you have a Midnight wallet, feel free to connect it, or generate a new one!
+        </p>
+      </NarrativeCard>
+
+      <div className="ces-section-stack">
           {extensionAvailable && (
             <button onClick={handleConnectExtension} className="ces-btn-primary w-full py-4">
               Connect Lace
@@ -178,8 +236,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
               wallet so the demo can still show how DUST handling works.
             </p>
           )}
-        </div>
-      )}
+      </div>
 
       {error && (
         <div className="p-3 rounded-lg bg-ces-danger/10 border border-ces-danger/20 text-ces-danger text-sm">
@@ -203,6 +260,51 @@ function useEta(appliedIndex: bigint, targetIndex: bigint, done: boolean): strin
   if (remaining < 2) {return '< 1s';}
   if (remaining < 60) {return `~${remaining}s`;}
   return `~${Math.ceil(remaining / 60)}m`;
+}
+
+function SeedExportModal({ mnemonic, onClose }: { mnemonic: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const words = mnemonic.split(' ');
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(mnemonic);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="ces-card ces-section-stack p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-ces-text font-display font-semibold text-sm">Seed Phrase</p>
+        <button
+          onClick={onClose}
+          className="p-1 rounded hover:bg-ces-surface-raised text-ces-text-muted hover:text-ces-text transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="p-3 rounded-lg bg-ces-surface-raised border border-ces-border grid grid-cols-3 gap-x-4 gap-y-1.5">
+        {words.map((word, i) => (
+          <div key={i} className="flex items-baseline gap-1.5">
+            <span className="text-[10px] text-ces-text-muted/50 font-mono w-4 text-right">{i + 1}</span>
+            <span className="text-xs font-mono text-ces-text select-all">{word}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="ces-compact-stack">
+        <button onClick={handleCopy} className="ces-btn-secondary w-full text-sm">
+          {copied ? 'Copied!' : 'Copy to Clipboard'}
+        </button>
+        <p className="text-[10px] text-ces-text-muted text-center">
+          Store this phrase securely. Anyone with access to it can control this wallet.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function SyncBar({ label, progress }: { label: string; progress: SubWalletProgress }) {

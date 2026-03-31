@@ -324,7 +324,7 @@
   }
 
   .ces-card {
-    @apply overflow-hidden border;
+    @apply border;
     background: rgb(var(--ces-color-surface));
     padding: var(--ces-space-card);
     border-radius: var(--ces-radius-card);

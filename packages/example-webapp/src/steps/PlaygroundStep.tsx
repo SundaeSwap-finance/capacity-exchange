@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { NarrativeCard } from '../components/NarrativeCard';
 import { CounterCard } from '../components/CounterCard';
 import { RotatingStatusText } from '../components/RotatingStatusText';
@@ -10,6 +10,7 @@ import type { UseSponsoredTransactionResult } from '../features/ces/useSponsored
 import type { OfferConfirmationResult } from '../features/ces/types';
 import { useCountdown } from '../lib/hooks/useCountdown';
 import { formatDust } from '../utils/format';
+import { resolveTokenLabel } from '../utils/tokenLabels';
 import type { NetworkConfig } from '../config';
 
 interface PlaygroundStepProps {
@@ -18,6 +19,7 @@ interface PlaygroundStepProps {
   cesTransaction: UseCesTransactionResult;
   sponsoredTransaction: UseSponsoredTransactionResult;
   tokenMintAddress: string | null;
+  mintedTokenColor: string;
   counterAddress: string | null;
   counterValue: string | null;
   config: NetworkConfig;
@@ -32,15 +34,30 @@ export function PlaygroundStep({
   cesTransaction,
   sponsoredTransaction,
   tokenMintAddress,
+  mintedTokenColor,
   counterAddress,
   counterValue,
   config,
   allowMockMintWithoutContractAddress = false,
 }: PlaygroundStepProps) {
   const anyTransacting =
-    sponsoredMint.status === 'building' || sponsoredMint.status === 'submitting' ||
+    sponsoredMint.status === 'building' ||
+    sponsoredMint.status === 'submitting' ||
     !['idle', 'success', 'error'].includes(cesTransaction.status) ||
-    sponsoredTransaction.status === 'building' || sponsoredTransaction.status === 'submitting';
+    sponsoredTransaction.status === 'building' ||
+    sponsoredTransaction.status === 'submitting';
+
+  // Freeze the displayed balance while any transaction is in flight so
+  // the wallet SDK's optimistic deduction doesn't confuse the user.
+  const frozenWalletDataRef = useRef<typeof walletData>(null);
+  useEffect(() => {
+    if (anyTransacting && !frozenWalletDataRef.current) {
+      frozenWalletDataRef.current = walletData;
+    } else if (!anyTransacting) {
+      frozenWalletDataRef.current = null;
+    }
+  }, [anyTransacting, walletData]);
+  const displayWalletData = frozenWalletDataRef.current ?? walletData;
 
   return (
     <div className="ces-step-stack">
@@ -49,14 +66,19 @@ export function PlaygroundStep({
           You&apos;ve seen both DUST-handling modes - <strong className="text-ces-accent">sponsored</strong> and{' '}
           <strong className="text-ces-gold">user-paid through exchange</strong>. Now explore both flows freely.
         </p>
-        <p>This keeps the underlying Midnight and Cardano steps visible while still showing the cleaner product experience you want for end users.</p>
+        <p>
+          This keeps the underlying Midnight and Cardano steps visible while still showing the cleaner product
+          experience you want for end users.
+        </p>
       </NarrativeCard>
 
       <div className="ces-inventory-grid">
         <CounterCard value={counterValue} freeze={anyTransacting} />
         <TokenBalanceCard
-          balance={walletData ? Object.values(walletData.shieldedBalances).reduce((a, b) => a + b, 0n) : 0n}
-          tokenLabel="Tokens"
+          balance={
+            displayWalletData ? Object.values(displayWalletData.shieldedBalances).reduce((a, b) => a + b, 0n) : 0n
+          }
+          tokenLabel="Tutorial Tokens"
         />
       </div>
 
@@ -77,7 +99,11 @@ export function PlaygroundStep({
         />
 
         {/* CES Counter */}
-        <CesPlaygroundAction cesTransaction={cesTransaction} shieldedBalances={walletData?.shieldedBalances ?? {}} />
+        <CesPlaygroundAction
+          cesTransaction={cesTransaction}
+          shieldedBalances={displayWalletData?.shieldedBalances ?? {}}
+          mintedTokenColor={mintedTokenColor}
+        />
       </div>
     </div>
   );
@@ -156,9 +182,25 @@ function PlaygroundAction({
   );
 }
 
-function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransaction: UseCesTransactionResult; shieldedBalances: Record<string, bigint> }) {
-  const { status, error, currencySelection, offerConfirmation, onCurrencySelected, onOfferConfirmed, incrementCounter, dismissOffer } =
-    cesTransaction;
+function CesPlaygroundAction({
+  cesTransaction,
+  shieldedBalances,
+  mintedTokenColor,
+}: {
+  cesTransaction: UseCesTransactionResult;
+  shieldedBalances: Record<string, bigint>;
+  mintedTokenColor: string;
+}) {
+  const {
+    status,
+    error,
+    currencySelection,
+    offerConfirmation,
+    onCurrencySelected,
+    onOfferConfirmed,
+    incrementCounter,
+    dismissOffer,
+  } = cesTransaction;
 
   const isActive = !['idle', 'success', 'error'].includes(status);
 
@@ -229,35 +271,43 @@ function CesPlaygroundAction({ cesTransaction, shieldedBalances }: { cesTransact
 
           {status === 'selecting-currency' && currencySelection && (
             <div className="ces-compact-stack border-t border-ces-border pt-2">
-              {[...currencySelection.prices].sort((a, b) => {
-                const balA = shieldedBalances[a.price.currency] ?? 0n;
-                const balB = shieldedBalances[b.price.currency] ?? 0n;
-                const canA = balA >= BigInt(a.price.amount);
-                const canB = balB >= BigInt(b.price.amount);
-                if (canA && !canB) return -1;
-                if (!canA && canB) return 1;
-                return 0;
-              }).map((ep, i) => {
-                const balance = shieldedBalances[ep.price.currency] ?? 0n;
-                const canAfford = balance >= BigInt(ep.price.amount);
-                return (
-                <button
-                  key={`${ep.price.currency}-${i}`}
-                  onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
-                  disabled={!canAfford}
-                  className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-border hover:bg-ces-surface-raised' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
-                >
-                  <div className="flex justify-between">
-                    <span className="text-ces-text-muted font-mono truncate max-w-[70%] text-xs">{ep.price.currency}</span>
-                    <span className="text-ces-gold font-semibold">{ep.price.amount}</span>
-                  </div>
-                </button>
-              );})}
+              {[...currencySelection.prices]
+                .sort((a, b) => {
+                  const balA = shieldedBalances[a.price.currency] ?? 0n;
+                  const balB = shieldedBalances[b.price.currency] ?? 0n;
+                  const canA = balA >= BigInt(a.price.amount);
+                  const canB = balB >= BigInt(b.price.amount);
+                  if (canA && !canB) return -1;
+                  if (!canA && canB) return 1;
+                  return 0;
+                })
+                .map((ep, i) => {
+                  const balance = shieldedBalances[ep.price.currency] ?? 0n;
+                  const canAfford = balance >= BigInt(ep.price.amount);
+                  const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);
+                  return (
+                    <button
+                      key={`${ep.price.currency}-${i}`}
+                      onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
+                      disabled={!canAfford}
+                      className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-border hover:bg-ces-surface-raised' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
+                    >
+                      <div className="flex justify-between">
+                        <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
+                        <span className="text-ces-gold font-semibold">{ep.price.amount}</span>
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           )}
 
           {status === 'confirming' && offerConfirmation && (
-            <CompactOfferConfirmation offer={offerConfirmation.offer} specksRequired={offerConfirmation.specksRequired} onConfirm={onOfferConfirmed} />
+            <CompactOfferConfirmation
+              offer={offerConfirmation.offer}
+              specksRequired={offerConfirmation.specksRequired}
+              onConfirm={onOfferConfirmed}
+            />
           )}
         </>
       )}
@@ -285,14 +335,20 @@ function CompactOfferConfirmation({
   return (
     <div className="ces-compact-stack border-t border-ces-border pt-2">
       <div className="flex justify-between text-xs">
-        <span className="text-ces-text-muted">Pay {offer.offerAmount} for {formatDust(specksRequired)} DUST</span>
+        <span className="text-ces-text-muted">
+          Pay {offer.offerAmount} for {formatDust(specksRequired)} DUST
+        </span>
         <span className={isExpired ? 'text-ces-danger' : 'text-ces-text-muted'}>{timeRemaining}</span>
       </div>
       <div className="flex gap-2">
         <button onClick={() => onConfirm({ status: 'cancelled' })} className="ces-btn-ghost flex-1 text-xs py-1.5">
           Cancel
         </button>
-        <button onClick={() => onConfirm({ status: 'confirmed' })} disabled={isExpired} className="ces-btn-primary flex-1 text-xs py-1.5">
+        <button
+          onClick={() => onConfirm({ status: 'confirmed' })}
+          disabled={isExpired}
+          className="ces-btn-primary flex-1 text-xs py-1.5"
+        >
           Confirm
         </button>
       </div>

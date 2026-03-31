@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/components';
 import type { WalletProviders } from '../features/interactions/useWalletProviders';
 import { findAndMintTokens } from '../features/ces/tokenMintContract';
@@ -17,6 +17,7 @@ export function useSponsoredMint(providers: WalletProviders | null): UseSponsore
   const config = useNetworkConfig();
   const [status, setStatus] = useState<SponsoredMintStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
 
   const reset = useCallback(() => {
     setStatus('idle');
@@ -29,6 +30,11 @@ export function useSponsoredMint(providers: WalletProviders | null): UseSponsore
         setError('Wallet not connected');
         return;
       }
+
+      if (inFlightRef.current) {
+        return;
+      }
+      inFlightRef.current = true;
 
       setStatus('building');
       setError(null);
@@ -45,6 +51,8 @@ export function useSponsoredMint(providers: WalletProviders | null): UseSponsore
         console.error('[SponsoredMint] Error:', err);
         setError(err instanceof Error ? err.message : 'Failed to mint tokens');
         setStatus('error');
+      } finally {
+        inFlightRef.current = false;
       }
     },
     [providers, config]

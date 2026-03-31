@@ -114,15 +114,25 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
       setPhase('revealing');
     }, COVER_DURATION_MS);
 
-    const revealTimer = window.setTimeout(() => {
-      setPhase('idle');
-    }, COVER_DURATION_MS + REVEAL_DURATION_MS);
-
     return () => {
       window.clearTimeout(coverTimer);
-      window.clearTimeout(revealTimer);
     };
   }, [animKey, displayedKey]);
+
+  // Separate effect for the revealing → idle transition so it isn't
+  // cancelled when the cover timer updates displayedKey and re-triggers
+  // the effect above.
+  useEffect(() => {
+    if (phase !== 'revealing') return;
+
+    const revealTimer = window.setTimeout(() => {
+      setPhase('idle');
+    }, REVEAL_DURATION_MS);
+
+    return () => {
+      window.clearTimeout(revealTimer);
+    };
+  }, [phase]);
 
   useEffect(() => {
     if (phase === 'idle' && animKey === displayedKey) {

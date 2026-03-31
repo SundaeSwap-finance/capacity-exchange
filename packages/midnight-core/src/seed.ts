@@ -20,3 +20,16 @@ export function parseMnemonic(mnemonic: string): Uint8Array {
   }
   return bip39.mnemonicToSeedSync(words);
 }
+
+/** Generate a new BIP-39 mnemonic (24 words / 256 bits of entropy). */
+export function generateMnemonic(): string {
+  return bip39.generateMnemonic(wordlist, 256);
+}
+
+/** Convert a mnemonic to a hex-encoded seed suitable for HDWallet.fromSeed. */
+export function mnemonicToSeedHex(mnemonic: string): string {
+  const seed = parseMnemonic(mnemonic);
+  return Array.from(seed)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
