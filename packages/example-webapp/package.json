@@ -16,6 +16,8 @@
     "@capacity-exchange/client": "1.0.0",
     "@capacity-exchange/components": "1.0.0",
     "@capacity-exchange/midnight-core": "1.0.0",
+    "@fontsource/geist": "^5.2.8",
+    "@fontsource/space-mono": "^5.2.9",
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",
@@ -38,7 +40,8 @@
     "@types/react-dom": "^19.2.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "rxjs": "^7.8.0"
+    "rxjs": "^7.8.0",
+    "unicornstudio-react": "^2.1.4-1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.2",

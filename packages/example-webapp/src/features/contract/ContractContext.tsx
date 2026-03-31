@@ -8,7 +8,6 @@ export interface TokenMintContract {
   contractAddress: string;
   tokenColor: string;
   derivedTokenColor: string;
-  privateStateId: string;
 }
 
 interface ContractContextValue {

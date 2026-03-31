@@ -24,15 +24,26 @@ export async function createWalletContext(config: AppConfig): Promise<WalletCont
   const store = new FileStateStore(config.walletStateDir, logger);
   const timeoutMs = config.walletSyncTimeoutMs ?? 120_000;
 
+  const walletConfig = resolveWalletConfig(config.networkId, config.endpoints.proofServerUrl);
   logger.info('Creating and syncing wallets...');
-  const { walletFacade, keys } = await createAndSyncWalletWithStore(
-    {
-      seedHex,
-      walletConfig: resolveWalletConfig(config.networkId, config.endpoints.proofServerUrl),
-    },
-    store,
-    timeoutMs
-  );
+  let walletFacade: WalletFacade;
+  let keys: WalletKeys;
+  try {
+    ({ walletFacade, keys } = await createAndSyncWalletWithStore(
+      { seedHex, walletConfig },
+      store,
+      timeoutMs
+    ));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const endpoints = config.endpoints;
+    throw new Error(
+      `Wallet sync failed: ${msg}\n` +
+      `  node:       ${endpoints.nodeUrl}\n` +
+      `  indexer:    ${endpoints.indexerHttpUrl}\n` +
+      `  proofServer: ${endpoints.proofServerUrl}`
+    );
+  }
   logger.info('Wallets synced');
 
   const walletProvider = new DustWalletProvider(walletFacade, keys.shieldedSecretKeys, keys.dustSecretKey);

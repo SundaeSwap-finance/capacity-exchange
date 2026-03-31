@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { CoinPublicKey, EncPublicKey, FinalizedTransaction, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v8';
-import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import type { BalanceSealedTx } from '@capacity-exchange/components';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
@@ -58,6 +57,7 @@ function buildExtensionWalletProviders(
   const balanceSealedTx: BalanceSealedTx = async (tx) => {
     const serialized = uint8ArrayToHex(tx.serialize());
     const result = await connectedAPI.balanceSealedTransaction(serialized);
+    const { Transaction } = await import('@midnight-ntwrk/ledger-v8');
     return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
       'signature',
       'proof',

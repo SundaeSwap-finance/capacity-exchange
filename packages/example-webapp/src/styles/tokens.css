@@ -1,0 +1,73 @@
+/* Raw color ramps and primitives.
+   This is the only place that should hold literal color values. */
+
+:root {
+  /* Monochrome structural ramp */
+  --ces-black-950: 0 0 0;
+  --ces-black-900: 13 13 13;
+  --ces-black-850: 21 21 21;
+  --ces-black-800: 31 31 31;
+  --ces-black-750: 41 41 41;
+  --ces-black-700: 56 56 56;
+  --ces-black-600: 82 82 82;
+  --ces-black-500: 116 116 116;
+  --ces-black-400: 154 154 154;
+  --ces-black-300: 194 194 194;
+  --ces-black-200: 224 224 224;
+  --ces-black-100: 244 244 244;
+
+  /* Blue accent ramp anchored on #0D00FF */
+  --ces-accent-950: 4 0 64;
+  --ces-accent-900: 7 0 112;
+  --ces-accent-850: 10 0 170;
+  --ces-accent-800: 13 0 214;
+  --ces-accent-700: 13 0 255;
+  --ces-accent-600: 52 42 255;
+  --ces-accent-500: 90 84 255;
+  --ces-accent-400: 130 126 255;
+  --ces-accent-300: 170 168 255;
+  --ces-accent-200: 208 207 255;
+  --ces-accent-100: 235 235 255;
+
+  /* Neutral ramp */
+  --ces-neutral-950: 10 10 10;
+  --ces-neutral-900: 20 20 20;
+  --ces-neutral-800: 31 31 31;
+  --ces-neutral-700: 49 49 49;
+  --ces-neutral-600: 79 79 79;
+  --ces-neutral-500: 111 111 111;
+  --ces-neutral-400: 148 148 148;
+  --ces-neutral-300: 183 183 183;
+  --ces-neutral-200: 219 219 219;
+  --ces-neutral-100: 245 245 245;
+  --ces-neutral-50: 255 255 255;
+
+  /* Gold ramp */
+  --ces-gold-950: 42 28 6;
+  --ces-gold-900: 77 53 14;
+  --ces-gold-800: 114 80 24;
+  --ces-gold-700: 153 111 36;
+  --ces-gold-600: 194 147 55;
+  --ces-gold-500: 240 201 86;
+  --ces-gold-400: 246 214 120;
+  --ces-gold-300: 250 226 159;
+  --ces-gold-200: 252 237 196;
+  --ces-gold-100: 254 247 229;
+  --ces-gold-50: 255 251 242;
+
+  /* Danger ramp */
+  --ces-danger-950: 59 20 20;
+  --ces-danger-900: 98 35 35;
+  --ces-danger-800: 139 52 52;
+  --ces-danger-700: 181 71 71;
+  --ces-danger-600: 216 88 88;
+  --ces-danger-500: 240 101 101;
+  --ces-danger-400: 246 135 135;
+  --ces-danger-300: 250 171 171;
+  --ces-danger-200: 252 206 206;
+  --ces-danger-100: 254 233 233;
+  --ces-danger-50: 255 244 244;
+
+  --ces-white: 255 255 255;
+  --ces-black: 0 0 0;
+}
