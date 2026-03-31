@@ -46,7 +46,7 @@ export class MetricsService {
 
   private totalSpecksConsumed = 0n;
   private dustEvents: DustEvent[] = [];
-  private revenueByurrency = new Map<string, bigint>();
+  private revenueByCurrency = new Map<string, bigint>();
   private revenueEvents: RevenueEntry[] = [];
   private contentionSamples: { ratio: number; timestamp: number }[] = [];
 
@@ -61,8 +61,8 @@ export class MetricsService {
   }
 
   recordRevenue(currency: string, amount: bigint): void {
-    const current = this.revenueByurrency.get(currency) ?? 0n;
-    this.revenueByurrency.set(currency, current + amount);
+    const current = this.revenueByCurrency.get(currency) ?? 0n;
+    this.revenueByCurrency.set(currency, current + amount);
     this.revenueEvents.push({ currency, amount, timestamp: Date.now() });
   }
 
@@ -97,7 +97,7 @@ export class MetricsService {
 
   private getRevenue(): RevenueSnapshot {
     const byCurrency: Record<string, string> = {};
-    for (const [currency, amount] of this.revenueByurrency) {
+    for (const [currency, amount] of this.revenueByCurrency) {
       byCurrency[currency] = amount.toString();
     }
     return { byCurrency };
