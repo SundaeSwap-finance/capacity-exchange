@@ -10,11 +10,13 @@ import { createWalletResources } from './config/wallet.js';
 export interface AppConfig {
   networkId: NetworkId.NetworkId;
   port: number;
+  quoteTtlSeconds: number;
   offerTtlSeconds: number;
   endpoints: NetworkEndpoints;
   priceFormulas: PriceFormula[];
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
+  quoteSecretFile: string;
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
 }
@@ -38,9 +40,11 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   const config: AppConfig = {
     networkId,
     port: env.PORT,
+    quoteTtlSeconds: env.QUOTE_TTL_SECONDS,
     offerTtlSeconds: env.OFFER_TTL_SECONDS,
     endpoints,
     priceFormulas: priceConfig.priceFormulas,
+    quoteSecretFile: env.QUOTE_SECRET_FILE,
     sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,
     walletConnection: wallet.walletConnection,

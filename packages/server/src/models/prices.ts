@@ -7,6 +7,7 @@ const Price = Type.Object({
 });
 
 export const PricesResponse = Type.Object({
+  quoteId: Type.String(),
   prices: Type.Array(Price),
 });
 

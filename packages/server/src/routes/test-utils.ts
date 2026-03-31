@@ -7,6 +7,7 @@ interface RouteTestAppOptions {
   routes: { plugin: FastifyPluginAsync; prefix: string };
 }
 
+/** Sets up a minimal Fastify app for route testing. Handles lifecycle via beforeAll/afterAll. */
 export function useRouteTestApp(options: RouteTestAppOptions): { get: () => FastifyInstance } {
   let app: FastifyInstance;
 
