@@ -1,5 +1,9 @@
-import { specksToDust } from '@capacity-exchange/midnight-core';
 import { useMetrics, type Metrics } from './useMetrics';
+
+const SPECKS_PER_DUST = 1_000_000_000_000_000n;
+function specksToDust(specks: bigint): string {
+  return (specks / SPECKS_PER_DUST).toLocaleString();
+}
 
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400);
@@ -85,6 +89,7 @@ export default function App() {
           <Card label="Locked / Total UTxOs" value={data ? `${data.contention.lockedUtxos} / ${data.contention.totalUtxos}` : '—'} />
           <Card label="Locked Specks" value={data ? formatDust(data.contention.lockedSpecks) : '—'} />
           <Card label="Contention Ratio" value={data ? formatContention(data.contention) : '—'} />
+          <Card label="Avg Contention (1h)" value={data ? `${(data.contention.averageRatioLastHour * 100).toFixed(1)}%` : '—'} />
         </Section>
       </main>
     </div>

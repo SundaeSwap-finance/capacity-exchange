@@ -24,6 +24,7 @@ export interface Metrics {
     totalUtxos: number;
     lockedSpecks: string;
     ratio: number;
+    averageRatioLastHour: number;
   };
 }
 

@@ -17,6 +17,7 @@ const ContentionSchema = Type.Object({
   totalUtxos: Type.Number(),
   lockedSpecks: Type.String(),
   ratio: Type.Number(),
+  averageRatioLastHour: Type.Number(),
 });
 
 export const MetricsResponse = Type.Object({
