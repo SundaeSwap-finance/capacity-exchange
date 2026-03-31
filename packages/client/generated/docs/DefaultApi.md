@@ -74,7 +74,9 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **201** | Default Response |  -  |
+| **400** | Default Response |  -  |
 | **409** | Default Response |  -  |
+| **410** | Default Response |  -  |
 | **500** | Default Response |  -  |
 | **503** | Default Response |  -  |
 
