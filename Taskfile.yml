@@ -197,6 +197,30 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
+  dashboard:preview:
+    desc: Run dashboard against preview
+    env:
+      VITE_API_URL: https://demo.capacity-exchange.preview.sundae.fi
+      DASHBOARD_PORT: '3001'
+    cmds:
+      - bun run --filter @capacity-exchange/dashboard dev
+
+  dashboard:preprod:
+    desc: Run dashboard against preprod
+    env:
+      VITE_API_URL: https://demo.capacity-exchange.preprod.sundae.fi
+      DASHBOARD_PORT: '3001'
+    cmds:
+      - bun run --filter @capacity-exchange/dashboard dev
+
+  dashboard:mainnet:
+    desc: Run dashboard against mainnet
+    env:
+      VITE_API_URL: https://demo.capacity-exchange.sundae.fi
+      DASHBOARD_PORT: '3001'
+    cmds:
+      - bun run --filter @capacity-exchange/dashboard dev
+
   _dev:run:
     internal: true
     env:
