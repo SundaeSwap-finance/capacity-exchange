@@ -4,11 +4,10 @@ import { RotatingStatusText } from '../components/RotatingStatusText';
 import { CounterCard } from '../components/CounterCard';
 import { TokenBalanceCard } from '../components/TokenBalanceCard';
 import { TransactionProgress } from '../components/TransactionProgress';
-import { useCountdown } from '../lib/hooks/useCountdown';
 import { formatDust } from '../utils/format';
 import type { WalletData } from '../features/wallet/types';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
-import type { ExchangePrice, CurrencySelectionResult, OfferConfirmationResult } from '../features/ces/types';
+import type { ExchangePrice, CurrencySelectionResult } from '../features/ces/types';
 import { resolveTokenLabel } from '../utils/tokenLabels';
 
 interface PaidExchangeStepProps {
@@ -80,9 +79,7 @@ function CesCounterAction({
     status,
     error,
     currencySelection,
-    offerConfirmation,
     onCurrencySelected,
-    onOfferConfirmed,
     incrementCounter,
     dismissOffer,
   } = cesTransaction;
@@ -106,7 +103,7 @@ function CesCounterAction({
       label: 'Prepare private registration payload',
       status: (status === 'building'
         ? 'active'
-        : ['selecting-currency', 'fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
+        : ['selecting-currency', 'fetching-offers', 'submitting', 'success'].includes(status)
           ? 'done'
           : 'waiting') as 'active' | 'done' | 'waiting',
     },
@@ -114,21 +111,13 @@ function CesCounterAction({
       label: 'Choose asset to satisfy DUST',
       status: (status === 'selecting-currency'
         ? 'active'
-        : ['fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
+        : ['fetching-offers', 'submitting', 'success'].includes(status)
           ? 'done'
           : 'waiting') as 'active' | 'done' | 'waiting',
     },
     {
-      label: 'Request live exchange quote',
-      status: (status === 'fetching-offers'
-        ? 'active'
-        : ['confirming', 'submitting', 'success'].includes(status)
-          ? 'done'
-          : 'waiting') as 'active' | 'done' | 'waiting',
-    },
-    {
-      label: 'Confirm & register user',
-      status: (status === 'confirming' || status === 'submitting'
+      label: 'Exchange & submit',
+      status: (status === 'fetching-offers' || status === 'submitting'
         ? 'active'
         : status === 'success'
           ? 'done'
@@ -168,14 +157,6 @@ function CesCounterAction({
               shieldedBalances={displayWalletData?.shieldedBalances ?? {}}
               mintedTokenColor={mintedTokenColor}
               onSelect={onCurrencySelected}
-            />
-          )}
-
-          {status === 'confirming' && offerConfirmation && (
-            <InlineOfferConfirmation
-              offer={offerConfirmation.offer}
-              specksRequired={offerConfirmation.specksRequired}
-              onConfirm={onOfferConfirmed}
             />
           )}
 
@@ -315,46 +296,3 @@ function InlineCurrencySelection({
   );
 }
 
-function InlineOfferConfirmation({
-  offer,
-  specksRequired,
-  onConfirm,
-}: {
-  offer: { offerId: string; offerAmount: string; offerCurrency: string; expiresAt: Date };
-  specksRequired: bigint;
-  onConfirm: (result: OfferConfirmationResult) => void;
-}) {
-  const { timeRemaining, isExpired } = useCountdown(offer.expiresAt);
-
-  return (
-    <div className="ces-section-stack border-t border-ces-border pt-2">
-      <div className="ces-compact-stack">
-        <div className="flex justify-between text-sm">
-          <span className="text-ces-text-muted">DUST required</span>
-          <span className="text-ces-text font-mono">{formatDust(specksRequired)}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-ces-text-muted">User pays</span>
-          <span className="text-ces-gold font-display font-semibold">{offer.offerAmount}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-ces-text-muted">Expires in</span>
-          <span className={isExpired ? 'text-ces-danger' : 'text-ces-text'}>{timeRemaining}</span>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button onClick={() => onConfirm({ status: 'back' })} className="ces-btn-ghost flex-1">
-          Back
-        </button>
-        <button
-          onClick={() => onConfirm({ status: 'confirmed' })}
-          disabled={isExpired}
-          className="ces-btn-primary flex-1"
-        >
-          Confirm & Register
-        </button>
-      </div>
-    </div>
-  );
-}

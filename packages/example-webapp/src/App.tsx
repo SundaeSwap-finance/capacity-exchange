@@ -193,7 +193,7 @@ function TutorialInner({
     cesStatus: activeCesTransaction.status,
     cesError: activeCesTransaction.error,
     currencySelection: activeCesTransaction.currencySelection,
-    offerConfirmation: activeCesTransaction.offerConfirmation,
+    offerConfirmation: null,
     sponsoredTransactionStatus: activeSponsoredTransaction.status,
     sponsoredTransactionError: activeSponsoredTransaction.error,
     tokenBalance: totalShieldedBalance,
@@ -213,7 +213,7 @@ function TutorialInner({
     }
 
     const { secrets } = await createWallet();
-    seedWallet.connect(secrets.seedHex);
+    seedWallet.connect(secrets.seedHex, { isNewWallet: true });
   };
 
   return (

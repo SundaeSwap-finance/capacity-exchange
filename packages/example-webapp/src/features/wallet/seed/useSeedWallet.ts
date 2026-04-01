@@ -25,20 +25,24 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
   }, [config]);
 
   const connect = useCallback(
-    async (seed: string) => {
+    async (seed: string, options?: { isNewWallet?: boolean }) => {
       if (status === 'connecting' || status === 'connected') {
         return;
       }
 
+      console.debug('[useSeedWallet] connect called, isNewWallet=', options?.isNewWallet);
       setStatus('connecting');
       setError(null);
       setSyncProgress(null);
 
       try {
+        console.log('[useSeedWallet] calling connectSeedWallet...');
         const connection = await connectSeedWallet(seed, config, (progress) => {
           setSyncProgress(progress);
-        });
+        }, options?.isNewWallet);
+        console.log('[useSeedWallet] connectSeedWallet returned');
         const adapter = new SeedWalletAdapter(connection.walletFacade, connection.networkId);
+        console.log('[useSeedWallet] adapter created');
         setWallet(adapter);
         setInternals({
           walletFacade: connection.walletFacade,
@@ -46,7 +50,9 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
           networkId: connection.networkId,
         });
         setStatus('connected');
+        console.log('[useSeedWallet] status set to connected');
       } catch (err) {
+        console.error('[useSeedWallet] error:', err);
         setError(err instanceof Error ? err.message : 'Failed to connect wallet');
         setStatus('disconnected');
       }

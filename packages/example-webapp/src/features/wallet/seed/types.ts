@@ -24,7 +24,7 @@ export interface SeedWalletState {
   internals: SeedWalletInternals | null;
   error: string | null;
   syncProgress: SyncProgressInfo | null;
-  connect: (seed: string) => Promise<void>;
+  connect: (seed: string, options?: { isNewWallet?: boolean }) => Promise<void>;
   disconnect: () => void;
 }
 

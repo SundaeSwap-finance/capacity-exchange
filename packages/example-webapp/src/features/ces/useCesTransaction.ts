@@ -1,7 +1,6 @@
 import { type RefObject, useState, useRef, useCallback } from 'react';
 import {
   type CurrencySelectionResult,
-  type OfferConfirmationResult,
   type PromptForCurrency,
   type ConfirmOffer,
   CapacityExchangeUserCancelledError,
@@ -9,7 +8,7 @@ import {
 } from '@capacity-exchange/components';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { BalanceSealedTx } from '@capacity-exchange/components';
-import type { CesFlowStatus, CurrencySelectionState, OfferConfirmationState } from './types';
+import type { CesFlowStatus, CurrencySelectionState } from './types';
 import { findAndIncrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
 
@@ -30,8 +29,6 @@ export interface UseCesTransactionResult {
   currencySelection: CurrencySelectionState | null;
   onCurrencySelected: (result: CurrencySelectionResult) => void;
 
-  offerConfirmation: OfferConfirmationState | null;
-  onOfferConfirmed: (result: OfferConfirmationResult) => void;
   dismissOffer: () => void;
 
   incrementCounter: () => Promise<void>;
@@ -58,28 +55,24 @@ function createPromptForCurrency(
   };
 }
 
-// Same pattern as above for the offer confirmation step.
-function createConfirmOffer(
+// Auto-confirms the offer once the user has already selected a currency.
+// The currency selection is the user's confirmation — no need to ask twice.
+function createAutoConfirmOffer(
   setStatus: (status: CesFlowStatus) => void,
   setCurrencySelection: (state: CurrencySelectionState | null) => void,
-  setOfferConfirmation: (state: OfferConfirmationState | null) => void,
-  resolverRef: RefObject<PromiseResolvers<OfferConfirmationResult> | null>
 ): ConfirmOffer {
-  return async (offer, specksRequired) => {
+  return async (_offer, _specksRequired) => {
     setCurrencySelection(null);
-    setStatus('confirming');
-    setOfferConfirmation({ offer, specksRequired });
-    return new Promise((resolve, reject) => {
-      resolverRef.current = { resolve, reject };
-    });
+    setStatus('submitting');
+    return { status: 'confirmed' as const };
   };
 }
 
 // Connects capacityExchangeWalletProvider's async callbacks with React state.
 // The SDK pauses for user input via promises; this hook stores resolvers in refs
-// and resumes the flow when modals call onCurrencySelected/onOfferConfirmed.
+// and resumes the flow when modals call onCurrencySelected.
 //
-// Flow: idle -> building -> selecting-currency -> fetching-offers -> confirming -> submitting -> success/error
+// Flow: idle -> building -> selecting-currency -> fetching-offers -> submitting -> success/error
 export function useCesTransaction(
   walletProvider: WalletProvider | null,
   midnightProvider: MidnightProvider | null,
@@ -90,11 +83,9 @@ export function useCesTransaction(
   const [status, setStatus] = useState<CesFlowStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [currencySelection, setCurrencySelection] = useState<CurrencySelectionState | null>(null);
-  const [offerConfirmation, setOfferConfirmation] = useState<OfferConfirmationState | null>(null);
 
   // Promise resolvers that connect SDK callbacks to UI interactions.
   const currencyResolverRef = useRef<PromiseResolvers<CurrencySelectionResult> | null>(null);
-  const offerResolverRef = useRef<PromiseResolvers<OfferConfirmationResult> | null>(null);
 
   // Resolves the pending currency promise to resume the SDK flow.
   const onCurrencySelected = useCallback((result: CurrencySelectionResult) => {
@@ -109,22 +100,8 @@ export function useCesTransaction(
     }
   }, []);
 
-  // Resolves the pending offer promise to resume the SDK flow.
-  const onOfferConfirmed = useCallback((result: OfferConfirmationResult) => {
-    if (offerResolverRef.current) {
-      offerResolverRef.current.resolve(result);
-      offerResolverRef.current = null;
-    }
-    if (result.status === 'confirmed') {
-      setStatus('submitting');
-    } else {
-      setOfferConfirmation(null);
-    }
-  }, []);
-
   // Resets to idle.
   const dismissOffer = useCallback(() => {
-    setOfferConfirmation(null);
     setStatus('idle');
     setError(null);
   }, []);
@@ -139,7 +116,7 @@ export function useCesTransaction(
     setError(null);
 
     const promptForCurrency = createPromptForCurrency(setStatus, setCurrencySelection, currencyResolverRef);
-    const confirmOffer = createConfirmOffer(setStatus, setCurrencySelection, setOfferConfirmation, offerResolverRef);
+    const confirmOffer = createAutoConfirmOffer(setStatus, setCurrencySelection);
 
     try {
       await findAndIncrementCounter(
@@ -154,7 +131,6 @@ export function useCesTransaction(
       setStatus('success');
     } catch (err) {
       setCurrencySelection(null);
-      setOfferConfirmation(null);
       if (
         err instanceof CapacityExchangeUserCancelledError ||
         (err instanceof Error && err.cause instanceof CapacityExchangeUserCancelledError)
@@ -173,8 +149,6 @@ export function useCesTransaction(
     error,
     currencySelection,
     onCurrencySelected,
-    offerConfirmation,
-    onOfferConfirmed,
     dismissOffer,
     incrementCounter,
   };

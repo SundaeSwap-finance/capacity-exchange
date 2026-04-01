@@ -7,8 +7,6 @@ import type { WalletData } from '../features/wallet/types';
 import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
-import type { OfferConfirmationResult } from '../features/ces/types';
-import { useCountdown } from '../lib/hooks/useCountdown';
 import { formatDust } from '../utils/format';
 import { resolveTokenLabel } from '../utils/tokenLabels';
 import type { NetworkConfig } from '../config';
@@ -195,9 +193,9 @@ function CesPlaygroundAction({
     status,
     error,
     currencySelection,
-    offerConfirmation,
+
     onCurrencySelected,
-    onOfferConfirmed,
+
     incrementCounter,
     dismissOffer,
   } = cesTransaction;
@@ -229,10 +227,8 @@ function CesPlaygroundAction({
                 : status === 'selecting-currency'
                   ? 'Choose asset for DUST...'
                   : status === 'fetching-offers'
-                    ? 'Fetching live quote...'
-                    : status === 'confirming'
-                      ? 'Confirm registration...'
-                      : 'Submitting settlement...'}
+                    ? 'Requesting exchange...'
+                    : 'Submitting settlement...'}
             </span>
           </div>
 
@@ -302,13 +298,6 @@ function CesPlaygroundAction({
             </div>
           )}
 
-          {status === 'confirming' && offerConfirmation && (
-            <CompactOfferConfirmation
-              offer={offerConfirmation.offer}
-              specksRequired={offerConfirmation.specksRequired}
-              onConfirm={onOfferConfirmed}
-            />
-          )}
         </>
       )}
 
@@ -321,37 +310,3 @@ function CesPlaygroundAction({
   );
 }
 
-function CompactOfferConfirmation({
-  offer,
-  specksRequired,
-  onConfirm,
-}: {
-  offer: { offerAmount: string; expiresAt: Date };
-  specksRequired: bigint;
-  onConfirm: (result: OfferConfirmationResult) => void;
-}) {
-  const { timeRemaining, isExpired } = useCountdown(offer.expiresAt);
-
-  return (
-    <div className="ces-compact-stack border-t border-ces-border pt-2">
-      <div className="flex justify-between text-xs">
-        <span className="text-ces-text-muted">
-          Pay {offer.offerAmount} for {formatDust(specksRequired)} DUST
-        </span>
-        <span className={isExpired ? 'text-ces-danger' : 'text-ces-text-muted'}>{timeRemaining}</span>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={() => onConfirm({ status: 'cancelled' })} className="ces-btn-ghost flex-1 text-xs py-1.5">
-          Cancel
-        </button>
-        <button
-          onClick={() => onConfirm({ status: 'confirmed' })}
-          disabled={isExpired}
-          className="ces-btn-primary flex-1 text-xs py-1.5"
-        >
-          Confirm
-        </button>
-      </div>
-    </div>
-  );
-}

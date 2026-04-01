@@ -35,7 +35,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const error = walletError || seedWallet.error || extensionWallet.error;
 
   const sp = seedWallet.syncProgress;
-  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status === 'disconnected';
+  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status !== 'connecting' && extensionWallet.status !== 'connected';
 
   const extensionAvailable = extensionWallet.status !== 'unavailable';
 
@@ -61,7 +61,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       const { meta, secrets } = await createWallet();
       setActiveWalletIsPasskey(meta.mode === 'passkey');
       setActiveMnemonic(secrets.mnemonic);
-      seedWallet.connect(secrets.seedHex);
+      seedWallet.connect(secrets.seedHex, { isNewWallet: true });
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : 'Failed to create wallet');
     }
@@ -74,7 +74,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       const { secrets } = await createWallet();
       setActiveWalletIsPasskey(false);
       setActiveMnemonic(secrets.mnemonic);
-      seedWallet.connect(secrets.seedHex);
+      seedWallet.connect(secrets.seedHex, { isNewWallet: true });
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : 'Failed to create wallet');
     }
@@ -194,12 +194,6 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
             <div className="ces-section-stack px-2">
               <SyncBar label="Shielded" progress={sp.shielded} />
               <SyncBar label="Dust" progress={sp.dust} />
-              <div className="grid grid-cols-[8rem,minmax(0,1fr)] items-center gap-x-4">
-                <span className="text-xs text-ces-text-muted">Unshielded //</span>
-                <span className={`text-xs ${sp.unshielded ? 'text-ces-accent' : 'text-ces-text-muted/50'}`}>
-                  {sp.unshielded ? 'Done' : 'Waiting...'}
-                </span>
-              </div>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
