@@ -228,7 +228,7 @@ function SponsoredMintAction({
 
   return (
     <div className="ces-step-stack">
-      <NarrativeCard heading="Sponsored Transaction" variant="accent">
+      <NarrativeCard heading="Sponsored Transactions" variant="accent">
         {alreadyHasTokens ? (
           <p>
             You already have tokens from a previous session, but this flow still shows how the app can sponsor the DUST
@@ -236,13 +236,13 @@ function SponsoredMintAction({
           </p>
         ) : (
           <>
-            <p>Let's onboard you to a simple application we've built to show off the capacity exchange.</p>
-            <p>We'll do this in two steps to show you the two ways this is supported.</p>
+            <p>Let&apos;s show you how easy it is to onboard users with this small demo we built.</p>
+            <p>We&apos;ll show you two different supported onboarding flows.</p>
           </>
         )}
         <p>
-          Whether it's a game, a real world service, or something else, the value comes from acquiring the user. The
-          dApp is more than happy to cover the DUST transaction fees for you.
+          Whether it&apos;s a game, a medical privacy app, or a decentralized exchange, the dApp is often more than
+          happy to cover the DUST transaction fees to onboard the user.
         </p>
       </NarrativeCard>
 

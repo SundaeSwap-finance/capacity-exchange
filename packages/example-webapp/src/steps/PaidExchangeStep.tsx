@@ -137,11 +137,11 @@ function CesCounterAction({
 
   return (
     <div className="ces-step-stack">
-      <NarrativeCard heading="Register This User" variant="accent">
-        <p>Popular dApps may not have enough DUST to cover every transaction.</p>
+      <NarrativeCard heading="Register Graduation" variant="accent">
+        <p>However, dApps may not always be willing to cover every transaction.</p>
         <p>
-          The Capacity Exchange also lets users pay themselves with{' '}
-          <strong className="text-ces-text">any other asset</strong> accepted by the marketplace.
+          The Capacity Exchange also lets users pay with{' '}
+          <strong className="text-ces-text">any other asset</strong> accepted by the market.
         </p>
         <p>
           Let's register that you graduated this tutorial, paying the transaction fees with the token you just minted.
