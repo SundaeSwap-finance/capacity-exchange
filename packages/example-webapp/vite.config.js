@@ -1,6 +1,6 @@
 /* global process */
 import fs from 'fs';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
@@ -8,7 +8,8 @@ import { loadWalletSeed, requireNodeEnv } from '@capacity-exchange/midnight-node
 import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 
 // https://vitejs.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
   const networkId = requireNodeEnv('NETWORK_ID');
   process.env.VITE_NETWORK_ID = networkId;
   process.env.VITE_CAPACITY_EXCHANGE_URL ??= networkId === 'mainnet'
