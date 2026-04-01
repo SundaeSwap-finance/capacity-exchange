@@ -131,12 +131,13 @@ tasks:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,components,server,webapp
-          COLORS: blue,cyan,magenta,green,yellow
+          NAMES: core,node,components,server,webapp,dashboard
+          COLORS: blue,cyan,magenta,green,yellow,red
           EXTRA: >-
             "bun run --filter @capacity-exchange/components build:watch"
             "bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/example-webapp dev"
+            "bun run --filter @capacity-exchange/dashboard dev"
     requires:
       vars: [NETWORK_ID]
 
@@ -147,9 +148,11 @@ tasks:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,server
-          COLORS: blue,cyan,green
-          EXTRA: '"bun run --filter @capacity-exchange/server dev"'
+          NAMES: core,node,server,dashboard
+          COLORS: blue,cyan,green,red
+          EXTRA: >-
+            "bun run --filter @capacity-exchange/server dev"
+            "bun run --filter @capacity-exchange/dashboard dev"
     requires:
       vars: [NETWORK_ID]
 
