@@ -114,35 +114,11 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     );
   }
 
-  if (isSynced) {
+  if (showSpinner || isSynced) {
     return (
       <div className="ces-step-stack">
-        <div className="ces-card text-center py-8 ces-fade-in">
-          <div className="w-12 h-12 rounded-full bg-ces-accent/20 flex items-center justify-center mx-auto mb-3">
-            <svg
-              className="w-6 h-6 text-ces-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <p className="text-ces-text font-display font-semibold">Wallet Ready</p>
-          <button onClick={onConnected} className="ces-btn-primary mt-4">
-            Continue
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (showSpinner) {
-    return (
-      <div className="ces-step-stack">
-        <NarrativeCard heading="Syncing Wallet">
-          {isSeedWalletSyncing ? (
+        <NarrativeCard heading={isSynced ? 'Wallet Ready' : 'Syncing Wallet'}>
+          {isSeedWalletSyncing || isSynced ? (
             <>
               {activeWalletIsPasskey ? (
                 <>
@@ -155,20 +131,23 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
                     Your wallet is secure even from malicious browser extensions, as any
                     attempt to access it will <strong className="text-ces-text">prompt you for approval</strong>.
                   </p>
-                  <p>
-                    Now, we&apos;re loading relevant data directly from the Midnight Blockchain.
-                    This might take a while, and will get faster with future updates.
-                  </p>
+                  {!isSynced && (
+                    <p>
+                      Now, we&apos;re loading relevant data directly from the Midnight Blockchain.
+                      This might take a while, and will get faster with future updates.
+                    </p>
+                  )}
                 </>
               ) : (
                 <>
                   <p>
-                    You&apos;ve generated a new wallet in your browser for this test, and are now
-                    loading relevant data directly from the Midnight Blockchain.
+                    You&apos;ve generated a new wallet in your browser for this test{!isSynced && ', and are now loading relevant data directly from the Midnight Blockchain'}.
                   </p>
-                  <p>
-                    This might take a while, and will get faster with future updates.
-                  </p>
+                  {!isSynced && (
+                    <p>
+                      This might take a while, and will get faster with future updates.
+                    </p>
+                  )}
                 </>
               )}
               {activeMnemonic && (
@@ -189,19 +168,25 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
           )}
         </NarrativeCard>
 
-        <div className="ces-card ces-section-stack py-5">
-          {sp ? (
-            <div className="ces-section-stack px-2">
-              <SyncBar label="Shielded" progress={sp.shielded} />
-              <SyncBar label="Dust" progress={sp.dust} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <div className="ces-spinner-sm" />
-              <p className="text-sm text-ces-text-muted">Connecting...</p>
-            </div>
-          )}
-        </div>
+        {isSynced ? (
+          <button onClick={onConnected} className="ces-btn-primary w-full ces-fade-in">
+            Next
+          </button>
+        ) : (
+          <div className="ces-card ces-section-stack py-5">
+            {sp ? (
+              <div className="ces-section-stack px-2">
+                <SyncBar label="Shielded" progress={sp.shielded} />
+                <SyncBar label="Dust" progress={sp.dust} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <div className="ces-spinner-sm" />
+                <p className="text-sm text-ces-text-muted">Connecting...</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {showExportSeed && activeMnemonic && (
           <SeedExportModal mnemonic={activeMnemonic} onClose={() => setShowExportSeed(false)} />

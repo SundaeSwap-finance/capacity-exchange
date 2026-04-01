@@ -10,6 +10,7 @@ import type { UseSponsoredTransactionResult } from '../features/ces/useSponsored
 import { formatDust } from '../utils/format';
 import { resolveTokenLabel } from '../utils/tokenLabels';
 import type { NetworkConfig } from '../config';
+import { DevAccessForm } from './DevAccessStep';
 
 interface PlaygroundStepProps {
   walletData: WalletData | null;
@@ -80,6 +81,8 @@ export function PlaygroundStep({
         />
       </div>
 
+      <DevAccessForm compact />
+
       <div className="ces-section-stack">
         {/* Sponsored Mint */}
         <PlaygroundAction
@@ -93,7 +96,7 @@ export function PlaygroundStep({
             sponsoredMint.mint(resolvedTokenMintAddress, 1000n);
           }}
           onReset={sponsoredMint.reset}
-          variant="accent"
+          variant="gold"
         />
 
         {/* CES Counter */}
@@ -220,7 +223,11 @@ function CesPlaygroundAction({
       {isActive && (
         <>
           <div className="flex items-center gap-3">
-            <div className="ces-spinner-sm" />
+            {status === 'selecting-currency' ? (
+              <div className="w-4 h-4 rounded-full border-2 border-ces-gold animate-pulse flex-shrink-0" />
+            ) : (
+              <div className="ces-spinner-sm" />
+            )}
             <span className="text-sm text-ces-text-muted">
               {status === 'building'
                 ? 'Building registration proof...'
@@ -266,7 +273,7 @@ function CesPlaygroundAction({
           )}
 
           {status === 'selecting-currency' && currencySelection && (
-            <div className="ces-compact-stack border-t border-ces-border pt-2">
+            <div className="ces-compact-stack ces-input-pulse">
               {[...currencySelection.prices]
                 .sort((a, b) => {
                   const balA = shieldedBalances[a.price.currency] ?? 0n;
@@ -286,7 +293,7 @@ function CesPlaygroundAction({
                       key={`${ep.price.currency}-${i}`}
                       onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
                       disabled={!canAfford}
-                      className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-border hover:bg-ces-surface-raised' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
+                      className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-gold/40 hover:bg-ces-surface-raised hover:border-ces-gold' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
                     >
                       <div className="flex justify-between">
                         <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>

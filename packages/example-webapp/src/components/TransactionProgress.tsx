@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 interface ProgressStep {
   label: ReactNode;
-  status: 'waiting' | 'active' | 'done';
+  status: 'waiting' | 'active' | 'input' | 'done';
 }
 
 interface TransactionProgressProps {
@@ -35,13 +35,16 @@ export function TransactionProgress({ steps }: TransactionProgressProps) {
             {step.status === 'active' && (
               <div className="w-[18px] h-[18px] rounded-full border-2 border-ces-accent/30 border-t-ces-accent animate-spin" />
             )}
+            {step.status === 'input' && (
+              <div className="w-[18px] h-[18px] rounded-full border-2 border-ces-gold animate-pulse" />
+            )}
             {step.status === 'waiting' && <div className="w-[18px] h-[18px] rounded-full border-2 border-ces-border" />}
           </div>
 
           {/* Label */}
           <span
             className={`text-sm py-1 ${
-              step.status === 'active'
+              step.status === 'active' || step.status === 'input'
                 ? 'text-ces-text'
                 : step.status === 'done'
                   ? 'text-ces-accent/60'

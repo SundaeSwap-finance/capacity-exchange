@@ -15,6 +15,8 @@ interface SponsoredStepProps {
   autoAdvanceOnSuccess?: boolean;
   successAutoAdvanceDelayMs?: number;
   onMintSuccess: () => void;
+  hasGraduated?: boolean;
+  onSkipToPlayground?: () => void;
 }
 
 const MOCK_TOKEN_MINT_ADDRESS = 'mock-token-mint-address';
@@ -41,6 +43,8 @@ export function SponsoredStep({
   autoAdvanceOnSuccess = true,
   successAutoAdvanceDelayMs = 900,
   onMintSuccess,
+  hasGraduated = false,
+  onSkipToPlayground,
 }: SponsoredStepProps) {
   const tokenBalance = getTokenBalance(walletData, mintedTokenColor);
   const alreadyHasTokens = tokenBalance > 0n;
@@ -55,6 +59,8 @@ export function SponsoredStep({
       autoAdvanceOnSuccess={autoAdvanceOnSuccess}
       successAutoAdvanceDelayMs={successAutoAdvanceDelayMs}
       onSuccess={onMintSuccess}
+      hasGraduated={hasGraduated}
+      onSkipToPlayground={onSkipToPlayground}
     />
   );
 }
@@ -68,6 +74,8 @@ function SponsoredMintAction({
   autoAdvanceOnSuccess,
   successAutoAdvanceDelayMs,
   onSuccess,
+  hasGraduated,
+  onSkipToPlayground,
 }: {
   sponsoredMint: UseSponsoredMintResult;
   tokenMintAddress: string | null;
@@ -77,6 +85,8 @@ function SponsoredMintAction({
   autoAdvanceOnSuccess: boolean;
   successAutoAdvanceDelayMs: number;
   onSuccess: () => void;
+  hasGraduated: boolean;
+  onSkipToPlayground?: () => void;
 }) {
   type LocalMintUiPhase = 'idle' | 'building' | 'submitting' | 'success' | 'error';
 
@@ -256,6 +266,11 @@ function SponsoredMintAction({
           {alreadyHasTokens && (
             <button onClick={onSuccess} className="ces-btn-ghost w-full">
               Skip to paid exchange
+            </button>
+          )}
+          {hasGraduated && onSkipToPlayground && (
+            <button onClick={onSkipToPlayground} className="ces-btn-ghost w-full">
+              Skip to playground
             </button>
           )}
         </>

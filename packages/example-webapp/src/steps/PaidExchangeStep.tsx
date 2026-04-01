@@ -16,6 +16,8 @@ interface PaidExchangeStepProps {
   counterValue: string | null;
   mintedTokenColor: string | null;
   onCesSuccess: () => void;
+  hasGraduated?: boolean;
+  onSkipToPlayground?: () => void;
 }
 
 function getTokenBalance(walletData: WalletData | null): bigint {
@@ -50,6 +52,8 @@ export function PaidExchangeStep({
   counterValue,
   mintedTokenColor,
   onCesSuccess,
+  hasGraduated = false,
+  onSkipToPlayground,
 }: PaidExchangeStepProps) {
   return (
     <CesCounterAction
@@ -58,6 +62,8 @@ export function PaidExchangeStep({
       counterValue={counterValue}
       mintedTokenColor={mintedTokenColor}
       onSuccess={onCesSuccess}
+      hasGraduated={hasGraduated}
+      onSkipToPlayground={onSkipToPlayground}
     />
   );
 }
@@ -68,12 +74,16 @@ function CesCounterAction({
   counterValue,
   mintedTokenColor,
   onSuccess,
+  hasGraduated,
+  onSkipToPlayground,
 }: {
   cesTransaction: UseCesTransactionResult;
   walletData: WalletData | null;
   counterValue: string | null;
   mintedTokenColor: string | null;
   onSuccess: () => void;
+  hasGraduated: boolean;
+  onSkipToPlayground?: () => void;
 }) {
   const {
     status,
@@ -110,10 +120,10 @@ function CesCounterAction({
     {
       label: 'Choose asset to satisfy DUST',
       status: (status === 'selecting-currency'
-        ? 'active'
+        ? 'input'
         : ['fetching-offers', 'submitting', 'success'].includes(status)
           ? 'done'
-          : 'waiting') as 'active' | 'done' | 'waiting',
+          : 'waiting') as 'active' | 'input' | 'done' | 'waiting',
     },
     {
       label: 'Exchange & submit',
@@ -141,9 +151,16 @@ function CesCounterAction({
       <InventoryStrip counterValue={counterValue} walletData={displayWalletData} freeze={isTransacting} />
 
       {status === 'idle' && (
-        <button onClick={incrementCounter} className="ces-btn-primary w-full">
-          Register Graduation (Pay with Tutorial Tokens)
-        </button>
+        <>
+          <button onClick={incrementCounter} className="ces-btn-primary w-full">
+            Register Graduation (Pay with Tutorial Tokens)
+          </button>
+          {hasGraduated && onSkipToPlayground && (
+            <button onClick={onSkipToPlayground} className="ces-btn-ghost w-full">
+              Skip to playground
+            </button>
+          )}
+        </>
       )}
 
       {status !== 'idle' && status !== 'success' && status !== 'error' && (
@@ -256,8 +273,8 @@ function InlineCurrencySelection({
   });
 
   return (
-    <div className="ces-compact-stack border-t border-ces-border pt-2">
-      <p className="text-sm text-ces-text-muted">
+    <div className="ces-compact-stack ces-input-pulse">
+      <p className="text-sm text-ces-text">
         This transaction needs <span className="text-ces-text font-mono">{formatDust(specksRequired)}</span> DUST (
         <span className="font-mono">{specksRequired.toString()}</span> specks). Pick which accepted asset should cover
         it:
@@ -275,7 +292,7 @@ function InlineCurrencySelection({
             disabled={!canAfford}
             className={`w-full p-3 rounded-lg border text-left transition-colors ${
               canAfford
-                ? 'border-ces-border bg-ces-surface-raised/50 hover:bg-ces-surface-raised'
+                ? 'border-ces-gold/40 bg-ces-surface-raised/50 hover:bg-ces-surface-raised hover:border-ces-gold'
                 : 'border-ces-border/30 bg-ces-surface/30 opacity-40 cursor-not-allowed'
             }`}
           >
