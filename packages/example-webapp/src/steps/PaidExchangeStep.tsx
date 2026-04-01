@@ -144,7 +144,8 @@ function CesCounterAction({
           <strong className="text-ces-text">any other asset</strong> accepted by the marketplace.
         </p>
         <p>
-          Let's register that you graduated this tutorial, paying the transaction fees with the token you just minted.
+          Let&apos;s complete the tutorial by registering you user and paying the transaction fees with the tutorial
+          tokens you just minted.
         </p>
       </NarrativeCard>
 
@@ -153,7 +154,7 @@ function CesCounterAction({
       {status === 'idle' && (
         <>
           <button onClick={incrementCounter} className="ces-btn-primary w-full">
-            Register Graduation (Pay with Tutorial Tokens)
+            Complete Tutorial (Pay with Tutorial Tokens)
           </button>
           {hasGraduated && onSkipToPlayground && (
             <button onClick={onSkipToPlayground} className="ces-btn-ghost w-full">
@@ -205,7 +206,7 @@ function CesCounterAction({
               messages={[
                 'Submitting the transaction to Midnight now.',
                 'Waiting for the transaction to be included in a block.',
-                'When this completes, your graduation will be recorded!',
+                'When this completes, the tutorial will be marked complete!',
               ]}
             />
           )}
@@ -227,7 +228,7 @@ function CesCounterAction({
           </div>
           <p className="text-ces-text font-display font-semibold text-lg">Registration Complete</p>
           <p className="mt-1 text-sm text-ces-text-muted">
-            You've registered your graduation without ever requiring DUST.
+            You completed the tutorial without ever requiring DUST.
           </p>
           <button onClick={onSuccess} className="ces-btn-primary mt-4">
             Continue to Playground
@@ -312,4 +313,3 @@ function InlineCurrencySelection({
     </div>
   );
 }
-

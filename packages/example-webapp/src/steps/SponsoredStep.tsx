@@ -236,8 +236,12 @@ function SponsoredMintAction({
           </p>
         ) : (
           <>
-            <p>Let's onboard you to a simple application we've built to show off the capacity exchange.</p>
-            <p>We'll do this in two steps to show you the two ways this is supported.</p>
+            <p>We&apos;ll onboard you into a simple app that demonstrates the Capacity Exchange.</p>
+            <p>
+              This is the first step: the app sponsors the DUST requirement so a new user can mint tutorial tokens
+              right away. After this, we&apos;ll show the second path, where the user covers that requirement with
+              tokens.
+            </p>
           </>
         )}
         <p>
