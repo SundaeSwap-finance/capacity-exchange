@@ -12,6 +12,6 @@ await registerRoutes(app);
 await app.ready();
 
 const schema = app.swagger();
-writeFileSync(outputPath, JSON.stringify(schema));
+writeFileSync(outputPath, JSON.stringify(schema, null, 2));
 console.log(`Schema written to ${outputPath}`);
 await app.close();
