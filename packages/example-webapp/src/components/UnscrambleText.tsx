@@ -4,7 +4,7 @@ const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SCRAMBLE_FRAME_MS = 28;
 const SCRAMBLE_DURATION_MS = 420;
 
-function scrambleFrame(target: string, revealedCount: number): string {
+export function scrambleFrame(target: string, revealedCount: number): string {
   return target
     .split('')
     .map((char, index) => {
@@ -18,9 +18,10 @@ function scrambleFrame(target: string, revealedCount: number): string {
 interface UnscrambleTextProps {
   text: string;
   className?: string;
+  as?: 'p' | 'span';
 }
 
-export function UnscrambleText({ text, className }: UnscrambleTextProps) {
+export function UnscrambleText({ text, className, as: Component = 'span' }: UnscrambleTextProps) {
   const [displayText, setDisplayText] = useState(() => scrambleFrame(text, 0));
 
   useEffect(() => {
@@ -43,5 +44,5 @@ export function UnscrambleText({ text, className }: UnscrambleTextProps) {
     return () => window.clearInterval(timer);
   }, [text]);
 
-  return <span className={className}>{displayText}</span>;
+  return <Component className={className}>{displayText}</Component>;
 }

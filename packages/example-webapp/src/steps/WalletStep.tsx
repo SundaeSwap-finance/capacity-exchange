@@ -6,7 +6,7 @@ import type { WalletInfoState } from '../features/wallet/types';
 import type { SubWalletProgress } from '../features/wallet/seed/walletService';
 import type { StoredWalletMeta } from '../hooks/useWalletStore';
 import { useWalletStore } from '../hooks/useWalletStore';
-import { UnscrambleText } from '../shared/ui';
+import { UnscrambleText } from '../components/UnscrambleText';
 
 interface WalletStepProps {
   seedWallet: SeedWalletState;
