@@ -9,7 +9,11 @@ describe('Prices API', () => {
 
     const data = res.data as typeof PricesResponse.static;
     expect(data.quoteId).toBeDefined();
-    expect(data.prices.length).toBeGreaterThan(0);
-    expect(Number(data.prices[0].amount)).toBeGreaterThan(0);
+    expect(data.prices).toEqual([
+      {
+        currency: '1337133713371337133713371337133713371337133713371337133713371337',
+        amount: "112",
+      },
+    ])
   });
 });

@@ -19,10 +19,7 @@ export async function setup() {
     stdio: 'pipe',
     env: {
       ...process.env,
-      LOG_LEVEL: 'debug',
-      OFFER_TTL_SECONDS: '2',
-      QUOTE_TTL_SECONDS: '300',
-      QUOTE_SECRET_FILE: '.quote-secret.test.key',
+      DOTENV_CONFIG_PATH: path.join(CWD, '.env.test'),
     },
   });
   serverProcess.on('error', (err) => {

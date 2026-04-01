@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { CLIENT, getQuoteId } from '../utils.js';
 import { CreateOfferResponse } from '../client.js';
+import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
+import { hexToBytes } from '@capacity-exchange/midnight-core';
 
 describe('Offer API - Happy Path', () => {
   it('creates an offer successfully', async () => {
@@ -14,5 +16,9 @@ describe('Offer API - Happy Path', () => {
     expect(offer.offerCurrency).toBeDefined();
     expect(offer.serializedTx).toBeDefined();
     expect(offer.expiresAt).toBeDefined();
+
+    // check that response is valid
+    const bytes = hexToBytes(offer.serializedTx);
+    expect(() => Transaction.deserialize<SignatureEnabled, Proof, PreBinding>('signature', 'proof', 'pre-binding', bytes)).not.toThrow();
   });
 });
