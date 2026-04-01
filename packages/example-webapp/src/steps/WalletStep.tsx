@@ -333,7 +333,7 @@ function SeedExportModal({ mnemonic, onClose }: { mnemonic: string; onClose: () 
         <p className="text-ces-text font-display font-semibold text-sm">Seed Phrase</p>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-ces-surface-raised text-ces-text-muted hover:text-ces-text transition-colors"
+          className="p-1 hover:bg-ces-surface-raised text-ces-text-muted hover:text-ces-text transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -341,7 +341,7 @@ function SeedExportModal({ mnemonic, onClose }: { mnemonic: string; onClose: () 
         </button>
       </div>
 
-      <div className="p-3 rounded-lg bg-ces-surface-raised border border-ces-border grid grid-cols-3 gap-x-4 gap-y-1.5">
+      <div className="p-3 bg-ces-surface-raised border border-ces-border grid grid-cols-3 gap-x-4 gap-y-1.5">
         {words.map((word, i) => (
           <div key={i} className="flex items-baseline gap-1.5">
             <span className="text-[10px] text-ces-text-muted/50 font-mono w-4 text-right">{i + 1}</span>
