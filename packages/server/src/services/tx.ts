@@ -43,12 +43,12 @@ export class TxService {
     this.#proofProvider = httpClientProofProvider(proofProviderUrl, new EmptyZKConfigProvider());
   }
 
-  buildDustIntent(dust: UnprovenDustSpend, ttl: Date): UnprovenIntent {
+  buildDustIntent(dust: UnprovenDustSpend, ttl: Date, createdAt: Date): UnprovenIntent {
     const intent = Intent.new(ttl);
     intent.dustActions = new DustActions<SignatureEnabled, PreProof>(
       'signature',
       'pre-proof',
-      new Date(),
+      createdAt,
       [dust],
     );
     return intent;
@@ -58,8 +58,8 @@ export class TxService {
     return this.#proofProvider.proveTx(tx);
   }
 
-  async createDustOnlyTx(dust: UnprovenDustSpend, ttl: Date): Promise<UnboundTransaction> {
-    const intent = this.buildDustIntent(dust, ttl);
+  async createDustOnlyTx(dust: UnprovenDustSpend, ttl: Date, createdAt: Date): Promise<UnboundTransaction> {
+    const intent = this.buildDustIntent(dust, ttl, createdAt);
     const tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
     return this.proveTx(tx);
   }
@@ -68,6 +68,7 @@ export class TxService {
     coin: ShieldedCoinInfo,
     dust: UnprovenDustSpend,
     ttl: Date,
+    createdAt: Date,
     segmentId?: number,
   ): Promise<UnboundTransaction> {
     const SEGMENT = 0;
@@ -78,7 +79,7 @@ export class TxService {
       this.#zswap.encryptionPublicKey,
     );
     const offer = ZswapOffer.fromOutput(output, coin.type, coin.value);
-    const intent = this.buildDustIntent(dust, ttl);
+    const intent = this.buildDustIntent(dust, ttl, createdAt);
 
     // TODO: pass in segmentId when we can
     const tx = segmentId

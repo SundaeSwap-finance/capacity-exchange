@@ -73,6 +73,7 @@ export class OfferService {
       coin,
       lockedInfo.spend,
       expiration,
+      lockedInfo.createdAt,
       request.segmentId,
     );
 

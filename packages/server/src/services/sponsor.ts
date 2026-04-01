@@ -67,10 +67,10 @@ export class SponsorService {
       return lockResult;
     }
 
-    const { spend, expiresAtMillis } = lockResult.value;
+    const { spend, createdAt, expiresAtMillis } = lockResult.value;
     const ttl = new Date(expiresAtMillis);
 
-    const dustTx = await this.txService.createDustOnlyTx(spend, ttl);
+    const dustTx = await this.txService.createDustOnlyTx(spend, ttl, createdAt);
     this.logger.debug('Dust-only tx proven');
 
     const mergedTx = dustTx.merge(userTx);

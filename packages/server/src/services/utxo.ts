@@ -6,6 +6,7 @@ export interface UtxoLockInfo {
   id: string;
   utxo: DustFullInfo;
   spend: UnprovenDustSpend;
+  createdAt: Date;
   expiresAtMillis: number;
 }
 
@@ -119,7 +120,8 @@ export class UtxoService {
     this.lockedUtxos.set(key, { expiresAt, specks });
     this.logger.info({ id: key, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
 
-    const spend = this.walletService.spend(selectedUtxo, specks);
+    const createdAt = new Date();
+    const spend = this.walletService.spend(selectedUtxo, specks, createdAt);
 
     return {
       status: 'ok',
@@ -127,6 +129,7 @@ export class UtxoService {
         id: key,
         utxo: selectedUtxo,
         spend,
+        createdAt,
         expiresAtMillis: expiresAt,
       },
     };
