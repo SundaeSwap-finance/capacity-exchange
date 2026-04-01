@@ -17,8 +17,7 @@
   "scripts": {
     "clean": "rm -rf generated/dist generated/tsconfig.tsbuildinfo",
     "regenerate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true",
-    "build": "tsc",
-    "test": "vitest run"
+    "build": "tsc"
   },
   "dependencies": {
     "es6-promise": "^4.2.4",
@@ -26,7 +25,6 @@
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.28.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "typescript": "^5.9.3"
   }
 }
