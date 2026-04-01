@@ -27,6 +27,7 @@ export default fp(async (fastify: FastifyInstance) => {
     fastify.txService,
     fastify.priceService,
     fastify.metricsService,
+    fastify.config.offerTtlSeconds,
     fastify.log,
   );
   fastify.decorate('offerService', service);

@@ -5,6 +5,7 @@ import fp from 'fastify-plugin';
 declare module 'fastify' {
   interface FastifyReply {
     badRequest: (message?: string, details?: string) => FastifyReply;
+    gone: (message?: string, details?: string) => FastifyReply;
     conflict: (message?: string, details?: string) => FastifyReply;
     serviceUnavailable: (message?: string, details?: string) => FastifyReply;
     internalServerError: (message?: string, details?: string) => FastifyReply;
@@ -30,6 +31,17 @@ const errorHandler: FastifyPluginAsync = async (fastify: FastifyInstance, _opts)
     function (this: FastifyReply, message?: string, details?: string) {
       return this.status(400).send({
         error: 'Bad Request',
+        message,
+        details,
+      });
+    },
+  );
+
+  fastify.decorateReply(
+    'gone',
+    function (this: FastifyReply, message?: string, details?: string) {
+      return this.status(410).send({
+        error: 'Gone',
         message,
         details,
       });
