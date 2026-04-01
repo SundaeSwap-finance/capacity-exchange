@@ -3,7 +3,7 @@ import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
-import { TtlCache } from '../utils/ttl-cache.js';
+import { LRUCache } from 'lru-cache';
 import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
 
 export interface CreateOfferRequest {
@@ -34,7 +34,7 @@ export class OfferService {
   private readonly priceService: PriceService;
   private readonly metricsService: MetricsService;
   private readonly logger: FastifyBaseLogger;
-  private readonly cache: TtlCache<OfferResponse>;
+  private readonly cache: LRUCache<string, OfferResponse>;
   private readonly inflight = new Map<string, Promise<CreateOfferResult>>();
 
   constructor(
@@ -50,11 +50,10 @@ export class OfferService {
     this.priceService = priceService;
     this.metricsService = metricsService;
     this.logger = logger;
-    this.cache = new TtlCache(offerTtlSeconds, 'offers', logger);
-  }
-
-  stop(): void {
-    this.cache.stop();
+    this.cache = new LRUCache<string, OfferResponse>({
+      ttl: offerTtlSeconds * 1000,
+      ttlAutopurge: true,
+    });
   }
 
   /** Checks for a cached offer and returns it if present. Then checks for an in-flight
@@ -117,7 +116,7 @@ export class OfferService {
         expiresAt: expiration.toISOString(),
       };
 
-      this.cache.set(cacheKey, offer, lockedInfo.expiresAtMillis);
+      this.cache.set(cacheKey, offer);
       this.logger.info({ cacheKey, offerId: lockedInfo.id, expiresAt: expiration.toISOString() }, 'Offer built and cached');
 
       this.metricsService.recordDustUsage(request.specks);

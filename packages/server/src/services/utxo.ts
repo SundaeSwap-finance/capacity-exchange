@@ -1,7 +1,7 @@
 import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { FastifyBaseLogger } from 'fastify';
 import { WalletService } from './wallet.js';
-import { TtlCache } from '../utils/ttl-cache.js';
+import { LRUCache } from 'lru-cache';
 
 export interface UtxoLockInfo {
   id: string;
@@ -31,17 +31,16 @@ export class UtxoService {
   private readonly logger: FastifyBaseLogger;
   private readonly utxoLockTtlSeconds: number;
   // TODO: Move this to a db for reliability (if the service restarts)
-  private readonly lockedUtxos: TtlCache<UtxoLock>;
+  private readonly lockedUtxos: LRUCache<string, UtxoLock>;
 
   constructor(walletService: WalletService, logger: FastifyBaseLogger, utxoLockTtlSeconds: number) {
     this.walletService = walletService;
     this.logger = logger;
     this.utxoLockTtlSeconds = utxoLockTtlSeconds;
-    this.lockedUtxos = new TtlCache(utxoLockTtlSeconds, 'utxo-locks', logger);
-  }
-
-  stop(): void {
-    this.lockedUtxos.stop();
+    this.lockedUtxos = new LRUCache<string, UtxoLock>({
+      ttl: utxoLockTtlSeconds * 1000,
+      ttlAutopurge: true,
+    });
   }
 
   private getLockId(utxoInfo: DustFullInfo): string {
@@ -107,7 +106,7 @@ export class UtxoService {
     const now = Date.now();
     const expiresAt = now + this.utxoLockTtlSeconds * 1000;
     const key = this.getLockId(selectedUtxo);
-    this.lockedUtxos.set(key, { specks }, expiresAt);
+    this.lockedUtxos.set(key, { specks });
     this.logger.info({ id: key, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
 
     const spend = this.walletService.spend(selectedUtxo, specks);

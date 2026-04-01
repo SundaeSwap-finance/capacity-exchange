@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { OfferService } from './offer.js';
 import type { UtxoService } from './utxo.js';
 import type { TxService } from './tx.js';
@@ -44,9 +44,6 @@ describe('OfferService', () => {
   let service: OfferService;
   let deps: ReturnType<typeof createMockDeps>;
 
-  afterEach(() => {
-    service?.stop();
-  });
 
   it('returns cached offer on retry with same quoteId + currency', async () => {
     deps = createMockDeps();

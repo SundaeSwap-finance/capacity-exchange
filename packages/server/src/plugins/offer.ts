@@ -31,6 +31,5 @@ export default fp(async (fastify: FastifyInstance) => {
     fastify.log,
   );
   fastify.decorate('offerService', service);
-  fastify.addHook('onClose', () => service.stop());
   fastify.log.info("OfferService init'd");
 });
