@@ -11,6 +11,7 @@ import type { BalanceSealedTx } from '@capacity-exchange/components';
 import type { CesFlowStatus, CurrencySelectionState } from './types';
 import { findAndIncrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
+import { withDustRetry } from '../../utils/retry';
 
 function toUserErrorMessage(err: unknown): string {
   if (err instanceof CapacityExchangeUserCancelledError) {
@@ -119,14 +120,17 @@ export function useCesTransaction(
     const confirmOffer = createAutoConfirmOffer(setStatus, setCurrencySelection);
 
     try {
-      await findAndIncrementCounter(
-        walletProvider,
-        midnightProvider,
-        balanceSealedTx,
-        contractAddress,
-        promptForCurrency,
-        confirmOffer,
-        config
+      await withDustRetry(
+        () => findAndIncrementCounter(
+          walletProvider,
+          midnightProvider,
+          balanceSealedTx,
+          contractAddress,
+          promptForCurrency,
+          confirmOffer,
+          config
+        ),
+        { onRetry: (attempt) => console.warn(`[CESTransaction] Dust proof error, retrying (${attempt}/3)`) },
       );
       setStatus('success');
     } catch (err) {

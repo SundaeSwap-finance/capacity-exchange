@@ -3,6 +3,7 @@ import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/componen
 import type { WalletProviders } from '../interactions/useWalletProviders';
 import { incrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
+import { withDustRetry } from '../../utils/retry';
 
 export type SponsoredFlowStatus = 'idle' | 'building' | 'submitting' | 'success' | 'error';
 
@@ -42,7 +43,10 @@ export function useSponsoredTransaction(
       });
 
       setStatus('submitting');
-      await incrementCounter(providers, contractAddress, walletProvider, config);
+      await withDustRetry(
+        () => incrementCounter(providers, contractAddress, walletProvider, config),
+        { onRetry: (attempt) => console.warn(`[SponsoredTransaction] Dust proof error, retrying (${attempt}/3)`) },
+      );
       setStatus('success');
     } catch (err) {
       console.error('[SponsoredTransaction] Error:', err);
