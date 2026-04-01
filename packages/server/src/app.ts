@@ -43,7 +43,7 @@ export async function buildApp(
   await app.register(metricsPlugin);
   await app.register(offerPlugin);
   await app.register(sponsorPlugin);
-  registerRoutes(app);
+  await registerRoutes(app);
   return app;
 }
 
