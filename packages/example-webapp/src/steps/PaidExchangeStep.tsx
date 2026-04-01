@@ -144,7 +144,7 @@ function CesCounterAction({
           <strong className="text-ces-text">any other asset</strong> accepted by the market.
         </p>
         <p>
-          Let&apos;s complete the tutorial by registering you user and paying the transaction fees with the tutorial
+          Let&apos;s complete the tutorial by registering that you've finished the tutorial, and paying the transaction fees with the tutorial
           tokens you just minted.
         </p>
       </NarrativeCard>
