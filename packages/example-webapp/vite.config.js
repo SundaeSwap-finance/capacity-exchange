@@ -11,11 +11,20 @@ import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
 export default defineConfig(() => {
   const networkId = requireNodeEnv('NETWORK_ID');
   process.env.VITE_NETWORK_ID = networkId;
-  process.env.VITE_CAPACITY_EXCHANGE_URL ??= `https://capacity-exchange.${networkId}.sundae.fi`;
-  process.env.VITE_SERVER_SEED_HEX = uint8ArrayToHex(loadWalletSeed(networkId));
+  process.env.VITE_CAPACITY_EXCHANGE_URL ??= networkId === 'mainnet'
+    ? 'https://capacity-exchange.sundae.fi'
+    : `https://capacity-exchange.${networkId}.sundae.fi`;
+  try {
+    process.env.VITE_SERVER_SEED_HEX = uint8ArrayToHex(loadWalletSeed(networkId));
+  } catch {
+    console.warn('No wallet seed found — server wallet (faucet) will be unavailable');
+  }
   return {
     define: {
       global: 'globalThis',
+    },
+    resolve: {
+      dedupe: ['effect'],
     },
     plugins: [
       react(),

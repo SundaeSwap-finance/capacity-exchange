@@ -43,8 +43,11 @@ export async function fetchCesPrices(
 ): Promise<FetchCesPricesResult> {
   console.debug('[CESSteps] Fetching ledger parameters from:', indexerUrl);
   const ledgerParameters = await getLedgerParameters(indexerUrl);
-  const specksRequired = tx.feesWithMargin(ledgerParameters, margin);
-  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString());
+
+  const estimated = tx.feesWithMargin(ledgerParameters, margin);
+  // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
+  const specksRequired = estimated > 0n ? estimated : 1n;
+  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString(), estimated === 0n ? '(floored from 0)' : '');
 
   const exchangeApis = createCesApis(capacityExchangeUrls);
   const prices = await fetchPricesFromExchanges(exchangeApis, specksRequired);

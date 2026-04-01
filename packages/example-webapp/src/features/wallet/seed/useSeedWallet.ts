@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { WalletCapabilities } from '../types';
 import type { SeedWalletStatus, SeedWalletState, SeedWalletInternals } from './types';
-import { connectSeedWallet } from './walletService';
+import { connectSeedWallet, type SyncProgressInfo } from './walletService';
 import { SeedWalletAdapter } from './SeedWalletAdapter';
 import type { NetworkConfig } from '../../../config';
 
@@ -13,12 +13,14 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
   const [wallet, setWallet] = useState<WalletCapabilities | null>(null);
   const [internals, setInternals] = useState<SeedWalletInternals | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [syncProgress, setSyncProgress] = useState<SyncProgressInfo | null>(null);
 
   // Reset connection when config changes
   useEffect(() => {
     setWallet(null);
     setInternals(null);
     setError(null);
+    setSyncProgress(null);
     setStatus('disconnected');
   }, [config]);
 
@@ -30,9 +32,12 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
 
       setStatus('connecting');
       setError(null);
+      setSyncProgress(null);
 
       try {
-        const connection = await connectSeedWallet(seed, config);
+        const connection = await connectSeedWallet(seed, config, (progress) => {
+          setSyncProgress(progress);
+        });
         const adapter = new SeedWalletAdapter(connection.walletFacade, connection.networkId);
         setWallet(adapter);
         setInternals({
@@ -52,6 +57,7 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
   const disconnect = useCallback(() => {
     setWallet(null);
     setInternals(null);
+    setSyncProgress(null);
     setStatus('disconnected');
     setError(null);
   }, []);
@@ -61,6 +67,7 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
     wallet,
     internals,
     error,
+    syncProgress,
     connect,
     disconnect,
   };

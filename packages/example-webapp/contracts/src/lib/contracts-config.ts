@@ -7,6 +7,7 @@ export interface TokenMintConfig {
   tokenColor: string;
   derivedTokenColor: string;
   privateStateId: string;
+  adminKeyHash: string;
 }
 
 export interface CounterConfig {
@@ -37,4 +38,10 @@ export function loadContractsConfig(networkId: string): ContractsConfig | null {
 export function saveContractsConfig(networkId: string, config: ContractsConfig): void {
   const configPath = getConfigPath(networkId);
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+
+  // Write a public config with sensitive fields stripped (served to browsers)
+  const { privateStateId, adminKeyHash, ...publicTokenMint } = config.tokenMint;
+  const publicConfig = { networkId, tokenMint: publicTokenMint, counter: config.counter };
+  const publicConfigPath = path.resolve(import.meta.dirname, '../..', `.contracts.${networkId}.public.json`);
+  fs.writeFileSync(publicConfigPath, JSON.stringify(publicConfig, null, 2) + '\n');
 }

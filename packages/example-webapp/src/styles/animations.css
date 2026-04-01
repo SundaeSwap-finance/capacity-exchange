@@ -1,0 +1,434 @@
+/* Animation keyframes and helpers. */
+
+@keyframes ces-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ces-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes ces-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ces-slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ces-step-widget-unpixelate {
+  0% {
+    opacity: 0.78;
+    filter: brightness(0.92);
+    transform: translateY(6px) scale(0.988);
+  }
+  45% {
+    opacity: 1;
+    filter: brightness(0.97);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ces-step-widget-dim {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(0.94);
+    transform: scale(1);
+  }
+}
+
+@keyframes ces-step-pixel-cover {
+  0% {
+    opacity: 1;
+    transform: scale(1.08);
+    background-color: rgb(0 0 0 / 0);
+    box-shadow: 0 0 0 0 rgb(0 0 0 / 0);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1.03);
+    background-color: rgb(0 0 0 / 0);
+    box-shadow: 0 0 0 0 rgb(0 0 0 / 0);
+  }
+  84% {
+    opacity: 1;
+    transform: scale(1.02);
+    background-color: rgb(0 0 0 / calc(var(--ces-step-pixel-black-alpha, 0.98) * 0.45));
+    box-shadow: 0 0 0 4px rgb(0 0 0 / calc(var(--ces-step-pixel-black-alpha, 0.98) * 0.55));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.02);
+    background-color: rgb(0 0 0 / var(--ces-step-pixel-black-alpha, 0.98));
+    box-shadow: 0 0 0 4px rgb(0 0 0 / var(--ces-step-pixel-black-alpha, 0.98));
+  }
+}
+
+@keyframes ces-step-pixel-reveal {
+  0% {
+    opacity: 1;
+    transform: scale(1.02);
+    background-color: rgb(0 0 0 / var(--ces-step-pixel-black-alpha, 0.98));
+    box-shadow: 0 0 0 4px rgb(0 0 0 / var(--ces-step-pixel-black-alpha, 0.98));
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.01);
+    background-color: rgb(0 0 0 / var(--ces-step-pixel-black-alpha, 0.98));
+    box-shadow: 0 0 0 4px rgb(0 0 0 / calc(var(--ces-step-pixel-black-alpha, 0.98) * 0.7));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.01);
+    background-color: rgb(0 0 0 / 0);
+    box-shadow: 0 0 0 0 rgb(0 0 0 / 0);
+  }
+}
+
+@keyframes ces-step-backdrop-cover {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes ces-step-backdrop-reveal {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ces-pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes ces-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ces-pixel-cell-reveal {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ces-pixel-overlay-shift {
+  0% {
+    color: rgb(var(--ces-black-950));
+  }
+  100% {
+    color: rgb(var(--ces-black-950));
+  }
+}
+
+@keyframes ces-thunk-green {
+  0% {
+    color: inherit;
+    transform: scale(1) translateY(0) rotateX(0deg);
+    text-shadow: none;
+    filter: brightness(1);
+  }
+  8% {
+    color: rgb(var(--ces-color-accent));
+    transform: scale(1.6) translateY(-12px) rotateX(-20deg);
+    text-shadow:
+      0 0 30px rgb(var(--ces-color-accent) / 1),
+      0 0 60px rgb(var(--ces-color-accent) / 0.6),
+      0 4px 8px rgb(var(--ces-black) / 0.4);
+    filter: brightness(1.8);
+  }
+  20% {
+    transform: scale(0.85) translateY(6px) rotateX(10deg);
+    text-shadow:
+      0 0 20px rgb(var(--ces-color-accent) / 0.8),
+      0 2px 4px rgb(var(--ces-black) / 0.3);
+  }
+  35% {
+    color: rgb(var(--ces-color-accent));
+    transform: scale(1.15) translateY(-3px) rotateX(-5deg);
+    text-shadow: 0 0 15px rgb(var(--ces-color-accent) / 0.6);
+    filter: brightness(1.3);
+  }
+  50% {
+    transform: scale(0.97) translateY(1px) rotateX(2deg);
+  }
+  65% {
+    color: rgb(var(--ces-color-accent));
+    transform: scale(1.03) translateY(0);
+    text-shadow: 0 0 8px rgb(var(--ces-color-accent) / 0.3);
+  }
+  100% {
+    color: inherit;
+    transform: scale(1) translateY(0) rotateX(0deg);
+    text-shadow: none;
+    filter: brightness(1);
+  }
+}
+
+@keyframes ces-dissolve-red {
+  0% {
+    color: inherit;
+    transform: scale(1);
+    text-shadow: none;
+    filter: blur(0) brightness(1);
+  }
+  8% {
+    color: rgb(var(--ces-color-danger));
+    transform: scale(1.2);
+    text-shadow:
+      0 0 20px rgb(var(--ces-color-danger) / 0.9),
+      0 0 40px rgb(var(--ces-color-danger) / 0.4);
+    filter: blur(0) brightness(1.5);
+  }
+  20% {
+    color: rgb(var(--ces-color-danger));
+    transform: scale(0.9);
+    filter: blur(2px) brightness(1.2);
+    text-shadow: 0 0 30px rgb(var(--ces-color-danger) / 0.6);
+  }
+  40% {
+    filter: blur(1px) brightness(1.1);
+    transform: scale(1.02);
+  }
+  60% {
+    color: rgb(var(--ces-color-danger));
+    filter: blur(0.5px);
+    text-shadow: 0 0 8px rgb(var(--ces-color-danger) / 0.3);
+  }
+  100% {
+    color: inherit;
+    transform: scale(1);
+    text-shadow: none;
+    filter: blur(0) brightness(1);
+  }
+}
+
+@keyframes ces-unpixelate-glyph {
+  0% {
+    opacity: 0;
+    filter: blur(0.18em) saturate(0.85);
+    transform: translate3d(var(--ces-unpixelate-jitter-x, 0), 0.12em, 0) scale(0.9);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0.07em) saturate(1);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0) saturate(1);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes ces-unpixelate-mask {
+  0% {
+    opacity: 0.95;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  65% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--ces-unpixelate-jitter-x, 0), var(--ces-unpixelate-jitter-y, 0), 0) scale(0.88);
+    filter: blur(0.03em);
+  }
+}
+
+@layer utilities {
+  .ces-unpixelate {
+    display: inline-flex;
+    align-items: baseline;
+    min-width: 0;
+    white-space: pre;
+  }
+
+  .ces-unpixelate-char,
+  .ces-unpixelate-gap {
+    display: inline-grid;
+  }
+
+  .ces-unpixelate-char {
+    position: relative;
+    place-items: center;
+  }
+
+  .ces-unpixelate-glyph {
+    grid-area: 1 / 1;
+    display: block;
+    opacity: 0;
+    animation: ces-unpixelate-glyph var(--ces-unpixelate-duration, 520ms) cubic-bezier(0.2, 0.9, 0.2, 1)
+      var(--ces-unpixelate-delay, 0ms) forwards;
+  }
+
+  .ces-unpixelate-mask {
+    grid-area: 1 / 1;
+    align-self: stretch;
+    justify-self: stretch;
+    pointer-events: none;
+    background:
+      linear-gradient(currentColor 0 0) 0 6% / 52% 34% no-repeat,
+      linear-gradient(currentColor 0 0) 48% 0 / 52% 38% no-repeat,
+      linear-gradient(currentColor 0 0) 10% 44% / 24% 24% no-repeat,
+      linear-gradient(currentColor 0 0) 34% 40% / 28% 28% no-repeat,
+      linear-gradient(currentColor 0 0) 62% 44% / 28% 24% no-repeat,
+      linear-gradient(currentColor 0 0) 8% 72% / 40% 28% no-repeat,
+      linear-gradient(currentColor 0 0) 48% 68% / 42% 32% no-repeat;
+    opacity: 0.95;
+    mix-blend-mode: screen;
+    animation: ces-unpixelate-mask var(--ces-unpixelate-duration, 520ms) steps(5, end)
+      var(--ces-unpixelate-delay, 0ms) forwards;
+  }
+
+  .ces-unpixelate-gap {
+    white-space: pre;
+  }
+
+  .ces-pixel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    overflow: hidden;
+    color: rgb(var(--ces-black-950));
+    animation: ces-pixel-overlay-shift 500ms linear 1 forwards;
+  }
+
+  .ces-pixel-overlay-cell {
+    position: absolute;
+    background: currentColor;
+    animation-name: ces-pixel-cell-reveal;
+    animation-timing-function: steps(2, end);
+    animation-fill-mode: forwards;
+  }
+
+  .ces-step-transition {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ces-step-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ces-step-widget-unpixelate {
+    animation: ces-step-widget-unpixelate 380ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+
+  .ces-step-widget-dim {
+    animation: ces-step-widget-dim 220ms ease-out forwards;
+  }
+
+  .ces-step-pixel-overlay {
+    position: fixed;
+    z-index: 30;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .ces-step-pixel-cell {
+    position: absolute;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    background-color: var(--ces-step-pixel-bg, rgb(0 0 0 / 0));
+    backdrop-filter: blur(var(--ces-step-pixel-blur, 10px)) saturate(1.1);
+    -webkit-backdrop-filter: blur(var(--ces-step-pixel-blur, 10px)) saturate(1.1);
+    transform: translateZ(0);
+    transform-origin: center;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+
+  .ces-step-pixel-overlay-cover .ces-step-pixel-cell {
+    opacity: 1;
+    animation-name: ces-step-pixel-cover;
+    animation-duration: var(--ces-step-pixel-cover-duration, 240ms);
+    animation-delay: var(--ces-step-pixel-delay, 0ms);
+    animation-timing-function: steps(3, end);
+    animation-fill-mode: forwards;
+  }
+
+  .ces-step-pixel-overlay-reveal .ces-step-pixel-cell {
+    opacity: 1;
+    animation-name: ces-step-pixel-reveal;
+    animation-duration: var(--ces-step-pixel-reveal-duration, 280ms);
+    animation-delay: var(--ces-step-pixel-delay, 0ms);
+    animation-timing-function: steps(5, end);
+    animation-fill-mode: forwards;
+  }
+
+  .ces-unicorn-backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgb(var(--ces-black) / 1);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ces-main-stage[data-step-transition-phase='covering'] .ces-unicorn-backdrop::after {
+    animation: ces-step-backdrop-cover 240ms ease-out forwards;
+  }
+
+  .ces-main-stage[data-step-transition-phase='revealing'] .ces-unicorn-backdrop::after {
+    animation: ces-step-backdrop-reveal 360ms ease-out forwards;
+  }
+
+  .ces-fade-in {
+    animation: ces-fade-in 200ms ease-out;
+  }
+
+  .ces-spinner {
+    @apply h-5 w-5 rounded-full border-2 border-ces-accent/30 border-t-ces-accent;
+    animation: ces-spin 0.6s linear infinite;
+  }
+
+  .ces-spinner-sm {
+    @apply h-4 w-4 rounded-full border-2 border-ces-accent/30 border-t-ces-accent;
+    animation: ces-spin 0.6s linear infinite;
+  }
+
+  .ces-flash-green {
+    display: inline-block;
+    animation: ces-thunk-green 1200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .ces-flash-red {
+    display: inline-block;
+    animation: ces-dissolve-red 1000ms ease-out forwards;
+  }
+}
+
+@media (prefers-reduced-motion) {
+  *, ::before, ::after {
+    animation: none !important;
+  }
+}
