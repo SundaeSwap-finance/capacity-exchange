@@ -11,4 +11,4 @@ export { Message } from './Message';
 export { Modal } from './Modal';
 export { SecretInput } from './SecretInput';
 export { Tooltip } from './Tooltip';
-export { UnpixelatedText } from './UnpixelatedText';
+export { UnscrambleText } from './UnscrambleText';
