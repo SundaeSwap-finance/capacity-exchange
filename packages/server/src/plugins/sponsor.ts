@@ -23,6 +23,7 @@ export default fp(async (fastify: FastifyInstance) => {
     fastify.config.sponsoredContracts,
     fastify.config.endpoints.indexerHttpUrl,
     fastify.log,
+    fastify.config.cesWalletProvider,
   );
   fastify.decorate('sponsorService', service);
   fastify.log.info("SponsorService init'd");

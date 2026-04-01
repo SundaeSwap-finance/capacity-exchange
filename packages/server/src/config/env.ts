@@ -15,6 +15,8 @@ const AppEnvSchema = Type.Object({
   OFFER_TTL_SECONDS: Type.Number(),
   PROOF_SERVER_URL: Type.Optional(Type.String()),
   WALLET_STATE_DIR: Type.String(),
+  CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
+  PREFERRED_EXCHANGE_CURRENCY: Type.Optional(Type.String()),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -35,6 +37,8 @@ export function parseAppEnv(): AppEnv {
     OFFER_TTL_SECONDS: process.env.OFFER_TTL_SECONDS ? Number(process.env.OFFER_TTL_SECONDS) : undefined,
     PROOF_SERVER_URL: process.env.PROOF_SERVER_URL,
     WALLET_STATE_DIR: process.env.WALLET_STATE_DIR,
+    CAPACITY_EXCHANGE_PEER_URLS: process.env.CAPACITY_EXCHANGE_PEER_URLS,
+    PREFERRED_EXCHANGE_CURRENCY: process.env.PREFERRED_EXCHANGE_CURRENCY,
   };
 
   if (!Value.Check(AppEnvSchema, env)) {
