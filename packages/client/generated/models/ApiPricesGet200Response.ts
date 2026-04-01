@@ -29,6 +29,12 @@ import {
 export interface ApiPricesGet200Response {
     /**
      * 
+     * @type {string}
+     * @memberof ApiPricesGet200Response
+     */
+    quoteId: string;
+    /**
+     * 
      * @type {Array<ApiPricesGet200ResponsePricesInner>}
      * @memberof ApiPricesGet200Response
      */
@@ -39,6 +45,7 @@ export interface ApiPricesGet200Response {
  * Check if a given object implements the ApiPricesGet200Response interface.
  */
 export function instanceOfApiPricesGet200Response(value: object): value is ApiPricesGet200Response {
+    if (!('quoteId' in value) || value['quoteId'] === undefined) return false;
     if (!('prices' in value) || value['prices'] === undefined) return false;
     return true;
 }
@@ -53,6 +60,7 @@ export function ApiPricesGet200ResponseFromJSONTyped(json: any, ignoreDiscrimina
     }
     return {
         
+        'quoteId': json['quoteId'],
         'prices': ((json['prices'] as Array<any>).map(ApiPricesGet200ResponsePricesInnerFromJSON)),
     };
 }
@@ -68,6 +76,7 @@ export function ApiPricesGet200ResponseToJSONTyped(value?: ApiPricesGet200Respon
 
     return {
         
+        'quoteId': value['quoteId'],
         'prices': ((value['prices'] as Array<any>).map(ApiPricesGet200ResponsePricesInnerToJSON)),
     };
 }

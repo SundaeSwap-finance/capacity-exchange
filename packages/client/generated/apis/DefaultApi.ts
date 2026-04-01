@@ -15,6 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiMetricsGet200Response,
   ApiOffersPost201Response,
   ApiOffersPostRequest,
   ApiPricesGet200Response,
@@ -26,6 +27,8 @@ import type {
   HealthReadyGet200Response,
 } from '../models/index';
 import {
+    ApiMetricsGet200ResponseFromJSON,
+    ApiMetricsGet200ResponseToJSON,
     ApiOffersPost201ResponseFromJSON,
     ApiOffersPost201ResponseToJSON,
     ApiOffersPostRequestFromJSON,
@@ -62,6 +65,33 @@ export interface ApiSponsorPostOperationRequest {
  * 
  */
 export class DefaultApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async apiMetricsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMetricsGet200Response>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/metrics`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiMetricsGet200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiMetricsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMetricsGet200Response> {
+        const response = await this.apiMetricsGetRaw(initOverrides);
+        return await response.value();
+    }
 
     /**
      */
