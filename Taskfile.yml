@@ -256,6 +256,12 @@ tasks:
     cmds:
       - bun run fix
 
+  regenerate-client:
+    desc: Regenerate client with latest schema from server
+    deps: [_build:install]
+    cmds:
+      - bun run regenerate-client
+
   clean:
     desc: Clean build artifacts and generated files
     cmds:

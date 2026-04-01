@@ -20,7 +20,7 @@ import metricsRoutes from './routes/metrics.js';
 import type { AppConfig } from './loadConfig.js';
 import { readFileSync } from 'fs';
 
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
+const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -35,6 +35,19 @@ export async function buildApp(
   const app = Fastify(opts).withTypeProvider<TypeBoxTypeProvider>();
   app.decorate('config', config);
   app.register(cors, { origin: '*' });
+  await app.register(errorHandler);
+  await app.register(walletPlugin);
+  await app.register(txPlugin);
+  await app.register(pricesPlugin);
+  await app.register(quotePlugin);
+  await app.register(metricsPlugin);
+  await app.register(offerPlugin);
+  await app.register(sponsorPlugin);
+  registerRoutes(app);
+  return app;
+}
+
+export async function registerRoutes(app: FastifyInstance) {
   await app.register(swagger, {
     openapi: {
       info: {
@@ -46,19 +59,10 @@ export async function buildApp(
   await app.register(swaggerUi, {
     routePrefix: '/docs',
   });
-  await app.register(errorHandler);
-  await app.register(walletPlugin);
-  await app.register(txPlugin);
-  await app.register(pricesPlugin);
-  await app.register(quotePlugin);
-  await app.register(metricsPlugin);
-  await app.register(offerPlugin);
-  await app.register(sponsorPlugin);
   app.register(rootRoutes);
   app.register(healthRoutes, { prefix: '/health' });
   app.register(priceRoutes, { prefix: '/api' });
   app.register(offerRoutes, { prefix: '/api' });
   app.register(sponsorRoutes, { prefix: '/api' });
   app.register(metricsRoutes, { prefix: '/api' });
-  return app;
 }

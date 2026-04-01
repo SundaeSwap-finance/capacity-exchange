@@ -112,11 +112,7 @@ In production (mainnet), set `WALLET_MNEMONIC_FILE` or `WALLET_SEED_FILE` explic
 
 ## Generating the Client
 
-The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate:
-
-1. Start the server: `NETWORK_ID=preview task dev:server`
-2. Download the spec: `curl http://localhost:3000/docs/json > packages/client/openapi.json`
-3. Generate: `cd packages/client && bun run generate-client`
+The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate, run `task regenerate-client`.
 
 ## Security Notes
 
