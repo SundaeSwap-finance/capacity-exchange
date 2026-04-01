@@ -9,9 +9,11 @@ function CurrencyOption({ exchangePrice, onSelect }: { exchangePrice: ExchangePr
       onClick={onSelect}
       className="w-full p-3 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-left transition-colors"
     >
-      <div className="flex justify-between items-center">
-        <span className="text-white font-medium font-mono text-sm break-all">{exchangePrice.price.currency}</span>
-        <span className="text-dark-300 font-mono">{exchangePrice.price.amount}</span>
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <span className="min-w-0 text-white font-medium font-mono text-sm break-all">
+          {exchangePrice.price.currency}
+        </span>
+        <span className="shrink-0 text-dark-300 font-mono">{exchangePrice.price.amount}</span>
       </div>
     </button>
   );

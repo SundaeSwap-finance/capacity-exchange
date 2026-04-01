@@ -21,24 +21,24 @@ export function OfferConfirmationModal({ offer, specksRequired, onConfirm }: Off
         </BoxedLabelValue>
         <BoxedLabelValue label="Offer ID">{offer.offerId}</BoxedLabelValue>
       </div>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 gap-2">
         <Button
           variant="ghost"
-          className="flex-1 border border-dark-600 hover:border-dark-500"
+          className="min-w-0 flex-1 border border-dark-600 hover:border-dark-500"
           onClick={() => onConfirm({ status: 'back' })}
         >
           Back
         </Button>
         <Button
           variant="ghost"
-          className="flex-1 border border-dark-600 hover:border-dark-500"
+          className="min-w-0 flex-1 border border-dark-600 hover:border-dark-500"
           onClick={() => onConfirm({ status: 'cancelled' })}
         >
           Cancel
         </Button>
         <Button
           variant="green"
-          className="flex-1"
+          className="min-w-0 flex-1"
           disabled={isExpired}
           onClick={() => onConfirm({ status: 'confirmed' })}
         >

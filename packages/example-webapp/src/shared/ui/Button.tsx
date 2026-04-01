@@ -37,7 +37,7 @@ export function Button({
         ${VARIANTS[variant]}
         ${SIZES[size]}
         ${fullWidth ? 'w-full' : ''}
-        rounded transition-colors
+        min-w-0 rounded transition-colors
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}
