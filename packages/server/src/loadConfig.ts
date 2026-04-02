@@ -12,6 +12,9 @@ export interface AppConfig {
   port: number;
   quoteTtlSeconds: number;
   offerTtlSeconds: number;
+  otelServiceName?: string;
+  otelEndpoint?: string;
+  otelMetricExportIntervalMs?: number;
   endpoints: NetworkEndpoints;
   priceFormulas: PriceFormula[];
   sponsorAll: boolean;
@@ -42,6 +45,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     port: env.PORT,
     quoteTtlSeconds: env.QUOTE_TTL_SECONDS,
     offerTtlSeconds: env.OFFER_TTL_SECONDS,
+    otelServiceName: env.OTEL_SERVICE_NAME,
+    otelEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+    otelMetricExportIntervalMs: env.OTEL_METRIC_EXPORT_INTERVAL_MS,
     endpoints,
     priceFormulas: priceConfig.priceFormulas,
     quoteSecretFile: env.QUOTE_SECRET_FILE,

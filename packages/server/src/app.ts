@@ -11,6 +11,7 @@ import quotePlugin from './plugins/quote.js';
 import txPlugin from './plugins/tx.js';
 import metricsPlugin from './plugins/metrics.js';
 import errorHandler from './plugins/error-handler.js';
+import observability from './plugins/observability.js';
 import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/offers.js';
@@ -18,9 +19,7 @@ import sponsorRoutes from './routes/sponsor.js';
 import priceRoutes from './routes/prices.js';
 import metricsRoutes from './routes/metrics.js';
 import type { AppConfig } from './loadConfig.js';
-import { readFileSync } from 'fs';
-
-const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+import { packageName, packageVersion } from './packageInfo.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -36,6 +35,7 @@ export async function buildApp(
   app.decorate('config', config);
   app.register(cors, { origin: '*' });
   await app.register(errorHandler);
+  await app.register(observability);
   await app.register(walletPlugin);
   await app.register(txPlugin);
   await app.register(pricesPlugin);
@@ -51,8 +51,8 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(swagger, {
     openapi: {
       info: {
-        title: packageJson.name,
-        version: packageJson.version,
+        title: packageName,
+        version: packageVersion,
       },
     },
   });
