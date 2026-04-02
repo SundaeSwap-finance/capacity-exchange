@@ -10,7 +10,7 @@ new type IpAddress = Either<Ipv4, Ipv6>;
 
 new type Port = Bytes<2>;
 
-new type PublicKeyHash = Field;
+new type PublicKeyHash = Bytes<32>;
 
 new type UnixTimestampSeconds = Uint<64>;
 
@@ -26,8 +26,27 @@ export ledger nonce: Counter;
 
 export ledger registry: Map<PublicKeyHash, Entry>;
 
+export ledger collateralAmount: Uint<128>;
+
 witness secretKey(): Bytes<64>;
 
-constructor(adminKey: Field) {
+constructor(adminKey: Field, requiredCollateral: Uint<128>) {
   aggregateAdminKey = disclose(adminKey);
+  collateralAmount = disclose(requiredCollateral);
+}
+
+export circuit registerServer(entry: Entry): [] {
+  const disclosedEntry = disclose(entry);
+  assert(blockTimeGte((disclosedEntry.validTo as Uint<64>) - 2592000),
+         "validTo cannot be more than 30 days in the future"
+         );
+  const key = disclose(hashKey(secretKey()));
+  assert(!registry.member(key), "you already have an entry registered");
+  receiveUnshielded(nativeToken(), collateralAmount);
+
+  registry.insert(key, disclosedEntry);
+}
+
+circuit hashKey(key: Bytes<64>): PublicKeyHash {
+  return persistentHash<Bytes<64>>(key) as PublicKeyHash;
 }
