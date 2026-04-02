@@ -79,9 +79,7 @@ All network-aware tasks require `NETWORK_ID=<network>` (e.g., `preview`, `undepl
 │   ├── client/               # Auto-generated OpenAPI client
 │   ├── components/           # High-level CES components
 │   ├── server/               # CES server
-│   ├── example-webapp/       # Example CES webapp + Compact contracts
-│   ├── bridge-contracts/     # Bridge Compact contracts
-│   └── bridge-webapp/        # Bridge webapp
+│   └── example-webapp/       # Example CES webapp + Compact contracts
 ```
 
 ## External Services
@@ -95,8 +93,6 @@ The example webapp setup (preview) depends on these services:
 | Midnight indexer | `https://indexer.preview.midnight.network/api/v3/graphql` | No — public endpoint |
 
 For other networks (preprod, mainnet), you must provide your own proof server via `PROOF_SERVER_URL` in the server's `.env`. Network endpoints are configured in `packages/midnight-core/src/networks.ts`.
-
-The bridge webapp additionally requires a [Blockfrost](https://blockfrost.io/) API key (`VITE_BLOCKFROST_PROJECT_ID`). After running the rest of setup, you should provide this in `packages/bridge-contracts/.env.example`.
 
 ## Wallet Configuration
 

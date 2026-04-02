@@ -83,17 +83,6 @@ tasks:
     generates:
       - '{{.COMPACTC_BIN}}'
 
-  # --- Bridge contracts ---
-
-  compile-bridge-contracts:
-    run: once
-    status:
-      - test -d {{.ROOT_DIR}}/packages/bridge-contracts/vault/out
-    env:
-      COMPACTC: '{{.COMPACTC_BIN}}'
-    cmds:
-      - bun run --cwd {{.ROOT_DIR}}/packages/bridge-contracts compile
-
   # --- Typecheck ---
 
   typecheck-example-contracts:
@@ -101,14 +90,8 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/example-contracts build
 
-  typecheck-bridge-contracts:
-    deps: [components, compile-bridge-contracts]
-    cmds:
-      - bun run --filter @capacity-exchange/bridge-contracts build
-
   # TODO: Also typecheck test directories (packages/*/tests)
   build-all:
-    deps: [libs, server, typecheck-example-contracts, typecheck-bridge-contracts]
+    deps: [libs, server, typecheck-example-contracts]
     cmds:
       - bun run --filter @capacity-exchange/example-webapp typecheck
-      - bun run --filter @capacity-exchange/bridge-webapp typecheck
