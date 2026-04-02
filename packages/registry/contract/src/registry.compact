@@ -20,10 +20,6 @@ struct Entry {
   port: Port,
 }
 
-export ledger aggregateAdminKey: Field;
-
-export ledger nonce: Counter;
-
 export ledger registry: Map<RegistryKey, Entry>;
 
 export ledger collateralAmount: Uint<128>;
@@ -32,12 +28,9 @@ export ledger maximumValidityInterval: UnixTimestampSeconds;
 
 witness secretKey(): Bytes<64>;
 
-constructor(adminKey: Field,
-            requiredCollateral: Uint<128>,
-            maximumValidityInterval: UnixTimestampSeconds
-            ) {
-  aggregateAdminKey = disclose(adminKey);
+constructor(requiredCollateral: Uint<128>, maxValidityInterval: UnixTimestampSeconds) {
   collateralAmount = disclose(requiredCollateral);
+  maximumValidityInterval = disclose(maxValidityInterval);
 }
 
 export circuit registerServer(entry: Entry): [] {
