@@ -11,6 +11,7 @@ import quotePlugin from './plugins/quote.js';
 import txPlugin from './plugins/tx.js';
 import metricsPlugin from './plugins/metrics.js';
 import errorHandler from './plugins/error-handler.js';
+import observability from './plugins/observability.js';
 import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/offers.js';
@@ -36,6 +37,7 @@ export async function buildApp(
   app.decorate('config', config);
   app.register(cors, { origin: '*' });
   await app.register(errorHandler);
+  await app.register(observability);
   await app.register(walletPlugin);
   await app.register(txPlugin);
   await app.register(pricesPlugin);
