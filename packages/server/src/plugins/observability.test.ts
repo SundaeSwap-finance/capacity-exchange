@@ -6,9 +6,13 @@ const mockAdd = vi.fn();
 const mockRecord = vi.fn();
 vi.mock('../meter.js', () => ({
   meterService: {
+    counter: () => () => ({ add: mockAdd }),
+    histogram: () => () => ({ record: mockRecord }),
+    gauge: () => {},
     getMeter: () => ({
       createCounter: () => ({ add: mockAdd }),
       createHistogram: () => ({ record: mockRecord }),
+      createObservableGauge: () => ({ addCallback: () => {} }),
     }),
   },
 }));

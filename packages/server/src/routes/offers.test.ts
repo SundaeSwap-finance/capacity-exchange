@@ -10,6 +10,7 @@ const quoteService = new QuoteService(10, randomBytes(32));
 const stub = Object.create(OfferService.prototype) as OfferService;
 stub.createOffer = vi.fn(async (req) => ({
   status: 'ok' as const,
+  source: 'built' as const,
   offer: {
     offerId: 'test-id',
     offerAmount: '1000',
@@ -17,6 +18,8 @@ stub.createOffer = vi.fn(async (req) => ({
     serializedTx: 'deadbeef',
     expiresAt: new Date().toISOString(),
   },
+  specksCommitted: 1000n,
+  revenueCommitted: { amount: 100n, currency: req.offerCurrency },
 }));
 
 describe('POST /api/offers', () => {
