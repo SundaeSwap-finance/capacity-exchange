@@ -51,12 +51,12 @@ export class SponsorService {
     this.logger = logger;
   }
 
-  @recordDuration('ces.sponsors.duration_ms', 'Sponsor tx duration')
+  @recordDuration('ces.sponsor.duration_ms', 'Sponsor tx duration')
   @recordCounters(
     {
-      name: 'ces.txs.sponsored',
-      description: 'Transactions sponsored',
-      extract: (result: SponsorTxResult) => result.status === 'ok' ? { value: 1 } : null,
+      name: 'ces.sponsor.result',
+      description: 'Sponsor results by status',
+      extract: (result: SponsorTxResult) => ({ value: 1, attributes: { status: result.status } }),
     },
     {
       name: 'ces.dust.committed_specks',

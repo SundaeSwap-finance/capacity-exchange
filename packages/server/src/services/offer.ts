@@ -63,9 +63,13 @@ export class OfferService {
    * kicks-off a new build.
   */
   @recordCounters({
-    name: 'ces.offers.created',
-    description: 'Offers by source',
-    extract: (result: CreateOfferResult) => result.status === 'ok' ? { value: 1, attributes: { source: result.source } } : null,
+    name: 'ces.offer.result',
+    description: 'Offer results by status',
+    extract: (result: CreateOfferResult) => {
+      const attrs: Record<string, string> = { status: result.status };
+      if (result.status === 'ok') attrs.source = result.source;
+      return { value: 1, attributes: attrs };
+    },
   })
   async createOffer(request: CreateOfferRequest): Promise<CreateOfferResult> {
     const cacheKey = `${request.quoteId}:${request.offerCurrency}`;
@@ -96,7 +100,7 @@ export class OfferService {
   }
 
   /** Locks a UTXO, calculates the price, proves the tx, and caches the result. */
-  @recordDuration('ces.offers.build_duration_ms', 'Offer build duration')
+  @recordDuration('ces.offer.build_duration_ms', 'Offer build duration')
   @recordCounters(
     {
       name: 'ces.dust.committed_specks',
