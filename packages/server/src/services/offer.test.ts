@@ -4,6 +4,7 @@ import type { UtxoService } from './utxo.js';
 import type { TxService } from './tx.js';
 import type { PriceService } from './price.js';
 import type { MetricsService } from './metrics.js';
+
 import pino from 'pino';
 
 const logger = pino({ level: 'silent' });

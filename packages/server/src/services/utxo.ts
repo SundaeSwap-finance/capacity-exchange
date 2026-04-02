@@ -1,5 +1,6 @@
 import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { FastifyBaseLogger } from 'fastify';
+import { meterService } from '../meter.js';
 import { WalletService } from './wallet.js';
 import { LRUCache } from 'lru-cache';
 
@@ -41,6 +42,14 @@ export class UtxoService {
     this.lockedUtxos = new LRUCache<string, UtxoLock>({
       ttl: utxoLockTtlSeconds * 1000,
       ttlAutopurge: true,
+    });
+
+    meterService.gauge('ces.utxo.locked_count', 'Currently locked UTXOs', () => this.getLockedUtxoStats().count);
+    meterService.gauge('ces.utxo.locked_specks', 'Specks locked in outstanding offers', () => Number(this.getLockedUtxoStats().totalSpecks));
+    meterService.gauge('ces.utxo.total_count', 'Total available UTXOs', () => this.getTotalUtxoCount());
+    meterService.gauge('ces.utxo.total_specks', 'Total available specks', () => {
+      const state = this.walletService.state;
+      return state ? Number(state.balance(new Date())) : 0;
     });
   }
 

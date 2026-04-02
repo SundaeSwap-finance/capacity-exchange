@@ -19,6 +19,12 @@ class MeterService {
     let h: Histogram | undefined;
     return () => (h ??= this.getMeter().createHistogram(name, { description, unit: 'ms' }));
   }
+
+  gauge(name: string, description: string, getValue: () => number): void {
+    this.getMeter()
+      .createObservableGauge(name, { description })
+      .addCallback((obs) => obs.observe(getValue()));
+  }
 }
 
 export const meterService = new MeterService('capacity-exchange-server');

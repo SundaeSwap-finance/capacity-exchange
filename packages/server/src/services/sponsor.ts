@@ -1,4 +1,5 @@
 import { FastifyBaseLogger } from 'fastify';
+import { recordDuration, recordCounters } from '../decorators/record-metrics.js';
 import {
   ContractCall,
   type ContractAction,
@@ -16,12 +17,12 @@ import { TxService } from './tx.js';
 import { MetricsService } from './metrics.js';
 import type { SponsoredContract } from '../config/prices.js';
 
-const FEE_MARGIN_BLOCKS = 2;
-
 export type SponsorTxResult =
-  | { status: 'ok'; tx: FinalizedTransaction }
+  | { status: 'ok'; tx: FinalizedTransaction; specksCommitted: bigint }
   | { status: 'ineligible' }
   | WalletUnavailableResult;
+
+const FEE_MARGIN_BLOCKS = 2;
 
 export class SponsorService {
   private readonly utxoService: UtxoService;
@@ -50,6 +51,19 @@ export class SponsorService {
     this.logger = logger;
   }
 
+  @recordDuration('ces.sponsors.duration_ms', 'Sponsor tx duration')
+  @recordCounters(
+    {
+      name: 'ces.txs.sponsored',
+      description: 'Transactions sponsored',
+      extract: (result: SponsorTxResult) => result.status === 'ok' ? { value: 1 } : null,
+    },
+    {
+      name: 'ces.dust.committed_specks',
+      description: 'Specks committed via sponsorship',
+      extract: (result: SponsorTxResult) => result.status === 'ok' ? { value: Number(result.specksCommitted) } : null,
+    },
+  )
   async sponsorTx(userTx: UnboundTransaction): Promise<SponsorTxResult> {
     if (!this.isEligible(userTx)) {
       return { status: 'ineligible' };
@@ -80,7 +94,7 @@ export class SponsorService {
 
     this.metricsService.recordDustUsage(estimatedSpecks);
 
-    return { status: 'ok', tx: boundTx };
+    return { status: 'ok', tx: boundTx, specksCommitted: estimatedSpecks };
   }
 
   /**
