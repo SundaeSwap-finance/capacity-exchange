@@ -1,5 +1,5 @@
 import React from 'react';
-import { getNightBalance, specksToNight } from '@capacity-exchange/midnight-core';
+import { getNightBalance, starsToNight } from '@capacity-exchange/midnight-core';
 import { LabelValue } from '../../../shared/ui';
 import { formatDust } from '../../../utils/format';
 
@@ -9,7 +9,7 @@ interface BalanceGridProps {
 }
 
 export function BalanceGrid({ dustBalance, nightBalances }: BalanceGridProps) {
-  const nightDisplay = specksToNight(getNightBalance(nightBalances)) || '-';
+  const nightDisplay = starsToNight(getNightBalance(nightBalances)) || '-';
 
   return (
     <div className="grid grid-cols-2 gap-3">

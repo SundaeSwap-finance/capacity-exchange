@@ -10,7 +10,6 @@ export type CesFlowStatus =
   | 'building'
   | 'selecting-currency'
   | 'fetching-offers'
-  | 'confirming'
   | 'submitting'
   | 'success'
   | 'error';

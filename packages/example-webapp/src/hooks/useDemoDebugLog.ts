@@ -214,8 +214,6 @@ export function useDemoDebugLog({
         appendEntry('CES', 'info', 'DUST requirement priced — awaiting token selection');
       } else if (cesStatus === 'fetching-offers') {
         appendEntry('CES', 'info', 'requesting live capacity exchange quote');
-      } else if (cesStatus === 'confirming') {
-        appendEntry('CES', 'success', 'exchange offer received — awaiting user confirmation');
       } else if (cesStatus === 'submitting') {
         appendEntry('TX', 'info', 'submitting exchange + counter transaction to network');
       } else if (cesStatus === 'idle' && prevCesStatusRef.current !== 'idle') {

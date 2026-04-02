@@ -13,6 +13,7 @@ import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnigh
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
+import { MetricsService } from './metrics.js';
 import type { SponsoredContract } from '../config/prices.js';
 
 const FEE_MARGIN_BLOCKS = 2;
@@ -25,6 +26,7 @@ export type SponsorTxResult =
 export class SponsorService {
   private readonly utxoService: UtxoService;
   private readonly txService: TxService;
+  private readonly metricsService: MetricsService;
   private readonly sponsorAll: boolean;
   private readonly sponsoredContracts: SponsoredContract[];
   private readonly indexerUrl: string;
@@ -34,6 +36,7 @@ export class SponsorService {
   constructor(
     utxoService: UtxoService,
     txService: TxService,
+    metricsService: MetricsService,
     sponsorAll: boolean,
     sponsoredContracts: SponsoredContract[],
     indexerUrl: string,
@@ -42,6 +45,7 @@ export class SponsorService {
   ) {
     this.utxoService = utxoService;
     this.txService = txService;
+    this.metricsService = metricsService;
     this.sponsorAll = sponsorAll;
     this.sponsoredContracts = sponsoredContracts;
     this.indexerUrl = indexerUrl;
@@ -75,16 +79,18 @@ export class SponsorService {
       return lockResult;
     }
 
-    const { spend, expiresAtMillis } = lockResult.value;
+    const { spend, syncTime, expiresAtMillis } = lockResult.value;
     const ttl = new Date(expiresAtMillis);
 
-    const dustTx = await this.txService.createDustOnlyTx(spend, ttl);
+    const dustTx = await this.txService.createDustOnlyTx(spend, syncTime, ttl);
     this.logger.debug('Dust-only tx proven');
 
     const mergedTx = dustTx.merge(userTx);
     const boundTx = mergedTx.bind();
 
     this.logger.debug('Merged and bound dust tx with user tx');
+
+    this.metricsService.recordDustUsage(estimatedSpecks);
 
     return { status: 'ok', tx: boundTx };
   }

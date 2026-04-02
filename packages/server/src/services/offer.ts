@@ -2,6 +2,7 @@ import { FastifyBaseLogger } from 'fastify';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
+import { MetricsService } from './metrics.js';
 import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
 
 export interface CreateOfferRequest {
@@ -30,17 +31,20 @@ export class OfferService {
   private readonly utxoService: UtxoService;
   private readonly txService: TxService;
   private readonly priceService: PriceService;
+  private readonly metricsService: MetricsService;
   private readonly logger: FastifyBaseLogger;
 
   constructor(
     utxoService: UtxoService,
     txService: TxService,
     priceService: PriceService,
+    metricsService: MetricsService,
     logger: FastifyBaseLogger,
   ) {
     this.utxoService = utxoService;
     this.txService = txService;
     this.priceService = priceService;
+    this.metricsService = metricsService;
     this.logger = logger;
   }
 
@@ -68,6 +72,7 @@ export class OfferService {
     const tx = await this.txService.createOfferTx(
       coin,
       lockedInfo.spend,
+      lockedInfo.syncTime,
       expiration,
       request.segmentId,
     );
@@ -79,6 +84,9 @@ export class OfferService {
       serializedTx: Buffer.from(tx.serialize()).toString('hex'),
       expiresAt: expiration.toISOString(),
     };
+
+    this.metricsService.recordDustUsage(specks);
+    this.metricsService.recordRevenue(request.offerCurrency, getPriceResult.price);
 
     return { status: 'ok', offer };
   }

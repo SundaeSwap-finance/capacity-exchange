@@ -3,6 +3,7 @@ import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/componen
 import type { WalletProviders } from '../features/interactions/useWalletProviders';
 import { findAndMintTokens } from '../features/ces/tokenMintContract';
 import { useNetworkConfig } from '../config';
+import { withDustRetry } from '../utils/retry';
 
 export type SponsoredMintStatus = 'idle' | 'building' | 'submitting' | 'success' | 'error';
 
@@ -45,7 +46,10 @@ export function useSponsoredMint(providers: WalletProviders | null): UseSponsore
           capacityExchangeUrl: config.capacityExchangeUrl,
         });
 
-        await findAndMintTokens(providers.midnightProvider, walletProvider, contractAddress, amount, config);
+        await withDustRetry(
+          () => findAndMintTokens(providers.midnightProvider, walletProvider, contractAddress, amount, config),
+          { onRetry: (attempt) => console.warn(`[SponsoredMint] Dust proof error, retrying (${attempt}/3)`) },
+        );
         setStatus('success');
       } catch (err) {
         console.error('[SponsoredMint] Error:', err);

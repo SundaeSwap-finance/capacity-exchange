@@ -43,7 +43,7 @@ export function TutorialShell({
         <header className="relative z-20 flex min-h-[46px] border-b border-ces-border">
           <div className="flex min-w-0 flex-1 items-center gap-5 px-4 sm:px-6 lg:px-8">
             <div className="flex h-[46px] w-[46px] items-center justify-center border-r border-ces-border bg-ces-accent text-black">
-              <span className="font-display text-xl leading-none">M</span>
+              <span className="font-display text-base leading-none tracking-[-0.08em]">CE</span>
             </div>
             <StepIndicator currentStep={currentStep} completedSteps={completedSteps} onStepClick={onStepClick} />
           </div>

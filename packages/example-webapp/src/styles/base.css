@@ -9,6 +9,27 @@
 
   html {
     scrollbar-gutter: stable;
+    scrollbar-color: rgb(var(--ces-color-border)) transparent;
+    scrollbar-width: thin;
+  }
+
+  /* Webkit (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--ces-color-border));
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--ces-color-text-muted));
   }
 
   body {

@@ -15,3 +15,5 @@ keys.json
 .env
 **/public/midnight/
 load-test-results.json
+.admin-key.json
+.wallet-state-*/

@@ -4,11 +4,10 @@ import { RotatingStatusText } from '../components/RotatingStatusText';
 import { CounterCard } from '../components/CounterCard';
 import { TokenBalanceCard } from '../components/TokenBalanceCard';
 import { TransactionProgress } from '../components/TransactionProgress';
-import { useCountdown } from '../lib/hooks/useCountdown';
 import { formatDust } from '../utils/format';
 import type { WalletData } from '../features/wallet/types';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
-import type { ExchangePrice, CurrencySelectionResult, OfferConfirmationResult } from '../features/ces/types';
+import type { ExchangePrice, CurrencySelectionResult } from '../features/ces/types';
 import { resolveTokenLabel } from '../utils/tokenLabels';
 
 interface PaidExchangeStepProps {
@@ -17,6 +16,8 @@ interface PaidExchangeStepProps {
   counterValue: string | null;
   mintedTokenColor: string | null;
   onCesSuccess: () => void;
+  hasGraduated?: boolean;
+  onSkipToPlayground?: () => void;
 }
 
 function getTokenBalance(walletData: WalletData | null): bigint {
@@ -51,6 +52,8 @@ export function PaidExchangeStep({
   counterValue,
   mintedTokenColor,
   onCesSuccess,
+  hasGraduated = false,
+  onSkipToPlayground,
 }: PaidExchangeStepProps) {
   return (
     <CesCounterAction
@@ -59,6 +62,8 @@ export function PaidExchangeStep({
       counterValue={counterValue}
       mintedTokenColor={mintedTokenColor}
       onSuccess={onCesSuccess}
+      hasGraduated={hasGraduated}
+      onSkipToPlayground={onSkipToPlayground}
     />
   );
 }
@@ -69,20 +74,22 @@ function CesCounterAction({
   counterValue,
   mintedTokenColor,
   onSuccess,
+  hasGraduated,
+  onSkipToPlayground,
 }: {
   cesTransaction: UseCesTransactionResult;
   walletData: WalletData | null;
   counterValue: string | null;
   mintedTokenColor: string | null;
   onSuccess: () => void;
+  hasGraduated: boolean;
+  onSkipToPlayground?: () => void;
 }) {
   const {
     status,
     error,
     currencySelection,
-    offerConfirmation,
     onCurrencySelected,
-    onOfferConfirmed,
     incrementCounter,
     dismissOffer,
   } = cesTransaction;
@@ -106,29 +113,21 @@ function CesCounterAction({
       label: 'Prepare private registration payload',
       status: (status === 'building'
         ? 'active'
-        : ['selecting-currency', 'fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
+        : ['selecting-currency', 'fetching-offers', 'submitting', 'success'].includes(status)
           ? 'done'
           : 'waiting') as 'active' | 'done' | 'waiting',
     },
     {
       label: 'Choose asset to satisfy DUST',
       status: (status === 'selecting-currency'
-        ? 'active'
-        : ['fetching-offers', 'confirming', 'submitting', 'success'].includes(status)
+        ? 'input'
+        : ['fetching-offers', 'submitting', 'success'].includes(status)
           ? 'done'
-          : 'waiting') as 'active' | 'done' | 'waiting',
+          : 'waiting') as 'active' | 'input' | 'done' | 'waiting',
     },
     {
-      label: 'Request live exchange quote',
-      status: (status === 'fetching-offers'
-        ? 'active'
-        : ['confirming', 'submitting', 'success'].includes(status)
-          ? 'done'
-          : 'waiting') as 'active' | 'done' | 'waiting',
-    },
-    {
-      label: 'Confirm & register user',
-      status: (status === 'confirming' || status === 'submitting'
+      label: 'Exchange & submit',
+      status: (status === 'fetching-offers' || status === 'submitting'
         ? 'active'
         : status === 'success'
           ? 'done'
@@ -138,23 +137,31 @@ function CesCounterAction({
 
   return (
     <div className="ces-step-stack">
-      <NarrativeCard heading="Register This User" variant="accent">
-        <p>Popular dApps may not have enough DUST to cover every transaction.</p>
+      <NarrativeCard heading="Register Graduation" variant="accent">
+        <p>However, dApps may not always be willing to cover every transaction.</p>
         <p>
-          The Capacity Exchange also lets users pay themselves with{' '}
-          <strong className="text-ces-text">any other asset</strong> accepted by the marketplace.
+          The Capacity Exchange also lets users pay with{' '}
+          <strong className="text-ces-text">any other asset</strong> accepted by the market.
         </p>
         <p>
-          Let's register that you graduated this tutorial, paying the transaction fees with the token you just minted.
+          Let&apos;s complete the tutorial by registering that you've finished the tutorial, and paying the transaction fees with the tutorial
+          tokens you just minted.
         </p>
       </NarrativeCard>
 
       <InventoryStrip counterValue={counterValue} walletData={displayWalletData} freeze={isTransacting} />
 
       {status === 'idle' && (
-        <button onClick={incrementCounter} className="ces-btn-primary w-full">
-          Register Graduation (Pay with Tutorial Tokens)
-        </button>
+        <>
+          <button onClick={incrementCounter} className="ces-btn-primary w-full">
+            Complete Tutorial (Pay with Tutorial Tokens)
+          </button>
+          {hasGraduated && onSkipToPlayground && (
+            <button onClick={onSkipToPlayground} className="ces-btn-ghost w-full">
+              Skip to playground
+            </button>
+          )}
+        </>
       )}
 
       {status !== 'idle' && status !== 'success' && status !== 'error' && (
@@ -168,14 +175,6 @@ function CesCounterAction({
               shieldedBalances={displayWalletData?.shieldedBalances ?? {}}
               mintedTokenColor={mintedTokenColor}
               onSelect={onCurrencySelected}
-            />
-          )}
-
-          {status === 'confirming' && offerConfirmation && (
-            <InlineOfferConfirmation
-              offer={offerConfirmation.offer}
-              specksRequired={offerConfirmation.specksRequired}
-              onConfirm={onOfferConfirmed}
             />
           )}
 
@@ -207,7 +206,7 @@ function CesCounterAction({
               messages={[
                 'Submitting the transaction to Midnight now.',
                 'Waiting for the transaction to be included in a block.',
-                'When this completes, your graduation will be recorded!',
+                'When this completes, the tutorial will be marked complete!',
               ]}
             />
           )}
@@ -229,7 +228,7 @@ function CesCounterAction({
           </div>
           <p className="text-ces-text font-display font-semibold text-lg">Registration Complete</p>
           <p className="mt-1 text-sm text-ces-text-muted">
-            You've registered your graduation without ever requiring DUST.
+            You completed the tutorial without ever requiring DUST.
           </p>
           <button onClick={onSuccess} className="ces-btn-primary mt-4">
             Continue to Playground
@@ -275,8 +274,8 @@ function InlineCurrencySelection({
   });
 
   return (
-    <div className="ces-compact-stack border-t border-ces-border pt-2">
-      <p className="text-sm text-ces-text-muted">
+    <div className="ces-compact-stack ces-input-pulse">
+      <p className="text-sm text-ces-text">
         This transaction needs <span className="text-ces-text font-mono">{formatDust(specksRequired)}</span> DUST (
         <span className="font-mono">{specksRequired.toString()}</span> specks). Pick which accepted asset should cover
         it:
@@ -294,7 +293,7 @@ function InlineCurrencySelection({
             disabled={!canAfford}
             className={`w-full p-3 rounded-lg border text-left transition-colors ${
               canAfford
-                ? 'border-ces-border bg-ces-surface-raised/50 hover:bg-ces-surface-raised'
+                ? 'border-ces-gold/40 bg-ces-surface-raised/50 hover:bg-ces-surface-raised hover:border-ces-gold'
                 : 'border-ces-border/30 bg-ces-surface/30 opacity-40 cursor-not-allowed'
             }`}
           >
@@ -311,50 +310,6 @@ function InlineCurrencySelection({
       <button onClick={() => onSelect({ status: 'cancelled' })} className="ces-btn-ghost w-full text-xs">
         Cancel
       </button>
-    </div>
-  );
-}
-
-function InlineOfferConfirmation({
-  offer,
-  specksRequired,
-  onConfirm,
-}: {
-  offer: { offerId: string; offerAmount: string; offerCurrency: string; expiresAt: Date };
-  specksRequired: bigint;
-  onConfirm: (result: OfferConfirmationResult) => void;
-}) {
-  const { timeRemaining, isExpired } = useCountdown(offer.expiresAt);
-
-  return (
-    <div className="ces-section-stack border-t border-ces-border pt-2">
-      <div className="ces-compact-stack">
-        <div className="flex justify-between text-sm">
-          <span className="text-ces-text-muted">DUST required</span>
-          <span className="text-ces-text font-mono">{formatDust(specksRequired)}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-ces-text-muted">User pays</span>
-          <span className="text-ces-gold font-display font-semibold">{offer.offerAmount}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-ces-text-muted">Expires in</span>
-          <span className={isExpired ? 'text-ces-danger' : 'text-ces-text'}>{timeRemaining}</span>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button onClick={() => onConfirm({ status: 'back' })} className="ces-btn-ghost flex-1">
-          Back
-        </button>
-        <button
-          onClick={() => onConfirm({ status: 'confirmed' })}
-          disabled={isExpired}
-          className="ces-btn-primary flex-1"
-        >
-          Confirm & Register
-        </button>
-      </div>
     </div>
   );
 }

@@ -7,11 +7,10 @@ import type { WalletData } from '../features/wallet/types';
 import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
-import type { OfferConfirmationResult } from '../features/ces/types';
-import { useCountdown } from '../lib/hooks/useCountdown';
 import { formatDust } from '../utils/format';
 import { resolveTokenLabel } from '../utils/tokenLabels';
 import type { NetworkConfig } from '../config';
+import { DevAccessForm } from './DevAccessStep';
 
 interface PlaygroundStepProps {
   walletData: WalletData | null;
@@ -82,6 +81,8 @@ export function PlaygroundStep({
         />
       </div>
 
+      <DevAccessForm compact />
+
       <div className="ces-section-stack">
         {/* Sponsored Mint */}
         <PlaygroundAction
@@ -95,7 +96,7 @@ export function PlaygroundStep({
             sponsoredMint.mint(resolvedTokenMintAddress, 1000n);
           }}
           onReset={sponsoredMint.reset}
-          variant="accent"
+          variant="gold"
         />
 
         {/* CES Counter */}
@@ -195,9 +196,9 @@ function CesPlaygroundAction({
     status,
     error,
     currencySelection,
-    offerConfirmation,
+
     onCurrencySelected,
-    onOfferConfirmed,
+
     incrementCounter,
     dismissOffer,
   } = cesTransaction;
@@ -222,17 +223,19 @@ function CesPlaygroundAction({
       {isActive && (
         <>
           <div className="flex items-center gap-3">
-            <div className="ces-spinner-sm" />
+            {status === 'selecting-currency' ? (
+              <div className="w-4 h-4 rounded-full border-2 border-ces-gold animate-pulse flex-shrink-0" />
+            ) : (
+              <div className="ces-spinner-sm" />
+            )}
             <span className="text-sm text-ces-text-muted">
               {status === 'building'
                 ? 'Building registration proof...'
                 : status === 'selecting-currency'
                   ? 'Choose asset for DUST...'
                   : status === 'fetching-offers'
-                    ? 'Fetching live quote...'
-                    : status === 'confirming'
-                      ? 'Confirm registration...'
-                      : 'Submitting settlement...'}
+                    ? 'Requesting exchange...'
+                    : 'Submitting settlement...'}
             </span>
           </div>
 
@@ -270,7 +273,7 @@ function CesPlaygroundAction({
           )}
 
           {status === 'selecting-currency' && currencySelection && (
-            <div className="ces-compact-stack border-t border-ces-border pt-2">
+            <div className="ces-compact-stack ces-input-pulse">
               {[...currencySelection.prices]
                 .sort((a, b) => {
                   const balA = shieldedBalances[a.price.currency] ?? 0n;
@@ -290,7 +293,7 @@ function CesPlaygroundAction({
                       key={`${ep.price.currency}-${i}`}
                       onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
                       disabled={!canAfford}
-                      className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-border hover:bg-ces-surface-raised' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
+                      className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-gold/40 hover:bg-ces-surface-raised hover:border-ces-gold' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
                     >
                       <div className="flex justify-between">
                         <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
@@ -302,13 +305,6 @@ function CesPlaygroundAction({
             </div>
           )}
 
-          {status === 'confirming' && offerConfirmation && (
-            <CompactOfferConfirmation
-              offer={offerConfirmation.offer}
-              specksRequired={offerConfirmation.specksRequired}
-              onConfirm={onOfferConfirmed}
-            />
-          )}
         </>
       )}
 
@@ -321,37 +317,3 @@ function CesPlaygroundAction({
   );
 }
 
-function CompactOfferConfirmation({
-  offer,
-  specksRequired,
-  onConfirm,
-}: {
-  offer: { offerAmount: string; expiresAt: Date };
-  specksRequired: bigint;
-  onConfirm: (result: OfferConfirmationResult) => void;
-}) {
-  const { timeRemaining, isExpired } = useCountdown(offer.expiresAt);
-
-  return (
-    <div className="ces-compact-stack border-t border-ces-border pt-2">
-      <div className="flex justify-between text-xs">
-        <span className="text-ces-text-muted">
-          Pay {offer.offerAmount} for {formatDust(specksRequired)} DUST
-        </span>
-        <span className={isExpired ? 'text-ces-danger' : 'text-ces-text-muted'}>{timeRemaining}</span>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={() => onConfirm({ status: 'cancelled' })} className="ces-btn-ghost flex-1 text-xs py-1.5">
-          Cancel
-        </button>
-        <button
-          onClick={() => onConfirm({ status: 'confirmed' })}
-          disabled={isExpired}
-          className="ces-btn-primary flex-1 text-xs py-1.5"
-        >
-          Confirm
-        </button>
-      </div>
-    </div>
-  );
-}

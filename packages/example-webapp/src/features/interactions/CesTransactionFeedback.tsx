@@ -2,7 +2,6 @@ import { LoadingSpinner } from '../../shared/ui';
 import {
   FetchingOffersModal,
   CurrencySelectionModal,
-  OfferConfirmationModal,
   SubmittingModal,
   SuccessModal,
   ErrorModal,
@@ -32,25 +31,8 @@ export function CesTransactionFeedback({ ces }: { ces: UseCesTransactionResult }
         />
       );
 
-    case 'confirming':
-      if (!ces.offerConfirmation) {
-        return null;
-      }
-      return (
-        <OfferConfirmationModal
-          offer={ces.offerConfirmation.offer}
-          specksRequired={ces.offerConfirmation.specksRequired}
-          onConfirm={ces.onOfferConfirmed}
-        />
-      );
-
     case 'submitting':
-      if (!ces.offerConfirmation) {
-        return null;
-      }
-      return (
-        <SubmittingModal offer={ces.offerConfirmation.offer} specksRequired={ces.offerConfirmation.specksRequired} />
-      );
+      return <SubmittingModal />;
 
     case 'success':
       return <SuccessModal onDismiss={ces.dismissOffer} />;

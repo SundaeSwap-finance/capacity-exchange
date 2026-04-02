@@ -94,7 +94,7 @@ export class WalletService {
     }
   }
 
-  spend(utxo: DustFullInfo, amount: bigint): UnprovenDustSpend {
+  spend(utxo: DustFullInfo, amount: bigint, ctime: Date): UnprovenDustSpend {
     const state = this.lastDustWalletState;
     if (!state) {
       throw new Error('dust wallet not synced');
@@ -103,7 +103,7 @@ export class WalletService {
       state.state,
       this.walletConnection.keys.dustSecretKey,
       [{ token: utxo.token, value: amount }],
-      new Date(),
+      ctime,
     );
 
     return spends[0];

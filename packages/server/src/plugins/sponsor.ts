@@ -15,10 +15,14 @@ export default fp(async (fastify: FastifyInstance) => {
   if (!fastify.txService) {
     throw new Error("SponsorService requires TxService to be init'd first");
   }
+  if (!fastify.metricsService) {
+    throw new Error("SponsorService requires MetricsService to be init'd first");
+  }
 
   const service = new SponsorService(
     fastify.utxoService,
     fastify.txService,
+    fastify.metricsService,
     fastify.config.sponsorAll ?? false,
     fastify.config.sponsoredContracts,
     fastify.config.endpoints.indexerHttpUrl,

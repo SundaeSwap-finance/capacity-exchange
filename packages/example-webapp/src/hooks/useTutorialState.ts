@@ -21,11 +21,39 @@ type Action =
   | { type: 'MARK_MINTED' }
   | { type: 'MARK_CES_USED' };
 
+const GRADUATION_KEY = 'ces-demo-graduation';
+
+interface GraduationFlags {
+  hasMintedTokens: boolean;
+  hasUsedCes: boolean;
+}
+
+function loadGraduation(): GraduationFlags {
+  try {
+    const raw = localStorage.getItem(GRADUATION_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        hasMintedTokens: !!parsed.hasMintedTokens,
+        hasUsedCes: !!parsed.hasUsedCes,
+      };
+    }
+  } catch { /* ignore */ }
+  return { hasMintedTokens: false, hasUsedCes: false };
+}
+
+function saveGraduation(flags: GraduationFlags) {
+  try {
+    localStorage.setItem(GRADUATION_KEY, JSON.stringify(flags));
+  } catch { /* ignore */ }
+}
+
 const STEP_FLOW: Array<{ step: TutorialStep; substep: Substep }> = [
   { step: 0, substep: 'a' },
   { step: 1, substep: 'b' },
   { step: 2, substep: 'b' },
   { step: 3, substep: 'a' },
+  { step: 3, substep: 'b' },
 ];
 
 function flowIndex(step: TutorialStep, substep: Substep): number {
@@ -77,13 +105,13 @@ function reducer(state: TutorialState, action: Action): TutorialState {
       const targetSubstep = action.substep ?? defaultSubstepForStep(action.step);
       const targetIdx = flowIndex(action.step, targetSubstep);
 
-      // When jumping backward, mark all steps up to and including
-      // the current step as completed so forward tabs stay enabled.
+      // Mark all steps between current and target as completed so
+      // sidebar tabs stay enabled regardless of jump direction.
       const completedSteps = new Set(state.completedSteps);
-      if (targetIdx < curIdx) {
-        for (let i = targetIdx; i <= curIdx; i++) {
-          completedSteps.add(STEP_FLOW[i].step);
-        }
+      const lo = Math.min(curIdx, targetIdx);
+      const hi = Math.max(curIdx, targetIdx);
+      for (let i = lo; i <= hi; i++) {
+        completedSteps.add(STEP_FLOW[i].step);
       }
 
       return {
@@ -96,29 +124,38 @@ function reducer(state: TutorialState, action: Action): TutorialState {
       };
     }
 
-    case 'MARK_MINTED':
-      return { ...state, hasMintedTokens: true };
+    case 'MARK_MINTED': {
+      const next = { ...state, hasMintedTokens: true };
+      saveGraduation({ hasMintedTokens: next.hasMintedTokens, hasUsedCes: next.hasUsedCes });
+      return next;
+    }
 
-    case 'MARK_CES_USED':
-      return { ...state, hasUsedCes: true };
+    case 'MARK_CES_USED': {
+      const next = { ...state, hasUsedCes: true };
+      saveGraduation({ hasMintedTokens: next.hasMintedTokens, hasUsedCes: next.hasUsedCes });
+      return next;
+    }
 
     default:
       return state;
   }
 }
 
-const initialState: TutorialState = {
-  step: 0,
-  substep: 'a',
-  direction: 'forward',
-  animKey: 0,
-  completedSteps: new Set(),
-  hasMintedTokens: false,
-  hasUsedCes: false,
-};
+function createInitialState(): TutorialState {
+  const saved = loadGraduation();
+  return {
+    step: 0,
+    substep: 'a',
+    direction: 'forward',
+    animKey: 0,
+    completedSteps: new Set(),
+    hasMintedTokens: saved.hasMintedTokens,
+    hasUsedCes: saved.hasUsedCes,
+  };
+}
 
 export function useTutorialState() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, null, createInitialState);
 
   const advance = useCallback(() => dispatch({ type: 'ADVANCE' }), []);
   const goBack = useCallback(() => dispatch({ type: 'GO_BACK' }), []);

@@ -19,6 +19,7 @@ import { WalletStep } from './steps/WalletStep';
 import { SponsoredStep } from './steps/SponsoredStep';
 import { PaidExchangeStep } from './steps/PaidExchangeStep';
 import { PlaygroundStep } from './steps/PlaygroundStep';
+import { DevAccessStep } from './steps/DevAccessStep';
 import { useMockDemoState } from './mock/useMockDemoState';
 import { getDemoRailContent } from './demoNarrative';
 import type { NetworkConfig } from './config';
@@ -193,7 +194,7 @@ function TutorialInner({
     cesStatus: activeCesTransaction.status,
     cesError: activeCesTransaction.error,
     currencySelection: activeCesTransaction.currencySelection,
-    offerConfirmation: activeCesTransaction.offerConfirmation,
+    offerConfirmation: null,
     sponsoredTransactionStatus: activeSponsoredTransaction.status,
     sponsoredTransactionError: activeSponsoredTransaction.error,
     tokenBalance: totalShieldedBalance,
@@ -213,7 +214,7 @@ function TutorialInner({
     }
 
     const { secrets } = await createWallet();
-    seedWallet.connect(secrets.seedHex);
+    seedWallet.connect(secrets.seedHex, { isNewWallet: true });
   };
 
   return (
@@ -235,7 +236,7 @@ function TutorialInner({
             seedWallet={seedWallet}
             extensionWallet={extensionWallet}
             walletInfoState={activeWalletInfo}
-            onConnected={advance}
+            onConnected={state.hasMintedTokens && state.hasUsedCes ? () => jumpTo(3, 'b') : advance}
           />
         )}
 
@@ -249,6 +250,8 @@ function TutorialInner({
             autoAdvanceOnSuccess={false}
             successAutoAdvanceDelayMs={mockDemoEnabled ? 2200 : 900}
             onMintSuccess={advance}
+            hasGraduated={state.hasUsedCes}
+            onSkipToPlayground={() => jumpTo(3, 'b')}
           />
         )}
 
@@ -259,10 +262,16 @@ function TutorialInner({
             counterValue={activeCounterValue}
             mintedTokenColor={activeContractsConfig?.tokenMint.derivedTokenColor ?? null}
             onCesSuccess={advance}
+            hasGraduated={state.hasUsedCes}
+            onSkipToPlayground={() => jumpTo(3, 'b')}
           />
         )}
 
-        {state.step === 3 && activeContractsConfig && (
+        {state.step === 3 && state.substep === 'a' && (
+          <DevAccessStep onContinue={advance} />
+        )}
+
+        {state.step === 3 && state.substep === 'b' && activeContractsConfig && (
           <PlaygroundStep
             walletData={activeWalletData}
             sponsoredMint={activeSponsoredMint}

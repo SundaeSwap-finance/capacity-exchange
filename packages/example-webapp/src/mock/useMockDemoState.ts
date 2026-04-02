@@ -3,7 +3,7 @@ import type { NetworkConfig } from '../config';
 import type { ContractsConfig } from '../features/contract/hooks/useContractsConfig';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
-import type { ExchangePrice, Offer, OfferConfirmationResult, CurrencySelectionResult } from '../features/ces/types';
+import type { ExchangePrice, Offer, CurrencySelectionResult } from '../features/ces/types';
 import type { SeedWalletState } from '../features/wallet/seed/types';
 import type { SyncProgressInfo } from '../features/wallet/seed/walletService';
 import type { ExtensionWalletState } from '../features/wallet/extension/useExtensionWallet';
@@ -69,7 +69,7 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
   const [cesStatus, setCesStatus] = useState<UseCesTransactionResult['status']>('idle');
   const [cesError, setCesError] = useState<string | null>(null);
   const [currencySelection, setCurrencySelection] = useState<UseCesTransactionResult['currencySelection']>(null);
-  const [offerConfirmation, setOfferConfirmation] = useState<UseCesTransactionResult['offerConfirmation']>(null);
+  // offerConfirmation removed — auto-confirm flow
 
   const [sponsoredCounterStatus, setSponsoredCounterStatus] = useState<UseSponsoredTransactionResult['status']>('idle');
   const [sponsoredCounterError, setSponsoredCounterError] = useState<string | null>(null);
@@ -305,7 +305,6 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     setCesStatus('idle');
     setCesError(null);
     setCurrencySelection(null);
-    setOfferConfirmation(null);
   }, []);
 
   const incrementCesCounter = useCallback(async () => {
@@ -332,50 +331,27 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     pushLogEvent('CES', 'info', `requesting live capacity exchange quote for ${result.exchangePrice.price.amount} tokens`);
 
     window.setTimeout(() => {
-      pushLogEvent('CES', 'success', 'exchange offer received');
-      setOfferConfirmation({
-        offer: mockOffer(result.exchangePrice.price.amount),
-        specksRequired: MOCK_DUST_REQUIRED,
-      });
-      setCesStatus('confirming');
+      pushLogEvent('CES', 'success', 'exchange offer received — auto-confirming');
+      setCesStatus('submitting');
+      pushLogEvent('TX', 'info', 'broadcasting exchange + counter increment to Midnight network');
+
+      window.setTimeout(() => {
+        pushLogEvent('TX', 'success', 'transaction included in block');
+      }, 2000);
+
+      window.setTimeout(() => {
+        setTokenBalance((value) => (value >= 250n ? value - 250n : value));
+        setCounterValue((value) => value + 1);
+        setCesStatus('success');
+      }, 3500);
     }, 1500);
   }, [dismissCesOffer, pushLogEvent]);
-
-  const onOfferConfirmed = useCallback((result: OfferConfirmationResult) => {
-    if (result.status === 'back') {
-      setOfferConfirmation(null);
-      setCurrencySelection({ prices, specksRequired: MOCK_DUST_REQUIRED });
-      setCesStatus('selecting-currency');
-      return;
-    }
-
-    if (result.status !== 'confirmed') {
-      dismissCesOffer();
-      return;
-    }
-
-    setOfferConfirmation(null);
-    setCesStatus('submitting');
-    pushLogEvent('TX', 'info', 'broadcasting exchange + counter increment to Midnight network');
-
-    window.setTimeout(() => {
-      pushLogEvent('TX', 'success', 'transaction included in block');
-    }, 2000);
-
-    window.setTimeout(() => {
-      setTokenBalance((value) => (value >= 250n ? value - 250n : value));
-      setCounterValue((value) => value + 1);
-      setCesStatus('success');
-    }, 3500);
-  }, [dismissCesOffer, prices, pushLogEvent]);
 
   const cesTransaction = useMemo<UseCesTransactionResult>(() => ({
     status: cesStatus,
     error: cesError,
     currencySelection,
     onCurrencySelected,
-    offerConfirmation,
-    onOfferConfirmed,
     dismissOffer: dismissCesOffer,
     incrementCounter: incrementCesCounter,
   }), [
@@ -384,9 +360,7 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     currencySelection,
     dismissCesOffer,
     incrementCesCounter,
-    offerConfirmation,
     onCurrencySelected,
-    onOfferConfirmed,
   ]);
 
   const dismissSponsoredCounter = useCallback(() => {

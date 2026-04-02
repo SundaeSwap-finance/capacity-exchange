@@ -9,12 +9,14 @@ import sponsorPlugin from './plugins/sponsor.js';
 import pricesPlugin from './plugins/price.js';
 import quotePlugin from './plugins/quote.js';
 import txPlugin from './plugins/tx.js';
+import metricsPlugin from './plugins/metrics.js';
 import errorHandler from './plugins/error-handler.js';
 import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/offers.js';
 import sponsorRoutes from './routes/sponsor.js';
 import priceRoutes from './routes/prices.js';
+import metricsRoutes from './routes/metrics.js';
 import type { AppConfig } from './loadConfig.js';
 import { readFileSync } from 'fs';
 
@@ -49,6 +51,7 @@ export async function buildApp(
   await app.register(txPlugin);
   await app.register(pricesPlugin);
   await app.register(quotePlugin);
+  await app.register(metricsPlugin);
   await app.register(offerPlugin);
   await app.register(sponsorPlugin);
   app.register(rootRoutes);
@@ -56,5 +59,6 @@ export async function buildApp(
   app.register(priceRoutes, { prefix: '/api' });
   app.register(offerRoutes, { prefix: '/api' });
   app.register(sponsorRoutes, { prefix: '/api' });
+  app.register(metricsRoutes, { prefix: '/api' });
   return app;
 }

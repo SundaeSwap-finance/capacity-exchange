@@ -35,7 +35,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const error = walletError || seedWallet.error || extensionWallet.error;
 
   const sp = seedWallet.syncProgress;
-  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status === 'disconnected';
+  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status !== 'connecting' && extensionWallet.status !== 'connected';
 
   const extensionAvailable = extensionWallet.status !== 'unavailable';
 
@@ -61,7 +61,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       const { meta, secrets } = await createWallet();
       setActiveWalletIsPasskey(meta.mode === 'passkey');
       setActiveMnemonic(secrets.mnemonic);
-      seedWallet.connect(secrets.seedHex);
+      seedWallet.connect(secrets.seedHex, { isNewWallet: true });
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : 'Failed to create wallet');
     }
@@ -74,7 +74,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       const { secrets } = await createWallet();
       setActiveWalletIsPasskey(false);
       setActiveMnemonic(secrets.mnemonic);
-      seedWallet.connect(secrets.seedHex);
+      seedWallet.connect(secrets.seedHex, { isNewWallet: true });
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : 'Failed to create wallet');
     }
@@ -114,35 +114,11 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     );
   }
 
-  if (isSynced) {
+  if (showSpinner || isSynced) {
     return (
       <div className="ces-step-stack">
-        <div className="ces-card text-center py-8 ces-fade-in">
-          <div className="w-12 h-12 rounded-full bg-ces-accent/20 flex items-center justify-center mx-auto mb-3">
-            <svg
-              className="w-6 h-6 text-ces-accent"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <p className="text-ces-text font-display font-semibold">Wallet Ready</p>
-          <button onClick={onConnected} className="ces-btn-primary mt-4">
-            Continue
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (showSpinner) {
-    return (
-      <div className="ces-step-stack">
-        <NarrativeCard heading="Syncing Wallet">
-          {isSeedWalletSyncing ? (
+        <NarrativeCard heading={isSynced ? 'Wallet Ready' : 'Syncing Wallet'}>
+          {isSeedWalletSyncing || isSynced ? (
             <>
               {activeWalletIsPasskey ? (
                 <>
@@ -155,20 +131,23 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
                     Your wallet is secure even from malicious browser extensions, as any
                     attempt to access it will <strong className="text-ces-text">prompt you for approval</strong>.
                   </p>
-                  <p>
-                    Now, we&apos;re loading relevant data directly from the Midnight Blockchain.
-                    This might take a while, and will get faster with future updates.
-                  </p>
+                  {!isSynced && (
+                    <p>
+                      Now, we&apos;re loading relevant data directly from the Midnight Blockchain.
+                      This might take a while, and will get faster with future updates.
+                    </p>
+                  )}
                 </>
               ) : (
                 <>
                   <p>
-                    You&apos;ve generated a new wallet in your browser for this test, and are now
-                    loading relevant data directly from the Midnight Blockchain.
+                    You&apos;ve generated a new wallet in your browser for this test{!isSynced && ', and are now loading relevant data directly from the Midnight Blockchain'}.
                   </p>
-                  <p>
-                    This might take a while, and will get faster with future updates.
-                  </p>
+                  {!isSynced && (
+                    <p>
+                      This might take a while, and will get faster with future updates.
+                    </p>
+                  )}
                 </>
               )}
               {activeMnemonic && (
@@ -189,25 +168,25 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
           )}
         </NarrativeCard>
 
-        <div className="ces-card ces-section-stack py-5">
-          {sp ? (
-            <div className="ces-section-stack px-2">
-              <SyncBar label="Shielded" progress={sp.shielded} />
-              <SyncBar label="Dust" progress={sp.dust} />
-              <div className="grid grid-cols-[8rem,minmax(0,1fr)] items-center gap-x-4">
-                <span className="text-xs text-ces-text-muted">Unshielded //</span>
-                <span className={`text-xs ${sp.unshielded ? 'text-ces-accent' : 'text-ces-text-muted/50'}`}>
-                  {sp.unshielded ? 'Done' : 'Waiting...'}
-                </span>
+        {isSynced ? (
+          <button onClick={onConnected} className="ces-btn-primary w-full ces-fade-in">
+            Next
+          </button>
+        ) : (
+          <div className="ces-card ces-section-stack py-5">
+            {sp ? (
+              <div className="ces-section-stack px-2">
+                <SyncBar label="Shielded" progress={sp.shielded} />
+                <SyncBar label="Dust" progress={sp.dust} />
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <div className="ces-spinner-sm" />
-              <p className="text-sm text-ces-text-muted">Connecting...</p>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <div className="ces-spinner-sm" />
+                <p className="text-sm text-ces-text-muted">Connecting...</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {showExportSeed && activeMnemonic && (
           <SeedExportModal mnemonic={activeMnemonic} onClose={() => setShowExportSeed(false)} />
@@ -354,7 +333,7 @@ function SeedExportModal({ mnemonic, onClose }: { mnemonic: string; onClose: () 
         <p className="text-ces-text font-display font-semibold text-sm">Seed Phrase</p>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-ces-surface-raised text-ces-text-muted hover:text-ces-text transition-colors"
+          className="p-1 hover:bg-ces-surface-raised text-ces-text-muted hover:text-ces-text transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -362,7 +341,7 @@ function SeedExportModal({ mnemonic, onClose }: { mnemonic: string; onClose: () 
         </button>
       </div>
 
-      <div className="p-3 rounded-lg bg-ces-surface-raised border border-ces-border grid grid-cols-3 gap-x-4 gap-y-1.5">
+      <div className="p-3 bg-ces-surface-raised border border-ces-border grid grid-cols-3 gap-x-4 gap-y-1.5">
         {words.map((word, i) => (
           <div key={i} className="flex items-baseline gap-1.5">
             <span className="text-[10px] text-ces-text-muted/50 font-mono w-4 text-right">{i + 1}</span>

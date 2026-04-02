@@ -1,5 +1,17 @@
 /* Animation keyframes and helpers. */
 
+@keyframes ces-input-glow {
+  0%, 100% { border-color: rgb(var(--ces-color-gold) / 0.15); }
+  50% { border-color: rgb(var(--ces-color-gold) / 0.5); }
+}
+
+.ces-input-pulse {
+  animation: ces-input-glow 2s ease-in-out infinite;
+  border: 1px solid;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
 @keyframes ces-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }

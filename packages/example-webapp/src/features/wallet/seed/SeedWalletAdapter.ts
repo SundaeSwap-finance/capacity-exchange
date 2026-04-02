@@ -42,14 +42,12 @@ export class SeedWalletAdapter implements WalletCapabilities {
   }
 
   async getUnshieldedAddress(): Promise<{ unshieldedAddress: string }> {
-    const state = await this.#walletFacade.unshielded.waitForSyncedState();
-    const unshieldedAddress = MidnightBech32m.encode(this.#networkId, state.address).asString();
-    return { unshieldedAddress };
+    // Don't wait for unshielded sync — we don't use it in the demo
+    return { unshieldedAddress: '' };
   }
 
   async getUnshieldedBalances(): Promise<Record<string, bigint>> {
-    const state = await this.#walletFacade.unshielded.waitForSyncedState();
-    return state.balances;
+    return {};
   }
 
   async getShieldedBalances(): Promise<Record<string, bigint>> {
@@ -58,17 +56,19 @@ export class SeedWalletAdapter implements WalletCapabilities {
   }
 
   subscribeToBalances(callback: (update: BalanceUpdate) => void): () => void {
+    // Emit current balances immediately so callers don't wait for next state change
+    this.#emitCurrentBalances(callback);
+
     const subscription = combineLatest([
       this.#walletFacade.dust.state,
-      this.#walletFacade.unshielded.state,
       this.#walletFacade.shielded.state,
     ]).subscribe({
-      next: ([dustState, unshieldedState, shieldedState]) => {
+      next: ([dustState, shieldedState]) => {
         callback({
           status: 'success',
           data: {
             dustBalance: dustState.balance(new Date()),
-            nightBalances: unshieldedState.balances,
+            nightBalances: {},
             shieldedBalances: shieldedState.balances,
           },
         });
@@ -79,5 +79,21 @@ export class SeedWalletAdapter implements WalletCapabilities {
     });
 
     return () => subscription.unsubscribe();
+  }
+
+  #emitCurrentBalances(callback: (update: BalanceUpdate) => void): void {
+    Promise.all([
+      this.getDustBalance(),
+      this.getShieldedBalances(),
+    ]).then(([dust, shielded]) => {
+      callback({
+        status: 'success',
+        data: {
+          dustBalance: dust.balance,
+          nightBalances: {},
+          shieldedBalances: shielded,
+        },
+      });
+    }).catch(() => {});
   }
 }

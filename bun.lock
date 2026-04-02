@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "capacity-exchange-sdk",
@@ -113,6 +112,24 @@
         "@midnight-ntwrk/dapp-connector-api": "4.0.1",
         "@midnight-ntwrk/ledger-v8": "8.0.3",
         "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
+      },
+    },
+    "packages/dashboard": {
+      "name": "@capacity-exchange/dashboard",
+      "version": "1.0.0",
+      "dependencies": {
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.9",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "autoprefixer": "^10.4.23",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^3.4.19",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
       },
     },
     "packages/example-webapp": {
@@ -424,6 +441,8 @@
     "@capacity-exchange/client": ["@capacity-exchange/client@workspace:packages/client"],
 
     "@capacity-exchange/components": ["@capacity-exchange/components@workspace:packages/components"],
+
+    "@capacity-exchange/dashboard": ["@capacity-exchange/dashboard@workspace:packages/dashboard"],
 
     "@capacity-exchange/example-contracts": ["@capacity-exchange/example-contracts@workspace:packages/example-webapp/contracts"],
 
