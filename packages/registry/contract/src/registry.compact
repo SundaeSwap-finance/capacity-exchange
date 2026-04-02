@@ -1,0 +1,33 @@
+pragma language_version >= 0.22;
+
+import CompactStandardLibrary;
+
+new type Ipv4 = Bytes<4>;
+
+new type Ipv6 = Bytes<16>;
+
+new type IpAddress = Either<Ipv4, Ipv6>;
+
+new type Port = Bytes<2>;
+
+new type PublicKeyHash = Field;
+
+new type UnixTimestampSeconds = Uint<64>;
+
+struct Entry {
+  validTo: UnixTimestampSeconds,
+  ip: IpAddress,
+  port: Port,
+}
+
+export ledger aggregateAdminKey: Field;
+
+export ledger nonce: Counter;
+
+export ledger registry: Map<PublicKeyHash, Entry>;
+
+witness secretKey(): Bytes<64>;
+
+constructor(adminKey: Field) {
+  aggregateAdminKey = disclose(adminKey);
+}
