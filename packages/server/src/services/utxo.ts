@@ -1,7 +1,7 @@
 import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { FastifyBaseLogger } from 'fastify';
 import { WalletService } from './wallet.js';
-import { LRUCache } from 'lru-cache';
+import LRUCache from 'lru-cache';
 
 export interface UtxoLockInfo {
   id: string;

@@ -3,7 +3,7 @@ import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
-import { LRUCache } from 'lru-cache';
+import LRUCache from 'lru-cache';
 import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
 
 export interface CreateOfferRequest {
