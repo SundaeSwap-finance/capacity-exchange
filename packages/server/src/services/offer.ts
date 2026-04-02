@@ -100,13 +100,12 @@ export class OfferService {
     if (lockResult.status !== 'ok') {
       return lockResult;
     }
-
     const lockedInfo = lockResult.value;
 
     try {
       const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const tx = await this.txService.createOfferTx(coin, lockedInfo.spend, expiration);
+      const tx = await this.txService.createOfferTx(coin, lockedInfo.spend, lockedInfo.syncTime, expiration);
 
       const offer: OfferResponse = {
         offerId: lockedInfo.id,
