@@ -72,6 +72,7 @@ export class OfferService {
     const tx = await this.txService.createOfferTx(
       coin,
       lockedInfo.spend,
+      lockedInfo.syncTime,
       expiration,
       request.segmentId,
     );

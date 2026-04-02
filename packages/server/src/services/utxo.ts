@@ -6,6 +6,7 @@ export interface UtxoLockInfo {
   id: string;
   utxo: DustFullInfo;
   spend: UnprovenDustSpend;
+  syncTime: Date,
   expiresAtMillis: number;
 }
 
@@ -97,6 +98,8 @@ export class UtxoService {
       return { status: 'illegal-state', error: "Wallet is sync'd but no wallet state" };
     }
 
+    const syncTime = walletState.state.state.syncTime;
+
     const utxos = walletState.availableCoinsWithFullInfo(new Date());
     this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
 
@@ -117,9 +120,9 @@ export class UtxoService {
     const expiresAt = now + this.utxoLockTtlSeconds * 1000;
     const key = this.getLockId(selectedUtxo);
     this.lockedUtxos.set(key, { expiresAt, specks });
-    this.logger.info({ id: key, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
+    this.logger.info({ id: key, ctime: syncTime, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
 
-    const spend = this.walletService.spend(selectedUtxo, specks);
+    const spend = this.walletService.spend(selectedUtxo, specks, syncTime);
 
     return {
       status: 'ok',
@@ -127,6 +130,7 @@ export class UtxoService {
         id: key,
         utxo: selectedUtxo,
         spend,
+        syncTime,
         expiresAtMillis: expiresAt,
       },
     };
