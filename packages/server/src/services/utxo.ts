@@ -72,6 +72,7 @@ export class UtxoService {
   }
 
   lockUtxo(specks: bigint): LockUtxoResult {
+    const now = Date.now();
     const walletState = this.walletService.state;
     const walletSyncState = this.walletService.syncState;
 
@@ -88,9 +89,9 @@ export class UtxoService {
       return { status: 'illegal-state', error: "Wallet is sync'd but no wallet state" };
     }
 
-    const syncTime = walletState.state.state.syncTime;
+    const syncTime = this.walletService.dustSyncTime ?? new Date(now);
 
-    const utxos = walletState.availableCoinsWithFullInfo(new Date());
+    const utxos = walletState.availableCoinsWithFullInfo(new Date(now));
     this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
 
     const selectedUtxo = utxos.find((utxoInfo) => {
@@ -106,7 +107,6 @@ export class UtxoService {
       return { status: 'insufficient-funds', requested: specks };
     }
 
-    const now = Date.now();
     const expiresAt = now + this.utxoLockTtlSeconds * 1000;
     const key = this.getLockId(selectedUtxo);
     this.lockedUtxos.set(key, { specks });
