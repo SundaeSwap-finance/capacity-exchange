@@ -28,17 +28,22 @@ export ledger registry: Map<RegistryKey, Entry>;
 
 export ledger collateralAmount: Uint<128>;
 
+export ledger maximumValidityInterval: UnixTimestampSeconds;
+
 witness secretKey(): Bytes<64>;
 
-constructor(adminKey: Field, requiredCollateral: Uint<128>) {
+constructor(adminKey: Field,
+            requiredCollateral: Uint<128>,
+            maximumValidityInterval: UnixTimestampSeconds
+            ) {
   aggregateAdminKey = disclose(adminKey);
   collateralAmount = disclose(requiredCollateral);
 }
 
 export circuit registerServer(entry: Entry): [] {
   const disclosedEntry = disclose(entry);
-  assert(blockTimeGte((disclosedEntry.validTo as Uint<64>) - 2592000),
-         "validTo cannot be more than 30 days in the future"
+  assert(blockTimeGte((disclosedEntry.validTo - maximumValidityInterval) as Uint<64>),
+         "validity interval cannot be larger than maximumValidityInterval"
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
@@ -63,6 +68,18 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
     );
 
   registry.remove(disclosedKey);
+}
+
+export circuit refreshValidity(validTo: UnixTimestampSeconds): [] {
+  const key = disclose(hashKey(secretKey()));
+  assert(registry.member(key), "you don't have a registered server");
+  const disclosedEntry = disclose(registry.lookup(key));
+  assert(blockTimeGte((disclosedEntry.validTo - maximumValidityInterval) as Uint<64>),
+         "validity interval cannot be larger than maximumValidityInterval"
+         );
+  const entry = Entry { validTo: validTo, ip: disclosedEntry.ip, port: disclosedEntry.port, };
+
+  registry.insert(key, disclose(entry));
 }
 
 circuit hashKey(key: Bytes<64>): RegistryKey {
