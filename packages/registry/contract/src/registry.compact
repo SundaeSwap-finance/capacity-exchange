@@ -10,7 +10,7 @@ new type IpAddress = Either<Ipv4, Ipv6>;
 
 new type Port = Bytes<2>;
 
-new type PublicKeyHash = Bytes<32>;
+new type RegistryKey = Bytes<32>;
 
 new type UnixTimestampSeconds = Uint<64>;
 
@@ -24,7 +24,7 @@ export ledger aggregateAdminKey: Field;
 
 export ledger nonce: Counter;
 
-export ledger registry: Map<PublicKeyHash, Entry>;
+export ledger registry: Map<RegistryKey, Entry>;
 
 export ledger collateralAmount: Uint<128>;
 
@@ -47,6 +47,24 @@ export circuit registerServer(entry: Entry): [] {
   registry.insert(key, disclosedEntry);
 }
 
-circuit hashKey(key: Bytes<64>): PublicKeyHash {
-  return persistentHash<Bytes<64>>(key) as PublicKeyHash;
+export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
+  const disclosedKey = disclose(key);
+  assert(registry.member(disclosedKey), "key does not exist");
+  if (blockTimeLt(disclose(registry.lookup(disclosedKey).validTo) as Uint<64>)) {
+    assert(key == disclose(hashKey(secretKey())),
+           "you can only deregister your own entry before validTo"
+           );
+  }
+
+  sendUnshielded(
+    nativeToken(),
+    collateralAmount,
+    right<ContractAddress, UserAddress>(disclose(recipient))
+    );
+
+  registry.remove(disclosedKey);
+}
+
+circuit hashKey(key: Bytes<64>): RegistryKey {
+  return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
 }
