@@ -50,6 +50,7 @@ export function setupFetchMock(): void {
         ok: true,
         status: 200,
         json: async () => ({
+          quoteId: 'test-quote-id',
           prices: [
             { currency: 'ADA', amount: '1000000' },
             { currency: 'BTC', amount: '50000' },

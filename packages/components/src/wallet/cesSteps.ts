@@ -64,11 +64,11 @@ export async function fetchCesPrices(
  *
  * @throws {CapacityExchangeOfferExpiredError} if the offer is already expired
  */
-export async function requestCesOffer(exchangePrice: ExchangePrice, specksRequired: bigint): Promise<Offer> {
+export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
   const offerResponse = await exchangePrice.exchangeApi.api.apiOffersPost({
     apiOffersPostRequest: {
-      specks: specksRequired.toString(),
+      quoteId: exchangePrice.quoteId,
       offerCurrency: exchangePrice.price.currency,
     },
   });

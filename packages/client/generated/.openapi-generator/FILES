@@ -1,5 +1,11 @@
 apis/DefaultApi.ts
 apis/index.ts
+docs/ApiMetricsGet200Response.md
+docs/ApiMetricsGet200ResponseContention.md
+docs/ApiMetricsGet200ResponseDustUsage.md
+docs/ApiMetricsGet200ResponseHealth.md
+docs/ApiMetricsGet200ResponseRevenue.md
+docs/ApiMetricsGet200ResponseServer.md
 docs/ApiOffersPost201Response.md
 docs/ApiOffersPostRequest.md
 docs/ApiPricesGet200Response.md
@@ -15,6 +21,12 @@ docs/HealthReadyGet200Response.md
 docs/HealthReadyGet200ResponseIndexer.md
 docs/HealthReadyGet200ResponseWallet.md
 index.ts
+models/ApiMetricsGet200Response.ts
+models/ApiMetricsGet200ResponseContention.ts
+models/ApiMetricsGet200ResponseDustUsage.ts
+models/ApiMetricsGet200ResponseHealth.ts
+models/ApiMetricsGet200ResponseRevenue.ts
+models/ApiMetricsGet200ResponseServer.ts
 models/ApiOffersPost201Response.ts
 models/ApiOffersPostRequest.ts
 models/ApiPricesGet200Response.ts

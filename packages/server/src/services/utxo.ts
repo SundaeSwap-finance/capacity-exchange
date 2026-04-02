@@ -1,6 +1,7 @@
 import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { FastifyBaseLogger } from 'fastify';
 import { WalletService } from './wallet.js';
+import LRUCache from 'lru-cache';
 
 export interface UtxoLockInfo {
   id: string;
@@ -20,7 +21,6 @@ export type WalletUnavailableResult =
 export type LockUtxoResult = { status: 'ok'; value: UtxoLockInfo } | WalletUnavailableResult;
 
 interface UtxoLock {
-  expiresAt: number;
   specks: bigint;
 }
 
@@ -31,28 +31,17 @@ export class UtxoService {
   private readonly walletService: WalletService;
   private readonly logger: FastifyBaseLogger;
   private readonly utxoLockTtlSeconds: number;
-
   // TODO: Move this to a db for reliability (if the service restarts)
-  private lockedUtxos = new Map<string, UtxoLock>();
+  private readonly lockedUtxos: LRUCache<string, UtxoLock>;
 
   constructor(walletService: WalletService, logger: FastifyBaseLogger, utxoLockTtlSeconds: number) {
     this.walletService = walletService;
     this.logger = logger;
     this.utxoLockTtlSeconds = utxoLockTtlSeconds;
-  }
-
-  private isLocked(key: string, now: number): boolean {
-    const lock = this.lockedUtxos.get(key);
-    if (lock === undefined) {
-      return false;
-    }
-    if (lock.expiresAt > now) {
-      return true;
-    }
-    // Expired, clean up lazily
-    this.lockedUtxos.delete(key);
-    this.logger.debug({ id: key }, 'Cleaned up expired UTxO lock');
-    return false;
+    this.lockedUtxos = new LRUCache<string, UtxoLock>({
+      ttl: utxoLockTtlSeconds * 1000,
+      ttlAutopurge: true,
+    });
   }
 
   private getLockId(utxoInfo: DustFullInfo): string {
@@ -61,17 +50,12 @@ export class UtxoService {
   }
 
   getLockedUtxoStats(): { count: number; totalSpecks: bigint } {
-    const now = Date.now();
     let count = 0;
     let totalSpecks = 0n;
-    for (const [key, lock] of this.lockedUtxos) {
-      if (lock.expiresAt > now) {
-        count++;
-        totalSpecks += lock.specks;
-      } else {
-        this.lockedUtxos.delete(key);
-      }
-    }
+    this.lockedUtxos.forEach((lock) => {
+      count++;
+      totalSpecks += lock.specks;
+    });
     return { count, totalSpecks };
   }
 
@@ -79,6 +63,12 @@ export class UtxoService {
     const walletState = this.walletService.state;
     if (!walletState) return 0;
     return walletState.availableCoinsWithFullInfo(new Date()).length;
+  }
+
+  /** Releases a lock early */
+  unlock(id: string): void {
+    this.lockedUtxos.delete(id);
+    this.logger.info({ id }, 'Released UTxO lock');
   }
 
   lockUtxo(specks: bigint): LockUtxoResult {
@@ -103,10 +93,9 @@ export class UtxoService {
     const utxos = walletState.availableCoinsWithFullInfo(new Date());
     this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
 
-    const now = Date.now();
     const selectedUtxo = utxos.find((utxoInfo) => {
       const key = this.getLockId(utxoInfo);
-      if (this.isLocked(key, now)) {
+      if (this.lockedUtxos.has(key)) {
         return false;
       }
       // generatedNow is the calculated specks available on the UTxO
@@ -117,9 +106,10 @@ export class UtxoService {
       return { status: 'insufficient-funds', requested: specks };
     }
 
+    const now = Date.now();
     const expiresAt = now + this.utxoLockTtlSeconds * 1000;
     const key = this.getLockId(selectedUtxo);
-    this.lockedUtxos.set(key, { expiresAt, specks });
+    this.lockedUtxos.set(key, { specks });
     this.logger.info({ id: key, ctime: syncTime, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
 
     const spend = this.walletService.spend(selectedUtxo, specks, syncTime);

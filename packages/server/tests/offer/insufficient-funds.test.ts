@@ -1,14 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { CLIENT } from '../utils.js';
+import { CLIENT, getQuoteId } from '../utils.js';
 
 describe('Offer API - Insufficient Funds', () => {
   it('should return 409 when requesting too much', async () => {
-    const request = {
-      specks: '1000000000000000',
-      offerCurrency: 'lovelace',
-    };
-
-    const res = await CLIENT.createOffer(request);
+    const { quoteId, currency } = await getQuoteId('999999999999999999999999999');
+    const res = await CLIENT.createOffer({ quoteId, offerCurrency: currency });
     expect(res.status).toBe(409);
   });
 });

@@ -75,7 +75,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
 
       while (true) {
         const exchangePrice = await selectCurrency(prices, specksRequired, promptForCurrency);
-        const offer = await requestCesOffer(exchangePrice, specksRequired);
+        const offer = await requestCesOffer(exchangePrice);
         const result = await confirmOfferWithUser(offer, specksRequired, confirmOffer);
 
         if (result === 'confirmed') {

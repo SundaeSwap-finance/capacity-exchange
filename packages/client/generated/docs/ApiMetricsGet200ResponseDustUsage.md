@@ -1,24 +1,28 @@
 
-# ApiOffersPostRequest
+# ApiMetricsGet200ResponseDustUsage
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`quoteId` | string
-`offerCurrency` | string
+`availableBalance` | string
+`totalSpecksConsumed` | string
+`specksLastHour` | string
+`locksLastHour` | number
 
 ## Example
 
 ```typescript
-import type { ApiOffersPostRequest } from ''
+import type { ApiMetricsGet200ResponseDustUsage } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "quoteId": null,
-  "offerCurrency": null,
-} satisfies ApiOffersPostRequest
+  "availableBalance": null,
+  "totalSpecksConsumed": null,
+  "specksLastHour": null,
+  "locksLastHour": null,
+} satisfies ApiMetricsGet200ResponseDustUsage
 
 console.log(example)
 
@@ -27,7 +31,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ApiOffersPostRequest
+const exampleParsed = JSON.parse(exampleJSON) as ApiMetricsGet200ResponseDustUsage
 console.log(exampleParsed)
 ```
 
