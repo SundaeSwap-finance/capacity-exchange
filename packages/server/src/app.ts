@@ -19,9 +19,7 @@ import sponsorRoutes from './routes/sponsor.js';
 import priceRoutes from './routes/prices.js';
 import metricsRoutes from './routes/metrics.js';
 import type { AppConfig } from './loadConfig.js';
-import { readFileSync } from 'fs';
-
-const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+import { packageName, packageVersion } from './packageInfo.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -53,8 +51,8 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(swagger, {
     openapi: {
       info: {
-        title: packageJson.name,
-        version: packageJson.version,
+        title: packageName,
+        version: packageVersion,
       },
     },
   });

@@ -1,8 +1,6 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
-import { readFileSync } from 'fs';
 import { MetricsSchema } from '../models/metrics.js';
-
-const packageJson = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'));
+import { packageName, packageVersion } from '../packageInfo.js';
 
 const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.get('/metrics', MetricsSchema, async (_request, _reply) => {
@@ -12,8 +10,8 @@ const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
 
     return {
       server: {
-        name: packageJson.name,
-        version: packageJson.version,
+        name: packageName,
+        version: packageVersion,
         uptime: process.uptime(),
         network: fastify.config.networkId,
       },

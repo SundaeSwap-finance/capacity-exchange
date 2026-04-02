@@ -3,11 +3,9 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { readFileSync } from 'fs';
 import type { Logger } from 'pino';
 import type { AppConfig } from './loadConfig.js';
-
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
+import { packageName, packageVersion } from './packageInfo.js';
 
 export interface Telemetry {
   close(): Promise<void>;
@@ -20,14 +18,14 @@ export function initTelemetry(config: AppConfig, logger: Logger): Telemetry | un
     return undefined;
   }
 
-  const otelServiceName = config.otelServiceName ?? packageJson.name;
+  const otelServiceName = config.otelServiceName ?? packageName;
   const exportIntervalMillis = config.otelMetricExportIntervalMs ?? 30_000;
   logger.info({ otelServiceName, endpoint: config.otelEndpoint, exportIntervalMillis }, 'Initializing OpenTelemetry');
 
   const sdk = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: otelServiceName,
-      [ATTR_SERVICE_VERSION]: packageJson.version,
+      [ATTR_SERVICE_VERSION]: packageVersion,
     }),
     metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({ url: `${config.otelEndpoint}/v1/metrics` }),

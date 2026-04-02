@@ -7,9 +7,11 @@ export function recordDuration(name: string, description: string) {
     const original = descriptor.value;
     descriptor.value = async function (...args: any[]) {
       const start = Date.now();
-      const result = await original.apply(this, args);
-      getHistogram().record(Date.now() - start);
-      return result;
+      try {
+        return await original.apply(this, args);
+      } finally {
+        getHistogram().record(Date.now() - start);
+      }
     };
     return descriptor;
   };

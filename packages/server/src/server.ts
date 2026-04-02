@@ -12,6 +12,7 @@ const start = async () => {
   const shutdown = async () => {
     await app.close();
     await telemetry?.close();
+    process.exit(0);
   };
 
   process.on('SIGTERM', shutdown);
