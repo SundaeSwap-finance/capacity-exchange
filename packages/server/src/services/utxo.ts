@@ -120,9 +120,9 @@ export class UtxoService {
     const expiresAt = now + this.utxoLockTtlSeconds * 1000;
     const key = this.getLockId(selectedUtxo);
     this.lockedUtxos.set(key, { expiresAt, specks });
-    this.logger.info({ id: key, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
+    this.logger.info({ id: key, ctime: syncTime, expiresAt: new Date(expiresAt).toISOString() }, 'Locked UTxO');
 
-    const spend = this.walletService.spend(selectedUtxo, specks);
+    const spend = this.walletService.spend(selectedUtxo, specks, syncTime);
 
     return {
       status: 'ok',
