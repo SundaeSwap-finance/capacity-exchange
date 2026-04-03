@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { RegistrySimulator, randomSecretKey } from './simulator.js';
+import { RegistrySimulator, randomSecretKey, makeRecipient, ocrt } from './simulator.js';
 import { entryFromContract } from '../src/types.js';
 
 const COLLATERAL = 1000n;
@@ -13,6 +13,14 @@ function futureDate(offsetSeconds: bigint): Date {
   return new Date(Number(BASE_TIME + offsetSeconds) * 1000);
 }
 
+function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffects']>): bigint {
+  let total = 0n;
+  for (const [, amount] of effects.unshieldedOutputs) {
+    total += amount;
+  }
+  return total;
+}
+
 function defaultEntry(validTo?: Date) {
   return {
     validTo: validTo ?? futureDate(MAX_VALIDITY),
@@ -23,6 +31,42 @@ function defaultEntry(validTo?: Date) {
 
 // Invariant: the contract's unshielded balance always equals registry.size() * collateralAmount
 describe('collateral conservation', () => {
+  it('register receives collateral as native token', () => {
+    const key = randomSecretKey();
+    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    sim.setBlockTime(BASE_TIME);
+
+    const effects = sim.register(defaultEntry());
+    const inputs = [...effects.unshieldedInputs.entries()];
+    expect(inputs).toHaveLength(1);
+    const [tokenType, amount] = inputs[0];
+    expect(tokenType.tag).toBe('unshielded');
+    expect(amount).toBe(COLLATERAL);
+  });
+
+  it('deregister sends collateral to the specified recipient', () => {
+    const key = randomSecretKey();
+    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    sim.setBlockTime(BASE_TIME);
+
+    sim.register(defaultEntry());
+    const registryKey = [...sim.getLedger().registry][0][0];
+    const recipient = makeRecipient();
+    const effects = sim.deregister(registryKey, recipient);
+
+    expect(getUnshieldedOutputTotal(effects)).toBe(COLLATERAL);
+
+    // Verify the spend is addressed to the correct recipient
+    const spends = [...effects.claimedUnshieldedSpends.entries()];
+    expect(spends).toHaveLength(1);
+    const [[, address], amount] = spends[0];
+    expect(amount).toBe(COLLATERAL);
+    expect(address).toEqual({
+      tag: 'user',
+      address: ocrt.decodeUserAddress(recipient.bytes),
+    });
+  });
+
   it('balance tracks registration count', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
