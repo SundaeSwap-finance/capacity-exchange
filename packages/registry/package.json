@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf contract/out/",
-    "compile": "compact compile +0.30.0 contract/src/registry.compact contract/out",
+    "compile": "\"$COMPACTC\" contract/src/registry.compact contract/out",
     "build": "tsc --noEmit",
     "test": "vitest run"
   },
