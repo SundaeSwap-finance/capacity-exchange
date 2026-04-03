@@ -14,6 +14,7 @@ export type GetQuoteResult =
 interface QuotePayload {
   specks: string;
   prices: Price[];
+  nonce: string;
   exp: number;
 }
 
@@ -41,6 +42,7 @@ export class QuoteService {
     const payload: QuotePayload = {
       specks: specks.toString(),
       prices,
+      nonce: crypto.randomUUID(),
       exp: Date.now() + this.ttlSeconds * 1000,
     };
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');

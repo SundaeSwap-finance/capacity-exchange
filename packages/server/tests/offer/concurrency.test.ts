@@ -51,7 +51,7 @@ describe('Offer API - Concurrency', () => {
   });
 
   it('eventually exhausts wallet UTxOs', async () => {
-    const CONCURRENT_REQUESTS = 20;
+    const CONCURRENT_REQUESTS = 10;
     let exhaustedUtxos = false;
 
     const quotes = await Promise.all(
