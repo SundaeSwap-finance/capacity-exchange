@@ -1,0 +1,26 @@
+{
+  "name": "@capacity-exchange/registry",
+  "version": "1.0.0",
+  "description": "Registry contract types and utilities for the capacity exchange SDK",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf contract/out/",
+    "compile": "compact compile +0.30.0 contract/src/registry.compact contract/out",
+    "build": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract/*": "./contract/out/contract/*"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/compact-runtime": "0.15.0",
+    "@midnight-ntwrk/midnight-js-types": "4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "typescript": "^5.9.3"
+  }
+}
