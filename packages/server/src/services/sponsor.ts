@@ -80,12 +80,12 @@ export class SponsorService {
     );
 
     const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
-    // ask other capacity exchange services to sponsor the transaction 
+    // ask other capacity exchange services to sponsor the transaction
     if (lockResult.status === 'insufficient-funds' && this.cesWalletProvider) {
       this.logger.debug('Insufficient dust funds; falling back to CES wallet provider');
       const tx = await this.cesWalletProvider.balanceTx(userTx);
 
-      return { status: 'ok', tx };
+      return { status: 'ok', tx, specksCommitted: estimatedSpecks };
     }
 
     if (lockResult.status !== 'ok') {

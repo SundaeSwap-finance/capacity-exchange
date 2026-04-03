@@ -1,6 +1,6 @@
 /**
  * Intended as a test of CES sponsorship flow for a counter contract `increment` transaction.
- * See `packages/server/scripts/test-sponsor.sh` test script, calling this CLI and validating the CES response.
+ * See `packages/server/scripts/test-prove-and-sponsor.sh` test script, calling this CLI and validating the CES response.
  *
  * What it does:
  *   1. Builds an unproven `increment` call transaction for the deployed counter contract.
