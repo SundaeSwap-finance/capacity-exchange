@@ -15,6 +15,9 @@ const AppEnvSchema = Type.Object({
   OFFER_TTL_SECONDS: Type.Number(),
   PROOF_SERVER_URL: Type.Optional(Type.String()),
   WALLET_STATE_DIR: Type.String(),
+  OTEL_SERVICE_NAME: Type.Optional(Type.String()),
+  OTEL_EXPORTER_OTLP_ENDPOINT: Type.Optional(Type.String()),
+  OTEL_METRIC_EXPORT_INTERVAL_MS: Type.Optional(Type.Number()),
   CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
 });
 
