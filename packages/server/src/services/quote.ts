@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac, randomUUID } from 'crypto';
 import type { Price } from './price.js';
 
 export interface Quote {
@@ -42,7 +42,7 @@ export class QuoteService {
     const payload: QuotePayload = {
       specks: specks.toString(),
       prices,
-      nonce: crypto.randomUUID(),
+      nonce: randomUUID(),
       exp: Date.now() + this.ttlSeconds * 1000,
     };
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');

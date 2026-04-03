@@ -76,5 +76,5 @@ describe('Offer API - Concurrency', () => {
     }
 
     expect(exhaustedUtxos).toBe(true);
-  }, 60_000_000);
+  }, 60_000);
 });
