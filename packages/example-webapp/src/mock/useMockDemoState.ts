@@ -3,7 +3,7 @@ import type { NetworkConfig } from '../config';
 import type { ContractsConfig } from '../features/contract/hooks/useContractsConfig';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
-import type { ExchangePrice, Offer, CurrencySelectionResult } from '../features/ces/types';
+import type { ExchangePrice, CurrencySelectionResult } from '../features/ces/types';
 import type { SeedWalletState } from '../features/wallet/seed/types';
 import type { SyncProgressInfo } from '../features/wallet/seed/walletService';
 import type { ExtensionWalletState } from '../features/wallet/extension/useExtensionWallet';
@@ -14,15 +14,6 @@ const MOCK_TOKEN_COLOR = 'mock-token-blue';
 const MOCK_TOKEN_MINT_ADDRESS = 'mock-token-mint-address';
 const MOCK_COUNTER_ADDRESS = 'mock-counter-address';
 const MOCK_DUST_REQUIRED = 4200000n;
-
-function mockOffer(amount: string): Offer {
-  return {
-    offerId: 'mock-offer-1',
-    offerAmount: amount,
-    offerCurrency: MOCK_TOKEN_COLOR,
-    expiresAt: new Date(Date.now() + 90_000),
-  } as unknown as Offer;
-}
 
 function mockPrice(amount: string): ExchangePrice {
   return {

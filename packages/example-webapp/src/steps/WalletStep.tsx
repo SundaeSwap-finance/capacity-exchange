@@ -22,7 +22,7 @@ function progressPercent(p: SubWalletProgress): number {
 }
 
 export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onConnected }: WalletStepProps) {
-  const { wallets, storageMode, unlocking, createWallet, unlockWallet, removeWallet, enablePasskey } = useWalletStore();
+  const { wallets, unlocking, createWallet, unlockWallet, removeWallet, enablePasskey } = useWalletStore();
   const [showConnect, setShowConnect] = useState(false);
   const [activeMnemonic, setActiveMnemonic] = useState<string | null>(null);
   const [showExportSeed, setShowExportSeed] = useState(false);
@@ -36,8 +36,6 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
 
   const sp = seedWallet.syncProgress;
   const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status !== 'connecting' && extensionWallet.status !== 'connected';
-
-  const extensionAvailable = extensionWallet.status !== 'unavailable';
 
   // Skip intro if already connecting/connected
   useEffect(() => {

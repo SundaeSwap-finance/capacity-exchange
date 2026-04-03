@@ -7,9 +7,7 @@ import type { WalletData } from '../features/wallet/types';
 import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
-import { formatDust } from '../utils/format';
 import { resolveTokenLabel } from '../utils/tokenLabels';
-import type { NetworkConfig } from '../config';
 import { DevAccessForm } from './DevAccessStep';
 
 interface PlaygroundStepProps {
@@ -19,9 +17,7 @@ interface PlaygroundStepProps {
   sponsoredTransaction: UseSponsoredTransactionResult;
   tokenMintAddress: string | null;
   mintedTokenColor: string;
-  counterAddress: string | null;
   counterValue: string | null;
-  config: NetworkConfig;
   allowMockMintWithoutContractAddress?: boolean;
 }
 
@@ -34,9 +30,7 @@ export function PlaygroundStep({
   sponsoredTransaction,
   tokenMintAddress,
   mintedTokenColor,
-  counterAddress,
   counterValue,
-  config,
   allowMockMintWithoutContractAddress = false,
 }: PlaygroundStepProps) {
   const anyTransacting =

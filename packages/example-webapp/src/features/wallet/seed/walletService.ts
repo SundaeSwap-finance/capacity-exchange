@@ -139,7 +139,7 @@ export async function connectSeedWallet(
 
   const unshieldedSub = walletFacade.unshielded.state.subscribe({
     next: (state) => {
-      const p = state.progress as any;
+      const p = state.progress;
       progress.unshielded = p.isStrictlyComplete?.() ?? true;
       emitProgress();
     },

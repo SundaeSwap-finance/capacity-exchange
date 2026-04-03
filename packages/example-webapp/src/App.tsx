@@ -221,7 +221,6 @@ function TutorialInner({
     <TutorialShell
       currentStep={state.step}
       completedSteps={state.completedSteps}
-      networkId={networkId}
       walletConnected={isWalletConnected}
       walletConnecting={isWalletConnecting}
       onWalletConnect={handleWalletConnect}
@@ -279,9 +278,7 @@ function TutorialInner({
             sponsoredTransaction={activeSponsoredTransaction}
             tokenMintAddress={activeContractsConfig.tokenMint.contractAddress}
             mintedTokenColor={activeContractsConfig.tokenMint.derivedTokenColor}
-            counterAddress={activeContractsConfig.counter.contractAddress}
             counterValue={activeCounterValue}
-            config={config}
             allowMockMintWithoutContractAddress={mockDemoEnabled}
           />
         )}
