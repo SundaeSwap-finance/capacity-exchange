@@ -6,7 +6,8 @@
   "scripts": {
     "clean": "rm -rf contract/out/",
     "compile": "compact compile +0.30.0 contract/src/registry.compact contract/out",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "test": "vitest run"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -17,10 +18,13 @@
   "dependencies": {
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
-    "@midnight-ntwrk/midnight-js-types": "4.0.1"
+    "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0"
   },
   "devDependencies": {
+    "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
     "@types/node": "22.10.7",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
