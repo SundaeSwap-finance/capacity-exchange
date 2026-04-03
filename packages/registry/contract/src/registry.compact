@@ -8,7 +8,7 @@ new type Ipv6 = Bytes<16>;
 
 new type IpAddress = Either<Ipv4, Ipv6>;
 
-new type Port = Bytes<2>;
+new type Port = Uint<16>;
 
 new type RegistryKey = Bytes<32>;
 

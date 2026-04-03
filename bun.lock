@@ -213,6 +213,19 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/registry": {
+      "name": "@capacity-exchange/registry",
+      "version": "1.0.0",
+      "dependencies": {
+        "@midnight-ntwrk/compact-js": "2.5.0",
+        "@midnight-ntwrk/compact-runtime": "0.15.0",
+        "@midnight-ntwrk/midnight-js-types": "4.0.1",
+      },
+      "devDependencies": {
+        "@types/node": "22.10.7",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/server": {
       "name": "@capacity-exchange/server",
       "version": "1.0.0",
@@ -375,6 +388,8 @@
     "@capacity-exchange/midnight-core": ["@capacity-exchange/midnight-core@workspace:packages/midnight-core"],
 
     "@capacity-exchange/midnight-node": ["@capacity-exchange/midnight-node@workspace:packages/midnight-node"],
+
+    "@capacity-exchange/registry": ["@capacity-exchange/registry@workspace:packages/registry"],
 
     "@capacity-exchange/server": ["@capacity-exchange/server@workspace:packages/server"],
 
