@@ -1,14 +1,12 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import { RootSchema } from '../models/root.js';
-import { readFileSync } from 'fs';
-
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
+import { packageName, packageVersion } from '../packageInfo.js';
 
 const rootRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.get('/', RootSchema, async (_request, _reply) => {
     return {
-      name: packageJson.name,
-      version: packageJson.version,
+      name: packageName,
+      version: packageVersion,
       env: {
         network: fastify.config.networkId,
         node_url: fastify.config.endpoints.nodeUrl,

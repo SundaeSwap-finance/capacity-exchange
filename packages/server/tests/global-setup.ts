@@ -19,9 +19,7 @@ export async function setup() {
     stdio: 'pipe',
     env: {
       ...process.env,
-      LOG_LEVEL: 'debug',
-      // Speed-up expiry
-      OFFER_TTL_SECONDS: '2',
+      DOTENV_CONFIG_PATH: path.join(CWD, '.env.test'),
     },
   });
   serverProcess.on('error', (err) => {

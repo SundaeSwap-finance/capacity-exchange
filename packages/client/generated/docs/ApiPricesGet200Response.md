@@ -6,6 +6,7 @@
 
 Name | Type
 ------------ | -------------
+`quoteId` | string
 `prices` | [Array&lt;ApiPricesGet200ResponsePricesInner&gt;](ApiPricesGet200ResponsePricesInner.md)
 
 ## Example
@@ -15,6 +16,7 @@ import type { ApiPricesGet200Response } from ''
 
 // TODO: Update the object below with actual values
 const example = {
+  "quoteId": null,
   "prices": null,
 } satisfies ApiPricesGet200Response
 

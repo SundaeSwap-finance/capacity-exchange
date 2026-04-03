@@ -16,9 +16,6 @@ includes:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
       COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
-  _bridge:
-    taskfile: taskfiles/bridge.yml
-    internal: true
 
 vars:
   CONTRACTS_DIR: '{{.ROOT_DIR}}/packages/example-webapp/contracts'
@@ -40,13 +37,6 @@ tasks:
     deps: [_build:extract-compactc]
     cmds:
       - task: _example:compile
-      - task: _build:compile-bridge-contracts
-
-  compile-bridge-contracts:
-    desc: Compile bridge vault Compact contracts
-    deps: [_build:extract-compactc]
-    cmds:
-      - task: _build:compile-bridge-contracts
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
@@ -125,8 +115,6 @@ tasks:
   dev:example:
     desc: Start server and example webapp with hot-reload
     deps: [require-proof-server-url, _example:require-deployed, _example:require-example-price-config, _build:libs]
-    env:
-      VITE_CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
     cmds:
       - task: _dev:run
         vars:
@@ -156,32 +144,6 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
-  dev:bridge:
-    desc: Start the bridge webapp with hot-reload
-    deps: [_bridge:require-env, _bridge:require-zk-assets, _build:libs]
-    cmds:
-      - task: _dev:run
-        vars:
-          NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,bridge
-          COLORS: blue,cyan,yellow
-          EXTRA: '"bun run --filter @capacity-exchange/bridge-webapp dev"'
-    requires:
-      vars: [NETWORK_ID]
-
-  # TODO: Add setup:bridge-dev task that deploys vault, deposits test tokens,
-  # and writes the contract address to bridge-webapp .env
-  setup:bridge:
-    desc: 'One-time setup for bridge webapp: compile contracts, copy ZK assets, init env'
-    cmds:
-      - task: install
-      - task: compile-bridge-contracts
-      - task: _bridge:copy-zk-assets
-      - task: _bridge:init-env
-      - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev:bridge' to start."
-    requires:
-      vars: [NETWORK_ID]
-
   dev:webapp:
     desc: Start the example webapp with hot-reload
     deps: [_example:require-deployed, _build:components]
@@ -203,6 +165,7 @@ tasks:
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
       PRICE_CONFIG_FILE: 'price-config.{{.NETWORK_ID}}.json'
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
+      VITE_CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
     cmds:
       - >-
         bunx concurrently --kill-others
@@ -237,6 +200,15 @@ tasks:
     cmds:
       - bun run --if-present --filter '*' test
 
+  test:e2e:
+    desc: Run e2e tests
+    deps: [_build:libs]
+    preconditions:
+      - sh: curl -sSf http://localhost:8088/ready
+        msg: Indexer is not running on port 8088.
+    cmds:
+      - bun run --filter '*' test:e2e
+
   check:
     desc: Lint and format check
     deps: [_build:install]
@@ -248,6 +220,12 @@ tasks:
     deps: [_build:install]
     cmds:
       - bun run fix
+
+  regenerate-client:
+    desc: Regenerate client with latest schema from server
+    deps: [_build:install]
+    cmds:
+      - bun run regenerate-client
 
   clean:
     desc: Clean build artifacts and generated files

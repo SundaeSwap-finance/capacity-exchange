@@ -6,6 +6,7 @@ export const DEFAULT_MARGIN = 3;
 
 export interface ExchangePrice {
   exchangeApi: CesApi;
+  quoteId: string;
   price: {
     currency: string;
     amount: string;

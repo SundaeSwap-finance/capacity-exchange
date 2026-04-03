@@ -2,7 +2,7 @@ import { Type } from '@sinclair/typebox';
 import { ErrorResponse } from './common.js';
 
 export const CreateOfferRequest = Type.Object({
-  specks: Type.String({ pattern: '^[1-9][0-9]*$' }),
+  quoteId: Type.String({ minLength: 1 }),
   offerCurrency: Type.String({ minLength: 1 }),
 });
 
@@ -24,6 +24,7 @@ export const OfferSchema = {
       201: CreateOfferResponse,
       400: ErrorResponse,
       409: ErrorResponse,
+      410: ErrorResponse,
       500: ErrorResponse,
       503: ErrorResponse,
     },

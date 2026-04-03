@@ -15,7 +15,6 @@ const AppEnvSchema = Type.Object({
   OFFER_TTL_SECONDS: Type.Number(),
   PROOF_SERVER_URL: Type.Optional(Type.String()),
   WALLET_STATE_DIR: Type.String(),
-  CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -37,6 +36,9 @@ export function parseAppEnv(): AppEnv {
     PROOF_SERVER_URL: process.env.PROOF_SERVER_URL,
     WALLET_STATE_DIR: process.env.WALLET_STATE_DIR,
     CAPACITY_EXCHANGE_PEER_URLS: process.env.CAPACITY_EXCHANGE_PEER_URLS,
+    OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
+    OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+    OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS ? Number(process.env.OTEL_METRIC_EXPORT_INTERVAL_MS) : undefined,
   };
 
   if (!Value.Check(AppEnvSchema, env)) {

@@ -8,12 +8,12 @@ dist
 node_modules
 tools/compactc/*/
 vendor
-wallet-seed.hex
+wallet-seed*.hex
 wallet-mnemonic*.txt
 .wallet-state
 keys.json
-.env
 **/public/midnight/
 load-test-results.json
 .admin-key.json
 .wallet-state-*/
+.quote-secret.key
