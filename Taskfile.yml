@@ -221,6 +221,12 @@ tasks:
     cmds:
       - bun run fix
 
+  check-client:
+    desc: Check that the client has the latest schema from the server
+    deps: [_build:install, _build:server]
+    cmds:
+      - bun run check-client
+
   regenerate-client:
     desc: Regenerate client with latest schema from server
     deps: [_build:install]
