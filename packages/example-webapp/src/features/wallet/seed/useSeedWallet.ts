@@ -37,9 +37,14 @@ export function useSeedWallet(config: NetworkConfig): SeedWalletState {
 
       try {
         console.log('[useSeedWallet] calling connectSeedWallet...');
-        const connection = await connectSeedWallet(seed, config, (progress) => {
-          setSyncProgress(progress);
-        }, options?.isNewWallet);
+        const connection = await connectSeedWallet(
+          seed,
+          config,
+          (progress) => {
+            setSyncProgress(progress);
+          },
+          options?.isNewWallet
+        );
         console.log('[useSeedWallet] connectSeedWallet returned');
         const adapter = new SeedWalletAdapter(connection.walletFacade, connection.networkId);
         console.log('[useSeedWallet] adapter created');

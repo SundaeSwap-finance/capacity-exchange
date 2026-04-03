@@ -1,6 +1,12 @@
 import type pino from 'pino';
 import { config as loadDotenv } from 'dotenv';
-import { toNetworkIdEnum, resolveEndpoints, type NetworkEndpoints, type WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
+import {
+  toNetworkIdEnum,
+  resolveEndpoints,
+  type NetworkEndpoints,
+  type WalletConnection,
+  type WalletStateStore,
+} from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { loadPriceConfig, type PriceFormula, type SponsoredContract } from './config/prices.js';
 import { parseAppEnv } from './config/env.js';

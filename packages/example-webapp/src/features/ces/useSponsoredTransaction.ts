@@ -43,10 +43,9 @@ export function useSponsoredTransaction(
       });
 
       setStatus('submitting');
-      await withDustRetry(
-        () => incrementCounter(providers, contractAddress, walletProvider, config),
-        { onRetry: (attempt) => console.warn(`[SponsoredTransaction] Dust proof error, retrying (${attempt}/3)`) },
-      );
+      await withDustRetry(() => incrementCounter(providers, contractAddress, walletProvider, config), {
+        onRetry: (attempt) => console.warn(`[SponsoredTransaction] Dust proof error, retrying (${attempt}/3)`),
+      });
       setStatus('success');
     } catch (err) {
       console.error('[SponsoredTransaction] Error:', err);

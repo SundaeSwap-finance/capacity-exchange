@@ -1,7 +1,9 @@
+import { DustWalletState } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import {
-  DustWalletState,
-} from '@midnight-ntwrk/wallet-sdk-dust-wallet';
-import { CoreWallet, type UnprovenDustSpend, type DustFullInfo } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
+  CoreWallet,
+  type UnprovenDustSpend,
+  type DustFullInfo,
+} from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
 import { nativeToken } from '@midnight-ntwrk/ledger-v8';

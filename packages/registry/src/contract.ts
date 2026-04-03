@@ -26,7 +26,7 @@ export type RegistryContract = Registry.Contract<CircuitPrivateState>;
 
 export const CompiledRegistryContract = CompiledContract.make<RegistryContract>('Registry', Registry.Contract).pipe(
   CompiledContract.withWitnesses(witnesses),
-  CompiledContract.withCompiledFileAssets('./contract/out'),
+  CompiledContract.withCompiledFileAssets('./contract/out')
 );
 
 export function constructorArgs(args: RegistryConstructorArgs): [bigint, bigint] {

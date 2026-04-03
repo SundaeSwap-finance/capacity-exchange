@@ -58,7 +58,11 @@ export class TxService {
     return this.#proofProvider.proveTx(tx);
   }
 
-  async createDustOnlyTx(dust: UnprovenDustSpend, ctime: Date, ttl: Date): Promise<UnboundTransaction> {
+  async createDustOnlyTx(
+    dust: UnprovenDustSpend,
+    ctime: Date,
+    ttl: Date,
+  ): Promise<UnboundTransaction> {
     const intent = this.buildDustIntent(dust, ctime, ttl);
     const tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
     return this.proveTx(tx);

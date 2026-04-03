@@ -37,7 +37,9 @@ export function recordCounters(...specs: CounterSpec[]) {
       const result = await original.apply(this, args);
       for (const { getCounter, extract } of counters) {
         const extracted = extract(result);
-        if (extracted) getCounter().add(extracted.value, extracted.attributes);
+        if (extracted) {
+          getCounter().add(extracted.value, extracted.attributes);
+        }
       }
       return result;
     };

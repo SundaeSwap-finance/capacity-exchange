@@ -1,4 +1,10 @@
-import type { WalletFacade, TokenTransfer, BalancingRecipe, ShieldedTokenTransfer, UnshieldedTokenTransfer } from '@midnight-ntwrk/wallet-sdk-facade';
+import type {
+  WalletFacade,
+  TokenTransfer,
+  BalancingRecipe,
+  ShieldedTokenTransfer,
+  UnshieldedTokenTransfer,
+} from '@midnight-ntwrk/wallet-sdk-facade';
 import type { ShieldedAddress, UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { WalletKeys } from './keys.js';
 
@@ -8,7 +14,7 @@ async function executeTransfer(
   walletFacade: WalletFacade,
   keys: WalletKeys,
   transfers: (ShieldedTokenTransfer | UnshieldedTokenTransfer)[],
-  sign: boolean,
+  sign: boolean
 ): Promise<string> {
   const { shieldedSecretKeys, dustSecretKey } = keys;
   const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
@@ -44,4 +50,3 @@ export function sendUnshieldedTokens(
 ): Promise<string> {
   return executeTransfer(walletFacade, keys, [{ type: 'unshielded', outputs }], true);
 }
-

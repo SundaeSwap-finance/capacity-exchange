@@ -39,7 +39,9 @@ describe('GET /api/prices', () => {
     const result = quoteService.getQuote(quoteId);
 
     expect(result.status).toBe('ok');
-    if (result.status !== 'ok') return;
+    if (result.status !== 'ok') {
+      return;
+    }
     expect(result.quote.specks).toBe(5000n);
     expect(result.quote.prices[0].currency).toBe('lovelace');
   });

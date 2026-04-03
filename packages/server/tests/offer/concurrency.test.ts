@@ -66,7 +66,7 @@ describe('Offer API - Concurrency', () => {
 
     const results = await Promise.allSettled(promises);
     for (const result of results) {
-      if (result.status === "rejected") {
+      if (result.status === 'rejected') {
         continue;
       }
       if (result.value.status === 409) {

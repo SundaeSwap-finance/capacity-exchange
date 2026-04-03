@@ -44,13 +44,8 @@ export async function connectSeedWallet(
   isNewWallet?: boolean
 ): Promise<SeedWalletConnection> {
   console.debug('[WalletService] Loading WASM...');
-  const {
-    createWallet,
-    COST_PARAMS,
-    LocalStorageStateStore,
-    WalletStateStore,
-    deriveWalletKeys,
-  } = await loadMidnightCore();
+  const { createWallet, COST_PARAMS, LocalStorageStateStore, WalletStateStore, deriveWalletKeys } =
+    await loadMidnightCore();
   console.debug('[WalletService] WASM loaded');
 
   const walletConfig = {
@@ -68,11 +63,7 @@ export async function connectSeedWallet(
   const keys = deriveWalletKeys(seedHex, walletConfig.networkId);
   console.debug('[WalletService] Keys derived');
   const baseStore = new LocalStorageStateStore();
-  const store = new WalletStateStore(
-    baseStore,
-    String(walletConfig.networkId),
-    keys.shieldedSecretKeys.coinPublicKey
-  );
+  const store = new WalletStateStore(baseStore, String(walletConfig.networkId), keys.shieldedSecretKeys.coinPublicKey);
 
   // For new wallets, try to use pre-synced snapshots to skip most of the sync
   let saved = await store.loadWalletState();

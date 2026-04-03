@@ -158,10 +158,12 @@
     background:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='table' tableValues='0 0.92'/%3E%3CfeFuncG type='table' tableValues='0 0.92'/%3E%3CfeFuncB type='table' tableValues='0 0.92'/%3E%3CfeFuncA type='table' tableValues='0 0.2'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"),
       linear-gradient(180deg, rgb(var(--ces-black-950)), rgb(var(--ces-black-950)));
-    background-size: 180px 180px, auto;
+    background-size:
+      180px 180px,
+      auto;
     background-repeat: repeat, no-repeat;
     mix-blend-mode: screen;
-    filter: contrast(1.1) brightness(0.60);
+    filter: contrast(1.1) brightness(0.6);
     z-index: 0;
   }
 
@@ -192,9 +194,7 @@
     appearance: none;
     border-width: 0;
     border-radius: 0;
-    background:
-      linear-gradient(180deg, rgb(var(--ces-white) / 0.12), transparent 18%),
-      rgb(var(--ces-button-fill));
+    background: linear-gradient(180deg, rgb(var(--ces-white) / 0.12), transparent 18%), rgb(var(--ces-button-fill));
     color: rgb(var(--ces-button-ink));
     padding: var(--ces-btn-pad-y) calc(var(--ces-btn-icon-size) + 2rem) var(--ces-btn-pad-y) var(--ces-btn-pad-x);
     font-family: var(--ces-font-display);
@@ -236,9 +236,7 @@
     appearance: none;
     border-width: 0;
     border-radius: 0;
-    background:
-      linear-gradient(180deg, rgb(var(--ces-white) / 0.12), transparent 18%),
-      rgb(var(--ces-button-fill));
+    background: linear-gradient(180deg, rgb(var(--ces-white) / 0.12), transparent 18%), rgb(var(--ces-button-fill));
     color: rgb(var(--ces-button-ink));
     padding: 1.15rem calc(var(--ces-btn-icon-size) + 2rem) 1.15rem 1.25rem;
     font-family: var(--ces-font-mono);
@@ -308,9 +306,7 @@
     border-width: 2px;
     border-radius: 0;
     border-color: rgb(var(--ces-button-border));
-    background:
-      linear-gradient(180deg, rgb(var(--ces-white) / 0.08), transparent 20%),
-      rgb(var(--ces-button-fill));
+    background: linear-gradient(180deg, rgb(var(--ces-white) / 0.08), transparent 20%), rgb(var(--ces-button-fill));
     color: rgb(var(--ces-button-ink));
     padding: var(--ces-btn-pad-y) calc(var(--ces-btn-icon-size) + 2.2rem) var(--ces-btn-pad-y) var(--ces-btn-pad-x);
     font-family: var(--ces-font-display);

@@ -48,9 +48,15 @@ function nowLabel() {
 }
 
 function stepName(step: TutorialStep, _substep: Substep) {
-  if (step === 0) {return 'wallet';}
-  if (step === 1) {return 'sponsored-mint';}
-  if (step === 2) {return 'register-submit';}
+  if (step === 0) {
+    return 'wallet';
+  }
+  if (step === 1) {
+    return 'sponsored-mint';
+  }
+  if (step === 2) {
+    return 'register-submit';
+  }
   return 'playground';
 }
 
@@ -116,21 +122,25 @@ export function useDemoDebugLog({
   ]);
 
   const appendEntry = (source: string, level: DebugLogEntry['level'], message: string) => {
-    setEntries((current) => [
-      {
-        id: nextIdRef.current++,
-        timestamp: nowLabel(),
-        source,
-        level,
-        message,
-      },
-      ...current,
-    ].slice(0, MAX_LOG_ENTRIES));
+    setEntries((current) =>
+      [
+        {
+          id: nextIdRef.current++,
+          timestamp: nowLabel(),
+          source,
+          level,
+          message,
+        },
+        ...current,
+      ].slice(0, MAX_LOG_ENTRIES)
+    );
   };
 
   // Consume mock log events pushed by the mock state
   useEffect(() => {
-    if (!pendingLogEvents || pendingLogEvents.length === 0) {return;}
+    if (!pendingLogEvents || pendingLogEvents.length === 0) {
+      return;
+    }
     for (const event of pendingLogEvents) {
       appendEntry(event.source, event.level, event.message);
     }
@@ -291,7 +301,11 @@ export function useDemoDebugLog({
   useEffect(() => {
     if (tokenBalance > prevTokenBalanceRef.current) {
       const delta = tokenBalance - prevTokenBalanceRef.current;
-      appendEntry('CHAIN', 'success', `wallet observed token balance increase of ${delta.toString()} to ${tokenBalance.toString()}`);
+      appendEntry(
+        'CHAIN',
+        'success',
+        `wallet observed token balance increase of ${delta.toString()} to ${tokenBalance.toString()}`
+      );
     }
     prevTokenBalanceRef.current = tokenBalance;
   }, [tokenBalance]);

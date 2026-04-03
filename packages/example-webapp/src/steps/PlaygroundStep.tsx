@@ -86,7 +86,9 @@ export function PlaygroundStep({
           onAction={() => {
             const resolvedTokenMintAddress =
               tokenMintAddress ?? (allowMockMintWithoutContractAddress ? MOCK_TOKEN_MINT_ADDRESS : null);
-            if (!resolvedTokenMintAddress) return;
+            if (!resolvedTokenMintAddress) {
+              return;
+            }
             sponsoredMint.mint(resolvedTokenMintAddress, 1000n);
           }}
           onReset={sponsoredMint.reset}
@@ -274,8 +276,12 @@ function CesPlaygroundAction({
                   const balB = shieldedBalances[b.price.currency] ?? 0n;
                   const canA = balA >= BigInt(a.price.amount);
                   const canB = balB >= BigInt(b.price.amount);
-                  if (canA && !canB) return -1;
-                  if (!canA && canB) return 1;
+                  if (canA && !canB) {
+                    return -1;
+                  }
+                  if (!canA && canB) {
+                    return 1;
+                  }
                   return 0;
                 })
                 .map((ep, i) => {
@@ -298,7 +304,6 @@ function CesPlaygroundAction({
                 })}
             </div>
           )}
-
         </>
       )}
 
@@ -310,4 +315,3 @@ function CesPlaygroundAction({
     </div>
   );
 }
-

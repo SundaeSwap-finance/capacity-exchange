@@ -59,10 +59,7 @@ export class SeedWalletAdapter implements WalletCapabilities {
     // Emit current balances immediately so callers don't wait for next state change
     this.#emitCurrentBalances(callback);
 
-    const subscription = combineLatest([
-      this.#walletFacade.dust.state,
-      this.#walletFacade.shielded.state,
-    ]).subscribe({
+    const subscription = combineLatest([this.#walletFacade.dust.state, this.#walletFacade.shielded.state]).subscribe({
       next: ([dustState, shieldedState]) => {
         callback({
           status: 'success',
@@ -82,18 +79,17 @@ export class SeedWalletAdapter implements WalletCapabilities {
   }
 
   #emitCurrentBalances(callback: (update: BalanceUpdate) => void): void {
-    Promise.all([
-      this.getDustBalance(),
-      this.getShieldedBalances(),
-    ]).then(([dust, shielded]) => {
-      callback({
-        status: 'success',
-        data: {
-          dustBalance: dust.balance,
-          nightBalances: {},
-          shieldedBalances: shielded,
-        },
-      });
-    }).catch(() => {});
+    Promise.all([this.getDustBalance(), this.getShieldedBalances()])
+      .then(([dust, shielded]) => {
+        callback({
+          status: 'success',
+          data: {
+            dustBalance: dust.balance,
+            nightBalances: {},
+            shieldedBalances: shielded,
+          },
+        });
+      })
+      .catch(() => {});
   }
 }

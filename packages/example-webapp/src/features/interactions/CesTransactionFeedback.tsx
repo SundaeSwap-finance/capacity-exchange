@@ -1,11 +1,5 @@
 import { LoadingSpinner } from '../../shared/ui';
-import {
-  FetchingOffersModal,
-  CurrencySelectionModal,
-  SubmittingModal,
-  SuccessModal,
-  ErrorModal,
-} from '../ces';
+import { FetchingOffersModal, CurrencySelectionModal, SubmittingModal, SuccessModal, ErrorModal } from '../ces';
 import type { UseCesTransactionResult } from '../ces';
 
 export function CesTransactionFeedback({ ces }: { ces: UseCesTransactionResult }) {

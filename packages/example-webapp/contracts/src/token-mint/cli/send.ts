@@ -20,7 +20,11 @@ function main() {
 
   return withAppContext(networkId, (ctx) =>
     sendShieldedTokens(ctx.walletContext.walletFacade, ctx.walletContext.keys, [
-      { type: derivedTokenColor, receiverAddress: MidnightBech32m.parse(recipientAddress).decode(ShieldedAddress, networkId), amount },
+      {
+        type: derivedTokenColor,
+        receiverAddress: MidnightBech32m.parse(recipientAddress).decode(ShieldedAddress, networkId),
+        amount,
+      },
     ])
   );
 }

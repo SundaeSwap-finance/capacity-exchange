@@ -33,19 +33,27 @@ export function parseAppEnv(): AppEnv {
     PRICE_CONFIG_FILE: process.env.PRICE_CONFIG_FILE,
     PORT: process.env.PORT ? Number(process.env.PORT) : undefined,
     LOG_LEVEL: process.env.LOG_LEVEL,
-    QUOTE_TTL_SECONDS: process.env.QUOTE_TTL_SECONDS ? Number(process.env.QUOTE_TTL_SECONDS) : undefined,
+    QUOTE_TTL_SECONDS: process.env.QUOTE_TTL_SECONDS
+      ? Number(process.env.QUOTE_TTL_SECONDS)
+      : undefined,
     QUOTE_SECRET_FILE: process.env.QUOTE_SECRET_FILE,
-    OFFER_TTL_SECONDS: process.env.OFFER_TTL_SECONDS ? Number(process.env.OFFER_TTL_SECONDS) : undefined,
+    OFFER_TTL_SECONDS: process.env.OFFER_TTL_SECONDS
+      ? Number(process.env.OFFER_TTL_SECONDS)
+      : undefined,
     PROOF_SERVER_URL: process.env.PROOF_SERVER_URL,
     WALLET_STATE_DIR: process.env.WALLET_STATE_DIR,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-    OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS ? Number(process.env.OTEL_METRIC_EXPORT_INTERVAL_MS) : undefined,
+    OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS
+      ? Number(process.env.OTEL_METRIC_EXPORT_INTERVAL_MS)
+      : undefined,
   };
 
   if (!Value.Check(AppEnvSchema, env)) {
     const errors = [...Value.Errors(AppEnvSchema, env)];
-    throw new Error(`Invalid app env:\n${errors.map((e) => `  ${e.path}: ${e.message}`).join('\n')}`);
+    throw new Error(
+      `Invalid app env:\n${errors.map((e) => `  ${e.path}: ${e.message}`).join('\n')}`,
+    );
   }
 
   return env as AppEnv;

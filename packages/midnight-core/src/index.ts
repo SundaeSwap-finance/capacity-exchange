@@ -1,6 +1,14 @@
 export { requireBrowserEnv } from './envBrowser.js';
 export { hexToBytes, parseHex, uint8ArrayToHex } from './hex.js';
-export { STARS_PER_NIGHT, SPECKS_PER_DUST, getNightBalance, starsToNight, specksToDust, extractBalances, type TokenBalance } from './night.js';
+export {
+  STARS_PER_NIGHT,
+  SPECKS_PER_DUST,
+  getNightBalance,
+  starsToNight,
+  specksToDust,
+  extractBalances,
+  type TokenBalance,
+} from './night.js';
 export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';
@@ -39,8 +47,4 @@ export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';
 export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
-export {
-  connectedApiProvidersAdapter,
-  type BaseProviders,
-  type WalletIdentity,
-} from './connectedApiProviders.js';
+export { connectedApiProvidersAdapter, type BaseProviders, type WalletIdentity } from './connectedApiProviders.js';

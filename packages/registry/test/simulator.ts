@@ -35,33 +35,22 @@ export class RegistrySimulator {
   readonly collateralAmount: bigint;
   readonly maxValidityInterval: bigint;
 
-  constructor(
-    collateralAmount: bigint,
-    maxValidityInterval: bigint,
-    secretKey: Uint8Array,
-  ) {
+  constructor(collateralAmount: bigint, maxValidityInterval: bigint, secretKey: Uint8Array) {
     this.collateralAmount = collateralAmount;
     this.maxValidityInterval = maxValidityInterval;
     this.activeSecretKey = secretKey;
 
     this.contract = new Registry.Contract(makeWitnesses(secretKey));
 
-    const constructorCtx = createConstructorContext<PrivateState>(
-      { secretKey },
-      DUMMY_COIN_PUBLIC_KEY,
-    );
+    const constructorCtx = createConstructorContext<PrivateState>({ secretKey }, DUMMY_COIN_PUBLIC_KEY);
 
-    const result = this.contract.initialState(
-      constructorCtx,
-      collateralAmount,
-      maxValidityInterval,
-    );
+    const result = this.contract.initialState(constructorCtx, collateralAmount, maxValidityInterval);
 
     this.context = createCircuitContext(
       ocrt.dummyContractAddress(),
       result.currentZswapLocalState.coinPublicKey,
       result.currentContractState,
-      result.currentPrivateState,
+      result.currentPrivateState
     );
   }
 
@@ -87,11 +76,7 @@ export class RegistrySimulator {
   }
 
   deregister(key: Uint8Array, recipient?: { bytes: Uint8Array }) {
-    const result = this.contract.impureCircuits.deregisterServer(
-      this.context,
-      key,
-      recipient ?? makeRecipient(),
-    );
+    const result = this.contract.impureCircuits.deregisterServer(this.context, key, recipient ?? makeRecipient());
     const effects = result.context.currentQueryContext.effects;
     this.syncContext(result.context);
     return effects;
@@ -100,7 +85,7 @@ export class RegistrySimulator {
   refresh(validTo: Date) {
     const result = this.contract.impureCircuits.refreshValidity(
       this.context,
-      BigInt(Math.floor(validTo.getTime() / 1000)),
+      BigInt(Math.floor(validTo.getTime() / 1000))
     );
     const effects = result.context.currentQueryContext.effects;
     this.syncContext(result.context);

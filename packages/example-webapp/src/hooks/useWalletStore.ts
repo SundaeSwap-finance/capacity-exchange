@@ -100,11 +100,15 @@ export function useWalletStore(): UseWalletStoreResult {
   }, []);
 
   const ensurePasskeyUnlocked = useCallback(async (): Promise<boolean> => {
-    if (encryptRef.current && decryptRef.current) return true;
+    if (encryptRef.current && decryptRef.current) {
+      return true;
+    }
     setUnlocking(true);
     try {
       const result = await unlockPasskey();
-      if (!result) return false;
+      if (!result) {
+        return false;
+      }
       encryptRef.current = result.encryptFn;
       decryptRef.current = result.decryptFn;
       return true;
@@ -115,7 +119,9 @@ export function useWalletStore(): UseWalletStoreResult {
 
   const enablePasskey = useCallback(async (): Promise<boolean> => {
     // If already unlocked this session, we're good
-    if (encryptRef.current && decryptRef.current) return true;
+    if (encryptRef.current && decryptRef.current) {
+      return true;
+    }
 
     setUnlocking(true);
     try {
@@ -127,7 +133,9 @@ export function useWalletStore(): UseWalletStoreResult {
         result = await setupPasskey();
       }
 
-      if (!result) return false;
+      if (!result) {
+        return false;
+      }
       encryptRef.current = result.encryptFn;
       decryptRef.current = result.decryptFn;
       setStorageMode('passkey');
@@ -184,23 +192,28 @@ export function useWalletStore(): UseWalletStoreResult {
     return { meta: { id, label, createdAt, mode }, secrets };
   }, [storageMode]);
 
-  const unlockWallet = useCallback(async (id: string): Promise<WalletSecrets> => {
-    const raw = loadRawWallets();
-    const wallet = raw.find((w) => w.id === id);
-    if (!wallet) throw new Error('Wallet not found');
+  const unlockWallet = useCallback(
+    async (id: string): Promise<WalletSecrets> => {
+      const raw = loadRawWallets();
+      const wallet = raw.find((w) => w.id === id);
+      if (!wallet) {
+        throw new Error('Wallet not found');
+      }
 
-    if (!isEncrypted(wallet)) {
-      return { seedHex: wallet.seedHex, mnemonic: wallet.mnemonic };
-    }
+      if (!isEncrypted(wallet)) {
+        return { seedHex: wallet.seedHex, mnemonic: wallet.mnemonic };
+      }
 
-    // Need passkey to decrypt
-    const unlocked = await ensurePasskeyUnlocked();
-    if (!unlocked || !decryptRef.current) {
-      throw new Error('Passkey authentication required to unlock this wallet');
-    }
+      // Need passkey to decrypt
+      const unlocked = await ensurePasskeyUnlocked();
+      if (!unlocked || !decryptRef.current) {
+        throw new Error('Passkey authentication required to unlock this wallet');
+      }
 
-    return decryptRef.current(wallet.encrypted);
-  }, [ensurePasskeyUnlocked]);
+      return decryptRef.current(wallet.encrypted);
+    },
+    [ensurePasskeyUnlocked]
+  );
 
   const removeWallet = useCallback((id: string) => {
     const updated = loadRawWallets().filter((w) => w.id !== id);

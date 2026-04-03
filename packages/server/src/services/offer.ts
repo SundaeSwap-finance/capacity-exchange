@@ -22,7 +22,13 @@ export interface OfferResponse {
 }
 
 export type CreateOfferResult =
-  | { status: 'ok'; source: 'built'; offer: OfferResponse; specksCommitted: bigint; revenueCommitted: { amount: bigint; currency: string } }
+  | {
+      status: 'ok';
+      source: 'built';
+      offer: OfferResponse;
+      specksCommitted: bigint;
+      revenueCommitted: { amount: bigint; currency: string };
+    }
   | { status: 'ok'; source: 'cached' | 'coalesced'; offer: OfferResponse }
   | { status: 'unsupported-currency'; currency: string }
   | WalletUnavailableResult;
@@ -61,13 +67,15 @@ export class OfferService {
   /** Checks for a cached offer and returns it if present. Then checks for an in-flight
    * offer (still being built or proven) and returns that if present. Otherwise,
    * kicks-off a new build.
-  */
+   */
   @recordCounters({
     name: 'ces.offer.result',
     description: 'Offer results by status',
     extract: (result: CreateOfferResult) => {
       const attrs: Record<string, string> = { status: result.status };
-      if (result.status === 'ok') attrs.source = result.source;
+      if (result.status === 'ok') {
+        attrs.source = result.source;
+      }
       return { value: 1, attributes: attrs };
     },
   })
@@ -106,14 +114,19 @@ export class OfferService {
       name: 'ces.dust.committed_specks',
       description: 'Specks committed via offers',
       extract: (result: CreateOfferResult) =>
-        result.status === 'ok' && result.source === 'built' ? { value: Number(result.specksCommitted) } : null,
+        result.status === 'ok' && result.source === 'built'
+          ? { value: Number(result.specksCommitted) }
+          : null,
     },
     {
       name: 'ces.revenue.committed',
       description: 'Committed revenue by currency',
       extract: (result: CreateOfferResult) =>
         result.status === 'ok' && result.source === 'built'
-          ? { value: Number(result.revenueCommitted.amount), attributes: { currency: result.revenueCommitted.currency } }
+          ? {
+              value: Number(result.revenueCommitted.amount),
+              attributes: { currency: result.revenueCommitted.currency },
+            }
           : null,
     },
   )
@@ -121,7 +134,10 @@ export class OfferService {
     request: CreateOfferRequest,
     cacheKey: string,
   ): Promise<CreateOfferResult> {
-    this.logger.debug({ cacheKey, specks: request.specks.toString(), offerCurrency: request.offerCurrency }, 'Building offer');
+    this.logger.debug(
+      { cacheKey, specks: request.specks.toString(), offerCurrency: request.offerCurrency },
+      'Building offer',
+    );
 
     const getPriceResult = this.priceService.getPrice(request.offerCurrency, request.specks);
     if (getPriceResult.status === 'unsupported-currency') {
@@ -137,7 +153,12 @@ export class OfferService {
     try {
       const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const tx = await this.txService.createOfferTx(coin, lockedInfo.spend, lockedInfo.syncTime, expiration);
+      const tx = await this.txService.createOfferTx(
+        coin,
+        lockedInfo.spend,
+        lockedInfo.syncTime,
+        expiration,
+      );
 
       const offer: OfferResponse = {
         offerId: lockedInfo.id,
@@ -148,7 +169,10 @@ export class OfferService {
       };
 
       this.cache.set(cacheKey, offer);
-      this.logger.info({ cacheKey, offerId: lockedInfo.id, expiresAt: expiration.toISOString() }, 'Offer built and cached');
+      this.logger.info(
+        { cacheKey, offerId: lockedInfo.id, expiresAt: expiration.toISOString() },
+        'Offer built and cached',
+      );
 
       this.metricsService.recordDustUsage(request.specks);
       this.metricsService.recordRevenue(request.offerCurrency, getPriceResult.price);

@@ -98,83 +98,102 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     syncTimersRef.current = [];
   }, []);
 
-  const connectSeedWallet = useCallback(async (_seed: string) => {
-    if (seedStatus !== 'disconnected') {
-      return;
-    }
+  const connectSeedWallet = useCallback(
+    async (_seed: string) => {
+      if (seedStatus !== 'disconnected') {
+        return;
+      }
 
-    setSeedStatus('connecting');
-    setWalletInfoStatus('loading');
-    setSyncProgress(null);
-    clearSyncTimers();
+      setSeedStatus('connecting');
+      setWalletInfoStatus('loading');
+      setSyncProgress(null);
+      clearSyncTimers();
 
-    const timers: number[] = [];
+      const timers: number[] = [];
 
-    // Phase 1: become "connected" after 800ms, start showing sync UI
-    timers.push(window.setTimeout(() => {
-      setSeedStatus('connected');
-      setSyncProgress({
-        shielded: { appliedIndex: 0n, targetIndex: 200n, done: false },
-        dust: { appliedIndex: 0n, targetIndex: 150n, done: false },
-        unshielded: false,
-      });
-    }, 800));
+      // Phase 1: become "connected" after 800ms, start showing sync UI
+      timers.push(
+        window.setTimeout(() => {
+          setSeedStatus('connected');
+          setSyncProgress({
+            shielded: { appliedIndex: 0n, targetIndex: 200n, done: false },
+            dust: { appliedIndex: 0n, targetIndex: 150n, done: false },
+            unshielded: false,
+          });
+        }, 800)
+      );
 
-    // Phase 2: animate shielded progress over ~10s
-    const shieldedSteps = [
-      { delay: 2000, applied: 30n },
-      { delay: 3500, applied: 75n },
-      { delay: 5000, applied: 120n },
-      { delay: 6500, applied: 165n },
-      { delay: 8000, applied: 200n },
-    ];
+      // Phase 2: animate shielded progress over ~10s
+      const shieldedSteps = [
+        { delay: 2000, applied: 30n },
+        { delay: 3500, applied: 75n },
+        { delay: 5000, applied: 120n },
+        { delay: 6500, applied: 165n },
+        { delay: 8000, applied: 200n },
+      ];
 
-    for (const step of shieldedSteps) {
-      timers.push(window.setTimeout(() => {
-        setSyncProgress((prev) => prev && ({
-          ...prev,
-          shielded: {
-            appliedIndex: step.applied,
-            targetIndex: 200n,
-            done: step.applied >= 200n,
-          },
-        }));
-      }, step.delay));
-    }
+      for (const step of shieldedSteps) {
+        timers.push(
+          window.setTimeout(() => {
+            setSyncProgress(
+              (prev) =>
+                prev && {
+                  ...prev,
+                  shielded: {
+                    appliedIndex: step.applied,
+                    targetIndex: 200n,
+                    done: step.applied >= 200n,
+                  },
+                }
+            );
+          }, step.delay)
+        );
+      }
 
-    // Phase 3: animate dust progress (starts a bit after shielded, finishes around same time)
-    const dustSteps = [
-      { delay: 2800, applied: 20n },
-      { delay: 4500, applied: 60n },
-      { delay: 6000, applied: 105n },
-      { delay: 7500, applied: 150n },
-    ];
+      // Phase 3: animate dust progress (starts a bit after shielded, finishes around same time)
+      const dustSteps = [
+        { delay: 2800, applied: 20n },
+        { delay: 4500, applied: 60n },
+        { delay: 6000, applied: 105n },
+        { delay: 7500, applied: 150n },
+      ];
 
-    for (const step of dustSteps) {
-      timers.push(window.setTimeout(() => {
-        setSyncProgress((prev) => prev && ({
-          ...prev,
-          dust: {
-            appliedIndex: step.applied,
-            targetIndex: 150n,
-            done: step.applied >= 150n,
-          },
-        }));
-      }, step.delay));
-    }
+      for (const step of dustSteps) {
+        timers.push(
+          window.setTimeout(() => {
+            setSyncProgress(
+              (prev) =>
+                prev && {
+                  ...prev,
+                  dust: {
+                    appliedIndex: step.applied,
+                    targetIndex: 150n,
+                    done: step.applied >= 150n,
+                  },
+                }
+            );
+          }, step.delay)
+        );
+      }
 
-    // Phase 4: unshielded done
-    timers.push(window.setTimeout(() => {
-      setSyncProgress((prev) => prev && ({ ...prev, unshielded: true }));
-    }, 9000));
+      // Phase 4: unshielded done
+      timers.push(
+        window.setTimeout(() => {
+          setSyncProgress((prev) => prev && { ...prev, unshielded: true });
+        }, 9000)
+      );
 
-    // Phase 5: mark wallet fully synced
-    timers.push(window.setTimeout(() => {
-      setWalletInfoStatus('ready');
-    }, 10000));
+      // Phase 5: mark wallet fully synced
+      timers.push(
+        window.setTimeout(() => {
+          setWalletInfoStatus('ready');
+        }, 10000)
+      );
 
-    syncTimersRef.current = timers;
-  }, [seedStatus, clearSyncTimers]);
+      syncTimersRef.current = timers;
+    },
+    [seedStatus, clearSyncTimers]
+  );
 
   const disconnectSeedWallet = useCallback(() => {
     clearSyncTimers();
@@ -185,24 +204,30 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     setCounterValue(7);
   }, [clearSyncTimers]);
 
-  const seedWallet = useMemo<SeedWalletState>(() => ({
-    status: seedStatus,
-    wallet: null,
-    internals: null,
-    error: null,
-    syncProgress,
-    connect: connectSeedWallet,
-    disconnect: disconnectSeedWallet,
-  }), [connectSeedWallet, disconnectSeedWallet, seedStatus, syncProgress]);
+  const seedWallet = useMemo<SeedWalletState>(
+    () => ({
+      status: seedStatus,
+      wallet: null,
+      internals: null,
+      error: null,
+      syncProgress,
+      connect: connectSeedWallet,
+      disconnect: disconnectSeedWallet,
+    }),
+    [connectSeedWallet, disconnectSeedWallet, seedStatus, syncProgress]
+  );
 
-  const extensionWallet = useMemo<ExtensionWalletState>(() => ({
-    status: 'unavailable',
-    wallet: null,
-    connectedAPI: null,
-    error: null,
-    connect: async () => {},
-    disconnect: () => {},
-  }), []);
+  const extensionWallet = useMemo<ExtensionWalletState>(
+    () => ({
+      status: 'unavailable',
+      wallet: null,
+      connectedAPI: null,
+      error: null,
+      connect: async () => {},
+      disconnect: () => {},
+    }),
+    []
+  );
 
   const walletInfo = useMemo<WalletInfoState>(() => {
     if (walletData) {
@@ -224,73 +249,96 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     setSponsoredMintError(null);
   }, [clearSponsoredMintTimers]);
 
-  const mintSponsoredTokens = useCallback(async (_contractAddress: string, amount: bigint) => {
-    if (sponsoredMintInFlightRef.current) {
-      return;
-    }
+  const mintSponsoredTokens = useCallback(
+    async (_contractAddress: string, amount: bigint) => {
+      if (sponsoredMintInFlightRef.current) {
+        return;
+      }
 
-    sponsoredMintInFlightRef.current = true;
-    clearSponsoredMintTimers();
-    setSponsoredMintStatus('building');
-    setSponsoredMintError(null);
+      sponsoredMintInFlightRef.current = true;
+      clearSponsoredMintTimers();
+      setSponsoredMintStatus('building');
+      setSponsoredMintError(null);
 
-    const timers: number[] = [];
+      const timers: number[] = [];
 
-    // 0s: building status set above
-    pushLogEvent('PROOF', 'info', `compiling token-mint circuit for mint(amount=${amount})`);
+      // 0s: building status set above
+      pushLogEvent('PROOF', 'info', `compiling token-mint circuit for mint(amount=${amount})`);
 
-    // 2s: proof witness generation
-    timers.push(window.setTimeout(() => {
-      pushLogEvent('PROOF', 'info', 'generating zero-knowledge witness');
-    }, 2000));
+      // 2s: proof witness generation
+      timers.push(
+        window.setTimeout(() => {
+          pushLogEvent('PROOF', 'info', 'generating zero-knowledge witness');
+        }, 2000)
+      );
 
-    // 4.5s: proof complete, request DUST sponsorship
-    timers.push(window.setTimeout(() => {
-      pushLogEvent('PROOF', 'success', 'zero-knowledge proof generated');
-    }, 4500));
+      // 4.5s: proof complete, request DUST sponsorship
+      timers.push(
+        window.setTimeout(() => {
+          pushLogEvent('PROOF', 'success', 'zero-knowledge proof generated');
+        }, 4500)
+      );
 
-    // 5.5s: CES sponsorship request
-    timers.push(window.setTimeout(() => {
-      setSponsoredMintStatus('submitting');
-      pushLogEvent('CES', 'info', 'requesting DUST sponsorship from Capacity Exchange');
-    }, 5500));
+      // 5.5s: CES sponsorship request
+      timers.push(
+        window.setTimeout(() => {
+          setSponsoredMintStatus('submitting');
+          pushLogEvent('CES', 'info', 'requesting DUST sponsorship from Capacity Exchange');
+        }, 5500)
+      );
 
-    // 7s: CES approved
-    timers.push(window.setTimeout(() => {
-      pushLogEvent('CES', 'success', 'sponsorship approved — DUST fee covered by application');
-    }, 7000));
+      // 7s: CES approved
+      timers.push(
+        window.setTimeout(() => {
+          pushLogEvent('CES', 'success', 'sponsorship approved — DUST fee covered by application');
+        }, 7000)
+      );
 
-    // 8s: broadcasting
-    timers.push(window.setTimeout(() => {
-      pushLogEvent('TX', 'info', 'broadcasting transaction to Midnight network');
-    }, 8000));
+      // 8s: broadcasting
+      timers.push(
+        window.setTimeout(() => {
+          pushLogEvent('TX', 'info', 'broadcasting transaction to Midnight network');
+        }, 8000)
+      );
 
-    // 10s: confirmed on chain
-    timers.push(window.setTimeout(() => {
-      pushLogEvent('TX', 'success', 'transaction included in block');
-    }, 10000));
+      // 10s: confirmed on chain
+      timers.push(
+        window.setTimeout(() => {
+          pushLogEvent('TX', 'success', 'transaction included in block');
+        }, 10000)
+      );
 
-    // 11s: balance update observed
-    timers.push(window.setTimeout(() => {
-      setTokenBalance((value) => value + amount);
-      setSponsoredMintStatus('success');
-      sponsoredMintInFlightRef.current = false;
-    }, 11000));
+      // 11s: balance update observed
+      timers.push(
+        window.setTimeout(() => {
+          setTokenBalance((value) => value + amount);
+          setSponsoredMintStatus('success');
+          sponsoredMintInFlightRef.current = false;
+        }, 11000)
+      );
 
-    sponsoredMintTimersRef.current = timers;
-  }, [clearSponsoredMintTimers, pushLogEvent]);
+      sponsoredMintTimersRef.current = timers;
+    },
+    [clearSponsoredMintTimers, pushLogEvent]
+  );
 
-  useEffect(() => () => {
-    clearSyncTimers();
-    clearSponsoredMintTimers();
-  }, [clearSyncTimers, clearSponsoredMintTimers]);
+  useEffect(
+    () => () => {
+      clearSyncTimers();
+      clearSponsoredMintTimers();
+    },
+    [clearSyncTimers, clearSponsoredMintTimers]
+  );
 
-  const sponsoredMint = useMemo<UseSponsoredMintResult>(() => ({
-    status: sponsoredMintStatus,
-    error: sponsoredMintError,
-    mint: mintSponsoredTokens,
-    reset: resetSponsoredMint,
-  }), [mintSponsoredTokens, resetSponsoredMint, sponsoredMintError, sponsoredMintStatus]);
+  const sponsoredMint = useMemo<UseSponsoredMintResult>(
+    () => ({
+      status: sponsoredMintStatus,
+      error: sponsoredMintError,
+      mint: mintSponsoredTokens,
+      reset: resetSponsoredMint,
+    }),
+    [mintSponsoredTokens, resetSponsoredMint, sponsoredMintError, sponsoredMintStatus]
+  );
 
   const dismissCesOffer = useCallback(() => {
     setCesStatus('idle');
@@ -311,48 +359,51 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     }, 2500);
   }, [prices, pushLogEvent]);
 
-  const onCurrencySelected = useCallback((result: CurrencySelectionResult) => {
-    if (result.status !== 'selected') {
-      dismissCesOffer();
-      return;
-    }
+  const onCurrencySelected = useCallback(
+    (result: CurrencySelectionResult) => {
+      if (result.status !== 'selected') {
+        dismissCesOffer();
+        return;
+      }
 
-    setCurrencySelection(null);
-    setCesStatus('fetching-offers');
-    pushLogEvent('CES', 'info', `requesting live capacity exchange quote for ${result.exchangePrice.price.amount} tokens`);
-
-    window.setTimeout(() => {
-      pushLogEvent('CES', 'success', 'exchange offer received — auto-confirming');
-      setCesStatus('submitting');
-      pushLogEvent('TX', 'info', 'broadcasting exchange + counter increment to Midnight network');
-
-      window.setTimeout(() => {
-        pushLogEvent('TX', 'success', 'transaction included in block');
-      }, 2000);
+      setCurrencySelection(null);
+      setCesStatus('fetching-offers');
+      pushLogEvent(
+        'CES',
+        'info',
+        `requesting live capacity exchange quote for ${result.exchangePrice.price.amount} tokens`
+      );
 
       window.setTimeout(() => {
-        setTokenBalance((value) => (value >= 250n ? value - 250n : value));
-        setCounterValue((value) => value + 1);
-        setCesStatus('success');
-      }, 3500);
-    }, 1500);
-  }, [dismissCesOffer, pushLogEvent]);
+        pushLogEvent('CES', 'success', 'exchange offer received — auto-confirming');
+        setCesStatus('submitting');
+        pushLogEvent('TX', 'info', 'broadcasting exchange + counter increment to Midnight network');
 
-  const cesTransaction = useMemo<UseCesTransactionResult>(() => ({
-    status: cesStatus,
-    error: cesError,
-    currencySelection,
-    onCurrencySelected,
-    dismissOffer: dismissCesOffer,
-    incrementCounter: incrementCesCounter,
-  }), [
-    cesError,
-    cesStatus,
-    currencySelection,
-    dismissCesOffer,
-    incrementCesCounter,
-    onCurrencySelected,
-  ]);
+        window.setTimeout(() => {
+          pushLogEvent('TX', 'success', 'transaction included in block');
+        }, 2000);
+
+        window.setTimeout(() => {
+          setTokenBalance((value) => (value >= 250n ? value - 250n : value));
+          setCounterValue((value) => value + 1);
+          setCesStatus('success');
+        }, 3500);
+      }, 1500);
+    },
+    [dismissCesOffer, pushLogEvent]
+  );
+
+  const cesTransaction = useMemo<UseCesTransactionResult>(
+    () => ({
+      status: cesStatus,
+      error: cesError,
+      currencySelection,
+      onCurrencySelected,
+      dismissOffer: dismissCesOffer,
+      incrementCounter: incrementCesCounter,
+    }),
+    [cesError, cesStatus, currencySelection, dismissCesOffer, incrementCesCounter, onCurrencySelected]
+  );
 
   const dismissSponsoredCounter = useCallback(() => {
     setSponsoredCounterStatus('idle');
@@ -382,27 +433,33 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
     }, 6500);
   }, [pushLogEvent]);
 
-  const sponsoredTransaction = useMemo<UseSponsoredTransactionResult>(() => ({
-    status: sponsoredCounterStatus,
-    error: sponsoredCounterError,
-    incrementCounter: incrementSponsoredCounter,
-    dismiss: dismissSponsoredCounter,
-  }), [dismissSponsoredCounter, incrementSponsoredCounter, sponsoredCounterError, sponsoredCounterStatus]);
+  const sponsoredTransaction = useMemo<UseSponsoredTransactionResult>(
+    () => ({
+      status: sponsoredCounterStatus,
+      error: sponsoredCounterError,
+      incrementCounter: incrementSponsoredCounter,
+      dismiss: dismissSponsoredCounter,
+    }),
+    [dismissSponsoredCounter, incrementSponsoredCounter, sponsoredCounterError, sponsoredCounterStatus]
+  );
 
-  const contractsConfig = useMemo<ContractsConfig>(() => ({
-    networkId,
-    tokenMint: {
-      contractAddress: MOCK_TOKEN_MINT_ADDRESS,
-      txHash: 'mock-token-mint-tx',
-      tokenColor: MOCK_TOKEN_COLOR,
-      derivedTokenColor: MOCK_TOKEN_COLOR,
-      privateStateId: 'mock-private-state-id',
-    },
-    counter: {
-      contractAddress: MOCK_COUNTER_ADDRESS,
-      txHash: 'mock-counter-tx',
-    },
-  }), [networkId]);
+  const contractsConfig = useMemo<ContractsConfig>(
+    () => ({
+      networkId,
+      tokenMint: {
+        contractAddress: MOCK_TOKEN_MINT_ADDRESS,
+        txHash: 'mock-token-mint-tx',
+        tokenColor: MOCK_TOKEN_COLOR,
+        derivedTokenColor: MOCK_TOKEN_COLOR,
+        privateStateId: 'mock-private-state-id',
+      },
+      counter: {
+        contractAddress: MOCK_COUNTER_ADDRESS,
+        txHash: 'mock-counter-tx',
+      },
+    }),
+    [networkId]
+  );
 
   return {
     seedWallet,

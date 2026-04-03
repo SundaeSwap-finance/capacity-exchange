@@ -12,12 +12,11 @@ export function DevAccessStep({ onContinue }: DevAccessStepProps) {
     <div className="ces-step-stack">
       <NarrativeCard heading="Build on the Capacity Exchange">
         <p>
-          You&apos;ve seen how the Capacity Exchange removes DUST friction for end
-          users. Imagine what that means for <strong className="text-ces-text">your</strong> app.
+          You&apos;ve seen how the Capacity Exchange removes DUST friction for end users. Imagine what that means for{' '}
+          <strong className="text-ces-text">your</strong> app.
         </p>
         <p>
-          We&apos;re opening early developer access. Tell us what you&apos;re building
-          and we&apos;ll get you set up.
+          We&apos;re opening early developer access. Tell us what you&apos;re building and we&apos;ll get you set up.
         </p>
       </NarrativeCard>
 
@@ -86,9 +85,7 @@ export function DevAccessForm({ compact = false }: { compact?: boolean }) {
   return (
     <form onSubmit={handleSubmit} className="ces-card ces-section-stack p-4">
       {compact && (
-        <p className="text-xs text-ces-text-muted uppercase tracking-wider font-medium">
-          Early Developer Access //
-        </p>
+        <p className="text-xs text-ces-text-muted uppercase tracking-wider font-medium">Early Developer Access //</p>
       )}
 
       <div className="ces-compact-stack">
@@ -122,18 +119,13 @@ export function DevAccessForm({ compact = false }: { compact?: boolean }) {
       </div>
 
       <p className="text-[10px] text-ces-text-muted/60 leading-relaxed">
-        We&apos;ll send: &ldquo;Hi! I&apos;m building <span className="text-ces-text">{project || '...'}</span> on Midnight, and I think the Capacity Exchange would be a great fit!&rdquo;
+        We&apos;ll send: &ldquo;Hi! I&apos;m building <span className="text-ces-text">{project || '...'}</span> on
+        Midnight, and I think the Capacity Exchange would be a great fit!&rdquo;
       </p>
 
-      {error && (
-        <p className="text-xs text-ces-danger">{error}</p>
-      )}
+      {error && <p className="text-xs text-ces-danger">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="ces-btn-primary w-full"
-      >
+      <button type="submit" disabled={submitting} className="ces-btn-primary w-full">
         {submitting ? 'Sending...' : 'Sign Up for Early Access'}
       </button>
     </form>

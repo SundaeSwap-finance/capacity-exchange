@@ -37,16 +37,13 @@ const errorHandler: FastifyPluginAsync = async (fastify: FastifyInstance, _opts)
     },
   );
 
-  fastify.decorateReply(
-    'gone',
-    function (this: FastifyReply, message?: string, details?: string) {
-      return this.status(410).send({
-        error: 'Gone',
-        message,
-        details,
-      });
-    },
-  );
+  fastify.decorateReply('gone', function (this: FastifyReply, message?: string, details?: string) {
+    return this.status(410).send({
+      error: 'Gone',
+      message,
+      details,
+    });
+  });
 
   fastify.decorateReply(
     'conflict',

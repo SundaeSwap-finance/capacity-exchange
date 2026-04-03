@@ -1,9 +1,6 @@
 import { Configuration, DefaultApi, ResponseError } from '@capacity-exchange/client';
 
-export type CesHealthStatus =
-  | { status: 'healthy' }
-  | { status: 'syncing' }
-  | { status: 'offline'; error: string };
+export type CesHealthStatus = { status: 'healthy' } | { status: 'syncing' } | { status: 'offline'; error: string };
 
 /**
  * One-shot health check against a CES exchange server.
@@ -12,10 +9,7 @@ export type CesHealthStatus =
  * Accepts either a DefaultApi instance or a URL string.
  */
 export async function checkCesHealth(apiOrUrl: DefaultApi | string): Promise<CesHealthStatus> {
-  const api =
-    typeof apiOrUrl === 'string'
-      ? new DefaultApi(new Configuration({ basePath: apiOrUrl }))
-      : apiOrUrl;
+  const api = typeof apiOrUrl === 'string' ? new DefaultApi(new Configuration({ basePath: apiOrUrl })) : apiOrUrl;
 
   try {
     await api.healthGet();

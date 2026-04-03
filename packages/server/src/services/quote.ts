@@ -65,9 +65,7 @@ export class QuoteService {
     }
 
     try {
-      const payload: QuotePayload = JSON.parse(
-        Buffer.from(encodedPayload, 'base64url').toString(),
-      );
+      const payload: QuotePayload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString());
       if (Date.now() > payload.exp) {
         return { status: 'expired' };
       }
