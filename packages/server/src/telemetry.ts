@@ -46,10 +46,11 @@ export function initTelemetry(config: AppConfig, logger: Logger): Telemetry | un
       [ATTR_SERVICE_NAME]: otelServiceName,
       [ATTR_SERVICE_VERSION]: packageVersion,
     }),
-    metricReaders: [new PeriodicExportingMetricReader({
+    // metricReaders (plural) silently drops counters/histograms in sdk-node 0.214.0
+    metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({ url: `${config.otelEndpoint}/v1/metrics` }),
       exportIntervalMillis,
-    })],
+    }),
   });
 
   sdk.start();
