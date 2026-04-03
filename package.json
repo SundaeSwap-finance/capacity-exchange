@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "check": "eslint . && prettier --check .",
-    "fix": "eslint . --fix && prettier --write .",
+    "fix": "prettier --write . && eslint . --fix",
     "regenerate-client": "bun scripts/regenerate-openapi-schema.ts && bun run --filter '@capacity-exchange/client' regenerate-client"
   },
   "keywords": [],

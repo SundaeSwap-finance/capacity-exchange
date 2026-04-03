@@ -10,5 +10,5 @@
       "@capacity-exchange/midnight-core": ["../packages/midnight-core/src/index.ts"],
       "@capacity-exchange/server": ["../packages/server/src/index.ts"]
     }
-  },
+  }
 }
