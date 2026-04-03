@@ -90,16 +90,6 @@ async function saveStoredCredential(cred: StoredCredential): Promise<void> {
   });
 }
 
-async function clearStoredCredential(): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(DB_STORE, 'readwrite');
-    tx.objectStore(DB_STORE).delete(CREDENTIAL_KEY);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
 // ── PRF key derivation ─────────────────────────────────────────────────
 
 /**

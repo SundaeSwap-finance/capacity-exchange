@@ -1,5 +1,7 @@
 import { meterService } from '../meter.js';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /** Records method duration to a histogram. */
 export function recordDuration(name: string, description: string) {
   const getHistogram = meterService.histogram(name, description);
