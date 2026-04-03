@@ -1,3 +1,4 @@
+import type pino from 'pino';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
@@ -8,44 +9,67 @@ import {
   BalanceSealedTx,
 } from '@capacity-exchange/components';
 import type { WalletConnection } from '@capacity-exchange/midnight-core';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { AppEnv } from './env.js';
 import type { NetworkEndpoints } from '@capacity-exchange/midnight-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 /**
- * Selects the lowest price matching the currency
+ * Creates a {@link PromptForCurrency} that selects the best exchange price
+ * based on the currencies this server wallet holds.
+ *
+ * Selection algorithm:
+ * 1. Fetch the wallet's current synced shielded state to get token balances.
+ * 2. Filter the incoming `prices` to currencies in the wallet with non-zero SHIELDED balance.
+ * 3. Among the remaining candidates, pick the one with the lowest price amount
+ *    (fewest tokens spent per dust acquired).
+ *
+ * Throws if no prices are provided, or if none of the offered currencies are
+ * held by this wallet.
  */
-function createAutoSelectCurrency(currency: string | undefined): PromptForCurrency {
-  return async (prices: ExchangePrice[]) => {
+function createAutoSelectCurrency(log: pino.Logger, walletFacade: WalletFacade): PromptForCurrency {
+  return async (prices: ExchangePrice[], dustRequired: bigint) => {
     if (prices.length === 0) {
       throw new Error('No exchange prices available');
     }
 
-    const candidates = currency
-      ? prices.filter((p) => p.price.currency === currency)
-      : prices;
+    log.debug({ dustRequired: dustRequired.toString(), prices: prices.map((p) => ({ currency: p.price.currency, amount: p.price.amount })) }, 'Available exchange prices');
 
+    const shieldedState = await walletFacade.shielded.waitForSyncedState();
+    const balances = shieldedState.balances;
+
+    const candidates = prices.filter((p) => (balances[p.price.currency] ?? 0n) > 0n);
     if (candidates.length === 0) {
-      throw new Error(`No exchange prices available for ${currency}`);
+      throw new Error('No exchange prices available for currencies held by this wallet');
     }
+
+    log.debug({ currencies: candidates.map((p) => p.price.currency) }, 'Currencies with non-zero balance');
 
     const selected = candidates.reduce((lowest, exchangePrice) =>
       BigInt(exchangePrice.price.amount) < BigInt(lowest.price.amount) ? exchangePrice : lowest
     );
+
+    log.info({ currency: selected.price.currency, amount: selected.price.amount }, 'Auto-selected exchange currency');
     return { status: 'selected', exchangePrice: selected };
   };
 }
 
-const autoConfirmOffer: ConfirmOffer = async () => ({ status: 'confirmed' });
+function createAutoConfirmOffer(log: pino.Logger): ConfirmOffer {
+  return async (offer, dustRequired) => {
+    log.info({ offerId: offer.offerId, amount: offer.offerAmount, currency: offer.offerCurrency, dustRequired: dustRequired.toString() }, 'Auto-confirming offer');
+    return { status: 'confirmed' };
+  };
+}
 
 /**
  * Builds a `capacityExchangeWalletProvider` using the server's wallet keys.
- * Auto-selects the currency(defined by the PREFERRED_EXCHANGE_CURRENCY) and confirms offers.
+ * Auto-selects the currency of the lowest price and confirms offers.
  * Returns null if no peer URLs are configured.
  */
 export function buildCesWalletProvider(
   env: AppEnv,
+  log: pino.Logger,
   walletConnection: WalletConnection,
   endpoints: NetworkEndpoints,
 ): WalletProvider | null {
@@ -78,7 +102,7 @@ export function buildCesWalletProvider(
     indexerUrl: endpoints.indexerHttpUrl,
     capacityExchangeUrls,
     margin: DEFAULT_MARGIN,
-    promptForCurrency: createAutoSelectCurrency(env.PREFERRED_EXCHANGE_CURRENCY),
-    confirmOffer: autoConfirmOffer,
+    promptForCurrency: createAutoSelectCurrency(log, walletFacade),
+    confirmOffer: createAutoConfirmOffer(log),
   });
 }

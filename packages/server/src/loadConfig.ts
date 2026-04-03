@@ -52,7 +52,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     sponsoredContracts: priceConfig.sponsoredContracts,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
-    cesWalletProvider: buildCesWalletProvider(env, wallet.walletConnection, endpoints),
+    cesWalletProvider: buildCesWalletProvider(env, logger, wallet.walletConnection, endpoints),
   };
 
   return { config, logger };
