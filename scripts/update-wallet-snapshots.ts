@@ -22,7 +22,7 @@ import {
   createWallet,
 } from '@capacity-exchange/midnight-core';
 
-const NETWORKS = ['preview', 'preprod', 'mainnet'] as const;
+const NETWORKS = ['preview', 'preprod', 'mainnet'];
 const OUT_DIR = path.resolve(import.meta.dirname, '../packages/example-webapp/public/wallet-snapshots');
 
 async function updateSnapshot(networkId: string) {
@@ -106,7 +106,7 @@ async function updateSnapshot(networkId: string) {
 
 const requested = process.argv.slice(2);
 const networks = requested.length > 0
-  ? requested.filter(n => NETWORKS.includes(n as any))
+  ? requested.filter(n => NETWORKS.includes(n))
   : [...NETWORKS];
 
 if (networks.length === 0) {
