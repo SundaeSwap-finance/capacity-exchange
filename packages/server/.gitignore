@@ -8,7 +8,9 @@
 dist
 node_modules
 price-config.*.json
+price-config-*.json
 !price-config.example.json
+.quote-secret-*.hex
 price-formulas.json
 wallet-mnemonic.txt
 wallet-seed.hex
