@@ -15,6 +15,7 @@ const AppEnvSchema = Type.Object({
   OFFER_TTL_SECONDS: Type.Number(),
   PROOF_SERVER_URL: Type.Optional(Type.String()),
   WALLET_STATE_DIR: Type.String(),
+  CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
