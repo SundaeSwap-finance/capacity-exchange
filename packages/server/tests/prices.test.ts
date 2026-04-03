@@ -12,8 +12,8 @@ describe('Prices API', () => {
     expect(data.prices).toEqual([
       {
         currency: '1337133713371337133713371337133713371337133713371337133713371337',
-        amount: "112",
+        amount: '112',
       },
-    ])
+    ]);
   });
 });

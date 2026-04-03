@@ -1,4 +1,9 @@
-import { AppContext, buildProviders, submitCallTxDirect, deployContractWithDryRun } from '@capacity-exchange/midnight-node';
+import {
+  AppContext,
+  buildProviders,
+  submitCallTxDirect,
+  deployContractWithDryRun,
+} from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
@@ -14,9 +19,13 @@ export async function deploy(ctx: AppContext, dryRun = false): Promise<DeployOut
   logger.info(`Deploying counter contract${dryRun ? ' (DRY RUN)' : ''}...`);
   const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
-  const deployed = await deployContractWithDryRun(providers, {
-    compiledContract: CompiledCounterContract,
-  }, dryRun);
+  const deployed = await deployContractWithDryRun(
+    providers,
+    {
+      compiledContract: CompiledCounterContract,
+    },
+    dryRun
+  );
 
   logger.info(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
   return {

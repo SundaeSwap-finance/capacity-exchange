@@ -75,7 +75,9 @@ export async function splitAndRegister(
   const balance = getNightBalance(state);
   const address = state.unshielded.address;
   const { amountPerUtxo, outputs } = buildSplitOutputs(balance, count, address);
-  logger.info(`Splitting: ${outputs.length} explicit outputs of ${amountPerUtxo} + remainder as change at ${MidnightBech32m.encode(networkId, address).asString()}`);
+  logger.info(
+    `Splitting: ${outputs.length} explicit outputs of ${amountPerUtxo} + remainder as change at ${MidnightBech32m.encode(networkId, address).asString()}`
+  );
   const splitTxHash = await sendUnshieldedTokens(walletFacade, keys, outputs);
   logger.info(`Split transaction submitted: ${splitTxHash}`);
   state = await waitForState(state$, hasUtxoCount(count));

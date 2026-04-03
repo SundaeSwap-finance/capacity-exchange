@@ -29,8 +29,6 @@ export function getAppConfigById(network: string): AppConfig {
   const endpoints = resolveEndpoints(networkId, process.env.PROOF_SERVER_URL ?? dotEnv['PROOF_SERVER_URL']);
   const seed = loadWalletSeed(network);
   const walletStateDir = dotEnv['WALLET_STATE_DIR'] ?? `./.wallet-state-${network}`;
-  const walletSyncTimeoutMs = dotEnv['WALLET_SYNC_TIMEOUT_MS']
-    ? Number(dotEnv['WALLET_SYNC_TIMEOUT_MS'])
-    : undefined;
+  const walletSyncTimeoutMs = dotEnv['WALLET_SYNC_TIMEOUT_MS'] ? Number(dotEnv['WALLET_SYNC_TIMEOUT_MS']) : undefined;
   return { networkId, endpoints, seed, walletStateDir, walletSyncTimeoutMs };
 }

@@ -55,7 +55,11 @@ describe('UtxoService gauges', () => {
   });
 
   it('reports zero when wallet state is null', () => {
-    const walletService = { state: null, syncState: { status: 'ok' }, spend: vi.fn() } as unknown as WalletService;
+    const walletService = {
+      state: null,
+      syncState: { status: 'ok' },
+      spend: vi.fn(),
+    } as unknown as WalletService;
     new UtxoService(walletService, logger as any, 60);
 
     expect(gaugeCallbacks.get('ces.utxo.total_count')!()).toBe(0);

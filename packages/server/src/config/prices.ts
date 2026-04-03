@@ -35,6 +35,8 @@ export function loadPriceConfig(filePath: string): PriceConfig {
   try {
     return Value.Decode(PriceConfigSchema, JSON.parse(raw));
   } catch (err) {
-    throw new Error(`Invalid price config in ${filePath}: ${err instanceof Error ? err.message : err}`);
+    throw new Error(
+      `Invalid price config in ${filePath}: ${err instanceof Error ? err.message : err}`,
+    );
   }
 }

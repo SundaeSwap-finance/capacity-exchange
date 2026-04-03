@@ -2,7 +2,12 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { persistentHash as ledgerPersistentHash } from '@midnight-ntwrk/ledger-v8';
-import { AppContext, buildProviders, submitStatefulCallTxDirect, deployContractWithDryRun } from '@capacity-exchange/midnight-node';
+import {
+  AppContext,
+  buildProviders,
+  submitStatefulCallTxDirect,
+  deployContractWithDryRun,
+} from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor, getShieldedBalance } from '@capacity-exchange/midnight-core';
@@ -53,8 +58,8 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
         adminKeyHash: Buffer.from(adminKeyHash).toString('hex'),
       },
       null,
-      2,
-    ) + '\n',
+      2
+    ) + '\n'
   );
   logger.info(`Admin secret key saved to ${adminKeyPath}`);
 
@@ -65,12 +70,16 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
 
   // Deploy with max_depositors = 0 (deposits disabled until admin enables)
   logger.info(`Calling deployContract${dryRun ? ' (DRY RUN)' : ''}...`);
-  const deployed = await deployContractWithDryRun(providers, {
-    compiledContract: CompiledTokenMintContract,
-    args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce, adminKeyHash, 0n],
-    privateStateId,
-    initialPrivateState,
-  }, dryRun);
+  const deployed = await deployContractWithDryRun(
+    providers,
+    {
+      compiledContract: CompiledTokenMintContract,
+      args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce, adminKeyHash, 0n],
+      privateStateId,
+      initialPrivateState,
+    },
+    dryRun
+  );
 
   const contractAddress = deployed.deployTxData.public.contractAddress;
   const derivedColor = deriveTokenColor(resolvedTokenColor, contractAddress);

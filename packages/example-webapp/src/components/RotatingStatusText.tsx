@@ -23,7 +23,9 @@ export function RotatingStatusText({
   }, [messages]);
 
   useEffect(() => {
-    if (!active || messages.length < 2) return;
+    if (!active || messages.length < 2) {
+      return;
+    }
 
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % messages.length);
@@ -32,12 +34,5 @@ export function RotatingStatusText({
     return () => window.clearInterval(timer);
   }, [active, intervalMs, messages]);
 
-  return (
-    <UnscrambleText
-      key={index}
-      text={messages[index] ?? ''}
-      className={className}
-      as={as}
-    />
-  );
+  return <UnscrambleText key={index} text={messages[index] ?? ''} className={className} as={as} />;
 }

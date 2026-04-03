@@ -60,7 +60,7 @@ function createPromptForCurrency(
 // The currency selection is the user's confirmation — no need to ask twice.
 function createAutoConfirmOffer(
   setStatus: (status: CesFlowStatus) => void,
-  setCurrencySelection: (state: CurrencySelectionState | null) => void,
+  setCurrencySelection: (state: CurrencySelectionState | null) => void
 ): ConfirmOffer {
   return async (_offer, _specksRequired) => {
     setCurrencySelection(null);
@@ -121,16 +121,17 @@ export function useCesTransaction(
 
     try {
       await withDustRetry(
-        () => findAndIncrementCounter(
-          walletProvider,
-          midnightProvider,
-          balanceSealedTx,
-          contractAddress,
-          promptForCurrency,
-          confirmOffer,
-          config
-        ),
-        { onRetry: (attempt) => console.warn(`[CESTransaction] Dust proof error, retrying (${attempt}/3)`) },
+        () =>
+          findAndIncrementCounter(
+            walletProvider,
+            midnightProvider,
+            balanceSealedTx,
+            contractAddress,
+            promptForCurrency,
+            confirmOffer,
+            config
+          ),
+        { onRetry: (attempt) => console.warn(`[CESTransaction] Dust proof error, retrying (${attempt}/3)`) }
       );
       setStatus('success');
     } catch (err) {

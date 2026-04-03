@@ -42,11 +42,15 @@ export function useMetrics(intervalSeconds = 5): MetricsState {
   const fetchingRef = useRef(false);
 
   const fetchMetrics = useCallback(async () => {
-    if (fetchingRef.current) return;
+    if (fetchingRef.current) {
+      return;
+    }
     fetchingRef.current = true;
     try {
       const res = await fetch(`${API_URL}/api/metrics`);
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      if (!res.ok) {
+        throw new Error(`${res.status} ${res.statusText}`);
+      }
       const data: Metrics = await res.json();
       countdownRef.current = intervalSeconds;
       setState({ data, error: false, secondsUntilRefresh: intervalSeconds });

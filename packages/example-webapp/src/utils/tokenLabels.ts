@@ -14,7 +14,7 @@ const KNOWN_TOKENS: Record<string, { label: string; className: string }> = {
  */
 export function resolveTokenLabel(
   currencyHex: string,
-  mintedTokenColor: string | null,
+  mintedTokenColor: string | null
 ): { label: string; className: string } {
   if (mintedTokenColor && currencyHex === mintedTokenColor) {
     return { label: 'Tutorial Tokens', className: 'text-ces-gold' };

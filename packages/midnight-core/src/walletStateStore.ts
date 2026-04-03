@@ -85,10 +85,7 @@ export class WalletStateStore {
       facade.shielded.serializeState(),
       facade.dust.serializeState(),
     ]);
-    await Promise.all([
-      this.#store.save('shielded', shieldedState),
-      this.#store.save('dust', dustState),
-    ]);
+    await Promise.all([this.#store.save('shielded', shieldedState), this.#store.save('dust', dustState)]);
   }
 
   async clearAll(): Promise<void> {

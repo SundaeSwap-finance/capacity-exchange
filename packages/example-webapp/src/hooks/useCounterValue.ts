@@ -8,15 +8,14 @@ export interface UseCounterValueResult {
   refresh: () => void;
 }
 
-export function useCounterValue(
-  counterAddress: string | null,
-  config: NetworkConfig
-): UseCounterValueResult {
+export function useCounterValue(counterAddress: string | null, config: NetworkConfig): UseCounterValueResult {
   const [value, setValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!counterAddress) return;
+    if (!counterAddress) {
+      return;
+    }
     setLoading(true);
     try {
       const result = await getCounterValue(counterAddress, config);

@@ -31,7 +31,9 @@ export function AnimatedNumber({
   }, [value]);
 
   useEffect(() => {
-    if (freeze) return;
+    if (freeze) {
+      return;
+    }
 
     const target = frozenTargetRef.current;
 
@@ -52,9 +54,7 @@ export function AnimatedNumber({
     }
 
     if (flash) {
-      const color = flash === 'auto'
-        ? (to > from ? 'green' : 'red')
-        : flash;
+      const color = flash === 'auto' ? (to > from ? 'green' : 'red') : flash;
       setFlashColor(color);
       setTimeout(() => setFlashColor(null), 1500);
     }
@@ -73,11 +73,7 @@ export function AnimatedNumber({
     return () => cancelAnimationFrame(rafRef.current);
   }, [freeze, value, duration, flash]);
 
-  const flashClass = flashColor === 'green'
-    ? 'ces-flash-green'
-    : flashColor === 'red'
-      ? 'ces-flash-red'
-      : '';
+  const flashClass = flashColor === 'green' ? 'ces-flash-green' : flashColor === 'red' ? 'ces-flash-red' : '';
 
   return <span className={`${className ?? ''} ${flashClass}`}>{formatter(display)}</span>;
 }

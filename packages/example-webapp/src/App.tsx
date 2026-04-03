@@ -113,21 +113,21 @@ function TutorialInner({
   const contractsConfig = useContractsConfig(networkId);
   const { createWallet } = useWalletStore();
 
-  const walletMode = seedWallet.status === 'connected'
-    ? 'seed' as const
-    : extensionWallet.status === 'connected'
-      ? 'extension' as const
-      : null;
+  const walletMode =
+    seedWallet.status === 'connected'
+      ? ('seed' as const)
+      : extensionWallet.status === 'connected'
+        ? ('extension' as const)
+        : null;
 
   const { wallet, walletConnection } = useActiveWallet(walletMode, seedWallet, extensionWallet);
   const { providers, walletInfo: realWalletInfo } = useWalletProviders(wallet, walletConnection);
 
-  const counterAddress = contractsConfig.status === 'loaded'
-    ? contractsConfig.config.counter.contractAddress : null;
-  const _tokenMintAddress = contractsConfig.status === 'loaded'
-    ? contractsConfig.config.tokenMint.contractAddress : null;
-  const _mintedTokenColor = contractsConfig.status === 'loaded'
-    ? contractsConfig.config.tokenMint.derivedTokenColor : null;
+  const counterAddress = contractsConfig.status === 'loaded' ? contractsConfig.config.counter.contractAddress : null;
+  const _tokenMintAddress =
+    contractsConfig.status === 'loaded' ? contractsConfig.config.tokenMint.contractAddress : null;
+  const _mintedTokenColor =
+    contractsConfig.status === 'loaded' ? contractsConfig.config.tokenMint.derivedTokenColor : null;
 
   const realSponsoredMint = useSponsoredMint(providers);
   const realCesTransaction = useCesTransaction(
@@ -141,13 +141,23 @@ function TutorialInner({
 
   const { state, advance, jumpTo, markMinted, markCesUsed } = useTutorialState();
 
-  const activeContractsConfig = mockDemoEnabled && mockState ? mockState.contractsConfig : contractsConfig.status === 'loaded' ? contractsConfig.config : null;
+  const activeContractsConfig =
+    mockDemoEnabled && mockState
+      ? mockState.contractsConfig
+      : contractsConfig.status === 'loaded'
+        ? contractsConfig.config
+        : null;
   const activeWalletInfo = mockDemoEnabled && mockState ? mockState.walletInfo : realWalletInfo;
-  const activeWalletData = mockDemoEnabled && mockState ? mockState.walletData : activeWalletInfo.status === 'ready' ? activeWalletInfo.data : null;
+  const activeWalletData =
+    mockDemoEnabled && mockState
+      ? mockState.walletData
+      : activeWalletInfo.status === 'ready'
+        ? activeWalletInfo.data
+        : null;
   const activeSponsoredMint = mockDemoEnabled && mockState ? mockState.sponsoredMint : realSponsoredMint;
   const activeCesTransaction = mockDemoEnabled && mockState ? mockState.cesTransaction : realCesTransaction;
-  const activeSponsoredTransaction = mockDemoEnabled && mockState
-    ? mockState.sponsoredTransaction : realSponsoredTransaction;
+  const activeSponsoredTransaction =
+    mockDemoEnabled && mockState ? mockState.sponsoredTransaction : realSponsoredTransaction;
   const activeCounterValue = mockDemoEnabled && mockState ? mockState.counterValue : realCounter.value;
   const totalShieldedBalance = activeWalletData
     ? Object.values(activeWalletData.shieldedBalances).reduce((sum, value) => sum + value, 0n)
@@ -166,19 +176,24 @@ function TutorialInner({
   }, [activeCesTransaction.status, markCesUsed, state.step, state.substep]);
 
   useEffect(() => {
-    if (mockDemoEnabled || activeCesTransaction.status !== 'success' && activeSponsoredTransaction.status !== 'success') {
+    if (
+      mockDemoEnabled ||
+      (activeCesTransaction.status !== 'success' && activeSponsoredTransaction.status !== 'success')
+    ) {
       return;
     }
 
     realCounter.refresh();
   }, [activeCesTransaction.status, activeSponsoredTransaction.status, mockDemoEnabled, realCounter]);
 
-  const isWalletConnected = mockDemoEnabled && mockState
-    ? mockState.isWalletConnected
-    : seedWallet.status === 'connected' || extensionWallet.status === 'connected';
-  const isWalletConnecting = mockDemoEnabled && mockState
-    ? mockState.isWalletConnecting
-    : seedWallet.status === 'connecting' || extensionWallet.status === 'connecting';
+  const isWalletConnected =
+    mockDemoEnabled && mockState
+      ? mockState.isWalletConnected
+      : seedWallet.status === 'connected' || extensionWallet.status === 'connected';
+  const isWalletConnecting =
+    mockDemoEnabled && mockState
+      ? mockState.isWalletConnecting
+      : seedWallet.status === 'connecting' || extensionWallet.status === 'connecting';
   const sidebarContent = useMemo(() => getDemoRailContent(state.step), [state.step]);
 
   const debugEntries = useDemoDebugLog({
@@ -266,9 +281,7 @@ function TutorialInner({
           />
         )}
 
-        {state.step === 3 && state.substep === 'a' && (
-          <DevAccessStep onContinue={advance} />
-        )}
+        {state.step === 3 && state.substep === 'a' && <DevAccessStep onContinue={advance} />}
 
         {state.step === 3 && state.substep === 'b' && activeContractsConfig && (
           <PlaygroundStep

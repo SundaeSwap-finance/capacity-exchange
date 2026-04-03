@@ -8,8 +8,12 @@ export function scrambleFrame(target: string, revealedCount: number): string {
   return target
     .split('')
     .map((char, index) => {
-      if (char === ' ') return char;
-      if (index < revealedCount || /[^A-Za-z0-9]/.test(char)) return char;
+      if (char === ' ') {
+        return char;
+      }
+      if (index < revealedCount || /[^A-Za-z0-9]/.test(char)) {
+        return char;
+      }
       return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
     })
     .join('');
