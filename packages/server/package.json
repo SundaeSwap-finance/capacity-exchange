@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "bun --watch src/server.ts",
+    "prebuild": "bun run --filter '@capacity-exchange/midnight-core' build && bun run --filter '@capacity-exchange/midnight-node' build && bun run --filter '@capacity-exchange/components' build",
     "build": "tsc",
     "start": "bun dist/server.js",
     "format": "prettier --write .",
