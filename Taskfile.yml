@@ -9,8 +9,8 @@ includes:
     vars:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
-  _example:
-    taskfile: taskfiles/example.yml
+  _demo:
+    taskfile: taskfiles/demo.yml
     internal: true
     vars:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
@@ -23,8 +23,8 @@ includes:
       COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
 
 vars:
-  CONTRACTS_DIR: '{{.ROOT_DIR}}/packages/example-webapp/contracts'
-  WEBAPP_DIR: '{{.ROOT_DIR}}/packages/example-webapp'
+  CONTRACTS_DIR: '{{.ROOT_DIR}}/apps/demo/contracts'
+  WEBAPP_DIR: '{{.ROOT_DIR}}/apps/demo'
 
 tasks:
   install:
@@ -41,15 +41,15 @@ tasks:
     desc: Compile Compact contracts (auto-extracts compiler)
     deps: [_build:extract-compactc]
     cmds:
-      - task: _example:compile
+      - task: _demo:compile
       - task: _registry:compile
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
-    deps: [_build:midnight-node, _example:require-compiled]
+    deps: [_build:midnight-node, _demo:require-compiled]
     preconditions:
       - sh: 'test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-        msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:example to create it'
+        msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:demo to create it'
     cmds:
       - bun run --cwd {{.CONTRACTS_DIR}} deploy-all {{.NETWORK_ID}} {{if .DRY_RUN}}--dry-run{{end}}
       - task: _deploy:post
@@ -62,8 +62,8 @@ tasks:
   _deploy:post:
     internal: true
     cmds:
-      - task: _example:copy-configs
-      - bun {{.ROOT_DIR}}/scripts/example-price-config.ts generate {{.NETWORK_ID}}
+      - task: _demo:copy-configs
+      - bun {{.ROOT_DIR}}/scripts/demo-price-config.ts generate {{.NETWORK_ID}}
     status:
       - '{{if .DRY_RUN}}exit 0{{else}}exit 1{{end}}'
 
@@ -87,18 +87,18 @@ tasks:
     status:
       - test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt
       - test -f {{.CONTRACTS_DIR}}/.env
-      - test -f {{.ROOT_DIR}}/packages/server/.env
+      - test -f {{.ROOT_DIR}}/apps/server/.env
       - test -f {{.WEBAPP_DIR}}/.env
     cmds:
       - task: prompt-mnemonic
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - cp {{.CONTRACTS_DIR}}/.env.example {{.CONTRACTS_DIR}}/.env
-      - cp {{.ROOT_DIR}}/packages/server/.env.example {{.ROOT_DIR}}/packages/server/.env
+      - cp {{.ROOT_DIR}}/apps/server/.env.example {{.ROOT_DIR}}/apps/server/.env
       - cp {{.WEBAPP_DIR}}/.env.example {{.WEBAPP_DIR}}/.env
 
-  setup:example:
-    desc: 'One-time setup for example webapp: configure env, install, build, deploy'
+  setup:demo:
+    desc: 'One-time setup for demo: configure env, install, build, deploy'
     deps: [require-proof-server-url]
     cmds:
       - task: init-env
@@ -106,21 +106,21 @@ tasks:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - task: install
       - task: compile-contracts
-      - task: _example:copy-zk-assets
-      - task: _build:webapp
+      - task: _demo:copy-zk-assets
+      - task: _build:demo
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
       - task: deploy
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-      - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev:example' to start."
+      - echo "Setup complete. Run 'NETWORK_ID={{.NETWORK_ID}} task dev:demo' to start."
     requires:
       vars: [NETWORK_ID]
 
-  dev:example:
-    desc: Start server and example webapp with hot-reload
-    deps: [require-proof-server-url, _example:require-deployed, _example:require-example-price-config, _build:libs]
+  dev:demo:
+    desc: Start server and demo webapp with hot-reload
+    deps: [require-proof-server-url, _demo:require-deployed, _demo:require-demo-price-config, _build:libs]
     cmds:
       - task: _dev:run
         vars:
@@ -130,7 +130,7 @@ tasks:
           EXTRA: >-
             "bun run --filter @capacity-exchange/components build:watch"
             "bun run --filter @capacity-exchange/server dev"
-            "bun run --filter @capacity-exchange/example-webapp dev"
+            "bun run --filter @capacity-exchange/demo dev"
             "bun run --filter @capacity-exchange/dashboard dev"
     requires:
       vars: [NETWORK_ID]
@@ -151,8 +151,8 @@ tasks:
       vars: [NETWORK_ID]
 
   dev:webapp:
-    desc: Start the example webapp with hot-reload
-    deps: [_example:require-deployed, _build:components]
+    desc: Start the demo webapp with hot-reload
+    deps: [_demo:require-deployed, _build:components]
     cmds:
       - task: _dev:run
         vars:
@@ -161,7 +161,7 @@ tasks:
           COLORS: blue,cyan,magenta,yellow
           EXTRA: >-
             "bun run --filter @capacity-exchange/components build:watch"
-            "bun run --filter @capacity-exchange/example-webapp dev"
+            "bun run --filter @capacity-exchange/demo dev"
     requires:
       vars: [NETWORK_ID]
 
@@ -180,17 +180,17 @@ tasks:
         "bun run --filter @capacity-exchange/midnight-node build:watch"
         {{.EXTRA}}
 
-  build:example:
-    desc: Build example webapp, server, and example contracts
+  build:demo:
+    desc: Build demo webapp, server, and demo contracts
     cmds:
-      - task: _example:compile
-      - task: _example:copy-zk-assets
-      - task: _example:copy-configs
-      - task: _build:webapp
+      - task: _demo:compile
+      - task: _demo:copy-zk-assets
+      - task: _demo:copy-configs
+      - task: _build:demo
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
-      - task: _build:typecheck-example-contracts
+      - task: _build:typecheck-demo-contracts
     requires:
       vars: [NETWORK_ID]
 

@@ -18,14 +18,14 @@ You'll need a wallet mnemonic funded with tNIGHT on preview. Create one using th
 ```bash
 # One-time: install deps, compile contracts, build packages, deploy, generate price config
 # Prompts for your wallet mnemonic on first run
-NETWORK_ID=preview task setup:example
+NETWORK_ID=preview task setup:demo
 ```
 
 ### 3. Run
 
 ```bash
 # Start capacity exchange server (port 3000) and webapp (port 5173) with hot-reload
-NETWORK_ID=preview task dev:example
+NETWORK_ID=preview task dev:demo
 ```
 
 You can also run them independently:
@@ -35,7 +35,7 @@ NETWORK_ID=preview task dev:server   # CES server only
 NETWORK_ID=preview task dev:webapp   # webapp only
 ```
 
-## What `task setup:example` Does
+## What `task setup:demo` Does
 
 1. **Prompts for wallet mnemonic** — saved to `wallet-mnemonic.preview.txt` at the project root
 2. **Copies `.env.example` files** — creates `.env` for server, webapp, and contracts packages
@@ -43,7 +43,7 @@ NETWORK_ID=preview task dev:webapp   # webapp only
 4. **Compiles Compact contracts** — extracts the bundled compiler and compiles counter + token-mint
 5. **Builds all packages** — midnight-core → midnight-node → client → components → webapp + server
 6. **Deploys contracts** — deploys to the Midnight preview network
-7. **Generates price config** — creates `packages/server/price-config.preview.json` from deployed contract data
+7. **Generates price config** — creates `apps/server/price-config.preview.json` from deployed contract data
 
 ## Available Tasks
 
@@ -51,11 +51,11 @@ Run `task --list` to see all tasks. Key ones:
 
 | Task | Description |
 |------|-------------|
-| `setup:example` | One-time setup for example webapp: configure env, install, build, deploy |
-| `dev:example` | Start server and example webapp with hot-reload |
+| `setup:demo` | One-time setup for demo: configure env, install, build, deploy |
+| `dev:demo` | Start server and demo with hot-reload |
 | `dev:server` | Start the server only |
-| `dev:webapp` | Start the webapp only |
-| `build:example` | Build example webapp, server, and example contracts |
+| `dev:webapp` | Start the demo webapp only |
+| `build:demo` | Build demo webapp, server, and demo contracts |
 | `deploy` | Deploy contracts for a network |
 | `compile-contracts` | Compile Compact contracts |
 | `test` | Run tests |
@@ -73,18 +73,19 @@ All network-aware tasks require `NETWORK_ID=<network>` (e.g., `preview`, `undepl
 ├── taskfiles/                # Internal task definitions
 ├── scripts/                  # Cross-package CLI tools
 ├── tools/                    # Bundled tooling (Compact compiler)
+├── apps/                     # Applications
+│   ├── demo/                 # Demo webapp + Compact contracts
+│   └── server/               # CES server
 ├── packages/
 │   ├── midnight-core/        # Shared core logic
 │   ├── midnight-node/        # Node-side Midnight integrations
 │   ├── client/               # Auto-generated OpenAPI client
-│   ├── components/           # High-level CES components
-│   ├── server/               # CES server
-│   └── example-webapp/       # Example CES webapp + Compact contracts
+│   └── components/           # High-level CES components
 ```
 
 ## External Services
 
-The example webapp setup (preview) depends on these services:
+The demo webapp setup (preview) depends on these services:
 
 | Service | Endpoint | Setup Required? |
 |---------|----------|-----------------|
@@ -102,7 +103,7 @@ All packages resolve the wallet mnemonic from a shared file at the project root:
 wallet-mnemonic.{network}.txt   # e.g. wallet-mnemonic.preview.txt
 ```
 
-`task setup:example` prompts for your mnemonic and creates this file. Each package finds it by walking up the directory tree from its working directory, so you only configure it once.
+`task setup:demo` prompts for your mnemonic and creates this file. Each package finds it by walking up the directory tree from its working directory, so you only configure it once.
 
 In production (mainnet), set `WALLET_MNEMONIC_FILE` or `WALLET_SEED_FILE` explicitly instead — the walk-up fallback is disabled on mainnet.
 
@@ -112,4 +113,4 @@ The code in `packages/client/generated` is auto-generated from the server's Open
 
 ## Security Notes
 
-The `example-webapp` reads the wallet mnemonic at build time and bakes it into the JS bundle via Vite (`VITE_SERVER_MNEMONIC`). This is fine for a demo on a test network but should not be used in production or with a real wallet.
+The `demo` webapp reads the wallet mnemonic at build time and bakes it into the JS bundle via Vite (`VITE_SERVER_MNEMONIC`). This is fine for a demo on a test network but should not be used in production or with a real wallet.

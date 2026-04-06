@@ -1,5 +1,5 @@
-// Generates a price config for the server from deployed example-webapp contracts.
-// This is a dev/demo tool — it wires the example-webapp's token into the server's
+// Generates a price config for the server from deployed demo contracts.
+// This is a dev/demo tool — it wires the demo's token into the server's
 // price config so both can be run together locally.
 import * as fs from 'fs';
 import {

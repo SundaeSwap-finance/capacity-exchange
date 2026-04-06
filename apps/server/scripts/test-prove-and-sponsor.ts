@@ -7,7 +7,7 @@
  * Steps:
  *  1. Starts N CES servers via run-servers.ts.
  *  2. Waits for server 1 (no-dust, fallback) and server 2 (funded) to be ready.
- *  3. Runs packages/example-webapp/contracts/src/counter/cli/test/prove-and-sponsor.ts
+ *  3. Runs apps/demo/contracts/src/counter/cli/test/prove-and-sponsor.ts
  *     against server 1.
  *  4. Checks if the response contains a `sponsorResponse.tx` field.
  *  5. Prints the tx length on success, or the error on failure.

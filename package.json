@@ -16,8 +16,9 @@
     "bun": ">=1.1.0"
   },
   "workspaces": [
-    "packages/*",
-    "packages/example-webapp/contracts"
+    "apps/*",
+    "apps/demo/contracts",
+    "packages/*"
   ],
   "overrides": {
     "whatwg-url": "14.1.1",

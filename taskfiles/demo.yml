@@ -1,7 +1,7 @@
 version: '3'
 
-# Internal tasks for the example: contract compilation, deployment, and asset copying.
-# Included by root Taskfile.yml under the _example namespace.
+# Internal tasks for the demo: contract compilation, deployment, and asset copying.
+# Included by root Taskfile.yml under the _demo namespace.
 
 tasks:
   # --- Compilation ---
@@ -19,7 +19,7 @@ tasks:
   copy-zk-assets:
     deps: [compile]
     cmds:
-      - bun run --filter @capacity-exchange/example-webapp copy-zk-assets
+      - bun run --filter @capacity-exchange/demo copy-zk-assets
 
   copy-configs:
     cmds:
@@ -36,10 +36,10 @@ tasks:
     run: once
     preconditions:
       - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.public.json >/dev/null 2>&1'
-        msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup:example' first."
+        msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup:demo' first."
 
-  require-example-price-config:
+  require-demo-price-config:
     run: once
     preconditions:
-      - sh: 'bun {{.ROOT_DIR}}/scripts/example-price-config.ts validate {{.NETWORK_ID}}'
-        msg: "Example price config invalid or missing. Run 'NETWORK_ID={{.NETWORK_ID}} task setup:example' first."
+      - sh: 'bun {{.ROOT_DIR}}/scripts/demo-price-config.ts validate {{.NETWORK_ID}}'
+        msg: "Demo price config invalid or missing. Run 'NETWORK_ID={{.NETWORK_ID}} task setup:demo' first."

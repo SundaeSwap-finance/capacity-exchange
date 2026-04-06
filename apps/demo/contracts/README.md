@@ -1,4 +1,4 @@
-# Example Contracts
+# Demo Contracts
 
 Midnight smart contracts for counter and token-mint demos.
 

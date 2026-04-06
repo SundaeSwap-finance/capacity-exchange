@@ -1,5 +1,5 @@
-// Validates that the server's price config includes the example-webapp's deployed token.
-// This is a dev/demo check — it ensures the server and example-webapp are wired up
+// Validates that the server's price config includes the demo's deployed token.
+// This is a dev/demo check — it ensures the server and demo are wired up
 // correctly for local development. Production server setup doesn't use this script.
 import { contractsConfigPath, priceConfigPath, readJsonFile, requireFile } from '../lib/paths.ts';
 

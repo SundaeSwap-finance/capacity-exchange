@@ -1,11 +1,11 @@
 import { program } from 'commander';
-import { generate } from './example-price-config/generate.ts';
-import { validate } from './example-price-config/validate.ts';
+import { generate } from './demo-price-config/generate.ts';
+import { validate } from './demo-price-config/validate.ts';
 
 function main() {
   program
-    .name('example-price-config')
-    .description('Generate and validate server price configs from deployed example-webapp contracts');
+    .name('demo-price-config')
+    .description('Generate and validate server price configs from deployed demo contracts');
 
   program
     .command('generate')

@@ -1,7 +1,7 @@
 {
-  "name": "@capacity-exchange/example-contracts",
+  "name": "@capacity-exchange/demo-contracts",
   "version": "1.0.0",
-  "description": "Example Midnight contracts for capacity exchange demos",
+  "description": "Midnight contracts for capacity exchange demos",
   "type": "module",
   "exports": {
     "./counter/out/contract/*": "./counter/out/contract/*",
