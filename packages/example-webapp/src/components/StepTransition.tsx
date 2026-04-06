@@ -49,7 +49,9 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
 
   useEffect(() => {
     const node = rootRef.current;
-    if (!node || typeof ResizeObserver === 'undefined') return;
+    if (!node || typeof ResizeObserver === 'undefined') {
+      return;
+    }
     const targetNode = node.closest<HTMLElement>('.ces-step-transition-scope') ?? node;
 
     const updateOverlayBounds = () => {
@@ -104,7 +106,9 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
       return;
     }
 
-    if (animKey === displayedKey) return;
+    if (animKey === displayedKey) {
+      return;
+    }
 
     setPhase('covering');
 
@@ -123,7 +127,9 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
   // cancelled when the cover timer updates displayedKey and re-triggers
   // the effect above.
   useEffect(() => {
-    if (phase !== 'revealing') return;
+    if (phase !== 'revealing') {
+      return;
+    }
 
     const revealTimer = window.setTimeout(() => {
       setPhase('idle');
@@ -142,7 +148,9 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
 
   useEffect(() => {
     const stage = rootRef.current?.closest<HTMLElement>('.ces-main-stage');
-    if (!stage) return;
+    if (!stage) {
+      return;
+    }
 
     if (phase === 'idle') {
       delete stage.dataset.stepTransitionPhase;
@@ -176,7 +184,7 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
       const coverDelay = Math.round(coverNoise * CELL_DELAY_SPREAD_MS);
       const revealDelay = Math.max(0, Math.round((wave + (revealNoise - 0.5) * 0.28 + 0.14) * CELL_DELAY_SPREAD_MS));
 
-        return {
+      return {
         id: index,
         left: xOffset + col * CELL_SIZE - CELL_OVERLAP,
         top: yOffset + row * CELL_SIZE - CELL_OVERLAP,
@@ -231,13 +239,7 @@ export function StepTransition({ animKey, direction, children }: StepTransitionP
                   '--ces-step-pixel-delay': `${phase === 'covering' ? cell.coverDelay : cell.revealDelay}ms`,
                 };
 
-                return (
-                  <span
-                    key={cell.id}
-                    className="ces-step-pixel-cell"
-                    style={cellStyle}
-                  />
-                );
+                return <span key={cell.id} className="ces-step-pixel-cell" style={cellStyle} />;
               })}
             </div>,
             document.body

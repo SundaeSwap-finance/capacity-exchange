@@ -82,7 +82,9 @@ export function PagePixelReveal() {
     };
   }, [viewport]);
 
-  if (!active) return null;
+  if (!active) {
+    return null;
+  }
 
   return (
     <div aria-hidden="true" className="ces-pixel-overlay">

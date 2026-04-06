@@ -38,14 +38,18 @@ function loadGraduation(): GraduationFlags {
         hasUsedCes: !!parsed.hasUsedCes,
       };
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { hasMintedTokens: false, hasUsedCes: false };
 }
 
 function saveGraduation(flags: GraduationFlags) {
   try {
     localStorage.setItem(GRADUATION_KEY, JSON.stringify(flags));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 const STEP_FLOW: Array<{ step: TutorialStep; substep: Substep }> = [
@@ -69,7 +73,9 @@ function reducer(state: TutorialState, action: Action): TutorialState {
     case 'ADVANCE': {
       const idx = flowIndex(state.step, state.substep);
       const next = STEP_FLOW[idx + 1];
-      if (!next) {return state;}
+      if (!next) {
+        return state;
+      }
 
       const completedSteps = new Set(state.completedSteps);
       if (next.step !== state.step) {
@@ -89,7 +95,9 @@ function reducer(state: TutorialState, action: Action): TutorialState {
     case 'GO_BACK': {
       const idx = flowIndex(state.step, state.substep);
       const prev = STEP_FLOW[idx - 1];
-      if (!prev) {return state;}
+      if (!prev) {
+        return state;
+      }
 
       return {
         ...state,

@@ -1,0 +1,14 @@
+version: '3'
+
+# Internal tasks for the registry
+
+tasks:
+  # --- Compilation ---
+
+  compile:
+    status:
+      - test -d {{.REGISTRY_CONTRACTS_DIR}}/counter/out
+    env:
+      COMPACTC: '{{.COMPACTC_BIN}}'
+    cmds:
+      - bun run --filter "@capacity-exchange/registry" compile

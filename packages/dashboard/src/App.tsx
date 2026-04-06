@@ -11,9 +11,15 @@ function formatUptime(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
   const parts: string[] = [];
-  if (d) parts.push(`${d}d`);
-  if (h) parts.push(`${h}h`);
-  if (m) parts.push(`${m}m`);
+  if (d) {
+    parts.push(`${d}d`);
+  }
+  if (h) {
+    parts.push(`${h}h`);
+  }
+  if (m) {
+    parts.push(`${m}m`);
+  }
   parts.push(`${s}s`);
   return parts.join(' ');
 }
@@ -28,11 +34,15 @@ function formatContention(data: Metrics['contention']): string {
 
 function formatRevenue(byCurrency: Record<string, string>): string {
   const entries = Object.entries(byCurrency);
-  if (entries.length === 0) return '—';
-  return entries.map(([currency, amount]) => {
-    const label = currency.length > 16 ? `${currency.slice(0, 8)}...${currency.slice(-6)}` : currency;
-    return `${BigInt(amount).toLocaleString()} ${label}`;
-  }).join(', ');
+  if (entries.length === 0) {
+    return '—';
+  }
+  return entries
+    .map(([currency, amount]) => {
+      const label = currency.length > 16 ? `${currency.slice(0, 8)}...${currency.slice(-6)}` : currency;
+      return `${BigInt(amount).toLocaleString()} ${label}`;
+    })
+    .join(', ');
 }
 
 const statusColor: Record<string, string> = {
@@ -46,7 +56,7 @@ export default function App() {
 
   const walletStatus = data?.health.wallet.status ?? 'unknown';
   const dotColor = error ? 'bg-red-500' : (statusColor[walletStatus] ?? 'bg-gray-500');
-  const statusLabel = error ? 'disconnected' : (data ? walletStatus : 'connecting');
+  const statusLabel = error ? 'disconnected' : data ? walletStatus : 'connecting';
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-200">
@@ -59,11 +69,7 @@ export default function App() {
           <span className="flex items-center gap-1.5">
             <span className={`inline-block h-2 w-2 rounded-full ${dotColor}`} />
             {statusLabel}
-            {data && (
-              <span className="text-gray-600 tabular-nums">
-                ({secondsUntilRefresh}s)
-              </span>
-            )}
+            {data && <span className="text-gray-600 tabular-nums">({secondsUntilRefresh}s)</span>}
           </span>
         </div>
       </header>
@@ -86,10 +92,16 @@ export default function App() {
         </Section>
 
         <Section title="Contention">
-          <Card label="Locked / Total UTxOs" value={data ? `${data.contention.lockedUtxos} / ${data.contention.totalUtxos}` : '—'} />
+          <Card
+            label="Locked / Total UTxOs"
+            value={data ? `${data.contention.lockedUtxos} / ${data.contention.totalUtxos}` : '—'}
+          />
           <Card label="Locked Specks" value={data ? formatDust(data.contention.lockedSpecks) : '—'} />
           <Card label="Contention Ratio" value={data ? formatContention(data.contention) : '—'} />
-          <Card label="Avg Contention (1h)" value={data ? `${(data.contention.averageRatioLastHour * 100).toFixed(1)}%` : '—'} />
+          <Card
+            label="Avg Contention (1h)"
+            value={data ? `${(data.contention.averageRatioLastHour * 100).toFixed(1)}%` : '—'}
+          />
         </Section>
       </main>
     </div>

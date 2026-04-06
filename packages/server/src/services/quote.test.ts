@@ -13,7 +13,9 @@ describe('QuoteService', () => {
     const result = service.getQuote(token);
 
     expect(result.status).toBe('ok');
-    if (result.status !== 'ok') return;
+    if (result.status !== 'ok') {
+      return;
+    }
     expect(result.quote.specks).toBe(500n);
     expect(result.quote.prices).toEqual(prices);
   });

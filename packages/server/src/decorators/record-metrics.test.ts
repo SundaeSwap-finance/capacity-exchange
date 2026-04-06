@@ -46,7 +46,7 @@ describe('recordCounters', () => {
       @recordCounters({
         name: 'test.counter',
         description: 'test',
-        extract: (result: any) => result.status === 'ok' ? { value: 1 } : null,
+        extract: (result: any) => (result.status === 'ok' ? { value: 1 } : null),
       })
       async doWork() {
         return { status: 'ok' };
@@ -62,7 +62,7 @@ describe('recordCounters', () => {
       @recordCounters({
         name: 'test.counter',
         description: 'test',
-        extract: (result: any) => result.status === 'ok' ? { value: 1 } : null,
+        extract: (result: any) => (result.status === 'ok' ? { value: 1 } : null),
       })
       async doWork() {
         return { status: 'error' };

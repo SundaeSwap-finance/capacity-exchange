@@ -29,10 +29,7 @@ export interface WalletIdentity {
  * midnight-js contracts require WalletProvider/MidnightProvider, so this adapter
  * bridges the two.
  */
-export function connectedApiProvidersAdapter(
-  connectedAPI: ConnectedAPI,
-  identity: WalletIdentity
-): BaseProviders {
+export function connectedApiProvidersAdapter(connectedAPI: ConnectedAPI, identity: WalletIdentity): BaseProviders {
   const walletProvider: WalletProvider = {
     getCoinPublicKey(): CoinPublicKey {
       return identity.coinPublicKey;

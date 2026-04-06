@@ -19,6 +19,13 @@ describe('Offer API - Happy Path', () => {
 
     // check that response is valid
     const bytes = hexToBytes(offer.serializedTx);
-    expect(() => Transaction.deserialize<SignatureEnabled, Proof, PreBinding>('signature', 'proof', 'pre-binding', bytes)).not.toThrow();
+    expect(() =>
+      Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+        'signature',
+        'proof',
+        'pre-binding',
+        bytes,
+      ),
+    ).not.toThrow();
   });
 });

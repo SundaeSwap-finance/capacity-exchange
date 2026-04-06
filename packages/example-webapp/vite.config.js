@@ -1,5 +1,4 @@
-/* global process */
-import fs from 'fs';
+/* global process, console */
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
@@ -12,9 +11,10 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
   const networkId = requireNodeEnv('NETWORK_ID');
   process.env.VITE_NETWORK_ID = networkId;
-  process.env.VITE_CAPACITY_EXCHANGE_URL ??= networkId === 'mainnet'
-    ? 'https://capacity-exchange.sundae.fi'
-    : `https://capacity-exchange.${networkId}.sundae.fi`;
+  process.env.VITE_CAPACITY_EXCHANGE_URL ??=
+    networkId === 'mainnet'
+      ? 'https://capacity-exchange.sundae.fi'
+      : `https://capacity-exchange.${networkId}.sundae.fi`;
   try {
     process.env.VITE_SERVER_SEED_HEX = uint8ArrayToHex(loadWalletSeed(networkId));
   } catch {

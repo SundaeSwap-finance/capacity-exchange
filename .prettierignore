@@ -5,4 +5,5 @@ generated
 vendor
 package-lock.json
 packages/client/openapi.json
+packages/example-webapp/public
 *.md

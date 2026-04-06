@@ -65,7 +65,11 @@ export function useTokenMintOperations(
       'Sending',
       () =>
         sendShieldedTokens(serverWallet.walletFacade!, serverWallet.keys!, [
-          { type: derivedColor, receiverAddress: MidnightBech32m.parse(shieldedAddress).decode(ShieldedAddress, networkConfig.networkId), amount: BigInt(sendAmount) },
+          {
+            type: derivedColor,
+            receiverAddress: MidnightBech32m.parse(shieldedAddress).decode(ShieldedAddress, networkConfig.networkId),
+            amount: BigInt(sendAmount),
+          },
         ]),
       setSendTxHash
     );

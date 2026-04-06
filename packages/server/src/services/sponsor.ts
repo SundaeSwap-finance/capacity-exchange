@@ -68,7 +68,8 @@ export class SponsorService {
     {
       name: 'ces.dust.committed_specks',
       description: 'Specks committed via sponsorship',
-      extract: (result: SponsorTxResult) => result.status === 'ok' ? { value: Number(result.specksCommitted) } : null,
+      extract: (result: SponsorTxResult) =>
+        result.status === 'ok' ? { value: Number(result.specksCommitted) } : null,
     },
   )
   async sponsorTx(userTx: UnboundTransaction): Promise<SponsorTxResult> {

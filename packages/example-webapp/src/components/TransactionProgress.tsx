@@ -27,7 +27,13 @@ export function TransactionProgress({ steps }: TransactionProgressProps) {
           <div className="relative z-10 mt-0.5 flex-shrink-0">
             {step.status === 'done' && (
               <div className="w-[18px] h-[18px] rounded-full bg-ces-accent/20 flex items-center justify-center">
-                <svg className="w-3 h-3 text-ces-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <svg
+                  className="w-3 h-3 text-ces-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>

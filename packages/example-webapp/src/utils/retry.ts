@@ -8,7 +8,7 @@ const COUNTERS_URL = 'https://api.counters.sundaeswap.finance/api/v0/increment';
  */
 export async function withDustRetry<T>(
   fn: () => Promise<T>,
-  { maxAttempts = 3, onRetry }: { maxAttempts?: number; onRetry?: (attempt: number, error: unknown) => void } = {},
+  { maxAttempts = 3, onRetry }: { maxAttempts?: number; onRetry?: (attempt: number, error: unknown) => void } = {}
 ): Promise<T> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -31,10 +31,16 @@ export async function withDustRetry<T>(
 }
 
 function getDustErrorCode(err: unknown): string | null {
-  if (!(err instanceof Error)) return null;
+  if (!(err instanceof Error)) {
+    return null;
+  }
   const msg = err.message + (err.cause instanceof Error ? ' ' + err.cause.message : '');
-  if (/170|InvalidDustProof|dust.*proof/i.test(msg)) return '170';
-  if (/182/.test(msg)) return '182';
+  if (/170|InvalidDustProof|dust.*proof/i.test(msg)) {
+    return '170';
+  }
+  if (/182/.test(msg)) {
+    return '182';
+  }
   return null;
 }
 

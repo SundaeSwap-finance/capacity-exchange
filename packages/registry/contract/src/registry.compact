@@ -1,0 +1,80 @@
+pragma language_version >= 0.22;
+
+import CompactStandardLibrary;
+
+new type Ipv4 = Bytes<4>;
+
+new type Ipv6 = Bytes<16>;
+
+new type IpAddress = Either<Ipv4, Ipv6>;
+
+new type Port = Uint<16>;
+
+new type RegistryKey = Bytes<32>;
+
+new type UnixTimestampSeconds = Uint<64>;
+
+struct Entry {
+  validTo: UnixTimestampSeconds,
+  ip: IpAddress,
+  port: Port,
+}
+
+export ledger registry: Map<RegistryKey, Entry>;
+
+export ledger collateralAmount: Uint<128>;
+
+export ledger maximumValidityInterval: UnixTimestampSeconds;
+
+witness secretKey(): Bytes<64>;
+
+constructor(requiredCollateral: Uint<128>, maxValidityInterval: UnixTimestampSeconds) {
+  collateralAmount = disclose(requiredCollateral);
+  maximumValidityInterval = disclose(maxValidityInterval);
+}
+
+export circuit registerServer(entry: Entry): [] {
+  const disclosedEntry = disclose(entry);
+  assert(blockTimeGte((disclosedEntry.validTo - maximumValidityInterval) as Uint<64>),
+         "validity interval cannot be larger than maximumValidityInterval"
+         );
+  const key = disclose(hashKey(secretKey()));
+  assert(!registry.member(key), "you already have an entry registered");
+  receiveUnshielded(nativeToken(), collateralAmount);
+
+  registry.insert(key, disclosedEntry);
+}
+
+export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
+  const disclosedKey = disclose(key);
+  assert(registry.member(disclosedKey), "key does not exist");
+  if (blockTimeLt(disclose(registry.lookup(disclosedKey).validTo) as Uint<64>)) {
+    assert(key == disclose(hashKey(secretKey())),
+           "you can only deregister your own entry before validTo"
+           );
+  }
+
+  sendUnshielded(
+    nativeToken(),
+    collateralAmount,
+    right<ContractAddress, UserAddress>(disclose(recipient))
+    );
+
+  registry.remove(disclosedKey);
+}
+
+export circuit refreshValidity(validTo: UnixTimestampSeconds): [] {
+  const key = disclose(hashKey(secretKey()));
+  assert(registry.member(key), "you don't have a registered server");
+  const currentEntry = registry.lookup(key);
+  assert(blockTimeGte((disclose(validTo) - maximumValidityInterval) as Uint<64>),
+         "validity interval cannot be larger than maximumValidityInterval"
+         );
+  const newEntry = Entry { validTo: validTo, ip: currentEntry.ip, port: currentEntry.port, };
+
+  registry.insert(key, disclose(newEntry));
+}
+
+circuit hashKey(key: Bytes<64>): RegistryKey {
+  return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
+}

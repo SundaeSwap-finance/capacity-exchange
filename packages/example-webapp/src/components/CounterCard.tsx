@@ -13,7 +13,9 @@ export function CounterCard({
   eyebrow = 'Underlying Contract State',
   label = 'Registered Graduations',
 }: CounterCardProps) {
-  if (value === null) return null;
+  if (value === null) {
+    return null;
+  }
 
   return (
     <div className="ces-inventory-card ces-inventory-left">
