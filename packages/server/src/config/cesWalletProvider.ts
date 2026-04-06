@@ -6,12 +6,9 @@ import {
   type ExchangePrice,
   type PromptForCurrency,
   type ConfirmOffer,
-  type BalanceSealedTx,
 } from '@capacity-exchange/components';
 import type { NetworkEndpoints } from '@capacity-exchange/midnight-core';
 import type { WalletService } from '../services/wallet.js';
-
-const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Creates a {@link PromptForCurrency} that selects the best exchange price
@@ -70,22 +67,12 @@ export function buildCesWalletProvider(
     return null;
   }
 
-  const { walletFacade, keys } = walletService.connection;
-
-  const balanceSealedTx: BalanceSealedTx = async (tx) => {
-    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const recipe = await walletFacade.balanceFinalizedTransaction(
-      tx,
-      { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-      { ttl, tokenKindsToBalance: ['shielded'] },
-    );
-    return walletFacade.finalizeRecipe(recipe);
-  };
+  const { coinPublicKey, encryptionPublicKey } = walletService.shieldedPublicKeys;
 
   return capacityExchangeWalletProvider({
-    coinPublicKey: keys.shieldedSecretKeys.coinPublicKey,
-    encryptionPublicKey: keys.shieldedSecretKeys.encryptionPublicKey,
-    balanceSealedTx,
+    coinPublicKey,
+    encryptionPublicKey,
+    balanceSealedTx: (tx) => walletService.balanceFinalizedTransaction(tx),
     indexerUrl: endpoints.indexerHttpUrl,
     capacityExchangeUrls,
     margin: DEFAULT_MARGIN,

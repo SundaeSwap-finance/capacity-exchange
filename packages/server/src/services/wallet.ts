@@ -6,8 +6,10 @@ import {
 } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
-import { nativeToken } from '@midnight-ntwrk/ledger-v8';
+import { nativeToken, type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
 import { WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
+
+const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 export type WalletSyncState =
   | { status: 'syncing' }
@@ -125,8 +127,23 @@ export class WalletService {
     return state.balances;
   }
 
-  get connection(): WalletConnection {
-    return this.walletConnection;
+  public async balanceFinalizedTransaction(tx: FinalizedTransaction): Promise<FinalizedTransaction> {
+    const { walletFacade, keys } = this.walletConnection;
+    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
+    const recipe = await walletFacade.balanceFinalizedTransaction(
+      tx,
+      { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
+      { ttl, tokenKindsToBalance: ['shielded'] },
+    );
+    return walletFacade.finalizeRecipe(recipe);
+  }
+
+  get shieldedPublicKeys() {
+    const { shieldedSecretKeys } = this.walletConnection.keys;
+    return {
+      coinPublicKey: shieldedSecretKeys.coinPublicKey,
+      encryptionPublicKey: shieldedSecretKeys.encryptionPublicKey,
+    };
   }
 
   get syncState(): WalletSyncState {
