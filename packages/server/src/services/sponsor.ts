@@ -87,7 +87,9 @@ export class SponsorService {
     const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
     // ask other capacity exchange services to sponsor the transaction
     if (lockResult.status === 'insufficient-funds' && this.cesWalletProvider) {
-      this.logger.info('Insufficient dust funds; fallback to other CES peers for dust sponsorship...');
+      this.logger.info(
+        'Insufficient dust funds; fallback to other CES peers for dust sponsorship...',
+      );
       const tx = await this.cesWalletProvider.balanceTx(userTx);
 
       return { status: 'ok', tx, specksCommitted: estimatedSpecks };

@@ -22,5 +22,9 @@ export default fp(async (fastify: FastifyInstance) => {
   );
 
   fastify.decorate('cesWalletProvider', cesWalletProvider);
-  fastify.log.info(cesWalletProvider ? "CES wallet provider init'd" : "No CAPACITY_EXCHANGE_PEER_URLS configured to initialize CES wallet provider");
+  fastify.log.info(
+    cesWalletProvider
+      ? "CES wallet provider init'd"
+      : 'No CAPACITY_EXCHANGE_PEER_URLS configured to initialize CES wallet provider',
+  );
 });

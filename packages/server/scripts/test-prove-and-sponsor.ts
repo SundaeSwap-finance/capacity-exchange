@@ -3,7 +3,7 @@
  * Usage: bun scripts/test-prove-and-sponsor.ts [N]
  *
  * 1. Starts N CES servers via run-servers.ts and waits for them to be ready,
- * 2. Runs the packages/example-webapp/contracts/src/counter/cli/test/prove-and-sponsor.ts 
+ * 2. Runs the packages/example-webapp/contracts/src/counter/cli/test/prove-and-sponsor.ts
  *    against server 1,
  * 3. Checks the test result: if result of above script HAS a tx field present:
  * 4. If success, prints the length of the tx using the bytes field,
@@ -51,7 +51,9 @@ console.log(`Counter contract address: ${contractAddress}`);
 console.log('');
 console.log(`Starting ${N} servers...`);
 
-const env = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined)) as Record<string, string>;
+const env = Object.fromEntries(
+  Object.entries(process.env).filter(([, v]) => v !== undefined),
+) as Record<string, string>;
 
 let serversProc: ReturnType<typeof Bun.spawn> | null = null;
 
@@ -63,8 +65,14 @@ function cleanup() {
   }
 }
 
-process.on('SIGINT', () => { cleanup(); process.exit(0); });
-process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+process.on('SIGINT', () => {
+  cleanup();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  cleanup();
+  process.exit(0);
+});
 
 serversProc = Bun.spawn(['bun', join(__dirname, 'run-servers.ts'), String(N)], {
   env,
@@ -74,7 +82,9 @@ serversProc = Bun.spawn(['bun', join(__dirname, 'run-servers.ts'), String(N)], {
 
 // ── Wait for server 1 to be ready ────────────────────────────────────────────
 console.log('');
-console.log(`Waiting for server 1 at ${SERVER_URL} to be ready (timeout: ${READY_TIMEOUT_SECS}s)...`);
+console.log(
+  `Waiting for server 1 at ${SERVER_URL} to be ready (timeout: ${READY_TIMEOUT_SECS}s)...`,
+);
 
 let elapsed = 0;
 let ready = false;

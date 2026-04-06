@@ -63,7 +63,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
-      ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',').map((u) => u.trim()).filter(Boolean)
+      ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
+          .map((u) => u.trim())
+          .filter(Boolean)
       : [],
   };
 

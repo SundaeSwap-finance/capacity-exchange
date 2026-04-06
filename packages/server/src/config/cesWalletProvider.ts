@@ -19,13 +19,22 @@ import type { WalletService } from '../services/wallet.js';
  * 3. Picks the lowest amount among the filtered prices
  *    (fewest tokens spent per dust acquired).
  */
-function createAutoSelectCurrency(log: FastifyBaseLogger, walletService: WalletService): PromptForCurrency {
+function createAutoSelectCurrency(
+  log: FastifyBaseLogger,
+  walletService: WalletService,
+): PromptForCurrency {
   return async (prices: ExchangePrice[], dustRequired: bigint) => {
     if (prices.length === 0) {
       throw new Error('No exchange prices available');
     }
 
-    log.debug({ dustRequired: dustRequired.toString(), prices: prices.map((p) => ({ currency: p.price.currency, amount: p.price.amount })) }, 'Available exchange prices');
+    log.debug(
+      {
+        dustRequired: dustRequired.toString(),
+        prices: prices.map((p) => ({ currency: p.price.currency, amount: p.price.amount })),
+      },
+      'Available exchange prices',
+    );
 
     const balances = await walletService.getShieldedTokenBalances();
 
@@ -34,20 +43,34 @@ function createAutoSelectCurrency(log: FastifyBaseLogger, walletService: WalletS
       throw new Error('No exchange prices available for currencies held by this wallet');
     }
 
-    log.debug({ currencies: candidates.map((p) => p.price.currency) }, 'Currencies with non-zero balance');
-    // TODO: allow configuring another selection strategy. 
+    log.debug(
+      { currencies: candidates.map((p) => p.price.currency) },
+      'Currencies with non-zero balance',
+    );
+    // TODO: allow configuring another selection strategy.
     const selected = candidates.reduce((lowest, exchangePrice) =>
-      BigInt(exchangePrice.price.amount) < BigInt(lowest.price.amount) ? exchangePrice : lowest
+      BigInt(exchangePrice.price.amount) < BigInt(lowest.price.amount) ? exchangePrice : lowest,
     );
 
-    log.info({ currency: selected.price.currency, amount: selected.price.amount }, 'Auto-selected exchange currency');
+    log.info(
+      { currency: selected.price.currency, amount: selected.price.amount },
+      'Auto-selected exchange currency',
+    );
     return { status: 'selected', exchangePrice: selected };
   };
 }
 
 function createAutoConfirmOffer(log: FastifyBaseLogger): ConfirmOffer {
   return async (offer, dustRequired) => {
-    log.info({ offerId: offer.offerId, amount: offer.offerAmount, currency: offer.offerCurrency, dustRequired: dustRequired.toString() }, 'Auto-confirming offer');
+    log.info(
+      {
+        offerId: offer.offerId,
+        amount: offer.offerAmount,
+        currency: offer.offerCurrency,
+        dustRequired: dustRequired.toString(),
+      },
+      'Auto-confirming offer',
+    );
     return { status: 'confirmed' };
   };
 }

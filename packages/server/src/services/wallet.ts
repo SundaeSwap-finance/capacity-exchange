@@ -127,7 +127,9 @@ export class WalletService {
     return state.balances;
   }
 
-  public async balanceFinalizedTransaction(tx: FinalizedTransaction): Promise<FinalizedTransaction> {
+  public async balanceFinalizedTransaction(
+    tx: FinalizedTransaction,
+  ): Promise<FinalizedTransaction> {
     const { walletFacade, keys } = this.walletConnection;
     const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
     const recipe = await walletFacade.balanceFinalizedTransaction(

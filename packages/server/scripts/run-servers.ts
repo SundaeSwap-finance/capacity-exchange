@@ -6,7 +6,7 @@
  *   - Server 1: no-dust wallet; peers to all funded servers (2..N)
  *   - Servers 2..N: funded wallets (serve dust directly)
  *
- * Ports: 
+ * Ports:
  *   - server i runs on BASE_PORT + i - 1  (default base: 3000)
  *   - server i dashboard runs on BASE_DASHBOARD_PORT + i - 1 (default base: 4000)
  *
@@ -15,11 +15,11 @@
  *     The wallet MUST have shielded token balance (set SKIP_BALANCE_CHECK=1 to bypass).
  *   - Servers 2..N wallets: each uses wallet-mnemonic-{i}.{MIDNIGHT_NETWORK}.txt (e.g. wallet-mnemonic-2.preview.txt).
  *     These wallets MUST have a DUST balance (set SKIP_BALANCE_CHECK=1 to bypass).
- * 
+ *
  * Files of Servers 2..N:
- *  - uses price-config-{i}.{MIDNIGHT_NETWORK}.json for its price config 
+ *  - uses price-config-{i}.{MIDNIGHT_NETWORK}.json for its price config
  *    (copy from price-config.{MIDNIGHT_NETWORK}.json if not exist).
- *  - uses .quote-secret-{i}.hex for quote secret (auto-created if not exist). 
+ *  - uses .quote-secret-{i}.hex for quote secret (auto-created if not exist).
  */
 
 import { existsSync, readFileSync, copyFileSync, mkdtempSync, rmSync, openSync } from 'fs';
@@ -75,7 +75,12 @@ if (!existsSync(SERVER1_WALLET_MNEMONIC_FILE)) {
 const DEFAULT_PRICE_CONFIG = join(PROJECT_ROOT, `price-config.${MIDNIGHT_NETWORK}.json`);
 
 for (let i = 2; i <= N; i++) {
-  const mnemonicFileI = resolve(PROJECT_ROOT, '..', '..', `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`);
+  const mnemonicFileI = resolve(
+    PROJECT_ROOT,
+    '..',
+    '..',
+    `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`,
+  );
   if (!existsSync(mnemonicFileI)) {
     console.error(`Error: Server ${i} wallet mnemonic not found at ${mnemonicFileI}`);
     process.exit(1);
@@ -84,7 +89,9 @@ for (let i = 2; i <= N; i++) {
   const priceConfigI = join(PROJECT_ROOT, `price-config-${i}.${MIDNIGHT_NETWORK}.json`);
   if (!existsSync(priceConfigI)) {
     if (!existsSync(DEFAULT_PRICE_CONFIG)) {
-      console.error(`Error: Cannot create ${priceConfigI} — default config not found at ${DEFAULT_PRICE_CONFIG}`);
+      console.error(
+        `Error: Cannot create ${priceConfigI} — default config not found at ${DEFAULT_PRICE_CONFIG}`,
+      );
       process.exit(1);
     }
     copyFileSync(DEFAULT_PRICE_CONFIG, priceConfigI);
@@ -101,17 +108,23 @@ if (!SKIP_BALANCE_CHECK) {
   // }
 
   // Server 1: sync once, check both shielded (must have) and dust (must not have)
-  console.log(`Checking server 1 shielded balance on '${MIDNIGHT_NETWORK}' (this may take a moment)...`);
+  console.log(
+    `Checking server 1 shielded balance on '${MIDNIGHT_NETWORK}' (this may take a moment)...`,
+  );
   const server1State = await getBalances(SERVER1_WALLET_MNEMONIC_FILE);
 
-  const hasShielded = Object.values(server1State.shielded.balances as Record<string, bigint>).some((v) => v > 0n);
+  const hasShielded = Object.values(server1State.shielded.balances as Record<string, bigint>).some(
+    (v) => v > 0n,
+  );
   if (!hasShielded) {
     console.error('');
     console.error('Error: Server 1 wallet has no shielded balance.');
     process.exit(1);
   }
 
-  console.log('Checking server 1 has no DUST balance (it should rely on peer CES servers for dust)...');
+  console.log(
+    'Checking server 1 has no DUST balance (it should rely on peer CES servers for dust)...',
+  );
   const server1Dust = server1State.dust.balance(new Date()) as bigint;
   if (server1Dust > 0n) {
     console.error('');
@@ -123,11 +136,18 @@ if (!SKIP_BALANCE_CHECK) {
 
   // Servers 2..N: must have dust
   for (let i = 2; i <= N; i++) {
-    const mnemonicFileI = resolve(PROJECT_ROOT, '..', '..', `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`);
-    console.log(`Checking server ${i} DUST balance on '${MIDNIGHT_NETWORK}' (this may take a moment)...`);
+    const mnemonicFileI = resolve(
+      PROJECT_ROOT,
+      '..',
+      '..',
+      `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`,
+    );
+    console.log(
+      `Checking server ${i} DUST balance on '${MIDNIGHT_NETWORK}' (this may take a moment)...`,
+    );
     const stateI = await getBalances(mnemonicFileI);
     const dustI = stateI.dust.balance(new Date()) as bigint;
-    
+
     if (dustI === 0n) {
       console.error('');
       console.error(`Error: Server ${i} wallet has no DUST balance.`);
@@ -155,18 +175,29 @@ function cleanup() {
   }
 }
 
-process.on('SIGINT', () => { cleanup(); process.exit(0); });
-process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+process.on('SIGINT', () => {
+  cleanup();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  cleanup();
+  process.exit(0);
+});
 
 // ── Build peer URL list for server 1 (all funded servers) ────────────────────
-const peerUrls = Array.from({ length: N - 1 }, (_, idx) => `http://localhost:${BASE_PORT + idx + 1}`).join(',');
+const peerUrls = Array.from(
+  { length: N - 1 },
+  (_, idx) => `http://localhost:${BASE_PORT + idx + 1}`,
+).join(',');
 
 // ── Start server 1 (no dust — peers to all funded servers) ───────────────────
 const server1Port = BASE_PORT;
 console.log(`Starting server 1 on port ${server1Port} (no-dust wallet, peers -> ${peerUrls})...`);
 
 // updating environment variables for server 1 (no-dust wallet)
-const env1 = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined)) as Record<string, string>;
+const env1 = Object.fromEntries(
+  Object.entries(process.env).filter(([, v]) => v !== undefined),
+) as Record<string, string>;
 env1.PORT = String(server1Port);
 env1.DASHBOARD_PORT = String(BASE_DASHBOARD_PORT);
 env1.WALLET_MNEMONIC_FILE = SERVER1_WALLET_MNEMONIC_FILE;
@@ -186,10 +217,19 @@ console.log(`Server 1 started (PID ${server1Proc.pid}) — logs: ${server1LogPat
 // ── Start funded servers 2..N ─────────────────────────────────────────────────
 for (let i = 2; i <= N; i++) {
   const portI = BASE_PORT + i - 1;
-  const mnemonicFileI = resolve(PROJECT_ROOT, '..', '..', `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`);
-  console.log(`Starting server ${i} on port ${portI} (funded wallet, mnemonic: ${mnemonicFileI})...`);
+  const mnemonicFileI = resolve(
+    PROJECT_ROOT,
+    '..',
+    '..',
+    `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`,
+  );
+  console.log(
+    `Starting server ${i} on port ${portI} (funded wallet, mnemonic: ${mnemonicFileI})...`,
+  );
 
-  const envI = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined)) as Record<string, string>;
+  const envI = Object.fromEntries(
+    Object.entries(process.env).filter(([, v]) => v !== undefined),
+  ) as Record<string, string>;
   envI.PORT = String(portI);
   envI.DASHBOARD_PORT = String(BASE_DASHBOARD_PORT + i - 1);
   envI.WALLET_MNEMONIC_FILE = mnemonicFileI;
@@ -212,9 +252,13 @@ for (let i = 2; i <= N; i++) {
 // ── Summary ───────────────────────────────────────────────────────────────────
 console.log('');
 console.log(`${N} servers running. Press Ctrl+C to stop.`);
-console.log(`  Server 1: http://localhost:${BASE_PORT}  (no dust, peers -> ${peerUrls})  dashboard: ${BASE_DASHBOARD_PORT}`);
+console.log(
+  `  Server 1: http://localhost:${BASE_PORT}  (no dust, peers -> ${peerUrls})  dashboard: ${BASE_DASHBOARD_PORT}`,
+);
 for (let i = 2; i <= N; i++) {
-  console.log(`  Server ${i}: http://localhost:${BASE_PORT + i - 1}  (funded wallet)  dashboard: ${BASE_DASHBOARD_PORT + i - 1}`);
+  console.log(
+    `  Server ${i}: http://localhost:${BASE_PORT + i - 1}  (funded wallet)  dashboard: ${BASE_DASHBOARD_PORT + i - 1}`,
+  );
 }
 
 await Promise.all(procs.map(({ proc }) => proc.exited));
