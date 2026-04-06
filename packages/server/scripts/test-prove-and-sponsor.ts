@@ -3,8 +3,9 @@
  * Usage: bun scripts/test-prove-and-sponsor.ts [N]
  *
  * 1. Starts N CES servers via run-servers.ts and waits for them to be ready,
- * 2. Runs the prove-and-sponsor integration test against server 1,
- * 3. Checks the test result: if `sponsorResponse` json HAS a tx field present:
+ * 2. Runs the packages/example-webapp/contracts/src/counter/cli/test/prove-and-sponsor.ts 
+ *    against server 1,
+ * 3. Checks the test result: if result of above script HAS a tx field present:
  * 4. If success, prints the length of the tx using the bytes field,
  * 5. If failure, prints the error,
  * 6. Cleans up the servers before exiting.
@@ -148,6 +149,6 @@ if (!parsed?.sponsorResponse?.tx) {
 }
 
 console.log('');
-console.log(`✓ prove-and-sponsor test passed (sponsor tx: ${parsed.sponsorResponse.tx.length} hex chars)`);
+console.log(`✓ PASSED (sponsor tx: ${parsed.sponsorResponse.tx.length} hex chars)`);
 cleanup();
 process.exit(0);

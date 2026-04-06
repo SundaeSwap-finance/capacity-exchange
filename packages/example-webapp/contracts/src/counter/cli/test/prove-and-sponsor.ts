@@ -1,12 +1,11 @@
 /**
- * Intended as a test of CES sponsorship flow for a counter contract `increment` transaction.
- * See `packages/server/scripts/test-prove-and-sponsor.sh` test script, calling this CLI and validating the CES response.
+ * Tests CES sponsorship flow for a counter contract `increment` transaction.
+ * See `packages/server/scripts/test-prove-and-sponsor.ts` script, calling this CLI and validating the CES response.
  *
- * What it does:
- *   1. Builds an unproven `increment` call transaction for the deployed counter contract.
- *   2. Proves the transaction.
- *   3. POSTs the proven transaction (hex-encoded) to the CES server's `/api/sponsor` endpoint.
- *   4. Logs the CES response, indicating success or failure of the sponsored transaction.
+ *  1. Builds an unproven `increment` call transaction for the deployed counter contract.
+ *  2. Proves the transaction.
+ *  3. POSTs the proven transaction (hex-encoded) to the CES server's `/api/sponsor` endpoint.
+ *  4. Logs the CES response for success or failure of the sponsored transaction.
  *
  * Usage:
  *   bun prove-and-sponsor.ts <networkId> <contractAddress> [--server-url <url>]
@@ -17,7 +16,7 @@
  * Prerequisites:
  *   - A wallet mnemonic file (wallet-mnemonic.{networkId}.txt).
  *   - A running CES server with a funded DUST wallet (or CES peer fallback configured).
- *     (see `packages/server/run-servers.sh`)
+ *     (see `packages/server/run-servers.ts`)
  *   - The counter contract already deployed at the given address.
  */
 import { program } from 'commander';
