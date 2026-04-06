@@ -1,19 +1,22 @@
 #!/usr/bin/env bun
 /**
+ * Integration test for the CES sponsorship flow.
+ *
  * Usage: bun scripts/test-prove-and-sponsor.ts [N]
  *
- * 1. Starts N CES servers via run-servers.ts and waits for them to be ready,
- * 2. Runs the packages/example-webapp/contracts/src/counter/cli/test/prove-and-sponsor.ts
- *    against server 1,
- * 3. Checks the test result: if result of above script HAS a tx field present:
- * 4. If success, prints the length of the tx using the bytes field,
- * 5. If failure, prints the error,
- * 6. Cleans up the servers before exiting.
+ * Steps:
+ *  1. Starts N CES servers via run-servers.ts.
+ *  2. Waits for server 1 (no-dust, fallback) and server 2 (funded) to be ready.
+ *  3. Runs packages/example-webapp/contracts/src/counter/cli/test/prove-and-sponsor.ts
+ *     against server 1.
+ *  4. Checks if the response contains a `sponsorResponse.tx` field.
+ *  5. Prints the tx length on success, or the error on failure.
+ *  6. Cleans up all servers before exiting.
  *
  * Override defaults with env vars:
  *   MIDNIGHT_NETWORK    (default: preview)
- *   BASE_PORT           (same in run--servers.ts; default: 3000)
- *   SKIP_BALANCE_CHECK  (default: 0) – passed through to run-servers.ts
+ *   BASE_PORT           (default: 3000) — must match run-servers.ts
+ *   SKIP_BALANCE_CHECK  (default: 0)   — passed through to run-servers.ts
  */
 
 import { existsSync, readFileSync } from 'fs';
