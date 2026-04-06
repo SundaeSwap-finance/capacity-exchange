@@ -23,7 +23,7 @@ import {
 } from '@capacity-exchange/midnight-core';
 
 const NETWORKS = ['preview', 'preprod', 'mainnet'];
-const OUT_DIR = path.resolve(import.meta.dirname, '../packages/example-webapp/public/wallet-snapshots');
+const OUT_DIR = path.resolve(import.meta.dirname, '../apps/demo/public/wallet-snapshots');
 
 async function updateSnapshot(networkId: string) {
   console.log(`[${networkId}] Syncing throwaway wallet...`);

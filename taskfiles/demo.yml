@@ -1,0 +1,45 @@
+version: '3'
+
+# Internal tasks for the demo: contract compilation, deployment, and asset copying.
+# Included by root Taskfile.yml under the _demo namespace.
+
+tasks:
+  # --- Compilation ---
+
+  compile:
+    status:
+      - test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
+    env:
+      COMPACTC: '{{.COMPACTC_BIN}}'
+    cmds:
+      - bun run --cwd {{.CONTRACTS_DIR}} compile
+
+  # --- Asset copying ---
+
+  copy-zk-assets:
+    deps: [compile]
+    cmds:
+      - bun run --filter @capacity-exchange/demo copy-zk-assets
+
+  copy-configs:
+    cmds:
+      - mkdir -p {{.WEBAPP_DIR}}/public/contracts
+      - cp {{.CONTRACTS_DIR}}/.contracts.*.public.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
+
+  # --- Preconditions ---
+
+  require-compiled:
+    run: once
+    deps: [compile]
+
+  require-deployed:
+    run: once
+    preconditions:
+      - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.public.json >/dev/null 2>&1'
+        msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup:demo' first."
+
+  require-demo-price-config:
+    run: once
+    preconditions:
+      - sh: 'bun {{.ROOT_DIR}}/scripts/demo-price-config.ts validate {{.NETWORK_ID}}'
+        msg: "Demo price config invalid or missing. Run 'NETWORK_ID={{.NETWORK_ID}} task setup:demo' first."

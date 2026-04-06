@@ -33,16 +33,16 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/client build
 
-  components:
+  providers:
     deps: [midnight-node, client]
     cmds:
-      - bun run --filter @capacity-exchange/components build
+      - bun run --filter @capacity-exchange/providers build
 
   libs:
-    deps: [components]
+    deps: [providers]
 
   server:
-    deps: [components]
+    deps: [providers]
     cmds:
       - bun run --filter @capacity-exchange/server build
 
@@ -51,7 +51,7 @@ tasks:
     env:
       VITE_NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
-      - bun run --filter @capacity-exchange/example-webapp build
+      - bun run --filter @capacity-exchange/demo build
     requires:
       vars: [NETWORK_ID]
 
@@ -85,13 +85,13 @@ tasks:
 
   # --- Typecheck ---
 
-  typecheck-example-contracts:
-    deps: [components]
+  typecheck-demo-contracts:
+    deps: [providers]
     cmds:
-      - bun run --filter @capacity-exchange/example-contracts build
+      - bun run --filter @capacity-exchange/demo-contracts build
 
   # TODO: Also typecheck test directories (packages/*/tests)
   build-all:
-    deps: [libs, server, typecheck-example-contracts]
+    deps: [libs, server, typecheck-demo-contracts]
     cmds:
-      - bun run --filter @capacity-exchange/example-webapp typecheck
+      - bun run --filter @capacity-exchange/demo typecheck

@@ -4,15 +4,15 @@ import * as path from 'path';
 export const rootDir = path.resolve(import.meta.dirname, '..', '..');
 
 export function contractsConfigPath(networkId: string): string {
-  return path.join(rootDir, 'packages', 'example-webapp', 'contracts', `.contracts.${networkId}.json`);
+  return path.join(rootDir, 'apps', 'demo', 'contracts', `.contracts.${networkId}.json`);
 }
 
 export function priceConfigPath(networkId: string): string {
-  return path.join(rootDir, 'packages', 'server', `price-config.${networkId}.json`);
+  return path.join(rootDir, 'apps', 'server', `price-config.${networkId}.json`);
 }
 
 export function priceConfigExamplePath(): string {
-  return path.join(rootDir, 'packages', 'server', 'price-config.example.json');
+  return path.join(rootDir, 'apps', 'server', 'price-config.example.json');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

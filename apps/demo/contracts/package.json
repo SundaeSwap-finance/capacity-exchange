@@ -1,0 +1,72 @@
+{
+  "name": "@capacity-exchange/demo-contracts",
+  "version": "1.0.0",
+  "description": "Midnight contracts for capacity exchange demos",
+  "type": "module",
+  "exports": {
+    "./counter/out/contract/*": "./counter/out/contract/*",
+    "./token-mint/out/contract/*": "./token-mint/out/contract/*"
+  },
+  "scripts": {
+    "clean": "rm -rf counter/out token-mint/out .midnight-private-state .wallet-state .contracts.*.json",
+    "compile:counter": "\"$COMPACTC\" counter/counter.compact counter/out",
+    "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
+    "compile": "bun run compile:counter && bun run compile:token-mint",
+    "build": "tsc --noEmit",
+    "counter:e2e": "bun src/counter/cli/e2e.ts",
+    "counter:deploy": "bun src/counter/cli/deploy.ts",
+    "counter:increment": "bun src/counter/cli/increment.ts",
+    "counter:query": "bun src/counter/cli/query.ts",
+    "token-mint:e2e": "bun src/token-mint/cli/e2e.ts",
+    "token-mint:deploy": "bun src/token-mint/cli/deploy.ts",
+    "token-mint:mint": "bun src/token-mint/cli/mint.ts",
+    "token-mint:verify": "bun src/token-mint/cli/verify.ts",
+    "deploy-all": "bun src/deploy-all.ts"
+  },
+  "keywords": [
+    "midnight",
+    "compact",
+    "smart-contracts",
+    "zero-knowledge"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacity-exchange/midnight-core": "1.0.0",
+    "@capacity-exchange/midnight-node": "1.0.0",
+    "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/compact-runtime": "0.15.0",
+    "@midnight-ntwrk/ledger-v8": "8.0.3",
+    "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@midnight-ntwrk/wallet-sdk-node-client": "1.1.0",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-hd": "3.0.1",
+    "@scure/bip32": "2.0.1",
+    "@scure/bip39": "^2.0.1",
+    "cbor2": "^2.0.1",
+    "commander": "^14.0.2",
+    "dotenv": "17.2.3"
+  },
+  "devDependencies": {
+    "@capacity-exchange/client": "1.0.0",
+    "@eslint/js": "^9.39.2",
+    "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2",
+    "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0",
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.1.0",
+    "@types/node": "22.10.7",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  }
+}
