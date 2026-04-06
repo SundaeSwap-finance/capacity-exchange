@@ -115,7 +115,8 @@ export class MetricsService {
 
     const avgRatio =
       this.contentionSamples.length > 0
-        ? this.contentionSamples.reduce((sum, s) => sum + s.ratio, 0) / this.contentionSamples.length
+        ? this.contentionSamples.reduce((sum, s) => sum + s.ratio, 0) /
+          this.contentionSamples.length
         : 0;
 
     return {

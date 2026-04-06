@@ -1,7 +1,9 @@
+import { DustWalletState } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import {
-  DustWalletState,
-} from '@midnight-ntwrk/wallet-sdk-dust-wallet';
-import { CoreWallet, type UnprovenDustSpend, type DustFullInfo } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
+  CoreWallet,
+  type UnprovenDustSpend,
+  type DustFullInfo,
+} from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
 import { nativeToken } from '@midnight-ntwrk/ledger-v8';
@@ -133,5 +135,25 @@ export class WalletService {
 
   get state(): DustWalletState | null {
     return this.lastDustWalletState;
+  }
+
+  get dustSyncTime(): Date | null {
+    const syncTime = this.lastDustWalletState?.state?.state?.syncTime;
+    if (!syncTime) {
+      return null;
+    }
+
+    // Edge case: when running against a fresh undeployed network using a faucet wallet seed,
+    // the most recent DUST event is from the genesis block (meaning `syncTime` is August 2025).
+    // If we try spending DUST from the wallet as of that block, our balance is 0 specks.
+    // As a workaround, ignore any `syncTime` more than two weeks in the past.
+    // This should not affect mainnet; we will only use this code block if nobody
+    // has used the chain for anything in over two weeks.
+    const TWO_WEEKS_IN_MILLIS = 2 * 7 * 24 * 60 * 60 * 1000;
+    if (syncTime.valueOf() < Date.now() - TWO_WEEKS_IN_MILLIS) {
+      return null;
+    }
+
+    return syncTime;
   }
 }

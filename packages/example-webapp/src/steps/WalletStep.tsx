@@ -16,13 +16,17 @@ interface WalletStepProps {
 }
 
 function progressPercent(p: SubWalletProgress): number {
-  if (p.done) {return 100;}
-  if (p.targetIndex === 0n) {return 0;}
+  if (p.done) {
+    return 100;
+  }
+  if (p.targetIndex === 0n) {
+    return 0;
+  }
   return Number((p.appliedIndex * 100n) / p.targetIndex);
 }
 
 export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onConnected }: WalletStepProps) {
-  const { wallets, storageMode, unlocking, createWallet, unlockWallet, removeWallet, enablePasskey } = useWalletStore();
+  const { wallets, unlocking, createWallet, unlockWallet, removeWallet, enablePasskey } = useWalletStore();
   const [showConnect, setShowConnect] = useState(false);
   const [activeMnemonic, setActiveMnemonic] = useState<string | null>(null);
   const [showExportSeed, setShowExportSeed] = useState(false);
@@ -35,9 +39,11 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const error = walletError || seedWallet.error || extensionWallet.error;
 
   const sp = seedWallet.syncProgress;
-  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && extensionWallet.status !== 'connecting' && extensionWallet.status !== 'connected';
-
-  const extensionAvailable = extensionWallet.status !== 'unavailable';
+  const isSeedWalletSyncing =
+    (isConnecting || isConnected) &&
+    !isSynced &&
+    extensionWallet.status !== 'connecting' &&
+    extensionWallet.status !== 'connected';
 
   // Skip intro if already connecting/connected
   useEffect(() => {
@@ -99,8 +105,8 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       <div className="ces-step-stack">
         <NarrativeCard heading="Welcome to Midnight">
           <p>
-            On most blockchains, users need a token to pay network fees.
-            This makes it very difficult to onboard new users.
+            On most blockchains, users need a token to pay network fees. This makes it very difficult to onboard new
+            users.
           </p>
           <p>
             The <strong className="text-ces-text">Capacity Exchange</strong> solves this.
@@ -124,42 +130,39 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
                 <>
                   <p>
                     You&apos;ve generated a <strong className="text-ces-accent">secure passkey wallet</strong>.
-                    Depending on your device, this is likely secured
-                    by <strong className="text-ces-text">biometrics</strong>,{' '}
-                    a <strong className="text-ces-text">pin</strong>, or
-                    your <strong className="text-ces-text">password manager</strong>.
-                    Your wallet is secure even from malicious browser extensions, as any
-                    attempt to access it will <strong className="text-ces-text">prompt you for approval</strong>.
+                    Depending on your device, this is likely secured by{' '}
+                    <strong className="text-ces-text">biometrics</strong>, a{' '}
+                    <strong className="text-ces-text">pin</strong>, or your{' '}
+                    <strong className="text-ces-text">password manager</strong>. Your wallet is secure even from
+                    malicious browser extensions, as any attempt to access it will{' '}
+                    <strong className="text-ces-text">prompt you for approval</strong>.
                   </p>
                   {!isSynced && (
                     <p>
-                      Now, we&apos;re loading relevant data directly from the Midnight Blockchain.
-                      This might take a while, and will get faster with future updates.
+                      Now, we&apos;re loading relevant data directly from the Midnight Blockchain. This might take a
+                      while, and will get faster with future updates.
                     </p>
                   )}
                 </>
               ) : (
                 <>
                   <p>
-                    You&apos;ve generated a new wallet in your browser for this test{!isSynced && ', and are now loading relevant data directly from the Midnight Blockchain'}.
+                    You&apos;ve generated a new wallet in your browser for this test
+                    {!isSynced && ', and are now loading relevant data directly from the Midnight Blockchain'}.
                   </p>
-                  {!isSynced && (
-                    <p>
-                      This might take a while, and will get faster with future updates.
-                    </p>
-                  )}
+                  {!isSynced && <p>This might take a while, and will get faster with future updates.</p>}
                 </>
               )}
               {activeMnemonic && (
                 <p>
-                  There should be no need to keep this wallet, but if you&apos;d like to,
-                  you can export the seed phrase{' '}
+                  There should be no need to keep this wallet, but if you&apos;d like to, you can export the seed phrase{' '}
                   <button
                     onClick={() => setShowExportSeed(true)}
                     className="text-ces-accent underline underline-offset-2 hover:text-ces-text transition-colors"
                   >
                     here
-                  </button>.
+                  </button>
+                  .
                 </p>
               )}
             </>
@@ -199,98 +202,102 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     <div className="ces-step-stack">
       <NarrativeCard heading="Connect a Wallet">
         <p>
-          Transaction fees on Midnight are paid in <strong className="text-ces-text">DUST</strong>.
-          DUST is generated by NIGHT.
-          Through the Capacity Exchange, dApps can use their own DUST to pay for
-          users&apos; transactions, removing onboarding friction.
+          Transaction fees on Midnight are paid in <strong className="text-ces-text">DUST</strong>. DUST is generated by
+          NIGHT. Through the Capacity Exchange, dApps can use their own DUST to pay for users&apos; transactions,
+          removing onboarding friction.
         </p>
-        <p>
-          New users don&apos;t even need a new wallet, as we can generate one
-          securely right in the browser.
-        </p>
-        <p>
-          If you have a Midnight wallet, feel free to connect it, or generate a new one!
-        </p>
+        <p>New users don&apos;t even need a new wallet, as we can generate one securely right in the browser.</p>
+        <p>If you have a Midnight wallet, feel free to connect it, or generate a new one!</p>
       </NarrativeCard>
 
       <div className="ces-section-stack">
-          {/* TODO: re-enable once newer Lace build is released */}
-          {/* extensionAvailable && (
+        {/* TODO: re-enable once newer Lace build is released */}
+        {/* extensionAvailable && (
             <button onClick={() => extensionWallet.connect()} className="ces-btn-primary w-full py-4">
               Connect Wallet Extension
             </button>
           ) */}
 
-          {/* Saved wallets */}
-          {wallets.length > 0 && (
-            <div className="ces-compact-stack">
-              <p className="text-xs text-ces-text-muted uppercase tracking-wider font-medium px-1">Saved Wallets //</p>
-              {wallets.map((w) => (
-                <div
-                  key={w.id}
-                  className="flex items-center gap-2 p-3 border border-ces-border bg-ces-surface hover:bg-ces-surface-raised transition-colors"
-                >
-                  <button onClick={() => handleConnectSaved(w)} disabled={unlocking} className="flex-1 text-left flex items-center gap-2">
-                    {w.mode === 'passkey' && (
-                      <svg className="w-3.5 h-3.5 text-ces-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    )}
-                    <span className="text-sm text-ces-text font-medium">{w.label}</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeWallet(w.id);
-                    }}
-                    className="p-1.5 rounded hover:bg-ces-danger/10 text-ces-text-muted/40 hover:text-ces-danger transition-colors"
-                    title="Delete wallet"
-                  >
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 12 10" fill="currentColor" aria-hidden="true">
-                      <path d="M1 0h2v2H1V0Zm8 0h2v2H9V0ZM3 2h2v2H3V2Zm4 0h2v2H7V2ZM5 4h2v2H5V4ZM3 6h2v2H3V6Zm4 0h2v2H7V6ZM1 8h2v2H1V8Zm8 0h2v2H9V8Z" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={handleCreatePasskeyWallet}
-            disabled={unlocking}
-            className="ces-btn-primary w-full py-4 flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <UnscrambleText text="Create Passkey Wallet" />
-          </button>
-
-          {passkeyFailed && (
-            <div className="ces-card ces-section-stack p-4">
-              <p className="text-sm text-ces-text-muted">
-                Passkeys are not supported on this device, or the setup was cancelled.
-                You can still create a wallet stored in your browser.
-              </p>
-              <button
-                onClick={handleCreatePlaintextWallet}
-                disabled={unlocking}
-                className="ces-btn-secondary w-full"
+        {/* Saved wallets */}
+        {wallets.length > 0 && (
+          <div className="ces-compact-stack">
+            <p className="text-xs text-ces-text-muted uppercase tracking-wider font-medium px-1">Saved Wallets //</p>
+            {wallets.map((w) => (
+              <div
+                key={w.id}
+                className="flex items-center gap-2 p-3 border border-ces-border bg-ces-surface hover:bg-ces-surface-raised transition-colors"
               >
-                Create Browser Wallet
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={() => handleConnectSaved(w)}
+                  disabled={unlocking}
+                  className="flex-1 text-left flex items-center gap-2"
+                >
+                  {w.mode === 'passkey' && (
+                    <svg
+                      className="w-3.5 h-3.5 text-ces-accent shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  )}
+                  <span className="text-sm text-ces-text font-medium">{w.label}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeWallet(w.id);
+                  }}
+                  className="p-1.5 rounded hover:bg-ces-danger/10 text-ces-text-muted/40 hover:text-ces-danger transition-colors"
+                  title="Delete wallet"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 12 10" fill="currentColor" aria-hidden="true">
+                    <path d="M1 0h2v2H1V0Zm8 0h2v2H9V0ZM3 2h2v2H3V2Zm4 0h2v2H7V2ZM5 4h2v2H5V4ZM3 6h2v2H3V6Zm4 0h2v2H7V6ZM1 8h2v2H1V8Zm8 0h2v2H9V8Z" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
-          {!passkeyFailed && (
-            <button
-              onClick={handleCreatePlaintextWallet}
-              disabled={unlocking}
-              className="ces-btn-ghost w-full text-xs"
-            >
-              Create without passkey
+        <button
+          onClick={handleCreatePasskeyWallet}
+          disabled={unlocking}
+          className="ces-btn-primary w-full py-4 flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+          <UnscrambleText text="Create Passkey Wallet" />
+        </button>
+
+        {passkeyFailed && (
+          <div className="ces-card ces-section-stack p-4">
+            <p className="text-sm text-ces-text-muted">
+              Passkeys are not supported on this device, or the setup was cancelled. You can still create a wallet
+              stored in your browser.
+            </p>
+            <button onClick={handleCreatePlaintextWallet} disabled={unlocking} className="ces-btn-secondary w-full">
+              Create Browser Wallet
             </button>
-          )}
+          </div>
+        )}
+
+        {!passkeyFailed && (
+          <button onClick={handleCreatePlaintextWallet} disabled={unlocking} className="ces-btn-ghost w-full text-xs">
+            Create without passkey
+          </button>
+        )}
       </div>
 
       {error && (
@@ -305,15 +312,23 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
 function useEta(appliedIndex: bigint, targetIndex: bigint, done: boolean): string | null {
   const [startTime] = useState(() => Date.now());
 
-  if (done || targetIndex === 0n || appliedIndex === 0n) {return null;}
+  if (done || targetIndex === 0n || appliedIndex === 0n) {
+    return null;
+  }
 
   const elapsed = (Date.now() - startTime) / 1000;
   const pct = Number(appliedIndex) / Number(targetIndex);
-  if (pct < 0.02) {return null;}
+  if (pct < 0.02) {
+    return null;
+  }
   const totalEstimate = elapsed / pct;
   const remaining = Math.max(0, Math.round(totalEstimate - elapsed));
-  if (remaining < 2) {return '< 1s';}
-  if (remaining < 60) {return `~${remaining}s`;}
+  if (remaining < 2) {
+    return '< 1s';
+  }
+  if (remaining < 60) {
+    return `~${remaining}s`;
+  }
   return `~${Math.ceil(remaining / 60)}m`;
 }
 

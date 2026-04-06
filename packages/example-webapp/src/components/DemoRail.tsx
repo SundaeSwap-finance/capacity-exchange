@@ -18,9 +18,15 @@ interface DemoRailProps {
 }
 
 function levelLabel(level: DebugLogEntry['level']) {
-  if (level === 'success') return 'OK';
-  if (level === 'warn') return 'WARN';
-  if (level === 'error') return 'ERR';
+  if (level === 'success') {
+    return 'OK';
+  }
+  if (level === 'warn') {
+    return 'WARN';
+  }
+  if (level === 'error') {
+    return 'ERR';
+  }
   return 'INFO';
 }
 
@@ -36,7 +42,10 @@ export function DemoRail({ content, entries }: DemoRailProps) {
       <div className="min-h-0 flex-1 overflow-auto px-3 py-3">
         <div className="space-y-2">
           {entries.map((entry) => (
-            <div key={entry.id} className="grid grid-cols-[48px,34px,minmax(0,1fr)] gap-2 font-mono text-[9px] leading-[1.5]">
+            <div
+              key={entry.id}
+              className="grid grid-cols-[48px,34px,minmax(0,1fr)] gap-2 font-mono text-[9px] leading-[1.5]"
+            >
               <span
                 className={`${
                   entry.level === 'success'

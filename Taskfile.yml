@@ -16,6 +16,11 @@ includes:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
       COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
+  _registry:
+    taskfile: taskfiles/registry.yml
+    internal: true
+    vars:
+      COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
 
 vars:
   CONTRACTS_DIR: '{{.ROOT_DIR}}/packages/example-webapp/contracts'
@@ -37,6 +42,7 @@ tasks:
     deps: [_build:extract-compactc]
     cmds:
       - task: _example:compile
+      - task: _registry:compile
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
@@ -196,7 +202,7 @@ tasks:
 
   test:
     desc: Run tests
-    deps: [_build:libs]
+    deps: [_build:libs, compile-contracts]
     cmds:
       - bun run --if-present --filter '*' test
 
@@ -220,6 +226,12 @@ tasks:
     deps: [_build:install]
     cmds:
       - bun run fix
+
+  check-client:
+    desc: Check that the client has the latest schema from the server
+    deps: [_build:install, _build:server]
+    cmds:
+      - bun run check-client
 
   regenerate-client:
     desc: Regenerate client with latest schema from server

@@ -6,9 +6,8 @@
     "allowJs": true,
     "declaration": false,
     "rootDir": "..",
-    "baseUrl": "..",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["../src/*"]
     }
   },
   "include": ["./**/*.ts", "../src/**/*.ts"]

@@ -21,7 +21,9 @@ interface PaidExchangeStepProps {
 }
 
 function getTokenBalance(walletData: WalletData | null): bigint {
-  if (!walletData) return 0n;
+  if (!walletData) {
+    return 0n;
+  }
   const balances = Object.values(walletData.shieldedBalances);
   return balances.length > 0 ? balances.reduce((a, b) => a + b, 0n) : 0n;
 }
@@ -36,7 +38,9 @@ function InventoryStrip({
   freeze?: boolean;
 }) {
   const tokenBalance = getTokenBalance(walletData);
-  if (counterValue === null && tokenBalance === 0n) return null;
+  if (counterValue === null && tokenBalance === 0n) {
+    return null;
+  }
 
   return (
     <div className="ces-inventory-grid">
@@ -85,14 +89,7 @@ function CesCounterAction({
   hasGraduated: boolean;
   onSkipToPlayground?: () => void;
 }) {
-  const {
-    status,
-    error,
-    currencySelection,
-    onCurrencySelected,
-    incrementCounter,
-    dismissOffer,
-  } = cesTransaction;
+  const { status, error, currencySelection, onCurrencySelected, incrementCounter, dismissOffer } = cesTransaction;
 
   const isTransacting = !['idle', 'success', 'error'].includes(status);
 
@@ -140,12 +137,12 @@ function CesCounterAction({
       <NarrativeCard heading="Register Graduation" variant="accent">
         <p>However, dApps may not always be willing to cover every transaction.</p>
         <p>
-          The Capacity Exchange also lets users pay with{' '}
-          <strong className="text-ces-text">any other asset</strong> accepted by the market.
+          The Capacity Exchange also lets users pay with <strong className="text-ces-text">any other asset</strong>{' '}
+          accepted by the market.
         </p>
         <p>
-          Let&apos;s complete the tutorial by registering that you've finished the tutorial, and paying the transaction fees with the tutorial
-          tokens you just minted.
+          Let&apos;s complete the tutorial by registering that you've finished the tutorial, and paying the transaction
+          fees with the tutorial tokens you just minted.
         </p>
       </NarrativeCard>
 
@@ -227,9 +224,7 @@ function CesCounterAction({
             </svg>
           </div>
           <p className="text-ces-text font-display font-semibold text-lg">Registration Complete</p>
-          <p className="mt-1 text-sm text-ces-text-muted">
-            You completed the tutorial without ever requiring DUST.
-          </p>
+          <p className="mt-1 text-sm text-ces-text-muted">You completed the tutorial without ever requiring DUST.</p>
           <button onClick={onSuccess} className="ces-btn-primary mt-4">
             Continue to Playground
           </button>
@@ -268,8 +263,12 @@ function InlineCurrencySelection({
     const balB = shieldedBalances[b.price.currency] ?? 0n;
     const canAffordA = balA >= BigInt(a.price.amount);
     const canAffordB = balB >= BigInt(b.price.amount);
-    if (canAffordA && !canAffordB) return -1;
-    if (!canAffordA && canAffordB) return 1;
+    if (canAffordA && !canAffordB) {
+      return -1;
+    }
+    if (!canAffordA && canAffordB) {
+      return 1;
+    }
     return 0;
   });
 

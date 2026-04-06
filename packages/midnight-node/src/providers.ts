@@ -116,11 +116,14 @@ export async function deployContractWithDryRun<C extends Contract.Any>(
   dryRun = false
 ): Promise<DeployedContract<C>> {
   if (!dryRun) {
-    return deployContract(providers, options as any);
+    return deployContract(providers, options);
   }
 
   // Dry-run: build and prove+balance without submitting
-  const unprovenData = await createUnprovenDeployTx(providers, options as any);
+  const unprovenData = await createUnprovenDeployTx(providers, {
+    ...options,
+    signingKey: '',
+  });
 
   logger.info('Proving deploy transaction...');
   const provenTx = await providers.proofProvider.proveTx(unprovenData.private.unprovenTx);

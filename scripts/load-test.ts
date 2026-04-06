@@ -1,7 +1,6 @@
 import { parseArgs } from 'util';
 import { readFileSync, writeFileSync } from 'fs';
 
-
 interface Config {
   server: string;
   users: number;
@@ -97,7 +96,9 @@ function parseConfig(): Config {
   if (values.config) {
     try {
       const fileConfig = JSON.parse(readFileSync(values.config, 'utf-8'));
-      if (fileConfig.currency) fileConfig.currencyOverridden = true;
+      if (fileConfig.currency) {
+        fileConfig.currencyOverridden = true;
+      }
       config = { ...config, ...fileConfig };
     } catch (err) {
       console.error(`Error reading config file: ${values.config}`);
@@ -106,14 +107,22 @@ function parseConfig(): Config {
     }
   }
 
-  if (values.server) config.server = values.server;
-  if (values.users) config.users = parseInt(values.users, 10);
-  if (values.specks) config.specks = values.specks;
+  if (values.server) {
+    config.server = values.server;
+  }
+  if (values.users) {
+    config.users = parseInt(values.users, 10);
+  }
+  if (values.specks) {
+    config.specks = values.specks;
+  }
   if (values.currency) {
     config.currency = values.currency;
     config.currencyOverridden = true;
   }
-  if (values.output) config.output = values.output;
+  if (values.output) {
+    config.output = values.output;
+  }
 
   if (isNaN(config.users) || config.users < 1) {
     console.error(`Invalid --users value: must be a positive integer`);
@@ -127,18 +136,20 @@ function parseConfig(): Config {
   return config;
 }
 
-
 function categorize(status: number): ResultCategory {
-  if (status === 201) return 'success';
-  if (status === 409) return 'utxo_exhaustion';
-  if (status >= 500) return 'server_error';
+  if (status === 201) {
+    return 'success';
+  }
+  if (status === 409) {
+    return 'utxo_exhaustion';
+  }
+  if (status >= 500) {
+    return 'server_error';
+  }
   return 'other_error';
 }
 
-async function sendOffer(
-  config: Config,
-  userId: number,
-): Promise<RequestResult> {
+async function sendOffer(config: Config, userId: number): Promise<RequestResult> {
   const start = performance.now();
   try {
     const response = await fetch(`${config.server}/api/offers`, {
@@ -194,7 +205,9 @@ function computeLatencyStats(results: RequestResult[]): LatencyStats | null {
     .map((r) => r.latencyMs)
     .sort((a, b) => a - b);
 
-  if (successful.length === 0) return null;
+  if (successful.length === 0) {
+    return null;
+  }
 
   return {
     min: successful[0],
@@ -205,10 +218,7 @@ function computeLatencyStats(results: RequestResult[]): LatencyStats | null {
   };
 }
 
-function computeSummary(
-  results: RequestResult[],
-  durationMs: number,
-): Summary {
+function computeSummary(results: RequestResult[], durationMs: number): Summary {
   const total = results.length;
   const count = (cat: ResultCategory) => results.filter((r) => r.category === cat).length;
   const pct = (n: number) => Math.round((n / total) * 1000) / 10;
@@ -235,7 +245,9 @@ function pad(str: string, len: number): string {
 }
 
 function fmtMs(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
+  if (ms < 1000) {
+    return `${ms}ms`;
+  }
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
@@ -331,9 +343,7 @@ async function main() {
   console.log(`Firing ${config.users} concurrent requests...`);
   const testStart = performance.now();
 
-  const results = await Promise.all(
-    Array.from({ length: config.users }, (_, i) => sendOffer(config, i)),
-  );
+  const results = await Promise.all(Array.from({ length: config.users }, (_, i) => sendOffer(config, i)));
 
   const durationMs = Math.round(performance.now() - testStart);
   const summary = computeSummary(results, durationMs);

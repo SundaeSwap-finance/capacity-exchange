@@ -22,7 +22,7 @@ import {
   createWallet,
 } from '@capacity-exchange/midnight-core';
 
-const NETWORKS = ['preview', 'preprod', 'mainnet'] as const;
+const NETWORKS = ['preview', 'preprod', 'mainnet'];
 const OUT_DIR = path.resolve(import.meta.dirname, '../packages/example-webapp/public/wallet-snapshots');
 
 async function updateSnapshot(networkId: string) {
@@ -35,7 +35,9 @@ async function updateSnapshot(networkId: string) {
   // Generate a random seed — we only care about the chain state, not the keys
   const seedBytes = new Uint8Array(32);
   crypto.getRandomValues(seedBytes);
-  const seedHex = Array.from(seedBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const seedHex = Array.from(seedBytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 
   const walletConfig = {
     networkId: networkIdEnum,
@@ -55,10 +57,7 @@ async function updateSnapshot(networkId: string) {
   await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
 
   // Wait for shielded + dust only
-  await Promise.all([
-    walletFacade.shielded.waitForSyncedState(),
-    walletFacade.dust.waitForSyncedState(),
-  ]);
+  await Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]);
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
   console.log(`[${networkId}] Synced in ${elapsed}s, serializing...`);
@@ -95,19 +94,17 @@ async function updateSnapshot(networkId: string) {
   fs.writeFileSync(path.join(OUT_DIR, `${networkId}-dust.json`), JSON.stringify(dustSnapshot));
   fs.writeFileSync(path.join(OUT_DIR, `${networkId}-unshielded.json`), JSON.stringify(unshieldedSnapshot));
 
-  const totalKB = (
-    JSON.stringify(shieldedSnapshot).length +
-    JSON.stringify(dustSnapshot).length +
-    JSON.stringify(unshieldedSnapshot).length
-  ) / 1024;
+  const totalKB =
+    (JSON.stringify(shieldedSnapshot).length +
+      JSON.stringify(dustSnapshot).length +
+      JSON.stringify(unshieldedSnapshot).length) /
+    1024;
 
   console.log(`[${networkId}] Saved snapshots (${totalKB.toFixed(0)}KB total) at offset ${shielded.offset}`);
 }
 
 const requested = process.argv.slice(2);
-const networks = requested.length > 0
-  ? requested.filter(n => NETWORKS.includes(n as any))
-  : [...NETWORKS];
+const networks = requested.length > 0 ? requested.filter((n) => NETWORKS.includes(n)) : [...NETWORKS];
 
 if (networks.length === 0) {
   console.error(`Usage: bun scripts/update-wallet-snapshots.ts [${NETWORKS.join('|')}]`);

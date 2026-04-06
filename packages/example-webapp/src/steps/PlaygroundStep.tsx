@@ -7,9 +7,7 @@ import type { WalletData } from '../features/wallet/types';
 import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
-import { formatDust } from '../utils/format';
 import { resolveTokenLabel } from '../utils/tokenLabels';
-import type { NetworkConfig } from '../config';
 import { DevAccessForm } from './DevAccessStep';
 
 interface PlaygroundStepProps {
@@ -19,9 +17,7 @@ interface PlaygroundStepProps {
   sponsoredTransaction: UseSponsoredTransactionResult;
   tokenMintAddress: string | null;
   mintedTokenColor: string;
-  counterAddress: string | null;
   counterValue: string | null;
-  config: NetworkConfig;
   allowMockMintWithoutContractAddress?: boolean;
 }
 
@@ -34,9 +30,7 @@ export function PlaygroundStep({
   sponsoredTransaction,
   tokenMintAddress,
   mintedTokenColor,
-  counterAddress,
   counterValue,
-  config,
   allowMockMintWithoutContractAddress = false,
 }: PlaygroundStepProps) {
   const anyTransacting =
@@ -92,7 +86,9 @@ export function PlaygroundStep({
           onAction={() => {
             const resolvedTokenMintAddress =
               tokenMintAddress ?? (allowMockMintWithoutContractAddress ? MOCK_TOKEN_MINT_ADDRESS : null);
-            if (!resolvedTokenMintAddress) return;
+            if (!resolvedTokenMintAddress) {
+              return;
+            }
             sponsoredMint.mint(resolvedTokenMintAddress, 1000n);
           }}
           onReset={sponsoredMint.reset}
@@ -280,8 +276,12 @@ function CesPlaygroundAction({
                   const balB = shieldedBalances[b.price.currency] ?? 0n;
                   const canA = balA >= BigInt(a.price.amount);
                   const canB = balB >= BigInt(b.price.amount);
-                  if (canA && !canB) return -1;
-                  if (!canA && canB) return 1;
+                  if (canA && !canB) {
+                    return -1;
+                  }
+                  if (!canA && canB) {
+                    return 1;
+                  }
                   return 0;
                 })
                 .map((ep, i) => {
@@ -304,7 +304,6 @@ function CesPlaygroundAction({
                 })}
             </div>
           )}
-
         </>
       )}
 
@@ -316,4 +315,3 @@ function CesPlaygroundAction({
     </div>
   );
 }
-

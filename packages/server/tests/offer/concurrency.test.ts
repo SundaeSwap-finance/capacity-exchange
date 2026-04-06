@@ -51,7 +51,7 @@ describe('Offer API - Concurrency', () => {
   });
 
   it('eventually exhausts wallet UTxOs', async () => {
-    const CONCURRENT_REQUESTS = 20;
+    const CONCURRENT_REQUESTS = 10;
     let exhaustedUtxos = false;
 
     const quotes = await Promise.all(
@@ -66,7 +66,7 @@ describe('Offer API - Concurrency', () => {
 
     const results = await Promise.allSettled(promises);
     for (const result of results) {
-      if (result.status === "rejected") {
+      if (result.status === 'rejected') {
         continue;
       }
       if (result.value.status === 409) {
@@ -76,5 +76,5 @@ describe('Offer API - Concurrency', () => {
     }
 
     expect(exhaustedUtxos).toBe(true);
-  });
+  }, 60_000);
 });

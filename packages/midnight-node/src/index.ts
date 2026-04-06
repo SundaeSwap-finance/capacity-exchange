@@ -7,7 +7,12 @@ export { checkWebSocket, checkProofServer, checkIndexerFreshness } from './conne
 export { createPrivateStateProvider } from './levelPrivateStateProvider.js';
 export { type AppContext, createAppContext } from './appContext.js';
 export { type WalletContext, createWalletContext } from './walletContext.js';
-export { buildProviders, submitCallTxDirect, submitStatefulCallTxDirect, deployContractWithDryRun } from './providers.js';
+export {
+  buildProviders,
+  submitCallTxDirect,
+  submitStatefulCallTxDirect,
+  deployContractWithDryRun,
+} from './providers.js';
 export { withAppContext, runCli, requireNetworkId, type RunCliOptions } from './cli.js';
 export {
   registerAllForDust,

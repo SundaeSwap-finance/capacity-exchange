@@ -6,10 +6,12 @@
       "name": "capacity-exchange-sdk",
       "devDependencies": {
         "@eslint/js": "^9.18.0",
-        "commander": "^14.0.2",
+        "@types/node": "^25.5.2",
+        "commander": "^14.0.3",
         "concurrently": "^9.2.1",
         "eslint": "^9.18.0",
         "eslint-config-prettier": "^10.0.1",
+        "fast-diff": "^1.3.0",
         "globals": "^17.0.0",
         "prettier": "^3.4.2",
         "typescript-eslint": "^8.21.0",
@@ -215,6 +217,22 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/registry": {
+      "name": "@capacity-exchange/registry",
+      "version": "1.0.0",
+      "dependencies": {
+        "@midnight-ntwrk/compact-js": "2.5.0",
+        "@midnight-ntwrk/compact-runtime": "0.15.0",
+        "@midnight-ntwrk/midnight-js-types": "4.0.1",
+        "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
+      },
+      "devDependencies": {
+        "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
+        "@types/node": "22.10.7",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18",
+      },
+    },
     "packages/server": {
       "name": "@capacity-exchange/server",
       "version": "1.0.0",
@@ -378,6 +396,8 @@
     "@capacity-exchange/midnight-core": ["@capacity-exchange/midnight-core@workspace:packages/midnight-core"],
 
     "@capacity-exchange/midnight-node": ["@capacity-exchange/midnight-node@workspace:packages/midnight-node"],
+
+    "@capacity-exchange/registry": ["@capacity-exchange/registry@workspace:packages/registry"],
 
     "@capacity-exchange/server": ["@capacity-exchange/server@workspace:packages/server"],
 
@@ -2071,6 +2091,8 @@
 
     "@babel/helper-compilation-targets/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
+    "@capacity-exchange/components/@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
+
     "@capacity-exchange/example-contracts/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@capacity-exchange/example-contracts/dotenv": ["dotenv@17.2.3", "", {}, "sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w=="],
@@ -2114,6 +2136,12 @@
     "@scure/sr25519/@noble/curves": ["@noble/curves@1.9.7", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw=="],
 
     "@scure/sr25519/@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
+
+    "@types/bn.js/@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
+
+    "@types/mute-stream/@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
+
+    "@types/ws/@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
 
     "@typescript-eslint/eslint-plugin/ignore": ["ignore@7.0.5", "", {}, "sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg=="],
 
@@ -2160,6 +2188,8 @@
     "node-stdlib-browser/buffer": ["buffer@5.7.1", "", { "dependencies": { "base64-js": "^1.3.1", "ieee754": "^1.1.13" } }, "sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ=="],
 
     "pino-pretty/pino-abstract-transport": ["pino-abstract-transport@3.0.0", "", { "dependencies": { "split2": "^4.0.0" } }, "sha512-wlfUczU+n7Hy/Ha5j9a/gZNy7We5+cXp8YL+X+PG8S0KXxw7n/JXA3c46Y0zQznIJ83URJiwy7Lh56WLokNuxg=="],
+
+    "protobufjs/@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
 
     "proxy-agent/lru-cache": ["lru-cache@7.18.3", "", {}, "sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA=="],
 

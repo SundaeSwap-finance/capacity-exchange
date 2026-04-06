@@ -10,7 +10,9 @@ export async function fetchPricesFromExchanges(exchangeApis: CesApi[], dustRequi
 
   const priceResponses = await Promise.allSettled(
     exchangeApis.map(({ url, api }) =>
-      api.apiPricesGet({ specks: dustRequired.toString() }).then((response) => ({ url, quoteId: response.quoteId, prices: response.prices }))
+      api
+        .apiPricesGet({ specks: dustRequired.toString() })
+        .then((response) => ({ url, quoteId: response.quoteId, prices: response.prices }))
     )
   );
 

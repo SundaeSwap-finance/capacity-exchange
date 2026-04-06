@@ -21,7 +21,9 @@ export function BalanceDisplay({ dustBalance, shieldedBalances, highlightEmpty, 
         }`}
       >
         <span className="text-sm text-ces-text-muted">DUST Balance</span>
-        <span className={`font-display font-semibold ${isEmpty && highlightEmpty ? 'text-ces-danger' : 'text-ces-text'}`}>
+        <span
+          className={`font-display font-semibold ${isEmpty && highlightEmpty ? 'text-ces-danger' : 'text-ces-text'}`}
+        >
           {isEmpty ? '0' : formatDust(dustBalance)}
         </span>
       </div>
@@ -31,7 +33,10 @@ export function BalanceDisplay({ dustBalance, shieldedBalances, highlightEmpty, 
           {Object.entries(shieldedBalances)
             .filter(([, balance]) => balance > 0n)
             .map(([color, balance]) => (
-              <div key={color} className="flex items-center justify-between p-3 rounded-lg border border-ces-border bg-ces-surface-raised/50">
+              <div
+                key={color}
+                className="flex items-center justify-between p-3 rounded-lg border border-ces-border bg-ces-surface-raised/50"
+              >
                 <span className="text-sm text-ces-text-muted">{tokenLabel ?? truncateColor(color)}</span>
                 <span className="font-display font-semibold text-ces-gold">{balance.toString()}</span>
               </div>
@@ -43,6 +48,8 @@ export function BalanceDisplay({ dustBalance, shieldedBalances, highlightEmpty, 
 }
 
 function truncateColor(color: string): string {
-  if (color.length <= 12) return color;
+  if (color.length <= 12) {
+    return color;
+  }
   return `${color.slice(0, 6)}...${color.slice(-4)}`;
 }

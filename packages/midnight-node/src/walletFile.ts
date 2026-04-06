@@ -34,8 +34,7 @@ export function findWalletSeedFile(network: string, startDir: string = process.c
   const found = findFileUp(filename, startDir);
   if (!found) {
     throw new Error(
-      `Wallet seed file not found: ${filename}. ` +
-        `Create it at the project root with a hex-encoded seed.`
+      `Wallet seed file not found: ${filename}. ` + `Create it at the project root with a hex-encoded seed.`
     );
   }
   return found;

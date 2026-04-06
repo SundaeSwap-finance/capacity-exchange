@@ -37,7 +37,10 @@ export function initTelemetry(config: AppConfig, logger: Logger): Telemetry | un
 
   const otelServiceName = config.otelServiceName ?? packageName;
   const exportIntervalMillis = config.otelMetricExportIntervalMs ?? 30_000;
-  logger.info({ otelServiceName, endpoint: config.otelEndpoint, exportIntervalMillis }, 'Initializing OpenTelemetry');
+  logger.info(
+    { otelServiceName, endpoint: config.otelEndpoint, exportIntervalMillis },
+    'Initializing OpenTelemetry',
+  );
 
   diag.setLogger(pinoToDiagLogger(logger.child({ component: 'otel' })), DiagLogLevel.WARN);
 

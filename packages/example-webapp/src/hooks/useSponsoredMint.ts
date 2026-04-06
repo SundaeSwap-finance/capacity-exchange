@@ -48,7 +48,7 @@ export function useSponsoredMint(providers: WalletProviders | null): UseSponsore
 
         await withDustRetry(
           () => findAndMintTokens(providers.midnightProvider, walletProvider, contractAddress, amount, config),
-          { onRetry: (attempt) => console.warn(`[SponsoredMint] Dust proof error, retrying (${attempt}/3)`) },
+          { onRetry: (attempt) => console.warn(`[SponsoredMint] Dust proof error, retrying (${attempt}/3)`) }
         );
         setStatus('success');
       } catch (err) {

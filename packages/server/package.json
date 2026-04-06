@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Capacity Exchange Server",
   "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "scripts": {
     "dev": "bun --watch src/server.ts",
     "prebuild": "bun run --filter '@capacity-exchange/midnight-core' build && bun run --filter '@capacity-exchange/midnight-node' build",

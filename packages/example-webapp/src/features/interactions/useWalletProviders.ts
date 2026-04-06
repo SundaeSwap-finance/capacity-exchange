@@ -1,6 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { CoinPublicKey, EncPublicKey, FinalizedTransaction, SignatureEnabled, Proof, Binding } from '@midnight-ntwrk/ledger-v8';
+import type {
+  CoinPublicKey,
+  EncPublicKey,
+  FinalizedTransaction,
+  SignatureEnabled,
+  Proof,
+  Binding,
+} from '@midnight-ntwrk/ledger-v8';
 import type { BalanceSealedTx } from '@capacity-exchange/components';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
@@ -98,7 +105,9 @@ export function useWalletProviders(
           console.error('Failed to fetch shielded addresses from extension:', err);
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [walletConnection, wallet]);
 
   const providers = useMemo<WalletProviders | null>(() => {

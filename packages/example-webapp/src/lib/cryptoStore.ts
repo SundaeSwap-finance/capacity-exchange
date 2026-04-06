@@ -18,7 +18,7 @@ const PRF_SALT = new TextEncoder().encode('capacity-exchange-demo-wallet-v1');
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface EncryptedBlob {
-  iv: string;      // base64
+  iv: string; // base64
   ciphertext: string; // base64
 }
 
@@ -43,7 +43,9 @@ function toBase64(buf: ArrayBuffer): string {
 function fromBase64(b64: string): ArrayBuffer {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  for (let i = 0; i < bin.length; i++) {
+    bytes[i] = bin.charCodeAt(i);
+  }
   return bytes.buffer;
 }
 
@@ -90,16 +92,6 @@ async function saveStoredCredential(cred: StoredCredential): Promise<void> {
   });
 }
 
-async function clearStoredCredential(): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(DB_STORE, 'readwrite');
-    tx.objectStore(DB_STORE).delete(CREDENTIAL_KEY);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
 // ── PRF key derivation ─────────────────────────────────────────────────
 
 /**
@@ -113,7 +105,7 @@ async function prfOutputToKey(prfOutput: ArrayBuffer): Promise<CryptoKey> {
     prfOutput,
     { name: 'AES-GCM', length: 256 },
     false, // non-extractable
-    ['encrypt', 'decrypt'],
+    ['encrypt', 'decrypt']
   );
 }
 
@@ -150,7 +142,7 @@ type PRFExtension = {
 async function createPasskey(): Promise<{ credentialId: string; prfKey: CryptoKey } | null> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
 
-  const credential = await navigator.credentials.create({
+  const credential = (await navigator.credentials.create({
     publicKey: {
       rp: { name: 'Capacity Exchange Demo' },
       user: {
@@ -160,8 +152,8 @@ async function createPasskey(): Promise<{ credentialId: string; prfKey: CryptoKe
       },
       challenge,
       pubKeyCredParams: [
-        { type: 'public-key', alg: -7 },   // ES256
-        { type: 'public-key', alg: -257 },  // RS256
+        { type: 'public-key', alg: -7 }, // ES256
+        { type: 'public-key', alg: -257 }, // RS256
       ],
       authenticatorSelection: {
         residentKey: 'preferred',
@@ -173,9 +165,11 @@ async function createPasskey(): Promise<{ credentialId: string; prfKey: CryptoKe
         },
       } as PublicKeyCredentialCreationOptions['extensions'] & PRFExtension,
     },
-  }) as PublicKeyCredential | null;
+  })) as PublicKeyCredential | null;
 
-  if (!credential) return null;
+  if (!credential) {
+    return null;
+  }
 
   const ext = credential.getClientExtensionResults() as PRFExtension & AuthenticationExtensionsClientOutputs;
   const prfResult = ext.prf;
@@ -191,7 +185,9 @@ async function createPasskey(): Promise<{ credentialId: string; prfKey: CryptoKe
   if (prfResult?.enabled) {
     const credentialId = toBase64Url(credential.rawId);
     const prfKey = await authenticateAndDerivePrfKey(credentialId);
-    if (prfKey) return { credentialId, prfKey };
+    if (prfKey) {
+      return { credentialId, prfKey };
+    }
   }
 
   return null;
@@ -203,14 +199,16 @@ async function createPasskey(): Promise<{ credentialId: string; prfKey: CryptoKe
 async function authenticateAndDerivePrfKey(credentialId: string): Promise<CryptoKey | null> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
 
-  const assertion = await navigator.credentials.get({
+  const assertion = (await navigator.credentials.get({
     publicKey: {
       challenge,
       rpId: window.location.hostname,
-      allowCredentials: [{
-        type: 'public-key',
-        id: fromBase64Url(credentialId),
-      }],
+      allowCredentials: [
+        {
+          type: 'public-key',
+          id: fromBase64Url(credentialId),
+        },
+      ],
       userVerification: 'preferred',
       extensions: {
         prf: {
@@ -218,13 +216,17 @@ async function authenticateAndDerivePrfKey(credentialId: string): Promise<Crypto
         },
       } as PublicKeyCredentialRequestOptions['extensions'] & PRFExtension,
     },
-  }) as PublicKeyCredential | null;
+  })) as PublicKeyCredential | null;
 
-  if (!assertion) return null;
+  if (!assertion) {
+    return null;
+  }
 
   const ext = assertion.getClientExtensionResults() as PRFExtension & AuthenticationExtensionsClientOutputs;
   const prfOutput = ext.prf?.results?.first;
-  if (!prfOutput) return null;
+  if (!prfOutput) {
+    return null;
+  }
 
   return prfOutputToKey(prfOutput);
 }
@@ -251,7 +253,9 @@ export async function detectStorageMode(): Promise<StorageMode> {
 export async function setupPasskey(): Promise<{ mode: 'passkey'; encryptFn: EncryptFn; decryptFn: DecryptFn } | null> {
   try {
     const result = await createPasskey();
-    if (!result) return null;
+    if (!result) {
+      return null;
+    }
 
     await saveStoredCredential({ credentialId: result.credentialId, mode: 'passkey' });
     const key = result.prfKey;
@@ -274,10 +278,14 @@ export async function setupPasskey(): Promise<{ mode: 'passkey'; encryptFn: Encr
 export async function unlockPasskey(): Promise<{ encryptFn: EncryptFn; decryptFn: DecryptFn } | null> {
   try {
     const stored = await getStoredCredential();
-    if (!stored) return null;
+    if (!stored) {
+      return null;
+    }
 
     const key = await authenticateAndDerivePrfKey(stored.credentialId);
-    if (!key) return null;
+    if (!key) {
+      return null;
+    }
 
     return {
       encryptFn: (secrets) => encrypt(key, secrets),

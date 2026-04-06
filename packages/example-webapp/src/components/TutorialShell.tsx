@@ -8,7 +8,6 @@ import type { DebugLogEntry, DemoRailContent } from './DemoRail';
 interface TutorialShellProps {
   currentStep: TutorialStep;
   completedSteps: Set<TutorialStep>;
-  networkId: string;
   walletConnected: boolean;
   walletConnecting: boolean;
   onWalletConnect: () => void;
@@ -25,7 +24,6 @@ const RIGHT_RAIL_WIDTH = '280px';
 export function TutorialShell({
   currentStep,
   completedSteps,
-  networkId,
   walletConnected,
   walletConnecting,
   onWalletConnect,

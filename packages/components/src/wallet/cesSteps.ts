@@ -47,7 +47,11 @@ export async function fetchCesPrices(
   const estimated = tx.feesWithMargin(ledgerParameters, margin);
   // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
   const specksRequired = estimated > 0n ? estimated : 1n;
-  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString(), estimated === 0n ? '(floored from 0)' : '');
+  console.debug(
+    '[CESSteps] Specks required (with margin):',
+    specksRequired.toString(),
+    estimated === 0n ? '(floored from 0)' : ''
+  );
 
   const exchangeApis = createCesApis(capacityExchangeUrls);
   const prices = await fetchPricesFromExchanges(exchangeApis, specksRequired);

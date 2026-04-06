@@ -15,7 +15,8 @@ export function priceConfigExamplePath(): string {
   return path.join(rootDir, 'packages', 'server', 'price-config.example.json');
 }
 
-export function readJsonFile(filePath: string): Record<string, unknown> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function readJsonFile(filePath: string): Record<string, any> {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
