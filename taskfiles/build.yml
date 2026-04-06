@@ -42,7 +42,7 @@ tasks:
     deps: [components]
 
   server:
-    deps: [midnight-node]
+    deps: [components]
     cmds:
       - bun run --filter @capacity-exchange/server build
 
