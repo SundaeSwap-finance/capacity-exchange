@@ -28,6 +28,7 @@ export interface AppConfig {
   quoteSecretFile: string;
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
+  capacityExchangeUrls: string[];
 }
 
 export interface ServerBootstrap {
@@ -61,6 +62,11 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     sponsoredContracts: priceConfig.sponsoredContracts,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
+    capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
+      ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
+          .map((u) => u.trim())
+          .filter(Boolean)
+      : [],
   };
 
   return { config, logger };

@@ -10,7 +10,7 @@ import {
   type Transaction,
   Intent,
 } from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { getLedgerParameters } from '@capacity-exchange/midnight-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
@@ -32,6 +32,7 @@ export class SponsorService {
   private readonly sponsoredContracts: SponsoredContract[];
   private readonly indexerUrl: string;
   private readonly logger: FastifyBaseLogger;
+  private readonly cesWalletProvider: WalletProvider | null;
 
   constructor(
     utxoService: UtxoService,
@@ -41,6 +42,7 @@ export class SponsorService {
     sponsoredContracts: SponsoredContract[],
     indexerUrl: string,
     logger: FastifyBaseLogger,
+    cesWalletProvider: WalletProvider | null,
   ) {
     this.utxoService = utxoService;
     this.txService = txService;
@@ -49,6 +51,11 @@ export class SponsorService {
     this.sponsoredContracts = sponsoredContracts;
     this.indexerUrl = indexerUrl;
     this.logger = logger;
+
+    this.cesWalletProvider = cesWalletProvider;
+    if (!cesWalletProvider) {
+      this.logger.debug('Peer dust fallback NOT available');
+    }
   }
 
   @recordDuration('ces.sponsor.duration_ms', 'Sponsor tx duration')
@@ -78,6 +85,16 @@ export class SponsorService {
     );
 
     const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
+    // ask other capacity exchange services to sponsor the transaction
+    if (lockResult.status === 'insufficient-funds' && this.cesWalletProvider) {
+      this.logger.info(
+        'Insufficient dust funds; fallback to other CES peers for dust sponsorship...',
+      );
+      const tx = await this.cesWalletProvider.balanceTx(userTx);
+
+      return { status: 'ok', tx, specksCommitted: estimatedSpecks };
+    }
+
     if (lockResult.status !== 'ok') {
       return lockResult;
     }

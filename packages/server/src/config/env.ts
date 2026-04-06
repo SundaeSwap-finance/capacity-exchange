@@ -18,6 +18,7 @@ const AppEnvSchema = Type.Object({
   OTEL_SERVICE_NAME: Type.Optional(Type.String()),
   OTEL_EXPORTER_OTLP_ENDPOINT: Type.Optional(Type.String()),
   OTEL_METRIC_EXPORT_INTERVAL_MS: Type.Optional(Type.Number()),
+  CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -42,6 +43,7 @@ export function parseAppEnv(): AppEnv {
       : undefined,
     PROOF_SERVER_URL: process.env.PROOF_SERVER_URL,
     WALLET_STATE_DIR: process.env.WALLET_STATE_DIR,
+    CAPACITY_EXCHANGE_PEER_URLS: process.env.CAPACITY_EXCHANGE_PEER_URLS,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS

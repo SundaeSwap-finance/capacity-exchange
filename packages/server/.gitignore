@@ -1,7 +1,9 @@
 price-config.*.json
+price-config-*.json
 !price-config.example.json
 !price-config.test.json
 !wallet-seed.test.hex
+.quote-secret-*.hex
 price-formulas.json
 midnight-level-db/
 .wallet-state/
