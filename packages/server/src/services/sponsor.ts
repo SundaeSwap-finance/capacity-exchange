@@ -32,7 +32,7 @@ export class SponsorService {
   private readonly sponsoredContracts: SponsoredContract[];
   private readonly indexerUrl: string;
   private readonly logger: FastifyBaseLogger;
-  readonly cesWalletProvider: WalletProvider | null;
+  private readonly cesWalletProvider: WalletProvider | null;
 
   constructor(
     utxoService: UtxoService,
@@ -51,7 +51,11 @@ export class SponsorService {
     this.sponsoredContracts = sponsoredContracts;
     this.indexerUrl = indexerUrl;
     this.logger = logger;
+
     this.cesWalletProvider = cesWalletProvider;
+    if (!cesWalletProvider) {
+      this.logger.debug('Peer dust fallback NOT available');
+    }
   }
 
   @recordDuration('ces.sponsor.duration_ms', 'Sponsor tx duration')
@@ -82,14 +86,13 @@ export class SponsorService {
     const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
     // ask other capacity exchange services to sponsor the transaction
     if (lockResult.status === 'insufficient-funds' && this.cesWalletProvider) {
-      this.logger.debug('Insufficient dust funds; falling back to CES wallet provider');
+      this.logger.info('Insufficient dust funds; fallback to other CES peers for dust sponsorship...');
       const tx = await this.cesWalletProvider.balanceTx(userTx);
 
       return { status: 'ok', tx, specksCommitted: estimatedSpecks };
     }
 
     if (lockResult.status !== 'ok') {
-      this.logger.debug("No available dust UTxO to sponsor transaction, and no CES wallet provider configured");
       return lockResult;
     }
 

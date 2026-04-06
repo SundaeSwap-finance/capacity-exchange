@@ -2,12 +2,10 @@ import type pino from 'pino';
 import { config as loadDotenv } from 'dotenv';
 import { toNetworkIdEnum, resolveEndpoints, type NetworkEndpoints, type WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { loadPriceConfig, type PriceFormula, type SponsoredContract } from './config/prices.js';
 import { parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
-import { buildCesWalletProvider } from './config/cesWalletProvider.js';
 
 export interface AppConfig {
   networkId: NetworkId.NetworkId;
@@ -24,7 +22,7 @@ export interface AppConfig {
   quoteSecretFile: string;
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
-  cesWalletProvider: WalletProvider | null;
+  capacityExchangeUrls: string[];
 }
 
 export interface ServerBootstrap {
@@ -58,7 +56,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     sponsoredContracts: priceConfig.sponsoredContracts,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
-    cesWalletProvider: buildCesWalletProvider(env, logger, wallet.walletConnection, endpoints),
+    capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
+      ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',').map((u) => u.trim()).filter(Boolean)
+      : [],
   };
 
   return { config, logger };

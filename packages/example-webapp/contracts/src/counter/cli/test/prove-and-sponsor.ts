@@ -25,12 +25,14 @@ import { runCli, withAppContext, buildProviders } from '@capacity-exchange/midni
 import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledCounterContract, CounterContract } from '../../lib/contract.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
+import { DefaultApi, type ApiSponsorPost200Response, Configuration } from '@capacity-exchange/client';
+
 
 const logger = createLogger(import.meta);
 
 interface ProveAndSponsorOutput {
   bytes: number;
-  sponsorResponse: unknown;
+  sponsorResponse: ApiSponsorPost200Response;
 }
 
 async function main(): Promise<ProveAndSponsorOutput> {
@@ -62,18 +64,12 @@ async function main(): Promise<ProveAndSponsorOutput> {
     const provenTxHex = Buffer.from(provenTx.serialize()).toString('hex');
     logger.info(`Proved tx (${provenTxHex.length / 2} bytes), calling ${serverUrl}/api/sponsor...`);
 
-    const res = await fetch(`${serverUrl}/api/sponsor`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provenTx: provenTxHex }),
+    const api = new DefaultApi(new Configuration({ basePath: serverUrl }));
+    const sponsorResponse: ApiSponsorPost200Response = await api.apiSponsorPost({
+      apiSponsorPostRequest: { provenTx: provenTxHex },
     });
 
-    const sponsorResponse = await res.json();
-    if (!res.ok) {
-      logger.error({ status: res.status, sponsorResponse }, 'Sponsor request failed');
-    } else {
-      logger.info({ status: res.status }, 'Sponsor request succeeded');
-    }
+    logger.info({ tx: sponsorResponse.tx.slice(0, 16) + '…' }, 'Sponsor request succeeded');
 
     return { bytes: provenTxHex.length / 2, sponsorResponse };
   });

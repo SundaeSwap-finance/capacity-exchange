@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import walletPlugin from './plugins/wallet-utxo.js';
+import cesWalletProviderPlugin from './plugins/ces-wallet-provider.js';
 import offerPlugin from './plugins/offer.js';
 import sponsorPlugin from './plugins/sponsor.js';
 import pricesPlugin from './plugins/price.js';
@@ -37,6 +38,7 @@ export async function buildApp(
   await app.register(errorHandler);
   await app.register(observability);
   await app.register(walletPlugin);
+  await app.register(cesWalletProviderPlugin);
   await app.register(txPlugin);
   await app.register(pricesPlugin);
   await app.register(quotePlugin);

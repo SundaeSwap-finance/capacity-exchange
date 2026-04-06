@@ -1,4 +1,4 @@
-import type pino from 'pino';
+import type { FastifyBaseLogger } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
@@ -6,12 +6,10 @@ import {
   type ExchangePrice,
   type PromptForCurrency,
   type ConfirmOffer,
-  BalanceSealedTx,
+  type BalanceSealedTx,
 } from '@capacity-exchange/components';
-import type { WalletConnection } from '@capacity-exchange/midnight-core';
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { AppEnv } from './env.js';
 import type { NetworkEndpoints } from '@capacity-exchange/midnight-core';
+import type { WalletService } from '../services/wallet.js';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
@@ -19,16 +17,12 @@ const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
  * Creates a {@link PromptForCurrency} that selects the best exchange price
  * based on the currencies this server wallet holds.
  *
- * Selection algorithm:
- * 1. Fetch the wallet's current synced shielded state to get token balances.
- * 2. Filter the incoming `prices` to currencies in the wallet with non-zero SHIELDED balance.
- * 3. Among the remaining candidates, pick the one with the lowest price amount
+ * 1. Fetches the server's current sycned shielded token balances
+ * 2. Filters the prices to those with non-zero balance
+ * 3. Picks the lowest amount among the filtered prices
  *    (fewest tokens spent per dust acquired).
- *
- * Throws if no prices are provided, or if none of the offered currencies are
- * held by this wallet.
  */
-function createAutoSelectCurrency(log: pino.Logger, walletFacade: WalletFacade): PromptForCurrency {
+function createAutoSelectCurrency(log: FastifyBaseLogger, walletService: WalletService): PromptForCurrency {
   return async (prices: ExchangePrice[], dustRequired: bigint) => {
     if (prices.length === 0) {
       throw new Error('No exchange prices available');
@@ -36,8 +30,7 @@ function createAutoSelectCurrency(log: pino.Logger, walletFacade: WalletFacade):
 
     log.debug({ dustRequired: dustRequired.toString(), prices: prices.map((p) => ({ currency: p.price.currency, amount: p.price.amount })) }, 'Available exchange prices');
 
-    const shieldedState = await walletFacade.shielded.waitForSyncedState();
-    const balances = shieldedState.balances;
+    const balances = await walletService.getShieldedTokenBalances();
 
     const candidates = prices.filter((p) => (balances[p.price.currency] ?? 0n) > 0n);
     if (candidates.length === 0) {
@@ -45,7 +38,7 @@ function createAutoSelectCurrency(log: pino.Logger, walletFacade: WalletFacade):
     }
 
     log.debug({ currencies: candidates.map((p) => p.price.currency) }, 'Currencies with non-zero balance');
-
+    // TODO: allow configuring another selection strategy. 
     const selected = candidates.reduce((lowest, exchangePrice) =>
       BigInt(exchangePrice.price.amount) < BigInt(lowest.price.amount) ? exchangePrice : lowest
     );
@@ -55,7 +48,7 @@ function createAutoSelectCurrency(log: pino.Logger, walletFacade: WalletFacade):
   };
 }
 
-function createAutoConfirmOffer(log: pino.Logger): ConfirmOffer {
+function createAutoConfirmOffer(log: FastifyBaseLogger): ConfirmOffer {
   return async (offer, dustRequired) => {
     log.info({ offerId: offer.offerId, amount: offer.offerAmount, currency: offer.offerCurrency, dustRequired: dustRequired.toString() }, 'Auto-confirming offer');
     return { status: 'confirmed' };
@@ -63,27 +56,21 @@ function createAutoConfirmOffer(log: pino.Logger): ConfirmOffer {
 }
 
 /**
- * Builds a `capacityExchangeWalletProvider` using the server's wallet keys.
- * Auto-selects the currency of the lowest price and confirms offers.
+ * Builds a `capacityExchangeWalletProvider` using the WalletService.
+ * Auto-selects the currency with lowest price.
  * Returns null if no peer URLs are configured.
  */
 export function buildCesWalletProvider(
-  env: AppEnv,
-  log: pino.Logger,
-  walletConnection: WalletConnection,
+  walletService: WalletService,
   endpoints: NetworkEndpoints,
+  capacityExchangeUrls: string[],
+  log: FastifyBaseLogger,
 ): WalletProvider | null {
-  if (!env.CAPACITY_EXCHANGE_PEER_URLS) {
-    return null;
-  }
-
-  const capacityExchangeUrls = env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
-    .map((u) => u.trim()).filter(Boolean);
   if (capacityExchangeUrls.length === 0) {
     return null;
   }
 
-  const { walletFacade, keys } = walletConnection;
+  const { walletFacade, keys } = walletService.connection;
 
   const balanceSealedTx: BalanceSealedTx = async (tx) => {
     const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
@@ -102,7 +89,7 @@ export function buildCesWalletProvider(
     indexerUrl: endpoints.indexerHttpUrl,
     capacityExchangeUrls,
     margin: DEFAULT_MARGIN,
-    promptForCurrency: createAutoSelectCurrency(log, walletFacade),
+    promptForCurrency: createAutoSelectCurrency(log, walletService),
     confirmOffer: createAutoConfirmOffer(log),
   });
 }

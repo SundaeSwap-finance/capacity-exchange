@@ -111,10 +111,20 @@ export class WalletService {
 
   public async getBalances() {
     const state = await firstValueFrom(this.walletConnection.walletFacade.state());
+    // TODO: does it make sense to collect balances on ALL tokens, not just the native token?
     const unshielded = state.unshielded?.balances[nativeToken().raw] ?? 0n;
     const shielded = state.shielded?.balances[nativeToken().raw] ?? 0n;
     const dust = state.dust?.balance(new Date()) ?? 0n;
     return { unshielded, shielded, dust };
+  }
+
+  public async getShieldedTokenBalances(): Promise<Record<string, bigint>> {
+    const state = await this.walletConnection.walletFacade.shielded.waitForSyncedState();
+    return state.balances;
+  }
+
+  get connection(): WalletConnection {
+    return this.walletConnection;
   }
 
   get syncState(): WalletSyncState {
