@@ -41,7 +41,7 @@ NETWORK_ID=preview task dev:webapp   # webapp only
 2. **Copies `.env.example` files** — creates `.env` for server, webapp, and contracts packages
 3. **Installs dependencies** — `bun install`
 4. **Compiles Compact contracts** — extracts the bundled compiler and compiles counter + token-mint
-5. **Builds all packages** — midnight-core → midnight-node → client → components → webapp + server
+5. **Builds all packages** — midnight-core → midnight-node → client → providers → webapp + server
 6. **Deploys contracts** — deploys to the Midnight preview network
 7. **Generates price config** — creates `apps/server/price-config.preview.json` from deployed contract data
 
@@ -80,7 +80,7 @@ All network-aware tasks require `NETWORK_ID=<network>` (e.g., `preview`, `undepl
 │   ├── midnight-core/        # Shared core logic
 │   ├── midnight-node/        # Node-side Midnight integrations
 │   ├── client/               # Auto-generated OpenAPI client
-│   └── components/           # High-level CES components
+│   └── providers/            # CES providers to integrate into dApps
 ```
 
 ## External Services

@@ -33,16 +33,16 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/client build
 
-  components:
+  providers:
     deps: [midnight-node, client]
     cmds:
-      - bun run --filter @capacity-exchange/components build
+      - bun run --filter @capacity-exchange/providers build
 
   libs:
-    deps: [components]
+    deps: [providers]
 
   server:
-    deps: [components]
+    deps: [providers]
     cmds:
       - bun run --filter @capacity-exchange/server build
 
@@ -86,7 +86,7 @@ tasks:
   # --- Typecheck ---
 
   typecheck-demo-contracts:
-    deps: [components]
+    deps: [providers]
     cmds:
       - bun run --filter @capacity-exchange/demo-contracts build
 

@@ -3,7 +3,7 @@ import type {
   Offer,
   CurrencySelectionResult,
   OfferConfirmationResult,
-} from '@capacity-exchange/components';
+} from '@capacity-exchange/providers';
 
 export type CesFlowStatus =
   | 'idle'

@@ -8,7 +8,7 @@ import type {
   Proof,
   Binding,
 } from '@midnight-ntwrk/ledger-v8';
-import type { BalanceSealedTx } from '@capacity-exchange/components';
+import type { BalanceSealedTx } from '@capacity-exchange/providers';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities, WalletInfoState } from '../wallet/types';

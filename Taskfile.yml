@@ -125,10 +125,10 @@ tasks:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,components,server,webapp,dashboard
+          NAMES: core,node,providers,server,webapp,dashboard
           COLORS: blue,cyan,magenta,green,yellow,red
           EXTRA: >-
-            "bun run --filter @capacity-exchange/components build:watch"
+            "bun run --filter @capacity-exchange/providers build:watch"
             "bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/demo dev"
             "bun run --filter @capacity-exchange/dashboard dev"
@@ -152,15 +152,15 @@ tasks:
 
   dev:webapp:
     desc: Start the demo webapp with hot-reload
-    deps: [_demo:require-deployed, _build:components]
+    deps: [_demo:require-deployed, _build:providers]
     cmds:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,components,webapp
+          NAMES: core,node,providers,webapp
           COLORS: blue,cyan,magenta,yellow
           EXTRA: >-
-            "bun run --filter @capacity-exchange/components build:watch"
+            "bun run --filter @capacity-exchange/providers build:watch"
             "bun run --filter @capacity-exchange/demo dev"
     requires:
       vars: [NETWORK_ID]

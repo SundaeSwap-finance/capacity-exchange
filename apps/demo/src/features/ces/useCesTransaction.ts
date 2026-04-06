@@ -5,9 +5,9 @@ import {
   type ConfirmOffer,
   CapacityExchangeUserCancelledError,
   CapacityExchangeNoPricesAvailableError,
-} from '@capacity-exchange/components';
+} from '@capacity-exchange/providers';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { BalanceSealedTx } from '@capacity-exchange/components';
+import type { BalanceSealedTx } from '@capacity-exchange/providers';
 import type { CesFlowStatus, CurrencySelectionState } from './types';
 import { findAndIncrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';

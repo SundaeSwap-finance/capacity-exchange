@@ -8,7 +8,7 @@ import {
   type BalanceSealedTx,
   type PromptForCurrency,
   type ConfirmOffer,
-} from '@capacity-exchange/components';
+} from '@capacity-exchange/providers';
 import { buildMidnightProviders } from '@capacity-exchange/midnight-core';
 import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';

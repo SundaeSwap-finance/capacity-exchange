@@ -6,7 +6,7 @@ import {
   type ExchangePrice,
   type PromptForCurrency,
   type ConfirmOffer,
-} from '@capacity-exchange/components';
+} from '@capacity-exchange/providers';
 import type { NetworkEndpoints } from '@capacity-exchange/midnight-core';
 import type { WalletService } from '../services/wallet.js';
 
