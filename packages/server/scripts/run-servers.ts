@@ -103,7 +103,7 @@ for (let i = 2; i <= N; i++) {
 if (!SKIP_BALANCE_CHECK) {
   // TODO: should we add restriction for mainnet?
   // if (MIDNIGHT_NETWORK === 'mainnet') {
-  //   console.error('Error: This script is for testing puposes; does not support MIDNIGHT_NETWORK=mainnet.');
+  //   console.error('Error: This script is for testing purposes; does not support MIDNIGHT_NETWORK=mainnet.');
   //   process.exit(1);
   // }
 
@@ -152,10 +152,9 @@ if (!SKIP_BALANCE_CHECK) {
       console.error('');
       console.error(`Error: Server ${i} wallet has no DUST balance.`);
 
-      process.exit(1);
-
       // Need to register unshielded NIGHT UTxOs for dust generation.
       // Check cd packages/midnight-node bun src/cli/balances.ts ${MIDNIGHT_NETWORK} --register-dust`
+      process.exit(1);
     }
   }
 }

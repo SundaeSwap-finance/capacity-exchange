@@ -14,7 +14,7 @@ import type { WalletService } from '../services/wallet.js';
  * Creates a {@link PromptForCurrency} that selects the best exchange price
  * based on the currencies this server wallet holds.
  *
- * 1. Fetches the server's current sycned shielded token balances
+ * 1. Fetches the server's current synced shielded token balances
  * 2. Filters the prices to those with non-zero balance
  * 3. Picks the lowest amount among the filtered prices
  *    (fewest tokens spent per dust acquired).
