@@ -128,7 +128,6 @@
       "name": "@capacity-exchange/example-contracts",
       "version": "1.0.0",
       "dependencies": {
-        "@capacity-exchange/client": "1.0.0",
         "@capacity-exchange/midnight-core": "1.0.0",
         "@capacity-exchange/midnight-node": "1.0.0",
         "@midnight-ntwrk/compact-js": "2.5.0",
@@ -151,6 +150,7 @@
         "dotenv": "17.2.3",
       },
       "devDependencies": {
+        "@capacity-exchange/client": "1.0.0",
         "@eslint/js": "^9.39.2",
         "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
         "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2",

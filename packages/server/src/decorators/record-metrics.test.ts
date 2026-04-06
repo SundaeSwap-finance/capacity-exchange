@@ -28,7 +28,7 @@ describe('recordDuration', () => {
     class Test {
       @recordDuration('test.duration', 'test')
       async doWork() {
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, 20));
         return 'done';
       }
     }
