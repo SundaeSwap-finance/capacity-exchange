@@ -107,7 +107,7 @@ tasks:
       - task: install
       - task: compile-contracts
       - task: _demo:copy-zk-assets
-      - task: _build:demo
+      - task: _build:webapp
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
@@ -186,7 +186,7 @@ tasks:
       - task: _demo:compile
       - task: _demo:copy-zk-assets
       - task: _demo:copy-configs
-      - task: _build:demo
+      - task: _build:webapp
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
