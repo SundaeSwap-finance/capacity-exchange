@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { generateMnemonic, mnemonicToSeedHex } from '@capacity-exchange/midnight-core';
+import { generateMnemonic, mnemonicToSeedHex } from '@sundaeswap/capacity-exchange-core';
 import type { EncryptedBlob, PlaintextSecrets, EncryptFn, DecryptFn, StorageMode } from '../lib/cryptoStore';
 import { detectStorageMode, setupPasskey, unlockPasskey } from '../lib/cryptoStore';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Get200Response } from '@capacity-exchange/client';
+import { Get200Response } from '@sundaeswap/capacity-exchange-client';
 import { useApi } from '../hooks/useApi';
 import { useCesClient } from '../../config';
 

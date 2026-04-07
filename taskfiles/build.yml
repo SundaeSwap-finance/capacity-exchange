@@ -21,7 +21,7 @@ tasks:
   midnight-core:
     deps: [install]
     cmds:
-      - bun run --filter @capacity-exchange/midnight-core build
+      - bun run --filter @sundaeswap/capacity-exchange-core build
 
   midnight-node:
     deps: [midnight-core]
@@ -31,12 +31,12 @@ tasks:
   client:
     deps: [install]
     cmds:
-      - bun run --filter @capacity-exchange/client build
+      - bun run --filter @sundaeswap/capacity-exchange-client build
 
   providers:
     deps: [midnight-node, client]
     cmds:
-      - bun run --filter @capacity-exchange/providers build
+      - bun run --filter @sundaeswap/capacity-exchange-providers build
 
   libs:
     deps: [providers]

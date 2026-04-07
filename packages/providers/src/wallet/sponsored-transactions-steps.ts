@@ -6,7 +6,7 @@ import {
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import { hexToBytes } from '@capacity-exchange/midnight-core';
+import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import type { CesApi } from './exchangeApi';
 
 /**

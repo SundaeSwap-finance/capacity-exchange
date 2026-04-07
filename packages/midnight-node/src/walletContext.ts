@@ -4,7 +4,7 @@ import {
   DustWalletProvider,
   uint8ArrayToHex,
   type WalletKeys,
-} from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-core';
 import { FileStateStore } from './fileStateStore.js';
 import { createLogger } from './createLogger.js';
 import type { AppConfig } from './appConfig.js';

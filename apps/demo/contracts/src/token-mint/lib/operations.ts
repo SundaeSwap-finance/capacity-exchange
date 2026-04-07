@@ -8,9 +8,9 @@ import {
   submitStatefulCallTxDirect,
   deployContractWithDryRun,
 } from '@capacity-exchange/midnight-node';
-import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
+import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
-import { deriveTokenColor, getShieldedBalance } from '@capacity-exchange/midnight-core';
+import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
 

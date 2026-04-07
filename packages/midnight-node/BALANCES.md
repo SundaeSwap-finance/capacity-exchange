@@ -14,7 +14,7 @@ View your Midnight wallet addresses and balances. The examples below use `previe
 
 ```bash
 bun install
-bun run --filter @capacity-exchange/midnight-core build
+bun run --filter @sundaeswap/capacity-exchange-core build
 ```
 
 **2. Create a wallet mnemonic file**

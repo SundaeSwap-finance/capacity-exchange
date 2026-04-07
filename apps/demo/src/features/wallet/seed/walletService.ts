@@ -1,5 +1,5 @@
-import type { WalletKeys, WalletConnection } from '@capacity-exchange/midnight-core';
-export type { WalletKeys } from '@capacity-exchange/midnight-core';
+import type { WalletKeys, WalletConnection } from '@sundaeswap/capacity-exchange-core';
+export type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../../config';
@@ -7,7 +7,7 @@ import { loadSnapshots, buildSyntheticState } from '../../../lib/walletSnapshot'
 
 // Lazy-load the heavy midnight-core module (pulls in 10MB+ WASM) only when needed
 async function loadMidnightCore() {
-  return import('@capacity-exchange/midnight-core');
+  return import('@sundaeswap/capacity-exchange-core');
 }
 
 export interface SeedWalletConnection {

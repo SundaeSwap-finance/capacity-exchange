@@ -1,5 +1,5 @@
 import React from 'react';
-import { getNightBalance, starsToNight } from '@capacity-exchange/midnight-core';
+import { getNightBalance, starsToNight } from '@sundaeswap/capacity-exchange-core';
 import { LabelValue } from '../../../shared/ui';
 import { formatDust } from '../../../utils/format';
 

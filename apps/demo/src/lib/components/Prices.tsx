@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApi } from '../hooks/useApi';
 import { useCesClient } from '../../config';
-import { ApiPricesGet200Response } from '@capacity-exchange/client';
+import { ApiPricesGet200Response } from '@sundaeswap/capacity-exchange-client';
 
 interface PricesRenderProps {
   error: string | null;

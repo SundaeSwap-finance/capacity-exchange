@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { CLIENT, getQuoteId } from '../utils.js';
 import { CreateOfferResponse } from '../client.js';
 import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
-import { hexToBytes } from '@capacity-exchange/midnight-core';
+import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 
 describe('Offer API - Happy Path', () => {
   it('creates an offer successfully', async () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HealthReadyGet200Response } from '@capacity-exchange/client';
+import { HealthReadyGet200Response } from '@sundaeswap/capacity-exchange-client';
 import { useApi } from '../hooks/useApi';
 import { useCesClient } from '../../config';
 

@@ -128,7 +128,7 @@ tasks:
           NAMES: core,node,providers,server,webapp,dashboard
           COLORS: blue,cyan,magenta,green,yellow,red
           EXTRA: >-
-            "bun run --filter @capacity-exchange/providers build:watch"
+            "bun run --filter @sundaeswap/capacity-exchange-providers build:watch"
             "bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/demo dev"
             "bun run --filter @capacity-exchange/dashboard dev"
@@ -160,7 +160,7 @@ tasks:
           NAMES: core,node,providers,webapp
           COLORS: blue,cyan,magenta,yellow
           EXTRA: >-
-            "bun run --filter @capacity-exchange/providers build:watch"
+            "bun run --filter @sundaeswap/capacity-exchange-providers build:watch"
             "bun run --filter @capacity-exchange/demo dev"
     requires:
       vars: [NETWORK_ID]
@@ -176,7 +176,7 @@ tasks:
       - >-
         bunx concurrently --kill-others
         -n {{.NAMES}} -c {{.COLORS}}
-        "bun run --filter @capacity-exchange/midnight-core build:watch"
+        "bun run --filter @sundaeswap/capacity-exchange-core build:watch"
         "bun run --filter @capacity-exchange/midnight-node build:watch"
         {{.EXTRA}}
 

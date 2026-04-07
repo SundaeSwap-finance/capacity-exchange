@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSubmit } from '../hooks/useSubmit';
 import { useCesClient } from '../../config';
-import { ApiOffersPostOperationRequest, ApiOffersPost201Response } from '@capacity-exchange/client';
+import { ApiOffersPostOperationRequest, ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 
 interface OffersRenderProps {
   submit: (args: ApiOffersPostOperationRequest) => Promise<void>;

@@ -1,6 +1,7 @@
 {
   "name": "@capacity-exchange/demo",
   "version": "1.0.0",
+  "private": true,
   "description": "Demo Webapp for the Capacity Exchange",
   "type": "module",
   "main": "index.js",
@@ -13,9 +14,9 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@capacity-exchange/client": "1.0.0",
-    "@capacity-exchange/midnight-core": "1.0.0",
-    "@capacity-exchange/providers": "1.0.0",
+    "@sundaeswap/capacity-exchange-client": "1.0.0",
+    "@sundaeswap/capacity-exchange-core": "1.0.0",
+    "@sundaeswap/capacity-exchange-providers": "1.0.0",
     "@fontsource/geist": "^5.2.8",
     "@fontsource/space-mono": "^5.2.9",
     "@midnight-ntwrk/compact-js": "2.5.0",
