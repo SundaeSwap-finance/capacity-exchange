@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { parseMnemonic, parseSeedHex } from '@capacity-exchange/midnight-core';
+import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core';
 
 function seedFilename(network: string): string {
   return `wallet-seed.${network.toLowerCase()}.hex`;

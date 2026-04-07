@@ -1,6 +1,6 @@
 import { writeFile, readFile, rename, unlink, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import type { StateStore, Logger } from '@capacity-exchange/midnight-core';
+import type { StateStore, Logger } from '@sundaeswap/capacity-exchange-core';
 
 /**
  * File-backed StateStore implementation.

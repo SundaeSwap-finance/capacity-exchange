@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/client",
+  "name": "@sundaeswap/capacity-exchange-client",
   "version": "1.0.0",
   "description": "Capacity Exchange Client",
   "main": "generated/dist/index.js",
@@ -8,6 +8,9 @@
   "files": [
     "generated/dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "import": "./generated/dist/index.js",
@@ -17,7 +20,8 @@
   "scripts": {
     "clean": "rm -rf generated/dist generated/tsconfig.tsbuildinfo",
     "regenerate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true",
-    "build": "tsc"
+    "build": "tsc",
+    "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
     "es6-promise": "^4.2.4",

@@ -8,10 +8,10 @@ import {
 } from '@midnight-ntwrk/ledger-v8';
 import type { ExchangePrice, Offer, BalanceSealedTx } from './types';
 import { isOfferExpired } from './utils';
-import { getLedgerParameters, hexToBytes } from '@capacity-exchange/midnight-core';
+import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
-import type { ApiOffersPost201Response } from '@capacity-exchange/client';
+import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
 
 function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {

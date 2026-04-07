@@ -6,7 +6,7 @@ import {
   type NetworkEndpoints,
   type WalletConnection,
   type WalletStateStore,
-} from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { loadPriceConfig, type PriceFormula, type SponsoredContract } from './config/prices.js';
 import { parseAppEnv } from './config/env.js';

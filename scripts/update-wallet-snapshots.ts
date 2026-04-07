@@ -20,7 +20,7 @@ import {
   toNetworkIdEnum,
   COST_PARAMS,
   createWallet,
-} from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-core';
 
 const NETWORKS = ['preview', 'preprod', 'mainnet'];
 const OUT_DIR = path.resolve(import.meta.dirname, '../apps/demo/public/wallet-snapshots');

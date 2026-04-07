@@ -8,7 +8,7 @@
  * from genesis — the wallet only needs to catch up from the snapshot offset.
  */
 
-import type { WalletKeys } from '@capacity-exchange/midnight-core';
+import type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
 import { PublicKey } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
 
 interface ChainSnapshot {

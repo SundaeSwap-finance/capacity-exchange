@@ -8,7 +8,7 @@ import type {
   Proof,
   Binding,
 } from '@midnight-ntwrk/ledger-v8';
-import type { BalanceSealedTx } from '@capacity-exchange/providers';
+import type { BalanceSealedTx } from '@sundaeswap/capacity-exchange-providers';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities, WalletInfoState } from '../wallet/types';
@@ -18,7 +18,7 @@ import {
   type WalletIdentity,
   hexToBytes,
   uint8ArrayToHex,
-} from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-core';
 import { useNetworkConfig } from '../../config';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;

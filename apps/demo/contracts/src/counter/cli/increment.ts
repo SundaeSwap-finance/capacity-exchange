@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
-import { type TxResult } from '@capacity-exchange/midnight-core';
+import { type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { increment } from '../lib/operations.js';
 
 function main(): Promise<TxResult> {

@@ -8,7 +8,7 @@ import {
   parseMnemonic,
   uint8ArrayToHex,
   type WalletConnection,
-} from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { FileStateStore, loadWalletSeed } from '@capacity-exchange/midnight-node';
 import type { AppEnv } from './env.js';

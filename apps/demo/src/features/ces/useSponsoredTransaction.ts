@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/providers';
+import { sponsoredTransactionsWalletProvider } from '@sundaeswap/capacity-exchange-providers';
 import type { WalletProviders } from '../interactions/useWalletProviders';
 import { incrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';

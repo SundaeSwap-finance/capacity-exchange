@@ -1,0 +1,29 @@
+name: Branch CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run check
+
+      - run: bun run --filter '@sundaeswap/capacity-exchange-*' build
+
+      - run: bun run --filter '@sundaeswap/capacity-exchange-*' --if-present test

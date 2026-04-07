@@ -11,7 +11,7 @@ import {
   Intent,
 } from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { getLedgerParameters } from '@capacity-exchange/midnight-core';
+import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { MetricsService } from './metrics.js';

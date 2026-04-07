@@ -1,4 +1,4 @@
-import { Configuration, DefaultApi, ResponseError } from '@capacity-exchange/client';
+import { Configuration, DefaultApi, ResponseError } from '@sundaeswap/capacity-exchange-client';
 
 export type CesHealthStatus = { status: 'healthy' } | { status: 'syncing' } | { status: 'offline'; error: string };
 

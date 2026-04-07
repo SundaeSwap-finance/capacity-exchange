@@ -7,7 +7,7 @@ import {
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
 import { nativeToken, type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
-import { WalletConnection, type WalletStateStore } from '@capacity-exchange/midnight-core';
+import { WalletConnection, type WalletStateStore } from '@sundaeswap/capacity-exchange-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 

@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/midnight-core",
+  "name": "@sundaeswap/capacity-exchange-core",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
@@ -11,10 +11,15 @@
       "default": "./dist/seed.js"
     }
   },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "0.15.0",

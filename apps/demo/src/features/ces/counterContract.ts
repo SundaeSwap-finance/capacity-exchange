@@ -8,8 +8,8 @@ import {
   type BalanceSealedTx,
   type PromptForCurrency,
   type ConfirmOffer,
-} from '@capacity-exchange/providers';
-import { buildMidnightProviders } from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-providers';
+import { buildMidnightProviders } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';
 

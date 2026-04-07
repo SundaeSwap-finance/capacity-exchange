@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { DefaultApi, Configuration } from '@capacity-exchange/client';
+import { DefaultApi, Configuration } from '@sundaeswap/capacity-exchange-client';
 import type { NetworkConfig } from './networks';
 
 interface NetworkConfigContextValue {

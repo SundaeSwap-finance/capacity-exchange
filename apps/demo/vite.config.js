@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { loadWalletSeed, requireNodeEnv } from '@capacity-exchange/midnight-node';
-import { uint8ArrayToHex } from '@capacity-exchange/midnight-core';
+import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
