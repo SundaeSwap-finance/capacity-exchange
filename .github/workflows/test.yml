@@ -27,3 +27,6 @@ jobs:
           compose-file: ./testnet/standalone.yml
       - name: Run e2e tests
         run: task test:e2e
+      - name: Print server logs
+        if: always()
+        run: cat apps/server/*_server.log
