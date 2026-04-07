@@ -263,6 +263,23 @@
         "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
       },
     },
+    "packages/react-sdk": {
+      "name": "@capacity-exchange/react-sdk",
+      "version": "1.0.0",
+      "dependencies": {
+        "@capacity-exchange/providers": "1.0.0",
+        "@midnight-ntwrk/ledger-v8": "8.0.3",
+        "@midnight-ntwrk/midnight-js-types": "4.0.1",
+      },
+      "devDependencies": {
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+      },
+      "peerDependencies": {
+        "react": "^19",
+        "react-dom": "^19",
+      },
+    },
     "packages/registry": {
       "name": "@capacity-exchange/registry",
       "version": "1.0.0",
@@ -398,6 +415,8 @@
     "@capacity-exchange/midnight-node": ["@capacity-exchange/midnight-node@workspace:packages/midnight-node"],
 
     "@capacity-exchange/providers": ["@capacity-exchange/providers@workspace:packages/providers"],
+
+    "@capacity-exchange/react-sdk": ["@capacity-exchange/react-sdk@workspace:packages/react-sdk"],
 
     "@capacity-exchange/registry": ["@capacity-exchange/registry@workspace:packages/registry"],
 

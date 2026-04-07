@@ -33,13 +33,18 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/client build
 
+  libs:
+    deps: [react-sdk]
+
   providers:
     deps: [midnight-node, client]
     cmds:
       - bun run --filter @capacity-exchange/providers build
 
-  libs:
+  react-sdk:
     deps: [providers]
+    cmds:
+      - bun run --filter @capacity-exchange/react-sdk build
 
   server:
     deps: [providers]
