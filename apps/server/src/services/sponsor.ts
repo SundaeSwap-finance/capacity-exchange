@@ -52,9 +52,7 @@ export class SponsorService {
     this.indexerUrl = indexerUrl;
     this.logger = logger;
 
-    // TODO: enable peer dust fallback in the future.
-    // this.cesWalletProvider = cesWalletProvider;
-    this.cesWalletProvider = null;
+    this.cesWalletProvider = cesWalletProvider;
     if (!cesWalletProvider) {
       this.logger.trace('Peer dust fallback NOT available');
     }
