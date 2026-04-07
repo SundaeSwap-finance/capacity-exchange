@@ -54,7 +54,7 @@ export class SponsorService {
 
     this.cesWalletProvider = cesWalletProvider;
     if (!cesWalletProvider) {
-      this.logger.debug('Peer dust fallback NOT available');
+      this.logger.trace('Peer dust fallback NOT available');
     }
   }
 
