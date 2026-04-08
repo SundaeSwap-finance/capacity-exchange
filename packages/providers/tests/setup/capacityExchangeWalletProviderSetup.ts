@@ -20,7 +20,7 @@ export function createTestContext(): TestContext {
   const mockWalletProvider = createMockWalletProvider();
   return {
     mockWalletProvider,
-    mockBalanceSealedTransaction: vi.fn().mockResolvedValue({} as any),
+    mockBalanceSealedTransaction: vi.fn().mockResolvedValue({ tx: '' } as any),
     promptForCurrency: vi.fn().mockImplementation((exchangePrices: ExchangePrice[]) => {
       const selectedPrice = exchangePrices.find((ep) => ep.price.currency === 'ADA') || exchangePrices[0];
       return Promise.resolve({ status: 'selected', exchangePrice: selectedPrice });

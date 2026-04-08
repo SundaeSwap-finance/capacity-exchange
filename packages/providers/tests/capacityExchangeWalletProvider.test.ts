@@ -70,7 +70,7 @@ describe('capacityExchangeWalletProvider', () => {
 
     await provider.balanceTx(mockTx, new Date(Date.now() + 60000));
 
-    expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired);
-    expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired);
+    expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
+    expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
   });
 });
