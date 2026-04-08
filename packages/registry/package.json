@@ -7,6 +7,9 @@
     "clean": "rm -rf contract/out/",
     "compile": "\"$COMPACTC\" contract/src/registry.compact contract/out",
     "build": "tsc --noEmit",
+    "deploy": "bun src/cli/deploy.ts",
+    "register": "bun src/cli/register-server.ts",
+    "list-servers": "bun src/cli/list-registered-servers.ts",
     "test": "vitest run"
   },
   "exports": {

@@ -2,13 +2,14 @@ import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import type { WitnessContext } from '@midnight-ntwrk/compact-runtime';
 import * as Registry from '../contract/out/contract/index.js';
 import type { Ledger, Witnesses } from '../contract/out/contract/index.js';
-import type { RegistryConstructorArgs } from './types.js';
+import type { SecretKey, RegistryConstructorArgs } from './types.js';
+
 
 export type CircuitPrivateState = {
-  secretKey: Uint8Array;
+  secretKey: SecretKey;
 };
 
-export function createPrivateState(secretKey: Uint8Array): CircuitPrivateState {
+export function createPrivateState(secretKey: SecretKey): CircuitPrivateState {
   if (secretKey.length !== 64) {
     throw new Error(`secretKey must be 64 bytes, got ${secretKey.length}`);
   }

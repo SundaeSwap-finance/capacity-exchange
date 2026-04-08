@@ -24,6 +24,11 @@ export type ContractEntry = {
 
 export type RegistryKey = Uint8Array;
 
+export type SecretKey = Uint8Array;
+
+//
+export type RegistryMapping = Map<string, RegistryEntry>;
+
 export interface RegistryConstructorArgs {
   requiredCollateral: bigint;
   maxValidityInterval: bigint;
