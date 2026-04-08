@@ -10,17 +10,14 @@ import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useCapacityExchangeContext } from '../stores/CapacityExchangeContext/context';
 import { useCallback, useMemo } from 'react';
 
-export type CapacityExchangeConfig = Omit<CapacityExchangeImplConfig, 'promptForCurrency' | 'createOffer'>;
+export type CapacityExchangeConfig = Omit<CapacityExchangeImplConfig, 'promptForCurrency' | 'confirmOffer'>;
 
 export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
-  const { state, dispatch } = useCapacityExchangeContext();
+  const { dispatch } = useCapacityExchangeContext();
 
   const promptForCurrency: PromptForCurrency = useCallback(
     async (prices, dustRequired) => {
-      if (state.status !== 'idle') {
-        return { status: 'cancelled' };
-      }
-      return await new Promise<CurrencySelectionResult>((resolve) => {
+      const result = await new Promise<CurrencySelectionResult>((resolve) => {
         dispatch({
           action: 'prompt-for-currency',
           payload: {
@@ -31,15 +28,16 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
           },
         });
       });
+      if (result.status === 'cancelled') {
+        dispatch({ action: 'finish' });
+      }
+      return result;
     },
-    [state.status, dispatch]
+    [dispatch]
   );
 
   const confirmOffer: ConfirmOffer = useCallback(
     async (offer, dustRequired) => {
-      if (state.status !== 'confirming-offer') {
-        return { status: 'cancelled' };
-      }
       const result = await new Promise<OfferConfirmationResult>((resolve) => {
         dispatch({
           action: 'confirm-offer',
@@ -55,7 +53,7 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
       dispatch({ action: 'finish' });
       return result;
     },
-    [state.status, dispatch]
+    [dispatch]
   );
 
   return useMemo(() => {

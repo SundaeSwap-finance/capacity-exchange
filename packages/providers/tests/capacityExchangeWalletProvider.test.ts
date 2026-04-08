@@ -53,7 +53,7 @@ describe('capacityExchangeWalletProvider', () => {
 
     expect(ctx.promptForCurrency).toHaveBeenCalledTimes(1);
     expect(ctx.confirmOffer).toHaveBeenCalledTimes(1);
-    expect(ctx.mockBalanceSealedTx).toHaveBeenCalledTimes(1);
+    expect(ctx.mockBalanceSealedTransaction).toHaveBeenCalledTimes(1);
   });
 
   it('should preserve original WalletProvider methods', () => {

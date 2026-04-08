@@ -1,14 +1,14 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import type {
-  CoinPublicKey,
-  EncPublicKey,
-  FinalizedTransaction,
+import {
+  type CoinPublicKey,
+  type EncPublicKey,
   SignatureEnabled,
-  Proof,
-  Binding,
+  type Proof,
+  type Binding,
+  Transaction,
 } from '@midnight-ntwrk/ledger-v8';
-import type { BalanceSealedTx } from '@capacity-exchange/providers';
+import type { BalanceSealedTransaction } from '@capacity-exchange/providers';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities, WalletInfoState } from '../wallet/types';
@@ -16,7 +16,6 @@ import {
   connectedApiProvidersAdapter,
   createConnectedAPI,
   type WalletIdentity,
-  hexToBytes,
   uint8ArrayToHex,
 } from '@capacity-exchange/midnight-core';
 import { useNetworkConfig } from '../../config';
@@ -26,7 +25,7 @@ const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 export interface WalletProviders {
   walletProvider: WalletProvider;
   midnightProvider: MidnightProvider;
-  balanceSealedTx: BalanceSealedTx;
+  balanceSealedTransaction: BalanceSealedTransaction;
 }
 
 function buildSeedWalletProviders(
@@ -41,17 +40,26 @@ function buildSeedWalletProviders(
   };
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
 
-  const balanceSealedTx: BalanceSealedTx = async (tx) => {
+  const balanceSealedTransaction: BalanceSealedTransaction = async (txHex) => {
+    const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+      'signature',
+      'proof',
+      'binding',
+      Buffer.from(txHex, 'hex')
+    );
     const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
     const recipe = await walletFacade.balanceFinalizedTransaction(
       tx,
       { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
       { ttl, tokenKindsToBalance: ['shielded'] }
     );
-    return walletFacade.finalizeRecipe(recipe);
+    const balancedTx = await walletFacade.finalizeRecipe(recipe);
+    return {
+      tx: uint8ArrayToHex(balancedTx.serialize()),
+    };
   };
 
-  return { walletProvider, midnightProvider, balanceSealedTx };
+  return { walletProvider, midnightProvider, balanceSealedTransaction };
 }
 
 function buildExtensionWalletProviders(
@@ -61,19 +69,9 @@ function buildExtensionWalletProviders(
   const { connectedAPI } = walletConnection;
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
 
-  const balanceSealedTx: BalanceSealedTx = async (tx) => {
-    const serialized = uint8ArrayToHex(tx.serialize());
-    const result = await connectedAPI.balanceSealedTransaction(serialized);
-    const { Transaction } = await import('@midnight-ntwrk/ledger-v8');
-    return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-      'signature',
-      'proof',
-      'binding',
-      hexToBytes(result.tx)
-    ).bind() as unknown as FinalizedTransaction;
-  };
+  const balanceSealedTransaction = connectedAPI.balanceSealedTransaction.bind(connectedAPI);
 
-  return { walletProvider, midnightProvider, balanceSealedTx };
+  return { walletProvider, midnightProvider, balanceSealedTransaction };
 }
 
 export function useWalletProviders(

@@ -95,7 +95,7 @@ export function buildCesWalletProvider(
   return capacityExchangeWalletProvider({
     coinPublicKey,
     encryptionPublicKey,
-    balanceSealedTx: (tx) => walletService.balanceFinalizedTransaction(tx),
+    balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
     indexerUrl: endpoints.indexerHttpUrl,
     capacityExchangeUrls,
     margin: DEFAULT_MARGIN,

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
+    "prebuild": "bun run --filter '@capacity-exchange/providers' build",
     "build": "tsc"
   },
   "dependencies": {
