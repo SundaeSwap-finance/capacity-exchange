@@ -95,7 +95,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
 export async function processTransactionWithOffer(
   tx: UnboundTransaction,
   offer: Offer,
-  balanceSealedTx: BalanceSealedTransaction
+  balanceSealedTransaction: BalanceSealedTransaction
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToBytes(offer.serializedTx);
@@ -113,7 +113,7 @@ export async function processTransactionWithOffer(
   console.debug('[CESSteps] Transactions merged, calling wallet to balance and seal');
 
   const mergedTxHex = Buffer.from(mergedTx.serialize()).toString('hex');
-  const { tx: result } = await balanceSealedTx(mergedTxHex);
+  const { tx: result } = await balanceSealedTransaction(mergedTxHex);
   console.debug('[CESSteps] Wallet balanced and sealed transaction');
 
   console.debug('[CESSteps] Transaction processing complete');
