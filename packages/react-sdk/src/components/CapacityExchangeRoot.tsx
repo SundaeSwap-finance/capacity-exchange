@@ -4,6 +4,9 @@ import { ConfirmOfferProps, DefaultConfirmOffer } from './ConfirmOffer';
 import { DefaultPromptForCurrency, PromptForCurrencyProps } from './PromptForCurrency';
 import { CapacityExchangeContext } from '../stores/CapacityExchangeContext/context';
 import { capacityExchangeReducer } from '../stores/CapacityExchangeContext/reducer';
+import { injectStyles } from '../styles';
+
+injectStyles();
 
 interface CapacityExchangeRootProps {
   PromptForCurrency?: React.FC<PromptForCurrencyProps>;
@@ -31,7 +34,7 @@ export function CapacityExchangeRoot(props: PropsWithChildren<CapacityExchangeRo
     <CapacityExchangeContext.Provider value={{ state, dispatch }}>
       {props.children}
       {createPortal(
-        <dialog ref={dialogRef}>
+        <dialog ref={dialogRef} data-ce-sdk>
           {state.status === 'prompting-for-currency' && (
             <PromptForCurrency
               prices={state.prices}

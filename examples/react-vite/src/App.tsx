@@ -98,9 +98,11 @@ function MockFlow() {
   }, [providers]);
 
   return (
-    <div>
+    <div className="page">
       <h1>Capacity Exchange Flow</h1>
-      <button onClick={buildAndSubmitTx}>Submit TX</button>
+      <button className="btn" onClick={buildAndSubmitTx}>
+        Submit TX
+      </button>
     </div>
   );
 }
