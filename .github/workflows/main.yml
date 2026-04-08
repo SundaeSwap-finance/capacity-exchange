@@ -44,3 +44,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.PUBLISH_NPM_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.PUBLISH_NPM_TOKEN }}
