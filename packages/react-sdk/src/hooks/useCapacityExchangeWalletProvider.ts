@@ -8,15 +8,17 @@ import {
 } from '@capacity-exchange/providers';
 import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useCapacityExchangeContext } from '../stores/CapacityExchangeContext/context';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 export type CapacityExchangeConfig = Omit<CapacityExchangeImplConfig, 'promptForCurrency' | 'confirmOffer'>;
 
 export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
   const { dispatch } = useCapacityExchangeContext();
+  const requestIdRef = useRef<string | null>(null);
 
   const promptForCurrency: PromptForCurrency = useCallback(
-    async (prices, dustRequired) => {
+    async (prices, dustRequired, requestId) => {
+      requestIdRef.current = requestId;
       const result = await new Promise<CurrencySelectionResult>((resolve) => {
         dispatch({
           action: 'prompt-for-currency',
@@ -30,6 +32,15 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
       });
       if (result.status === 'cancelled') {
         dispatch({ action: 'finish' });
+      } else {
+        dispatch({
+          action: 'wait-for-offer',
+          payload: {
+            price: result.exchangePrice,
+            dustRequired,
+            onCancelled: () => dispatch({ action: 'finish' }),
+          },
+        });
       }
       return result;
     },
@@ -37,7 +48,10 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
   );
 
   const confirmOffer: ConfirmOffer = useCallback(
-    async (offer, dustRequired) => {
+    async (offer, dustRequired, requestId) => {
+      if (requestIdRef.current !== requestId) {
+        return { status: 'cancelled' };
+      }
       const result = await new Promise<OfferConfirmationResult>((resolve) => {
         dispatch({
           action: 'confirm-offer',
@@ -51,6 +65,7 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
         });
       });
       dispatch({ action: 'finish' });
+      requestIdRef.current = null;
       return result;
     },
     [dispatch]

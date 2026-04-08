@@ -164,6 +164,24 @@ const CSS = `
     user-select: all;
   }
 
+  @keyframes ce-sdk-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .ce-sdk-spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--ce-sdk-border, #DEDEE0);
+    border-top-color: var(--ce-sdk-accent, #4092E5);
+    border-radius: 50%;
+    animation: ce-sdk-spin 0.7s linear infinite;
+    align-self: center;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .ce-sdk-spinner { border-color: var(--ce-sdk-border, #3B3D49); border-top-color: var(--ce-sdk-accent, #3A85D0); }
+  }
+
   .ce-sdk-actions {
     display: flex;
     gap: 8px;

@@ -11,6 +11,14 @@ export type CapacityExchangeAction =
       };
     }
   | {
+      action: 'wait-for-offer';
+      payload: {
+        price: ExchangePrice;
+        dustRequired: bigint;
+        onCancelled: () => void;
+      };
+    }
+  | {
       action: 'confirm-offer';
       payload: {
         offer: Offer;

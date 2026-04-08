@@ -25,9 +25,17 @@ export type CurrencySelectionResult = { status: 'selected'; exchangePrice: Excha
 
 export type OfferConfirmationResult = { status: 'confirmed' } | { status: 'back' } | { status: 'cancelled' };
 
-export type PromptForCurrency = (prices: ExchangePrice[], dustRequired: bigint) => Promise<CurrencySelectionResult>;
+export type PromptForCurrency = (
+  prices: ExchangePrice[],
+  dustRequired: bigint,
+  requestId: string,
+) => Promise<CurrencySelectionResult>;
 
-export type ConfirmOffer = (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
+export type ConfirmOffer = (
+  offer: Offer,
+  dustRequired: bigint,
+  requestId: string,
+) => Promise<OfferConfirmationResult>;
 
 export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
 

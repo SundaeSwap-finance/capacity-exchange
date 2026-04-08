@@ -10,6 +10,12 @@ export type FundingStatus =
       onCancelled: () => void;
     }
   | {
+      status: 'waiting-for-offer';
+      price: ExchangePrice;
+      dustRequired: bigint;
+      onCancelled: () => void;
+    }
+  | {
       status: 'confirming-offer';
       offer: Offer;
       dustRequired: bigint;

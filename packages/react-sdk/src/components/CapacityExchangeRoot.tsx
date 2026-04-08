@@ -5,16 +5,22 @@ import { DefaultPromptForCurrency, PromptForCurrencyProps } from './PromptForCur
 import { CapacityExchangeContext } from '../stores/CapacityExchangeContext/context';
 import { capacityExchangeReducer } from '../stores/CapacityExchangeContext/reducer';
 import { injectStyles } from '../styles';
+import { WaitForOfferProps, DefaultWaitForOffer } from './WaitForOffer';
 
 injectStyles();
 
 interface CapacityExchangeRootProps {
   PromptForCurrency?: React.FC<PromptForCurrencyProps>;
+  WaitForOffer?: React.FC<WaitForOfferProps>;
   ConfirmOffer?: React.FC<ConfirmOfferProps>;
 }
 
 export function CapacityExchangeRoot(props: PropsWithChildren<CapacityExchangeRootProps>) {
-  const { PromptForCurrency = DefaultPromptForCurrency, ConfirmOffer = DefaultConfirmOffer } = props;
+  const {
+    PromptForCurrency = DefaultPromptForCurrency,
+    WaitForOffer = DefaultWaitForOffer,
+    ConfirmOffer = DefaultConfirmOffer,
+  } = props;
   const [state, dispatch] = useReducer(capacityExchangeReducer, { status: 'idle' });
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -42,6 +48,9 @@ export function CapacityExchangeRoot(props: PropsWithChildren<CapacityExchangeRo
               onSelected={state.onSelected}
               onCancelled={state.onCancelled}
             />
+          )}
+          {state.status === 'waiting-for-offer' && (
+            <WaitForOffer price={state.price} dustRequired={state.dustRequired} onCancelled={state.onCancelled} />
           )}
           {state.status === 'confirming-offer' && (
             <ConfirmOffer

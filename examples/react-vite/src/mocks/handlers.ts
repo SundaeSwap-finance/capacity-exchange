@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { MOCK_PRICE_1, MOCK_PRICE_2 } from './constants';
 
 export const handlers = [
@@ -31,6 +31,9 @@ export const handlers = [
     } else {
       return HttpResponse.json({ message: 'invalid currency' }, { status: 400 });
     }
+
+    await delay(9_000);
+
     return HttpResponse.json(
       {
         offerId: 'mock-offer-id',

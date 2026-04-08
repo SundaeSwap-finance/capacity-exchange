@@ -7,10 +7,11 @@ import { CapacityExchangeUserCancelledError, CapacityExchangeOfferExpiredError }
 async function selectCurrency(
   prices: ExchangePrice[],
   specksRequired: bigint,
+  requestId: string,
   promptForCurrency: PromptForCurrency
 ): Promise<ExchangePrice> {
   console.debug('[CapacityExchange] Prompting user for currency selection');
-  const result = await promptForCurrency(prices, specksRequired);
+  const result = await promptForCurrency(prices, specksRequired, requestId);
 
   if (result.status === 'cancelled') {
     throw new CapacityExchangeUserCancelledError();
@@ -23,10 +24,11 @@ async function selectCurrency(
 async function confirmOfferWithUser(
   offer: Offer,
   specksRequired: bigint,
+  requestId: string,
   confirmOffer: ConfirmOffer
 ): Promise<'confirmed' | 'back'> {
   console.debug('[CapacityExchange] Prompting user to confirm offer');
-  const result = await confirmOffer(offer, specksRequired);
+  const result = await confirmOffer(offer, specksRequired, requestId);
 
   if (result.status === 'cancelled') {
     throw new CapacityExchangeUserCancelledError();
@@ -74,9 +76,10 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
       const { prices, specksRequired } = await fetchCesPrices(tx, indexerUrl, capacityExchangeUrls, margin);
 
       while (true) {
-        const exchangePrice = await selectCurrency(prices, specksRequired, promptForCurrency);
+        const requestId = crypto.randomUUID();
+        const exchangePrice = await selectCurrency(prices, specksRequired, requestId, promptForCurrency);
         const offer = await requestCesOffer(exchangePrice);
-        const result = await confirmOfferWithUser(offer, specksRequired, confirmOffer);
+        const result = await confirmOfferWithUser(offer, specksRequired, requestId, confirmOffer);
 
         if (result === 'confirmed') {
           return processTransactionWithOffer(tx, offer, balanceSealedTransaction);
