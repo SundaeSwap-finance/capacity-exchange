@@ -34,10 +34,13 @@ jobs:
 
       - run: bun run --filter '@sundaeswap/capacity-exchange-*' --if-present test
 
+      - name: Configure npm authentication
+        run: npm config set //registry.npmjs.org/:_authToken ${{ secrets.PUBLISH_NPM_TOKEN }}
+
       - name: Create Release PR or Publish
         uses: changesets/action@v1
         with:
           publish: bun run publish:ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_TOKEN: ${{ secrets.PUBLISH_NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.PUBLISH_NPM_TOKEN }}
