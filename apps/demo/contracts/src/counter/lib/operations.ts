@@ -4,7 +4,7 @@ import {
   submitCallTxDirect,
   deployContractWithDryRun,
 } from '@capacity-exchange/midnight-node';
-import { toTxResult, type TxResult } from '@capacity-exchange/midnight-core';
+import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
 

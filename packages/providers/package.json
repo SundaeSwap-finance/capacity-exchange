@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/providers",
+  "name": "@sundaeswap/capacity-exchange-providers",
   "version": "1.0.0",
   "description": "Capacity Exchange providers for midnight transactions",
   "type": "module",
@@ -8,16 +8,23 @@
   "exports": {
     ".": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "rm -rf dist",
-    "prebuild": "bun run --filter '@capacity-exchange/client' build && bun run --filter '@capacity-exchange/midnight-core' build",
+    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-client' build && bun run --filter '@sundaeswap/capacity-exchange-core' build",
     "build": "tsc && tsc --noEmit -p tests/tsconfig.json",
     "build:watch": "tsc --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
-    "@capacity-exchange/client": "1.0.0",
-    "@capacity-exchange/midnight-core": "1.0.0",
+    "@sundaeswap/capacity-exchange-client": "1.0.0",
+    "@sundaeswap/capacity-exchange-core": "1.0.0",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
     "@midnight-ntwrk/wallet-sdk-facade": "3.0.0"
   },

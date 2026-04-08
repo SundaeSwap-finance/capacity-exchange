@@ -1,4 +1,4 @@
-import { DefaultApi, Configuration } from '@capacity-exchange/client';
+import { DefaultApi, Configuration } from '@sundaeswap/capacity-exchange-client';
 import { vi } from 'vitest';
 
 export function createMockCapacityExchangeAPI() {

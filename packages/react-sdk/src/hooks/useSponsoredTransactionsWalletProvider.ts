@@ -1,4 +1,4 @@
-import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/providers';
+import { sponsoredTransactionsWalletProvider } from '@sundaeswap/capacity-exchange-providers';
 import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useMemo } from 'react';
 

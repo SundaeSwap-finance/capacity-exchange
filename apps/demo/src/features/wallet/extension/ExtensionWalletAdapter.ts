@@ -1,5 +1,5 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import { encodeShieldedAddress } from '@capacity-exchange/midnight-core';
+import { encodeShieldedAddress } from '@sundaeswap/capacity-exchange-core';
 import type { WalletCapabilities, BalanceUpdate, BalanceData } from '../types';
 
 const DEFAULT_POLL_INTERVAL = 5000;

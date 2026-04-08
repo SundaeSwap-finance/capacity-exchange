@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
-import { type TxResult } from '@capacity-exchange/midnight-core';
+import { type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { deploy, increment, query, DeployOutput, QueryOutput } from '../lib/operations.js';
 
 interface E2EOutput {

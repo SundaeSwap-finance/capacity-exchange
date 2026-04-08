@@ -24,7 +24,7 @@ import { runCli, withAppContext, buildProviders } from '@capacity-exchange/midni
 import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledCounterContract, CounterContract } from '../../lib/contract.js';
 import { createLogger } from '@capacity-exchange/midnight-node';
-import { DefaultApi, type ApiSponsorPost200Response, Configuration } from '@capacity-exchange/client';
+import { DefaultApi, type ApiSponsorPost200Response, Configuration } from '@sundaeswap/capacity-exchange-client';
 
 const logger = createLogger(import.meta);
 

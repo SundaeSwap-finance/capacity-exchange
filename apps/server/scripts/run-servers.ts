@@ -26,7 +26,7 @@ import { existsSync, readFileSync, copyFileSync, mkdtempSync, rmSync, openSync }
 import { tmpdir } from 'os';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { createWalletFromMnemonic } from '@capacity-exchange/midnight-core';
+import { createWalletFromMnemonic } from '@sundaeswap/capacity-exchange-core';
 import { FileStateStore, createLogger } from '@capacity-exchange/midnight-node';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

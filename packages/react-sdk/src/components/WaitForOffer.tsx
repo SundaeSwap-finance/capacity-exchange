@@ -1,4 +1,4 @@
-import { ExchangePrice } from '@capacity-exchange/providers';
+import { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
 
 export interface WaitForOfferProps {
   price: ExchangePrice;

@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/react-sdk",
+  "name": "@sundaeswap/capacity-exchange-react-sdk",
   "version": "1.0.0",
   "description": "React SDK to quickly integrate the capacity exchange into your app",
   "type": "module",
@@ -10,13 +10,13 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "prebuild": "bun run --filter '@capacity-exchange/providers' build",
+    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-providers' build",
     "build": "tsc"
   },
   "dependencies": {
-    "@capacity-exchange/providers": "1.0.0",
     "@midnight-ntwrk/ledger-v8": "8.0.3",
-    "@midnight-ntwrk/midnight-js-types": "4.0.1"
+    "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@sundaeswap/capacity-exchange-providers": "1.0.0"
   },
   "devDependencies": {
     "@types/react": "^19",

@@ -1,4 +1,4 @@
-import { ExchangePrice, Offer } from '@capacity-exchange/providers';
+import { ExchangePrice, Offer } from '@sundaeswap/capacity-exchange-providers';
 
 export type FundingStatus =
   | { status: 'idle' }

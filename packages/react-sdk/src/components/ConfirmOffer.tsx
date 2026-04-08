@@ -1,4 +1,4 @@
-import { Offer } from '@capacity-exchange/providers';
+import { Offer } from '@sundaeswap/capacity-exchange-providers';
 
 export interface ConfirmOfferProps {
   offer: Offer;

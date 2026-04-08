@@ -1,4 +1,4 @@
-import { Configuration, DefaultApi, ResponseError } from '@capacity-exchange/client';
+import { Configuration, DefaultApi, ResponseError } from '@sundaeswap/capacity-exchange-client';
 import { CapacityExchangeServerError } from './errors';
 
 export interface CesApi {

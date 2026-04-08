@@ -19,7 +19,7 @@ import {
   uint8ArrayToHex,
   WalletConnection,
   type WalletStateStore,
-} from '@capacity-exchange/midnight-core';
+} from '@sundaeswap/capacity-exchange-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 

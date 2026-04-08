@@ -1,8 +1,8 @@
 import * as Rx from 'rxjs';
 import { type WalletFacade, type FacadeState, type TokenTransfer } from '@midnight-ntwrk/wallet-sdk-facade';
 import { MidnightBech32m, type UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
-import type { WalletKeys } from '@capacity-exchange/midnight-core';
-import { sendUnshieldedTokens, waitForState } from '@capacity-exchange/midnight-core';
+import type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
+import { sendUnshieldedTokens, waitForState } from '@sundaeswap/capacity-exchange-core';
 import { createLogger } from './createLogger.js';
 import { deregisterAllFromDust, registerEachForDust } from './dust-registration.js';
 

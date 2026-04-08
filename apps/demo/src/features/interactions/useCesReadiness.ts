@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useCesClient } from '../../config';
-import { checkCesHealth } from '@capacity-exchange/providers';
+import { checkCesHealth } from '@sundaeswap/capacity-exchange-providers';
 
 export type CesReadiness =
   | { status: 'loading' }
