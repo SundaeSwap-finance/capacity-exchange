@@ -1,5 +1,5 @@
 import { use, useCallback, useMemo } from 'react';
-import { CapacityExchangeRoot, useCapacityExchangeWalletProvider } from '@capacity-exchange/react-sdk';
+import { CapacityExchangeRoot, useCapacityExchangeWalletProvider, useSponsoredTransactionsWalletProvider } from '@capacity-exchange/react-sdk';
 import { CostModel, FinalizedTransaction, Transaction, UnprovenTransaction } from '@midnight-ntwrk/ledger-v8';
 import { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
@@ -91,8 +91,23 @@ function MockFlow() {
     const unprovenTx = Transaction.fromParts('preview');
     const provenTx = await providers.proofProvider.proveTx(unprovenTx);
 
-    // This is where the capacity exchange does its thing
+    // This is where the capacity exchange does its thing.
     const balancedTx = await providers.walletProvider.balanceTx(provenTx);
+
+    await providers.midnightProvider.submitTx(balancedTx);
+  }, [providers]);
+
+  const sponsoredWalletProvider = useSponsoredTransactionsWalletProvider({
+    walletProvider: providers.walletProvider,
+    capacityExchangeUrl: 'http://localhost:3000',
+  });
+
+  const buildAndSubmitSponsoredTx = useCallback(async () => {
+    const unprovenTx = Transaction.fromParts('preview');
+    const provenTx = await providers.proofProvider.proveTx(unprovenTx);
+
+    // The capacity exchange will balance this transaction for free.
+    const balancedTx = await sponsoredWalletProvider.balanceTx(provenTx);
 
     await providers.midnightProvider.submitTx(balancedTx);
   }, [providers]);
@@ -102,6 +117,9 @@ function MockFlow() {
       <h1>Capacity Exchange Flow</h1>
       <button className="btn" onClick={buildAndSubmitTx}>
         Submit TX
+      </button>
+      <button className="btn" onClick={buildAndSubmitSponsoredTx}>
+        Submit Sponsored TX
       </button>
     </div>
   );

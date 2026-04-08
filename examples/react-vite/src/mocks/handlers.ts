@@ -21,7 +21,7 @@ export const handlers = [
   }),
 
   http.post('http://localhost:3000/api/offers', async (args) => {
-    const body = (await args.request.json()) as any;
+    const body = await args.request.json() as any;
     const offerCurrency = body.offerCurrency;
     let offerAmount: string;
     if (offerCurrency === MOCK_PRICE_1.currency) {
@@ -45,5 +45,12 @@ export const handlers = [
       },
       { status: 201 }
     );
+  }),
+
+  http.post('http://localhost:3000/api/sponsor', async () => {
+    await delay(5_000);
+    return HttpResponse.json({
+      tx: '6d69646e696768743a7472616e73616374696f6e5b76395d287369676e61747572655b76315d2c70726f6f662c706564657273656e2d7363686e6f72725b76315d293a080004000800002c001c707265766965770100',
+    });
   }),
 ];
