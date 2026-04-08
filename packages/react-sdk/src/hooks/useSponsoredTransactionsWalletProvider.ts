@@ -1,10 +1,10 @@
-import { sponsoredTransactionsWalletProvider } from "@capacity-exchange/providers";
-import { WalletProvider } from "@midnight-ntwrk/midnight-js-types";
-import { useMemo } from "react";
+import { sponsoredTransactionsWalletProvider } from '@capacity-exchange/providers';
+import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import { useMemo } from 'react';
 
 export interface SponsoredTransactionConfig {
-  walletProvider: WalletProvider,
-  capacityExchangeUrl: string,
+  walletProvider: WalletProvider;
+  capacityExchangeUrl: string;
 }
 
 export function useSponsoredTransactionsWalletProvider(config: SponsoredTransactionConfig): WalletProvider {

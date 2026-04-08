@@ -15,7 +15,9 @@ export function DefaultWaitForOffer({ price, onCancelled }: WaitForOfferProps) {
         <span className="ce-sdk-detail-label">Amount</span>
         <span className="ce-sdk-detail-value">{price.price.amount.toString()}</span>
         <span className="ce-sdk-detail-label">Currency</span>
-        <span className="ce-sdk-detail-value ce-sdk-hex" title={price.price.currency}>{price.price.currency}</span>
+        <span className="ce-sdk-detail-value ce-sdk-hex" title={price.price.currency}>
+          {price.price.currency}
+        </span>
       </div>
       <div className="ce-sdk-spinner" role="status" aria-label="Loading" />
       <p className="ce-sdk-hint">The server is funding your transaction. This will take a few seconds...</p>

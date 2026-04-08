@@ -21,7 +21,7 @@ export const handlers = [
   }),
 
   http.post('http://localhost:3000/api/offers', async (args) => {
-    const body = await args.request.json() as any;
+    const body = (await args.request.json()) as any;
     const offerCurrency = body.offerCurrency;
     let offerAmount: string;
     if (offerCurrency === MOCK_PRICE_1.currency) {

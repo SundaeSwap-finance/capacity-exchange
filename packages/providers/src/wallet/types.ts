@@ -28,14 +28,10 @@ export type OfferConfirmationResult = { status: 'confirmed' } | { status: 'back'
 export type PromptForCurrency = (
   prices: ExchangePrice[],
   dustRequired: bigint,
-  requestId: string,
+  requestId: string
 ) => Promise<CurrencySelectionResult>;
 
-export type ConfirmOffer = (
-  offer: Offer,
-  dustRequired: bigint,
-  requestId: string,
-) => Promise<OfferConfirmationResult>;
+export type ConfirmOffer = (offer: Offer, dustRequired: bigint, requestId: string) => Promise<OfferConfirmationResult>;
 
 export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
 
