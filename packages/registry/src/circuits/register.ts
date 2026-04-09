@@ -1,55 +1,64 @@
-import * as crypto from 'crypto';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 import { AppContext, buildProviders, createLogger } from "@capacity-exchange/midnight-node";
-import { toTxResult } from '@capacity-exchange/midnight-core';
+import { buildMidnightProviders, DustWalletProvider, toTxResult } from '@capacity-exchange/midnight-core';
 import { entryToContract, RegistryEntry, SecretKey } from "../types";
-import { CompiledRegistryContract, createPrivateState, RegistryContract } from "../contract";
+import { CompiledRegistryContract, createPrivateState, Registry, RegistryContract } from "../contract";
 
-import { SucceedEntirely, type MidnightProviders } from "@midnight-ntwrk/midnight-js-types";
-import { createUnprovenCallTx, submitTx } from "@midnight-ntwrk/midnight-js-contracts";
+import { FinalizedTxData, SucceedEntirely, type MidnightProviders } from "@midnight-ntwrk/midnight-js-types";
+import { createUnprovenCallTx, submitCallTx } from "@midnight-ntwrk/midnight-js-contracts";
+import { Intent, Transaction } from "@midnight-ntwrk/ledger-v8";
 
 const logger = createLogger(import.meta);
 
 const circuitId = 'registerServer';
+const TTL_MS = 5 * 60 * 1000;
 
 export interface RegisterParams {
     contractAddress: string;
+    privateStateId: string;
     secretKey: SecretKey;
     entry: RegistryEntry;
 }
 
 interface SubmitRegisterTxParams {
+    ctx: AppContext;
     providers: MidnightProviders<'registerServer'>;
     contractAddress: string;
+    privateStateId: string;
     entry: RegistryEntry;
 }
 
-export async function register(ctx: AppContext, params:RegisterParams) {
-    const { contractAddress, secretKey, entry } = params;
-    
-    logger.info(`Registering ${params.entry.ip}:${entry.port} to registry ${contractAddress}...`);
+export async function register(ctx: AppContext, secretKey: SecretKey, params: RegisterParams) {
+    const { contractAddress, privateStateId, entry } = params;
 
-    const providers = buildProviders<RegistryContract>(ctx, '../../contract/out');
+    logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
+
+    const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
+    logger.info(`Building providers with contract output directory: ${contractOutDir}`);
+
+    const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
+
     providers.privateStateProvider.setContractAddress(contractAddress);
 
-    const result = await submitRegisterTx({ 
-        providers: providers as MidnightProviders<`registerServer`>, 
-        contractAddress, 
-        entry 
+    // Restore the private state so the `secretKey` witness is available during circuit execution
+    await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
+
+    
+    const result = await submitRegisterTx({
+        ctx,
+        providers: providers as MidnightProviders<`registerServer`>,
+        contractAddress,
+        privateStateId,
+        entry,
     });
 
-    if (result.status === SucceedEntirely) {
-        logger.info(`Successfully registered ${params.entry.ip}:${entry.port} to registry ${contractAddress}`);
-    } else {
-        logger.error(`Failed to register ${params.entry.ip}:${entry.port} to registry ${contractAddress} with status: ${result.status}`);
-    }
-
-    return toTxResult(contractAddress, result);
+    return toTxResult(contractAddress,result);
 }
 
-
 async function submitRegisterTx(params: SubmitRegisterTxParams) {
-    const { providers, contractAddress, entry } = params;
+    const { ctx, providers, contractAddress, privateStateId, entry } = params;
 
     providers.privateStateProvider.setContractAddress(contractAddress);
 
@@ -57,19 +66,53 @@ async function submitRegisterTx(params: SubmitRegisterTxParams) {
         contractAddress,
         compiledContract: CompiledRegistryContract,
         circuitId,
-        privateStateId: crypto.randomBytes(32).toString('hex'),
+        privateStateId,
         args: [entryToContract(entry)],
     });
 
-    const result = await submitTx(providers, {
-        unprovenTx: callTxData.private.unprovenTx,
-        circuitId
-    });
+   
+    logger.info('Proving transaction (this may take several minutes)...');
+    const provenTx = await providers.proofProvider.proveTx(callTxData.private.unprovenTx);
 
+    const { walletFacade, keys } = ctx.walletContext;
+    logger.info('Balancing transaction...');
 
-    if (result.status !== SucceedEntirely) {
-        throw new Error(`RegisterServer transaction failed with status: ${result.status}`);
+    const ttl = new Date((new Date()).getTime() + 5 * 1000 * 60);
+    const recipe = await walletFacade.balanceUnboundTransaction(
+        provenTx,
+        { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
+        { ttl }
+    );
+
+    logger.info('Signing unshielded offer...');
+    const signedRecipe = await walletFacade.signRecipe(recipe, (payload: Uint8Array) =>
+        keys.unshieldedKeystore.signData(payload)
+    );
+
+    logger.info('Finalizing transaction...');
+    const finalizedTx = await walletFacade.finalizeRecipe(signedRecipe);
+
+    logger.info('Submitting transaction...');
+    const txId = await ctx.midnightProvider.submitTx(finalizedTx);
+    logger.info(`Transaction submitted: ${txId}`);
+
+    logger.info('Waiting for confirmation...');
+    const txData = await providers.publicDataProvider.watchForTxData(txId);
+
+    if (txData.status !== SucceedEntirely) {
+        throw new Error(`RegisterServer transaction failed with status: ${txData.status}`);
     }
 
-  return result;
+    return txData;
+}
+
+
+
+function getWalletProvider(ctx: AppContext) {
+
+    const { walletFacade, keys } = ctx.walletContext;
+
+    const walletProvider = new DustWalletProvider(walletFacade, keys.shieldedSecretKeys, keys.dustSecretKey);
+
+    return walletProvider;
 }

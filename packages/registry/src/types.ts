@@ -1,5 +1,5 @@
 import type { Ledger } from '../contract/out/contract/index.js';
-
+import * as crypto from 'crypto';
 export type IPv4 = { kind: 'ipv4'; address: string };
 export type IPv6 = { kind: 'ipv6'; address: string };
 export type IpAddress = IPv4 | IPv6;
@@ -26,12 +26,15 @@ export type RegistryKey = Uint8Array;
 
 export type SecretKey = Uint8Array;
 
-//
 export type RegistryMapping = Map<string, RegistryEntry>;
 
 export interface RegistryConstructorArgs {
   requiredCollateral: bigint;
   maxValidityInterval: bigint;
+}
+
+export function generateRandomSecretKey(): SecretKey {
+  return crypto.randomBytes(64);
 }
 
 export function ipToContract(ip: IpAddress): ContractIpAddress {
