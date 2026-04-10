@@ -9,7 +9,7 @@ import { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { MidnightProviders, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
+import { MidnightProviders, UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useMockWallet } from './mocks/wallet';
 
 async function getWalletDetails(wallet: ConnectedAPI, zkConfigProvider: ZKConfigProvider<string>) {
@@ -35,13 +35,20 @@ function useProviders<PCK extends string>(
   // Instead, it will reach out to a capacity-exchange server,
   // to request dust from a Liquidity Provider.
   const walletProvider = useCapacityExchangeWalletProvider({
+    // Pass the networkId you're building TXs for. You can find this in wallet config.
     networkId: configuration.networkId,
+    // Pass the coinPublicKey and encryptionPublicKey for the user's wallet.
+    // These are necessary for the user to receive shielded tokens.
     coinPublicKey: addresses.shieldedCoinPublicKey,
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
+    // balanceSealedTransaction is necessary for the user to spend shielded or unshielded tokens.
     balanceSealedTransaction: wallet.balanceSealedTransaction,
+    // indexerUrl also available from your wallet's configuration.
     indexerUrl: configuration.indexerUri,
   });
 
+  // The rest of this is standard boilerplate to construct the remaining Midnight providers.
+  // Your dApp is probably already doing most of this.
   return useMemo(() => {
     const accountId = addresses.shieldedCoinPublicKey;
     const storagePassword = `${Buffer.from(accountId, 'hex').toString('base64')}`;
@@ -79,6 +86,12 @@ function useProviders<PCK extends string>(
   }, [wallet, zkConfigProvider, walletProvider]);
 }
 
+async function buildTx(providers: MidnightProviders): Promise<UnboundTransaction> {
+  // Building an empty transaction. Your dApp will probably be more interesting!
+  const unprovenTx = Transaction.fromParts('preview');
+  return providers.proofProvider.proveTx(unprovenTx);
+}
+
 function MockFlow() {
   // To build the capacity exchange wallet provider, you need the user's wallet.
   // They don't need DUST, but may need to send or receive shielded or unshielded tokens.
@@ -90,28 +103,28 @@ function MockFlow() {
 
   // Here's how to use them to submit a transaction manually!
   const buildAndSubmitTx = useCallback(async () => {
-    // Building an empty transaction. Your dApp will probably be more interesting!
-    const unprovenTx = Transaction.fromParts('preview');
-    const provenTx = await providers.proofProvider.proveTx(unprovenTx);
+    const tx = await buildTx(providers);
 
     // This is where the capacity exchange does its thing.
-    const balancedTx = await providers.walletProvider.balanceTx(provenTx);
+    const balancedTx = await providers.walletProvider.balanceTx(tx);
 
     await providers.midnightProvider.submitTx(balancedTx);
   }, [providers]);
 
   const sponsoredWalletProvider = useSponsoredTransactionsWalletProvider({
+    // Pass the coinPublicKey and encryptionPublicKey for the user's wallet.
+    // These are necessary for the user to receive shielded tokens.
     coinPublicKey: providers.walletProvider.getCoinPublicKey(),
     encryptionPublicKey: providers.walletProvider.getEncryptionPublicKey(),
+    // Pass the URL for the sponsoring capacity exchange.
     capacityExchangeUrl: 'http://localhost:3000',
   });
 
   const buildAndSubmitSponsoredTx = useCallback(async () => {
-    const unprovenTx = Transaction.fromParts('preview');
-    const provenTx = await providers.proofProvider.proveTx(unprovenTx);
+    const tx = await buildTx(providers);
 
     // The capacity exchange will balance this transaction for free.
-    const balancedTx = await sponsoredWalletProvider.balanceTx(provenTx);
+    const balancedTx = await sponsoredWalletProvider.balanceTx(tx);
 
     await providers.midnightProvider.submitTx(balancedTx);
   }, [providers]);

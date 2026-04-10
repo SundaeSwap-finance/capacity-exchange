@@ -34,6 +34,7 @@ function useWalletProvider(wallet: ConnectedAPI) {
   ]), [wallet]);
   const [addresses, configuration] = use(walletDetailsPromise);
   return useCapacityExchangeWalletProvider({
+    networkId: configuration.networkId,
     coinPublicKey: addresses.shieldedCoinPublicKey,
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
     balanceSealedTransaction: wallet.balanceSealedTransaction,

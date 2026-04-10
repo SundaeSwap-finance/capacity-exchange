@@ -52,6 +52,7 @@ async function getWalletProvider(wallet: ConnectedAPI) {
     wallet.getConfiguration(),
   ]);
   return capacityExchangeWalletProvider({
+    networkId: configuration.networkId,
     coinPublicKey: addresses.shieldedCoinPublicKey,
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
