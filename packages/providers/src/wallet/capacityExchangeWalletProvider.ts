@@ -61,7 +61,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     balanceSealedTransaction,
     capacityExchangeUrls,
     indexerUrl,
-    margin,
+    margin = 3,
     promptForCurrency,
     confirmOffer,
   } = config;

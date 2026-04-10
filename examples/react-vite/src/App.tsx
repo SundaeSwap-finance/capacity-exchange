@@ -40,7 +40,6 @@ function useProviders<PCK extends string>(
     balanceSealedTransaction: wallet.balanceSealedTransaction,
     indexerUrl: configuration.indexerUri,
     capacityExchangeUrls: ['http://localhost:3000'],
-    margin: 3,
   });
 
   return useMemo(() => {

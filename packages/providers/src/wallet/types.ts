@@ -41,7 +41,7 @@ export interface CapacityExchangeConfig {
   balanceSealedTransaction: BalanceSealedTransaction;
   indexerUrl: string;
   capacityExchangeUrls: string[];
-  margin: number;
+  margin?: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
 }
