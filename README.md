@@ -4,8 +4,6 @@ Client and server packages for the Capacity Exchange Service on the Midnight net
 
 **For dApp developers**: See [packages/react-sdk/](packages/react-sdk/) or [packages/providers/](packages/providers/) to learn how to integrate this into your dApp.
 
-**For liquidity providers**: See [apps/server/](apps/server/) to learn how to run your own Capacity Exchange server.
-
 ## Local Dev Prerequisites
 
 - [bun](https://bun.sh) (>= 1.1.0)
