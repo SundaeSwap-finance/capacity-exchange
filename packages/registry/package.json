@@ -10,6 +10,8 @@
     "generate-secret": "bun src/cli/generate-secretKey.ts",
     "deploy": "bun src/cli/deploy.ts",
     "register": "bun src/cli/register.ts",
+    "deregister": "bun src/cli/deregister.ts",
+    "refresh-validity": "bun src/cli/refreshValidity.ts",
     "list-servers": "bun src/cli/list-registered-servers.ts",
     "test": "vitest run"
   },
@@ -28,6 +30,7 @@
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
     "@midnight-ntwrk/ledger-v8": "8.0.3",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
     "@midnight-ntwrk/onchain-runtime-v3": "3.0.0"
   },
   "devDependencies": {

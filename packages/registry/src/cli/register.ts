@@ -1,6 +1,7 @@
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import { program } from "commander";
-import type { RegistryEntry } from '../types.js';
+import { timestampToDate, type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { TxResult } from '@capacity-exchange/midnight-core';
@@ -11,18 +12,18 @@ function main(): Promise<TxResult> {
      .name('register')
      .description('Registers a server to the registry contract')
      .argument('<contractAddress>', 'address of the registry contract')
-     .argument('<secretKeyFile>', 'secret key file')
+     .argument('<registryKeyFile>', 'registry secret key file')
      .argument('<entryDetailsFile>', 'path to a JSON file with the registry entry details')
+     .option('--private-state-id <id>', 'private state ID (defaults to a random value)')
      .parse();
 
     const networkId = requireNetworkId();
 
-    const [contractAddress, secretKeyFile, entryDetailsFile] = program.args;
+    const [contractAddress, registryKeyFile, entryDetailsFile] = program.args;
+    const opts = program.opts<{ privateStateId?: string }>();
+    const privateStateId = opts.privateStateId ?? crypto.randomBytes(32).toString('hex');
 
-    const privateKeys = JSON.parse(fs.readFileSync('.registry-private-keys.json', 'utf-8'));
-    const privateStateId: string = privateKeys.privateStateId;
-
-    const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(secretKeyFile, 'utf-8').trim(), 'hex'));
+    const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(registryKeyFile, 'utf-8').trim(), 'hex'));
 
     const raw = JSON.parse(fs.readFileSync(entryDetailsFile, 'utf-8'));
 
@@ -32,16 +33,14 @@ function main(): Promise<TxResult> {
         ? { kind: 'ipv6', address: ipStr }
         : { kind: 'ipv4', address: ipStr },
       port: raw.port,
-      validTo: new Date(raw.validTo * 1000),
+      validTo: timestampToDate(raw.validTo),
     };
 
     return withAppContext(networkId, (ctx) => register(ctx, secretKey, {
         contractAddress,
         privateStateId,
-        secretKey,
-        entry
+        entry,
     }));
-
 }
 
 runCli(main);

@@ -37,6 +37,16 @@ export function generateRandomSecretKey(): SecretKey {
   return crypto.randomBytes(64);
 }
 
+export function timestampToDate(dateInString:string) {
+    const validToSecs = Number(dateInString);
+
+    if (!Number.isInteger(validToSecs) || validToSecs <= 0) {
+        throw new Error(`Invalid validTo value: "${dateInString}". Expected a Unix timestamp in seconds.`);
+    }
+
+    return new Date(validToSecs * 1000);
+}
+
 export function ipToContract(ip: IpAddress): ContractIpAddress {
   if (ip.kind === 'ipv4') {
     const parts = ip.address.split('.');
