@@ -1,4 +1,5 @@
 import { Offer } from '@sundaeswap/capacity-exchange-providers';
+import { formatDust } from './utils';
 
 export interface ConfirmOfferProps {
   offer: Offer;
@@ -19,8 +20,8 @@ export function DefaultConfirmOffer({ offer, dustRequired, onConfirmed, onBack, 
         </span>
         <span className="ce-sdk-detail-label">Amount</span>
         <span className="ce-sdk-detail-value">{offer.offerAmount.toString()}</span>
-        <span className="ce-sdk-detail-label">Dust required</span>
-        <span className="ce-sdk-detail-value">{dustRequired.toString()}</span>
+        <span className="ce-sdk-detail-label">DUST required</span>
+        <span className="ce-sdk-detail-value">{formatDust(dustRequired)}</span>
       </div>
       <div className="ce-sdk-actions">
         <button className="ce-sdk-btn ce-sdk-btn-ghost" onClick={onCancelled}>
