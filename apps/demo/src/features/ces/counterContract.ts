@@ -82,11 +82,12 @@ export async function findAndIncrementCounter(
   config: NetworkConfig
 ) {
   const cesWalletProvider = capacityExchangeWalletProvider({
+    networkId: config.networkId,
     coinPublicKey: walletProvider.getCoinPublicKey(),
     encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
     balanceSealedTransaction,
     indexerUrl: config.indexerUrl,
-    capacityExchangeUrls: [config.capacityExchangeUrl],
+    additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
     margin: DEFAULT_MARGIN,
     promptForCurrency,
     confirmOffer,

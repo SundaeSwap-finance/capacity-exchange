@@ -13,14 +13,14 @@ export const handlers = [
     });
   }),
 
-  http.get('http://localhost:3000/api/prices', () => {
+  http.get('https://capacity-exchange.preview.sundae.fi/api/prices', () => {
     return HttpResponse.json({
       quoteId: 'mock-quote-id',
       prices: [MOCK_PRICE_1, MOCK_PRICE_2],
     });
   }),
 
-  http.post('http://localhost:3000/api/offers', async (args) => {
+  http.post('https://capacity-exchange.preview.sundae.fi/api/offers', async (args) => {
     const body = (await args.request.json()) as any;
     const offerCurrency = body.offerCurrency;
     let offerAmount: string;

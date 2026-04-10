@@ -35,11 +35,11 @@ function useProviders<PCK extends string>(
   // Instead, it will reach out to a capacity-exchange server,
   // to request dust from a Liquidity Provider.
   const walletProvider = useCapacityExchangeWalletProvider({
+    networkId: configuration.networkId,
     coinPublicKey: addresses.shieldedCoinPublicKey,
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
     indexerUrl: configuration.indexerUri,
-    capacityExchangeUrls: ['http://localhost:3000'],
   });
 
   return useMemo(() => {

@@ -38,9 +38,6 @@ function useWalletProvider(wallet: ConnectedAPI) {
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
     indexerUrl: configuration.indexerUri,
-    capacityExchangeUrls: [
-      'https://capacity-exchange.sundae.fi',
-    ],
   });
 }
 
@@ -105,21 +102,14 @@ A React hook which gives you a `WalletProvider` backed by the Capacity Exchange.
 
 If you would like to provide DUST for user transactions yourself, consider the `useSponsoredTransactionsWalletProvider` instead.
 
-To use this API, you must pass `capacityExchangeUrls` with one or more Capacity Exchange servers. Sundae Labs is operating one server for each environment; you may use those. Anyone can run their own server, and in the near future we will provide a service discovery mechanism instead.
-
-| Network | Url |
-| --- | --- |
-| `preview` | `https://capacity-exchange.preview.sundae.fi` |
-| `preprod` | `https://capacity-exchange.preprod.sundae.fi` |
-| `mainnet` | `https://capacity-exchange.sundae.fi` |
-
 | Argument | Required | Description |
 | --- | --- | --- |
+| `config.networkId` | yes | The ID of the midnight network you're connecting to. Usually `preview`, `preprod`, or `mainnet`.
 | `config.coinPublicKey` | yes | The `coinPublicKey` of the user's Shielded wallet. |
 | `config.encryptionPublicKey` | yes | The `encryptionPublicKey` of the user's Shielded wallet. |
 | `config.balanceSealedTransaction` | yes | A callback which can balance a sealed transaction. You can pass `balanceSealedTransaction` from the user's wallet. |
 | `config.indexerUrl` | yes | The address of an indexer for your network. |
-| `config.capacityExchangeUrls` | yes | The URLs to one or more Capacity Exchange servers. See above for the Sundae Labs URLs. |
+| `config.additionalCapacityExchangeUrls` | no | The URLs for any additional Capacity Exchange servers to use. |
 | `config.margin` | no | A safety margin in blocks, used when estimating fees. Defaults to `3`. |
 
 ### `useSponsoredTransactionsWalletProvider(config)`

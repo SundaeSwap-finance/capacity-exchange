@@ -35,11 +35,12 @@ export type ConfirmOffer = (offer: Offer, dustRequired: bigint, requestId: strin
 export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
 
 export interface CapacityExchangeConfig {
+  networkId: string;
   coinPublicKey: CoinPublicKey;
   encryptionPublicKey: EncPublicKey;
   balanceSealedTransaction: BalanceSealedTransaction;
   indexerUrl: string;
-  capacityExchangeUrls: string[];
+  additionalCapacityExchangeUrls?: string[];
   margin?: number;
   promptForCurrency: PromptForCurrency;
   confirmOffer: ConfirmOffer;
