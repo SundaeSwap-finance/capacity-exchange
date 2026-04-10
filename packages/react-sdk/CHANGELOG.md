@@ -1,8 +1,8 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
-## 2.0.0
+## 1.1.0
 
-### Major Changes
+### Minor Changes
 
 - 0ce4581: Add React SDK.
 

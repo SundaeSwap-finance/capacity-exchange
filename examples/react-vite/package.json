@@ -16,7 +16,7 @@
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",
     "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.0.1",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
-    "@sundaeswap/capacity-exchange-react-sdk": "2.0.0",
+    "@sundaeswap/capacity-exchange-react-sdk": "1.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
