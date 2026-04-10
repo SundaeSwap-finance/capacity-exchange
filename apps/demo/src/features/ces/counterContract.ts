@@ -4,7 +4,6 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
-  DEFAULT_MARGIN,
   type BalanceSealedTransaction,
   type PromptForCurrency,
   type ConfirmOffer,
@@ -88,7 +87,6 @@ export async function findAndIncrementCounter(
     balanceSealedTransaction,
     indexerUrl: config.indexerUrl,
     additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
-    margin: DEFAULT_MARGIN,
     promptForCurrency,
     confirmOffer,
   });

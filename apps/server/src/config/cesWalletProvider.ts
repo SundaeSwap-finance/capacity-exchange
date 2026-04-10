@@ -2,7 +2,6 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
-  DEFAULT_MARGIN,
   type ExchangePrice,
   type PromptForCurrency,
   type ConfirmOffer,
@@ -100,7 +99,6 @@ export function buildCesWalletProvider(
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
     indexerUrl: endpoints.indexerHttpUrl,
     additionalCapacityExchangeUrls,
-    margin: DEFAULT_MARGIN,
     promptForCurrency: createAutoSelectCurrency(log, walletService),
     confirmOffer: createAutoConfirmOffer(log),
   });

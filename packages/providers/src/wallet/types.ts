@@ -1,8 +1,6 @@
 import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi';
 
-export const DEFAULT_MARGIN = 3;
-
 export interface ExchangePrice {
   exchangeApi: CesApi;
   quoteId: string;
