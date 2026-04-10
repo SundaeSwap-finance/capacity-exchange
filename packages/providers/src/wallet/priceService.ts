@@ -6,7 +6,7 @@ import { ExchangePrice } from './types';
  * Returns combined prices from all successful responses.
  */
 export async function fetchPricesFromExchanges(exchangeApis: CesApi[], dustRequired: bigint): Promise<ExchangePrice[]> {
-  console.debug('[CapacityExchange] Fetching prices from', exchangeApis.length, 'exchanges');
+  console.debug('[CapacityExchange] Fetching prices from', exchangeApis.length, 'exchange(s)');
 
   const priceResponses = await Promise.allSettled(
     exchangeApis.map(({ url, api }) =>

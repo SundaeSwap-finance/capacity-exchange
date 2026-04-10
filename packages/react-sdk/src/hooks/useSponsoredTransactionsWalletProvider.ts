@@ -1,14 +1,14 @@
-import { sponsoredTransactionsWalletProvider } from '@sundaeswap/capacity-exchange-providers';
+import {
+  sponsoredTransactionsWalletProvider,
+  SponsoredTransactionsConfig,
+} from '@sundaeswap/capacity-exchange-providers';
 import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useMemo } from 'react';
 
-export interface SponsoredTransactionConfig {
-  walletProvider: WalletProvider;
-  capacityExchangeUrl: string;
-}
+export { SponsoredTransactionsConfig };
 
-export function useSponsoredTransactionsWalletProvider(config: SponsoredTransactionConfig): WalletProvider {
+export function useSponsoredTransactionsWalletProvider(config: SponsoredTransactionsConfig): WalletProvider {
   return useMemo(() => {
     return sponsoredTransactionsWalletProvider(config);
-  }, [config.walletProvider, config.capacityExchangeUrl]);
+  }, [config.coinPublicKey, config.encryptionPublicKey, config.capacityExchangeUrl]);
 }

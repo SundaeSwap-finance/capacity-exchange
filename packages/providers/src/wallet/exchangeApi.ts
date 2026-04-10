@@ -37,6 +37,22 @@ class WrappedDefaultApi extends DefaultApi {
   }
 }
 
+const DEFAULT_CAPACITY_EXCHANGE_SERVERS: Record<string, string[] | undefined> = {
+  preview: ['https://capacity-exchange.preview.sundae.fi'],
+  preprod: ['https://capacity-exchange.preprod.sundae.fi'],
+  mainnet: ['https://capacity-exchange.sundae.fi'],
+};
+
+export function resolveCesUrls(networkId: string, additionalCapacityExchangeUrls: string[]): string[] {
+  const servers = [...(DEFAULT_CAPACITY_EXCHANGE_SERVERS[networkId] ?? [])];
+  for (const url of additionalCapacityExchangeUrls) {
+    if (!servers.includes(url)) {
+      servers.push(url);
+    }
+  }
+  return servers;
+}
+
 export function createCesApi(url: string): CesApi {
   return {
     url,

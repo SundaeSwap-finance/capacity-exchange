@@ -56,12 +56,13 @@ async function confirmOfferWithUser(
  */
 export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
   const {
+    networkId,
     coinPublicKey,
     encryptionPublicKey,
     balanceSealedTransaction,
-    capacityExchangeUrls,
     indexerUrl,
-    margin,
+    additionalCapacityExchangeUrls = [],
+    margin = 3,
     promptForCurrency,
     confirmOffer,
   } = config;
@@ -73,7 +74,13 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     async balanceTx(tx, _ttl?) {
       console.debug('[CapacityExchange] balanceTx called');
 
-      const { prices, specksRequired } = await fetchCesPrices(tx, indexerUrl, capacityExchangeUrls, margin);
+      const { prices, specksRequired } = await fetchCesPrices(
+        tx,
+        indexerUrl,
+        networkId,
+        additionalCapacityExchangeUrls,
+        margin
+      );
 
       while (true) {
         const requestId = crypto.randomUUID();

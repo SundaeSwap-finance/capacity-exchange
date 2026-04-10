@@ -2,7 +2,6 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
-  DEFAULT_MARGIN,
   type ExchangePrice,
   type PromptForCurrency,
   type ConfirmOffer,
@@ -82,23 +81,24 @@ function createAutoConfirmOffer(log: FastifyBaseLogger): ConfirmOffer {
  */
 export function buildCesWalletProvider(
   walletService: WalletService,
+  networkId: string,
   endpoints: NetworkEndpoints,
-  capacityExchangeUrls: string[],
+  additionalCapacityExchangeUrls: string[],
   log: FastifyBaseLogger,
 ): WalletProvider | null {
-  if (capacityExchangeUrls.length === 0) {
+  if (additionalCapacityExchangeUrls.length === 0) {
     return null;
   }
 
   const { coinPublicKey, encryptionPublicKey } = walletService.shieldedPublicKeys;
 
   return capacityExchangeWalletProvider({
+    networkId,
     coinPublicKey,
     encryptionPublicKey,
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
     indexerUrl: endpoints.indexerHttpUrl,
-    capacityExchangeUrls,
-    margin: DEFAULT_MARGIN,
+    additionalCapacityExchangeUrls,
     promptForCurrency: createAutoSelectCurrency(log, walletService),
     confirmOffer: createAutoConfirmOffer(log),
   });

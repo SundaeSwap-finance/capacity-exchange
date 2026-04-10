@@ -83,11 +83,12 @@ export function setupFetchMock(): void {
 
 export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
   return {
+    networkId: 'undeployed',
     coinPublicKey: ctx.mockWalletProvider.getCoinPublicKey(),
     encryptionPublicKey: ctx.mockWalletProvider.getEncryptionPublicKey(),
     balanceSealedTransaction: ctx.mockBalanceSealedTransaction,
     indexerUrl: 'http://localhost:8080/graphql',
-    capacityExchangeUrls: ['http://localhost:3000'],
+    additionalCapacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
     confirmOffer: ctx.confirmOffer,
     margin: 3,

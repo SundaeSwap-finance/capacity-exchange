@@ -81,7 +81,7 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
     config.coinPublicKey,
     config.encryptionPublicKey,
     config.indexerUrl,
-    ...config.capacityExchangeUrls,
+    ...(config.additionalCapacityExchangeUrls ?? []),
     config.margin,
     promptForCurrency,
     confirmOffer,

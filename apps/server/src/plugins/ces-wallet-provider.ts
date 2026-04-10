@@ -17,6 +17,7 @@ export default fp(async (fastify: FastifyInstance) => {
   // TODO: renable fallback feature in the future.
   // const cesWalletProvider = buildCesWalletProvider(
   //   fastify.walletService,
+  //   fastify.config.networkId,
   //   fastify.config.endpoints,
   //   fastify.config.capacityExchangeUrls,
   //   fastify.log,

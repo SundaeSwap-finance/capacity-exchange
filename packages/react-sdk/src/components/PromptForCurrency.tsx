@@ -1,4 +1,5 @@
 import { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
+import { formatDust } from './utils';
 
 export interface PromptForCurrencyProps {
   prices: ExchangePrice[];
@@ -11,7 +12,8 @@ export function DefaultPromptForCurrency({ prices, dustRequired, onSelected, onC
   return (
     <div className="ce-sdk-body">
       <p className="ce-sdk-title">Select payment currency</p>
-      <p className="ce-sdk-hint">This transaction requires {dustRequired.toString()} lovelace as dust.</p>
+      <p className="ce-sdk-hint">This transaction requires {formatDust(dustRequired)} DUST.</p>
+      <p className="ce-sdk-hint">Choose which accepted asset should cover it:</p>
       <div className="ce-sdk-options">
         {prices.map((p) => (
           <button

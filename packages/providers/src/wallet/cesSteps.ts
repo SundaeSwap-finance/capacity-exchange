@@ -10,7 +10,7 @@ import {
 import type { ExchangePrice, Offer, BalanceSealedTransaction } from './types';
 import { isOfferExpired } from './utils';
 import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
-import { createCesApis } from './exchangeApi';
+import { createCesApis, resolveCesUrls } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
@@ -39,7 +39,8 @@ export interface FetchCesPricesResult {
 export async function fetchCesPrices(
   tx: UnboundTransaction,
   indexerUrl: string,
-  capacityExchangeUrls: string[],
+  networkId: string,
+  additionalCapacityExchangeUrls: string[],
   margin: number
 ): Promise<FetchCesPricesResult> {
   console.debug('[CESSteps] Fetching ledger parameters from:', indexerUrl);
@@ -54,7 +55,8 @@ export async function fetchCesPrices(
     estimated === 0n ? '(floored from 0)' : ''
   );
 
-  const exchangeApis = createCesApis(capacityExchangeUrls);
+  const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls);
+  const exchangeApis = createCesApis(urls);
   const prices = await fetchPricesFromExchanges(exchangeApis, specksRequired);
 
   if (prices.length === 0) {
