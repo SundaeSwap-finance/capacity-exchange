@@ -1,4 +1,3 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi';
 
@@ -47,6 +46,7 @@ export interface CapacityExchangeConfig {
 }
 
 export interface SponsoredTransactionsConfig {
-  walletProvider: WalletProvider;
+  coinPublicKey: CoinPublicKey;
+  encryptionPublicKey: EncPublicKey;
   capacityExchangeUrl: string;
 }

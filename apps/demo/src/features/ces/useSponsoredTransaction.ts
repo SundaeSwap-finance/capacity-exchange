@@ -38,7 +38,8 @@ export function useSponsoredTransaction(
 
     try {
       const walletProvider = sponsoredTransactionsWalletProvider({
-        walletProvider: providers.walletProvider,
+        coinPublicKey: providers.walletProvider.getCoinPublicKey(),
+        encryptionPublicKey: providers.walletProvider.getEncryptionPublicKey(),
         capacityExchangeUrl: config.capacityExchangeUrl,
       });
 

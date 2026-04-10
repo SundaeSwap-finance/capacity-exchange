@@ -14,14 +14,15 @@ import { requestSponsorship } from './sponsored-transactions-steps';
  * @returns A new WalletProvider with sponsored transactions integration
  */
 export function sponsoredTransactionsWalletProvider({
-  walletProvider,
+  coinPublicKey,
+  encryptionPublicKey,
   capacityExchangeUrl,
 }: SponsoredTransactionsConfig): WalletProvider {
   const exchangeApi = createCesApi(capacityExchangeUrl);
 
   return {
-    getCoinPublicKey: () => walletProvider.getCoinPublicKey(),
-    getEncryptionPublicKey: () => walletProvider.getEncryptionPublicKey(),
+    getCoinPublicKey: () => coinPublicKey,
+    getEncryptionPublicKey: () => encryptionPublicKey,
 
     async balanceTx(tx, _ttl?) {
       console.debug('[SponsoredTransactions] balanceTx called');

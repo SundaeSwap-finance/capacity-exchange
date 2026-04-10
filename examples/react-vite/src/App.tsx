@@ -101,7 +101,8 @@ function MockFlow() {
   }, [providers]);
 
   const sponsoredWalletProvider = useSponsoredTransactionsWalletProvider({
-    walletProvider: providers.walletProvider,
+    coinPublicKey: providers.walletProvider.getCoinPublicKey(),
+    encryptionPublicKey: providers.walletProvider.getEncryptionPublicKey(),
     capacityExchangeUrl: 'http://localhost:3000',
   });
 
