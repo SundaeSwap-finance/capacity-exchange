@@ -1,5 +1,13 @@
 # @capacity-exchange/demo
 
+## 1.0.2
+
+### Patch Changes
+
+- f6407b1: Improve documentation for public API, and remove some required fields
+- Updated dependencies [f6407b1]
+  - @sundaeswap/capacity-exchange-providers@1.2.0
+
 ## 1.0.1
 
 ### Patch Changes

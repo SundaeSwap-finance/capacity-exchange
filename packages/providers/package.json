@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-providers",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Capacity Exchange providers for midnight transactions",
   "type": "module",
   "main": "dist/index.js",
