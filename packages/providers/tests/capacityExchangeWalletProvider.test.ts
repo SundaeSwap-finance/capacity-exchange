@@ -53,7 +53,7 @@ describe('capacityExchangeWalletProvider', () => {
 
     expect(ctx.promptForCurrency).toHaveBeenCalledTimes(1);
     expect(ctx.confirmOffer).toHaveBeenCalledTimes(1);
-    expect(ctx.mockBalanceSealedTx).toHaveBeenCalledTimes(1);
+    expect(ctx.mockBalanceSealedTransaction).toHaveBeenCalledTimes(1);
   });
 
   it('should preserve original WalletProvider methods', () => {
@@ -70,7 +70,7 @@ describe('capacityExchangeWalletProvider', () => {
 
     await provider.balanceTx(mockTx, new Date(Date.now() + 60000));
 
-    expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired);
-    expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired);
+    expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
+    expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
   });
 });

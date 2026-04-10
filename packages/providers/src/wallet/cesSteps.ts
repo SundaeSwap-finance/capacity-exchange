@@ -1,12 +1,13 @@
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import {
+  Proof,
+  SignatureEnabled,
   Transaction,
-  type SignatureEnabled,
-  type Proof,
   type PreBinding,
   type FinalizedTransaction,
+  Binding,
 } from '@midnight-ntwrk/ledger-v8';
-import type { ExchangePrice, Offer, BalanceSealedTx } from './types';
+import type { ExchangePrice, Offer, BalanceSealedTransaction } from './types';
 import { isOfferExpired } from './utils';
 import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis } from './exchangeApi';
@@ -94,7 +95,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
 export async function processTransactionWithOffer(
   tx: UnboundTransaction,
   offer: Offer,
-  balanceSealedTx: BalanceSealedTx
+  balanceSealedTransaction: BalanceSealedTransaction
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToBytes(offer.serializedTx);
@@ -111,9 +112,10 @@ export async function processTransactionWithOffer(
   const mergedTx = boundTx.merge(dustTx);
   console.debug('[CESSteps] Transactions merged, calling wallet to balance and seal');
 
-  const result = await balanceSealedTx(mergedTx);
+  const mergedTxHex = Buffer.from(mergedTx.serialize()).toString('hex');
+  const { tx: result } = await balanceSealedTransaction(mergedTxHex);
   console.debug('[CESSteps] Wallet balanced and sealed transaction');
 
   console.debug('[CESSteps] Transaction processing complete');
-  return result;
+  return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hexToBytes(result));
 }

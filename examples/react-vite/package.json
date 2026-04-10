@@ -1,0 +1,38 @@
+{
+  "name": "@capacity-exchange/example-react-vite",
+  "version": "1.0.0",
+  "description": "Example: integrating @sundaeswap/capacity-exchange-react-sdk into a React app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-react-sdk' build",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
+    "@midnight-ntwrk/ledger-v8": "8.0.3",
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@sundaeswap/capacity-exchange-react-sdk": "1.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "msw": "^2.0.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "vite-plugin-wasm": "^3.5.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}

@@ -5,7 +5,7 @@ import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-
 import {
   capacityExchangeWalletProvider,
   DEFAULT_MARGIN,
-  type BalanceSealedTx,
+  type BalanceSealedTransaction,
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@sundaeswap/capacity-exchange-providers';
@@ -75,7 +75,7 @@ export async function incrementCounter(
 export async function findAndIncrementCounter(
   walletProvider: WalletProvider,
   midnightProvider: MidnightProvider,
-  balanceSealedTx: BalanceSealedTx,
+  balanceSealedTransaction: BalanceSealedTransaction,
   contractAddress: string,
   promptForCurrency: PromptForCurrency,
   confirmOffer: ConfirmOffer,
@@ -84,7 +84,7 @@ export async function findAndIncrementCounter(
   const cesWalletProvider = capacityExchangeWalletProvider({
     coinPublicKey: walletProvider.getCoinPublicKey(),
     encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
-    balanceSealedTx,
+    balanceSealedTransaction,
     indexerUrl: config.indexerUrl,
     capacityExchangeUrls: [config.capacityExchangeUrl],
     margin: DEFAULT_MARGIN,

@@ -6,8 +6,20 @@ import {
 } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
-import { nativeToken, type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
-import { WalletConnection, type WalletStateStore } from '@sundaeswap/capacity-exchange-core';
+import {
+  Binding,
+  nativeToken,
+  Proof,
+  SignatureEnabled,
+  Transaction,
+  type FinalizedTransaction,
+} from '@midnight-ntwrk/ledger-v8';
+import {
+  hexToBytes,
+  uint8ArrayToHex,
+  WalletConnection,
+  type WalletStateStore,
+} from '@sundaeswap/capacity-exchange-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
@@ -125,6 +137,17 @@ export class WalletService {
   public async getShieldedTokenBalances(): Promise<Record<string, bigint>> {
     const state = await this.walletConnection.walletFacade.shielded.waitForSyncedState();
     return state.balances;
+  }
+
+  public async balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
+    const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+      'signature',
+      'proof',
+      'binding',
+      hexToBytes(txHex),
+    );
+    const balancedTx = await this.balanceFinalizedTransaction(tx);
+    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
   }
 
   public async balanceFinalizedTransaction(

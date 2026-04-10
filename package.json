@@ -19,7 +19,8 @@
   "workspaces": [
     "apps/*",
     "apps/demo/contracts",
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "overrides": {
     "whatwg-url": "14.1.1",
