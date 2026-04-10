@@ -1,0 +1,110 @@
+{
+  "title": "CES Overview",
+  "uid": "ces-overview",
+  "editable": true,
+  "time": { "from": "now-15m", "to": "now" },
+  "refresh": "5s",
+  "panels": [
+    {
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(ces_http_responses_total[1m])",
+          "legendFormat": "{{status}} {{route}}"
+        }
+      ]
+    },
+    {
+      "title": "HTTP Avg Latency (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(ces_http_request_duration_ms_milliseconds_sum[1m]) / rate(ces_http_request_duration_ms_milliseconds_count[1m])",
+          "legendFormat": "{{status}} {{route}}"
+        }
+      ]
+    },
+    {
+      "title": "Offer Results",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(ces_offer_result_total[1m])",
+          "legendFormat": "{{status}} {{source}}"
+        }
+      ]
+    },
+    {
+      "title": "Offer Build Duration (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(ces_offer_build_duration_ms_milliseconds_sum[1m]) / rate(ces_offer_build_duration_ms_milliseconds_count[1m])",
+          "legendFormat": "avg"
+        }
+      ]
+    },
+    {
+      "title": "UTXO Locked Count",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "ces_utxo_locked_count",
+          "legendFormat": "locked"
+        }
+      ]
+    },
+    {
+      "title": "UTXO Total Count",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        {
+          "expr": "ces_utxo_total_count",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "title": "Dust Committed (specks)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        {
+          "expr": "ces_dust_committed_specks_total",
+          "legendFormat": "cumulative"
+        }
+      ]
+    },
+    {
+      "title": "Revenue Committed",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "ces_revenue_committed_total",
+          "legendFormat": "{{currency}}"
+        }
+      ]
+    },
+    {
+      "title": "Sponsor Results",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(ces_sponsor_result_total[1m])",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
