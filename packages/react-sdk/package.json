@@ -11,7 +11,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-providers' build",
-    "build": "tsc"
+    "build": "tsc",
+    "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
     "@midnight-ntwrk/ledger-v8": "8.0.3",
