@@ -1,7 +1,10 @@
 {
   "priceFormulas": [
     {
-      "currency": "1337133713371337133713371337133713371337133713371337133713371337",
+      "currency": {
+        "type": "shielded",
+        "identifier": "1337133713371337133713371337133713371337133713371337133713371337"
+      },
       "basePrice": "101",
       "rateNumerator": "11",
       "rateDenominator": "1000"

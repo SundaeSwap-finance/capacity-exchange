@@ -7,7 +7,7 @@ export function useMockWallet(): ConnectedAPI {
     return {
       async getShieldedBalances() {
         return {
-          [MOCK_PRICE_1.currency]: 10_000_000n,
+          [MOCK_PRICE_1.currency.identifier]: 10_000_000n,
         };
       },
       async getUnshieldedBalances() {

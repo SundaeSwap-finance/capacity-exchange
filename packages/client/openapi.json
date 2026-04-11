@@ -461,7 +461,23 @@
                             "type": "string"
                           },
                           "currency": {
-                            "type": "string"
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "type",
+                              "identifier"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "identifier": {
+                                "type": "string"
+                              }
+                            }
                           }
                         }
                       }
@@ -572,7 +588,23 @@
                       "type": "string"
                     },
                     "offerCurrency": {
-                      "type": "string"
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "type",
+                        "identifier"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "identifier": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "serializedTx": {
                       "type": "string"

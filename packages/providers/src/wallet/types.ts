@@ -15,14 +15,33 @@ export interface ExchangePrice {
    */
   price: {
     /**
-     * A 32-byte hex-encoded token identifier.
+     * The currency with which to pay this price.
      */
-    currency: string;
+    currency: Currency;
     /**
      * An amount, in the smallest denomination of that token.
      */
     amount: string;
   };
+}
+
+/**
+ * A currency which the user may pay in.
+ */
+export interface Currency {
+  /**
+   * A unique identifier for this currency.
+   */
+  id: string;
+  /**
+   * What form of currency this is (i.e. shielded).
+   */
+  type: string;
+  /**
+   * The on-chain identifier for this currency.
+   * For shielded tokens, a 32-byte hex-encoded token identifier.
+   */
+  identifier: string;
 }
 
 /**
@@ -40,7 +59,7 @@ export interface Offer {
   /**
    * The currency which the caller must pay.
    */
-  offerCurrency: string;
+  offerCurrency: Currency;
   /**
    * A serialized Midnight transaction for the caller.
    * Includes a DUST spend, as well as a transfer of some token.

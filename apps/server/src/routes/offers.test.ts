@@ -14,7 +14,11 @@ stub.createOffer = vi.fn(async (req) => ({
   offer: {
     offerId: 'test-id',
     offerAmount: '1000',
-    offerCurrency: req.offerCurrency,
+    offerCurrency: {
+      id: `shielded:${req.offerCurrency}`,
+      type: 'shielded' as const,
+      identifier: req.offerCurrency,
+    },
     serializedTx: 'deadbeef',
     expiresAt: new Date().toISOString(),
   },
@@ -29,7 +33,16 @@ describe('POST /api/offers', () => {
   });
 
   it('returns 201 with a valid quote', async () => {
-    const quoteId = quoteService.createQuote(1000n, [{ amount: '100', currency: 'lovelace' }]);
+    const quoteId = quoteService.createQuote(1000n, [
+      {
+        amount: '100',
+        currency: {
+          id: 'shielded:lovelace',
+          type: 'shielded',
+          identifier: 'lovelace',
+        },
+      },
+    ]);
     const res = await app.get().inject({
       method: 'POST',
       url: '/api/offers',

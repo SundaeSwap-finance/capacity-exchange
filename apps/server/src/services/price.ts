@@ -1,18 +1,35 @@
-import type { PriceFormula } from '../config/prices.js';
+import type { RawCurrency, RawPriceFormula } from '../config/prices.js';
+
+export interface Currency extends RawCurrency {
+  id: string;
+}
+
+interface PriceFormula extends RawPriceFormula {
+  currency: Currency;
+}
 
 export interface Price {
   amount: string;
-  currency: string;
+  currency: Currency;
 }
 
-export type GetPriceResult = { status: 'ok'; price: bigint } | { status: 'unsupported-currency' };
+export type GetPriceResult =
+  | { status: 'ok'; price: bigint; currency: Currency }
+  | { status: 'unsupported-currency' };
 
 export class PriceService {
   readonly #formulas: Map<string, PriceFormula>;
-  constructor(formulas: PriceFormula[]) {
+  constructor(formulas: RawPriceFormula[]) {
     this.#formulas = new Map();
     for (const formula of formulas) {
-      this.#formulas.set(formula.currency, formula);
+      const id = computeCurrencyId(formula.currency);
+      this.#formulas.set(id, {
+        ...formula,
+        currency: {
+          ...formula.currency,
+          id,
+        },
+      });
     }
   }
 
@@ -24,6 +41,7 @@ export class PriceService {
     return {
       status: 'ok',
       price: this.#computePrice(specks, formula),
+      currency: formula.currency,
     };
   }
 
@@ -46,4 +64,8 @@ export class PriceService {
       (specks * BigInt(formula.rateNumerator)) / BigInt(formula.rateDenominator)
     );
   }
+}
+
+function computeCurrencyId(currency: Omit<Currency, 'id'>): string {
+  return `${currency.type}:${currency.identifier}`;
 }

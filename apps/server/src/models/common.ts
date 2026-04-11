@@ -1,5 +1,11 @@
 import { Type } from '@sinclair/typebox';
 
+export const Currency = Type.Object({
+  id: Type.String(),
+  type: Type.String(),
+  identifier: Type.String(),
+});
+
 // Generic error response shape
 export const ErrorResponse = Type.Object({
   error: Type.String(),

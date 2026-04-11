@@ -22,7 +22,7 @@ export function createTestContext(): TestContext {
     mockWalletProvider,
     mockBalanceSealedTransaction: vi.fn().mockResolvedValue({ tx: '' } as any),
     promptForCurrency: vi.fn().mockImplementation((exchangePrices: ExchangePrice[]) => {
-      const selectedPrice = exchangePrices.find((ep) => ep.price.currency === 'ADA') || exchangePrices[0];
+      const selectedPrice = exchangePrices.find((ep) => ep.price.currency.identifier === 'ADA') || exchangePrices[0];
       return Promise.resolve({ status: 'selected', exchangePrice: selectedPrice });
     }),
     confirmOffer: vi.fn().mockResolvedValue({ status: 'confirmed' }),
@@ -52,8 +52,8 @@ export function setupFetchMock(): void {
         json: async () => ({
           quoteId: 'test-quote-id',
           prices: [
-            { currency: 'ADA', amount: '1000000' },
-            { currency: 'BTC', amount: '50000' },
+            { currency: { id: 'shielded:ADA', type: 'shielded', identifier: 'ADA' }, amount: '1000000' },
+            { currency: { id: 'shielded:BTC', type: 'shielded', identifier: 'BTC' }, amount: '50000' },
           ],
         }),
       } as Response);
@@ -66,7 +66,11 @@ export function setupFetchMock(): void {
         json: async () => ({
           offerId: 'test-offer-123',
           offerAmount: '1000000',
-          offerCurrency: 'ADA',
+          offerCurrency: {
+            id: 'shielded:ADA',
+            type: 'shielded',
+            identifier: 'ADA',
+          },
           serializedTx: '0102030405060708090a0b0c0d0e0f',
           expiresAt: new Date(Date.now() + 60000),
         }),

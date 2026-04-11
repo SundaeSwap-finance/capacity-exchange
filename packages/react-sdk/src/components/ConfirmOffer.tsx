@@ -15,8 +15,8 @@ export function DefaultConfirmOffer({ offer, dustRequired, onConfirmed, onBack, 
       <p className="ce-sdk-title">Confirm offer</p>
       <div className="ce-sdk-detail">
         <span className="ce-sdk-detail-label">Currency</span>
-        <span className="ce-sdk-detail-value ce-sdk-hex" title={offer.offerCurrency}>
-          {offer.offerCurrency}
+        <span className="ce-sdk-detail-value ce-sdk-hex" title={offer.offerCurrency.identifier}>
+          {offer.offerCurrency.identifier}
         </span>
         <span className="ce-sdk-detail-label">Amount</span>
         <span className="ce-sdk-detail-value">{offer.offerAmount.toString()}</span>

@@ -25,7 +25,9 @@ function createMockDeps() {
 
   const txService = {
     createOfferTx: vi.fn(async () => ({
-      serialize: () => new Uint8Array([0xde, 0xad]),
+      bind: () => ({
+        serialize: () => new Uint8Array([0xde, 0xad]),
+      }),
     })),
   } as unknown as TxService;
 
@@ -81,7 +83,10 @@ describe('OfferService', () => {
     (deps.txService.createOfferTx as ReturnType<typeof vi.fn>).mockImplementation(
       () =>
         new Promise((resolve) => {
-          resolveProve = () => resolve({ serialize: () => new Uint8Array([0xde, 0xad]) });
+          resolveProve = () =>
+            resolve({
+              bind: () => ({ serialize: () => new Uint8Array([0xde, 0xad]) }),
+            });
         }),
     );
     service = new OfferService(

@@ -272,8 +272,8 @@ function CesPlaygroundAction({
             <div className="ces-compact-stack ces-input-pulse">
               {[...currencySelection.prices]
                 .sort((a, b) => {
-                  const balA = shieldedBalances[a.price.currency] ?? 0n;
-                  const balB = shieldedBalances[b.price.currency] ?? 0n;
+                  const balA = shieldedBalances[a.price.currency.identifier] ?? 0n;
+                  const balB = shieldedBalances[b.price.currency.identifier] ?? 0n;
                   const canA = balA >= BigInt(a.price.amount);
                   const canB = balB >= BigInt(b.price.amount);
                   if (canA && !canB) {
@@ -285,7 +285,7 @@ function CesPlaygroundAction({
                   return 0;
                 })
                 .map((ep, i) => {
-                  const balance = shieldedBalances[ep.price.currency] ?? 0n;
+                  const balance = shieldedBalances[ep.price.currency.identifier] ?? 0n;
                   const canAfford = balance >= BigInt(ep.price.amount);
                   const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);
                   return (
