@@ -8,7 +8,16 @@ describe('QuoteService', () => {
   const service = new QuoteService(10, secret);
 
   it('creates a token and decodes it back', () => {
-    const prices = [{ amount: '1000', currency: 'lovelace' }];
+    const prices = [
+      {
+        amount: '1000',
+        currency: {
+          id: 'shielded:lovelace',
+          type: 'shielded' as const,
+          identifier: 'lovelace',
+        },
+      },
+    ];
     const token = service.createQuote(500n, prices);
     const result = service.getQuote(token);
 
