@@ -1,5 +1,5 @@
 import type { CesApi } from './exchangeApi';
-import { ExchangePrice } from './types';
+import { Currency, ExchangePrice } from './types';
 
 /**
  * Fetches prices from all capacity exchanges in parallel.
@@ -10,9 +10,11 @@ export async function fetchPricesFromExchanges(exchangeApis: CesApi[], dustRequi
 
   const priceResponses = await Promise.allSettled(
     exchangeApis.map(({ url, api }) =>
-      api
-        .apiPricesGet({ specks: dustRequired.toString() })
-        .then((response) => ({ url, quoteId: response.quoteId, prices: response.prices }))
+      api.apiPricesGet({ specks: dustRequired.toString() }).then((response) => ({
+        url,
+        quoteId: response.quoteId,
+        prices: response.prices.filter((p) => isCurrencySupported(p.currency)),
+      }))
     )
   );
 
@@ -31,4 +33,8 @@ export async function fetchPricesFromExchanges(exchangeApis: CesApi[], dustRequi
 
   console.debug('[CapacityExchange] Total prices received:', exchangePrices.length);
   return exchangePrices;
+}
+
+function isCurrencySupported(currency: Currency): boolean {
+  return currency.type === 'shielded' || currency.type === 'unshielded';
 }
