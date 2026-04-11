@@ -153,12 +153,13 @@ export class OfferService {
     try {
       const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const tx = await this.txService.createOfferTx(
+      const unboundTx = await this.txService.createOfferTx(
         coin,
         lockedInfo.spend,
         lockedInfo.syncTime,
         expiration,
       );
+      const tx = unboundTx.bind();
 
       const offer: OfferResponse = {
         offerId: lockedInfo.id,

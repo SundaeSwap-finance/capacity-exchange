@@ -1,12 +1,5 @@
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import {
-  Proof,
-  SignatureEnabled,
-  Transaction,
-  type PreBinding,
-  type FinalizedTransaction,
-  Binding,
-} from '@midnight-ntwrk/ledger-v8';
+import { Binding, Proof, SignatureEnabled, Transaction, type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
 import type { ExchangePrice, Offer, BalanceSealedTransaction } from './types';
 import { isOfferExpired } from './utils';
 import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
@@ -101,12 +94,7 @@ export async function processTransactionWithOffer(
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToBytes(offer.serializedTx);
-  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
-    'signature',
-    'proof',
-    'pre-binding',
-    txBytes
-  ).bind();
+  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', txBytes);
   console.debug('[CESSteps] DUST transaction deserialized');
 
   console.debug('[CESSteps] Binding and merging transactions');

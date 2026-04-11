@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CLIENT, getQuoteId } from '../utils.js';
 import { CreateOfferResponse } from '../client.js';
-import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
+import { Binding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 
 describe('Offer API - Happy Path', () => {
@@ -20,10 +20,10 @@ describe('Offer API - Happy Path', () => {
     // check that response is valid
     const bytes = hexToBytes(offer.serializedTx);
     expect(() =>
-      Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+      Transaction.deserialize<SignatureEnabled, Proof, Binding>(
         'signature',
         'proof',
-        'pre-binding',
+        'binding',
         bytes,
       ),
     ).not.toThrow();
