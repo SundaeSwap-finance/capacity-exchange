@@ -54,7 +54,8 @@ export interface ApiOffersPostOperationRequest {
 }
 
 export interface ApiPricesGetRequest {
-    specks: string;
+    amount: string;
+    currency: ApiPricesGetCurrencyEnum;
 }
 
 export interface ApiSponsorPostOperationRequest {
@@ -133,17 +134,28 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      */
     async apiPricesGetRaw(requestParameters: ApiPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiPricesGet200Response>> {
-        if (requestParameters['specks'] == null) {
+        if (requestParameters['amount'] == null) {
             throw new runtime.RequiredError(
-                'specks',
-                'Required parameter "specks" was null or undefined when calling apiPricesGet().'
+                'amount',
+                'Required parameter "amount" was null or undefined when calling apiPricesGet().'
+            );
+        }
+
+        if (requestParameters['currency'] == null) {
+            throw new runtime.RequiredError(
+                'currency',
+                'Required parameter "currency" was null or undefined when calling apiPricesGet().'
             );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['specks'] != null) {
-            queryParameters['specks'] = requestParameters['specks'];
+        if (requestParameters['amount'] != null) {
+            queryParameters['amount'] = requestParameters['amount'];
+        }
+
+        if (requestParameters['currency'] != null) {
+            queryParameters['currency'] = requestParameters['currency'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -287,3 +299,11 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
 }
+
+/**
+ * @export
+ */
+export const ApiPricesGetCurrencyEnum = {
+    Dust: 'DUST'
+} as const;
+export type ApiPricesGetCurrencyEnum = typeof ApiPricesGetCurrencyEnum[keyof typeof ApiPricesGetCurrencyEnum];

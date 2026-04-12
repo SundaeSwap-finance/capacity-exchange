@@ -29,7 +29,7 @@ describe('GET /api/prices', () => {
   it('returns a quoteId with prices', async () => {
     const res = await app.get().inject({
       method: 'GET',
-      url: '/api/prices?specks=1000',
+      url: '/api/prices?currency=DUST&amount=1000',
     });
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -45,7 +45,7 @@ describe('GET /api/prices', () => {
   it('returns a quoteId that decodes to the correct specks and prices', async () => {
     const res = await app.get().inject({
       method: 'GET',
-      url: '/api/prices?specks=5000',
+      url: '/api/prices?currency=DUST&amount=5000',
     });
     const { quoteId } = res.json();
     const result = quoteService.getQuote(quoteId);
@@ -54,7 +54,8 @@ describe('GET /api/prices', () => {
     if (result.status !== 'ok') {
       return;
     }
-    expect(result.quote.specks).toBe(5000n);
+    expect(result.quote.currency).toEqual('DUST');
+    expect(result.quote.amount).toBe(5000n);
     expect(result.quote.prices[0].currency).toEqual({
       id: 'shielded:lovelace',
       type: 'shielded',

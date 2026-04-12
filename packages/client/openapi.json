@@ -429,7 +429,18 @@
               "type": "string"
             },
             "in": "query",
-            "name": "specks",
+            "name": "amount",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DUST"
+              ]
+            },
+            "in": "query",
+            "name": "currency",
             "required": true
           }
         ],
