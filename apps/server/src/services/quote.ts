@@ -2,7 +2,8 @@ import { createHmac, randomUUID } from 'crypto';
 import type { Price } from './price.js';
 
 export interface Quote {
-  specks: bigint;
+  currency: 'DUST';
+  amount: bigint;
   prices: Price[];
 }
 
@@ -12,7 +13,8 @@ export type GetQuoteResult =
   | { status: 'expired' };
 
 interface QuotePayload {
-  specks: string;
+  currency: 'DUST';
+  amount: string;
   prices: Price[];
   nonce: string;
   exp: number;
@@ -40,7 +42,8 @@ export class QuoteService {
   /** Creates a signed quote token. Format: base64url(payload).base64url(signature) */
   createQuote(specks: bigint, prices: Price[]): string {
     const payload: QuotePayload = {
-      specks: specks.toString(),
+      currency: 'DUST',
+      amount: specks.toString(),
       prices,
       nonce: randomUUID(),
       exp: Date.now() + this.ttlSeconds * 1000,
@@ -73,7 +76,8 @@ export class QuoteService {
       return {
         status: 'ok',
         quote: {
-          specks: BigInt(payload.specks),
+          currency: payload.currency,
+          amount: BigInt(payload.amount),
           prices: payload.prices,
         },
       };

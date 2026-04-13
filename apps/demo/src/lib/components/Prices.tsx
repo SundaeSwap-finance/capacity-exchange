@@ -15,7 +15,7 @@ interface PricesProps {
 
 const Prices: React.FC<PricesProps> = ({ children, specks }) => {
   const api = useCesClient();
-  const { data: prices, error } = useApi(() => api.apiPricesGet({ specks }), [specks], {
+  const { data: prices, error } = useApi(() => api.apiPricesGet({ currency: 'DUST', amount: specks }), [specks], {
     pollInterval: 5000,
   });
 

@@ -25,7 +25,8 @@ describe('QuoteService', () => {
     if (result.status !== 'ok') {
       return;
     }
-    expect(result.quote.specks).toBe(500n);
+    expect(result.quote.currency).toBe('DUST');
+    expect(result.quote.amount).toBe(500n);
     expect(result.quote.prices).toEqual(prices);
   });
 
