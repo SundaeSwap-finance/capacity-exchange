@@ -145,7 +145,7 @@ async function submitUnprovedTransaction(providers: DeregisterServerProvider, pa
 /**
  * Replicates the `hashKey` circuit to compute the 32-byte registry key
  */
-function computeRegistryKey(secretKey: RegistryKey): Uint8Array {
+export function computeRegistryKey(secretKey: RegistryKey): Uint8Array {
   return persistentHash(descriptor_12, [REGISTRY_PREFIX, secretKey]);
 }
 

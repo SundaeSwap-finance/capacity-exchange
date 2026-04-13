@@ -16,7 +16,7 @@ export interface DeployOutput {
 }
 
 export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Promise<DeployOutput> {
-  logger.info('Deploying vault contract...');
+  logger.info('Deploying registry contract...');
   const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../contract/out');
   const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
 

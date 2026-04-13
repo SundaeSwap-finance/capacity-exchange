@@ -31,8 +31,7 @@ export interface RefreshValidityParams {
 /**
  * Extends the validity of an existing registry entry.
  *
- * Calls the `refreshValidity` circuit. The new timestamp must not
- * exceed `maximumValidityInterval` seconds from the current block time.
+ * Calls the `refreshValidity` circuit. The new timestamp must not exceed `maximumValidityInterval`.
  *
  * @returns A {@link TxResult} with the transaction ID, hash, contract address, and block info.
  */
