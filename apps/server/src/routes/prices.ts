@@ -6,7 +6,11 @@ const priceRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     const specks = BigInt(request.query.specks);
     const prices = fastify.priceService.listPrices(specks);
     const quoteId = fastify.quoteService.createQuote(specks, prices);
-    return reply.status(200).send({ quoteId, prices });
+    // TODO: return full price info
+    return reply.status(200).send({
+      quoteId,
+      prices: prices.map((p) => ({ amount: p.amount, currency: p.currency.identifier })),
+    });
   });
 };
 

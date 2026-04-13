@@ -1,7 +1,10 @@
 {
   "priceFormulas": [
     {
-      "currency": "<derived-token-color>",
+      "currency": {
+        "type": "shielded",
+        "identifier": "<derived-token-color>"
+      },
       "basePrice": "101",
       "rateNumerator": "11",
       "rateDenominator": "1000"
