@@ -1,4 +1,5 @@
 import { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
+import { currencyName, currencyTitle } from './utils';
 
 export interface WaitForOfferProps {
   price: ExchangePrice;
@@ -15,8 +16,8 @@ export function DefaultWaitForOffer({ price, onCancelled }: WaitForOfferProps) {
         <span className="ce-sdk-detail-label">Amount</span>
         <span className="ce-sdk-detail-value">{price.price.amount.toString()}</span>
         <span className="ce-sdk-detail-label">Currency</span>
-        <span className="ce-sdk-detail-value ce-sdk-hex" title={price.price.currency.identifier}>
-          {price.price.currency.identifier}
+        <span className="ce-sdk-detail-value ce-sdk-hex" title={currencyTitle(price.price.currency)}>
+          {currencyName(price.price.currency)}
         </span>
       </div>
       <div className="ce-sdk-spinner" role="status" aria-label="Loading" />

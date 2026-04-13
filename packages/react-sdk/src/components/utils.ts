@@ -1,3 +1,5 @@
+import { Currency } from '@sundaeswap/capacity-exchange-providers';
+
 const SPECK_PER_DUST = 10n ** 15n;
 const SUBSCRIPT_DIGITS = '₀₁₂₃₄₅₆₇₈₉';
 
@@ -39,4 +41,12 @@ export function formatDust(specks: bigint): string {
   }
 
   return `${whole.toLocaleString()}.${decimal}`;
+}
+
+export function currencyName(currency: Currency): string {
+  return currency.identifier;
+}
+
+export function currencyTitle(currency: Currency): string {
+  return `${currency.type} token ${currency.identifier}`;
 }

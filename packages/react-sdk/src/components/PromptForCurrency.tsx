@@ -1,5 +1,5 @@
 import { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { formatDust } from './utils';
+import { currencyName, currencyTitle, formatDust } from './utils';
 
 export interface PromptForCurrencyProps {
   prices: ExchangePrice[];
@@ -19,10 +19,10 @@ export function DefaultPromptForCurrency({ prices, dustRequired, onSelected, onC
           <button
             key={p.price.currency.id}
             className="ce-sdk-option"
-            title={p.price.currency.identifier}
+            title={currencyTitle(p.price.currency)}
             onClick={() => onSelected(p)}
           >
-            <span className="ce-sdk-option-label">{p.price.currency.identifier}</span>
+            <span className="ce-sdk-option-label">{currencyName(p.price.currency)}</span>
             <span className="ce-sdk-option-amount">{p.price.amount.toString()}</span>
           </button>
         ))}
