@@ -34,9 +34,9 @@ function createMockDeps() {
       status: 'ok' as const,
       price: 1000n,
       currency: {
-        id: 'shielded:0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
-        type: 'shielded',
-        identifier: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+        id: 'midnight:shielded:0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+        type: 'midnight:shielded',
+        rawId: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
       },
     })),
   } as unknown as PriceService;

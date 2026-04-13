@@ -44,9 +44,9 @@ export function formatDust(specks: bigint): string {
 }
 
 export function currencyName(currency: Currency): string {
-  return currency.identifier;
+  return currency.rawId;
 }
 
 export function currencyTitle(currency: Currency): string {
-  return `${currency.type} token ${currency.identifier}`;
+  return `${currency.type} token ${currency.rawId}`;
 }

@@ -259,8 +259,8 @@ function InlineCurrencySelection({
   onSelect: (result: CurrencySelectionResult) => void;
 }) {
   const sortedPrices = [...prices].sort((a, b) => {
-    const balA = shieldedBalances[a.price.currency.identifier] ?? 0n;
-    const balB = shieldedBalances[b.price.currency.identifier] ?? 0n;
+    const balA = shieldedBalances[a.price.currency.rawId] ?? 0n;
+    const balB = shieldedBalances[b.price.currency.rawId] ?? 0n;
     const canAffordA = balA >= BigInt(a.price.amount);
     const canAffordB = balB >= BigInt(b.price.amount);
     if (canAffordA && !canAffordB) {
@@ -280,7 +280,7 @@ function InlineCurrencySelection({
         it:
       </p>
       {sortedPrices.map((ep, i) => {
-        const balance = shieldedBalances[ep.price.currency.identifier] ?? 0n;
+        const balance = shieldedBalances[ep.price.currency.rawId] ?? 0n;
         const cost = BigInt(ep.price.amount);
         const canAfford = balance >= cost;
         const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);

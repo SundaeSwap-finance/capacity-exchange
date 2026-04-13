@@ -36,7 +36,7 @@ export interface ApiPricesGet200ResponsePricesInnerCurrency {
      * @type {string}
      * @memberof ApiPricesGet200ResponsePricesInnerCurrency
      */
-    identifier: string;
+    rawId: string;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface ApiPricesGet200ResponsePricesInnerCurrency {
 export function instanceOfApiPricesGet200ResponsePricesInnerCurrency(value: object): value is ApiPricesGet200ResponsePricesInnerCurrency {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('type' in value) || value['type'] === undefined) return false;
-    if (!('identifier' in value) || value['identifier'] === undefined) return false;
+    if (!('rawId' in value) || value['rawId'] === undefined) return false;
     return true;
 }
 
@@ -61,7 +61,7 @@ export function ApiPricesGet200ResponsePricesInnerCurrencyFromJSONTyped(json: an
         
         'id': json['id'],
         'type': json['type'],
-        'identifier': json['identifier'],
+        'rawId': json['rawId'],
     };
 }
 
@@ -78,7 +78,7 @@ export function ApiPricesGet200ResponsePricesInnerCurrencyToJSONTyped(value?: Ap
         
         'id': value['id'],
         'type': value['type'],
-        'identifier': value['identifier'],
+        'rawId': value['rawId'],
     };
 }
 

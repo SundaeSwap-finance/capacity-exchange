@@ -18,18 +18,18 @@ export function resolveTokenLabel(
   currency: Currency,
   mintedTokenColor: string | null
 ): { label: string; className: string } {
-  if (mintedTokenColor && currency.type === 'shielded' && currency.identifier === mintedTokenColor) {
+  if (mintedTokenColor && currency.type === 'midnight:shielded' && currency.rawId === mintedTokenColor) {
     return { label: 'Tutorial Tokens', className: 'text-ces-gold' };
   }
 
-  const known = KNOWN_TOKENS[currency.identifier];
+  const known = KNOWN_TOKENS[currency.rawId];
   if (known) {
     return known;
   }
 
   // Truncated hex fallback
   return {
-    label: `${currency.identifier.slice(0, 8)}...${currency.identifier.slice(-6)}`,
+    label: `${currency.rawId.slice(0, 8)}...${currency.rawId.slice(-6)}`,
     className: 'text-ces-text-muted',
   };
 }

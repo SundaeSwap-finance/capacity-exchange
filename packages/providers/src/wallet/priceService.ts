@@ -36,5 +36,5 @@ export async function fetchPricesFromExchanges(exchangeApis: CesApi[], dustRequi
 }
 
 function isCurrencySupported(currency: Currency): boolean {
-  return currency.type === 'shielded' || currency.type === 'unshielded';
+  return currency.type === 'midnight:shielded' || currency.type === 'midnight:unshielded';
 }

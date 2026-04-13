@@ -67,5 +67,5 @@ export class PriceService {
 }
 
 function computeCurrencyId(currency: RawCurrency): string {
-  return `${currency.type}:${currency.identifier}`;
+  return `${currency.type}:${currency.rawId}`;
 }

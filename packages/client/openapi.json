@@ -465,7 +465,7 @@
                             "required": [
                               "id",
                               "type",
-                              "identifier"
+                              "rawId"
                             ],
                             "properties": {
                               "id": {
@@ -474,7 +474,7 @@
                               "type": {
                                 "type": "string"
                               },
-                              "identifier": {
+                              "rawId": {
                                 "type": "string"
                               }
                             }
@@ -592,7 +592,7 @@
                       "required": [
                         "id",
                         "type",
-                        "identifier"
+                        "rawId"
                       ],
                       "properties": {
                         "id": {
@@ -601,7 +601,7 @@
                         "type": {
                           "type": "string"
                         },
-                        "identifier": {
+                        "rawId": {
                           "type": "string"
                         }
                       }

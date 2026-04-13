@@ -34,14 +34,14 @@ export interface Currency {
    */
   id: string;
   /**
-   * What form of currency this is (i.e. shielded).
+   * What form of currency this is (i.e. midnight:shielded).
    */
   type: string;
   /**
-   * The on-chain identifier for this currency.
+   * The raw identifier for this currency.
    * For shielded tokens, a 32-byte hex-encoded token identifier.
    */
-  identifier: string;
+  rawId: string;
 }
 
 /**

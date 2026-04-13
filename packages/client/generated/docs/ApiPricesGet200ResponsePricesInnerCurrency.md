@@ -8,7 +8,7 @@ Name | Type
 ------------ | -------------
 `id` | string
 `type` | string
-`identifier` | string
+`rawId` | string
 
 ## Example
 
@@ -19,7 +19,7 @@ import type { ApiPricesGet200ResponsePricesInnerCurrency } from ''
 const example = {
   "id": null,
   "type": null,
-  "identifier": null,
+  "rawId": null,
 } satisfies ApiPricesGet200ResponsePricesInnerCurrency
 
 console.log(example)

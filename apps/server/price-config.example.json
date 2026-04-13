@@ -2,8 +2,8 @@
   "priceFormulas": [
     {
       "currency": {
-        "type": "shielded",
-        "identifier": "<derived-token-color>"
+        "type": "midnight:shielded",
+        "rawId": "<derived-token-color>"
       },
       "basePrice": "101",
       "rateNumerator": "11",

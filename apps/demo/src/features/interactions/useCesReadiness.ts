@@ -35,7 +35,7 @@ export function useCesReadiness(tokenColor: string | null): CesReadiness {
     try {
       const pricesData = await api.apiPricesGet({ specks: '1' });
       const hasCurrency = pricesData.prices.some(
-        (p) => p.currency.type === 'shielded' && p.currency.identifier === tokenColor
+        (p) => p.currency.type === 'midnight:shielded' && p.currency.rawId === tokenColor
       );
       setState({ status: 'ready', hasCurrency });
     } catch {

@@ -4,7 +4,7 @@ import { Type } from '@sinclair/typebox';
 export const Currency = Type.Object({
   id: Type.String(),
   type: Type.String(),
-  identifier: Type.String(),
+  rawId: Type.String(),
 });
 
 // Generic error response shape
