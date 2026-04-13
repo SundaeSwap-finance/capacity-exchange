@@ -1,7 +1,7 @@
 import { FastifyBaseLogger } from 'fastify';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
-import { PriceService } from './price.js';
+import { Currency, PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
 import { LRUCache } from 'lru-cache';
 import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
@@ -16,7 +16,7 @@ export interface CreateOfferRequest {
 export interface OfferResponse {
   offerId: string;
   offerAmount: string;
-  offerCurrency: string;
+  offerCurrency: Currency;
   serializedTx: string;
   expiresAt: string;
 }
@@ -166,7 +166,7 @@ export class OfferService {
       const offer: OfferResponse = {
         offerId: lockedInfo.id,
         offerAmount: getPriceResult.price.toString(),
-        offerCurrency: getPriceResult.currency.identifier, // TODO: return full currency object
+        offerCurrency: getPriceResult.currency,
         serializedTx: Buffer.from(tx.serialize()).toString('hex'),
         expiresAt: expiration.toISOString(),
       };

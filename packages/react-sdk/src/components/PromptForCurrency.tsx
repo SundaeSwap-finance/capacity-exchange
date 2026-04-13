@@ -17,12 +17,12 @@ export function DefaultPromptForCurrency({ prices, dustRequired, onSelected, onC
       <div className="ce-sdk-options">
         {prices.map((p) => (
           <button
-            key={p.price.currency}
+            key={p.price.currency.id}
             className="ce-sdk-option"
-            title={p.price.currency}
+            title={p.price.currency.identifier}
             onClick={() => onSelected(p)}
           >
-            <span className="ce-sdk-option-label">{p.price.currency}</span>
+            <span className="ce-sdk-option-label">{p.price.currency.identifier}</span>
             <span className="ce-sdk-option-amount">{p.price.amount.toString()}</span>
           </button>
         ))}

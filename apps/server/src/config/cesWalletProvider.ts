@@ -37,7 +37,7 @@ function createAutoSelectCurrency(
 
     const balances = await walletService.getShieldedTokenBalances();
 
-    const candidates = prices.filter((p) => (balances[p.price.currency] ?? 0n) > 0n);
+    const candidates = prices.filter((p) => (balances[p.price.currency.identifier] ?? 0n) > 0n);
     if (candidates.length === 0) {
       throw new Error('No exchange prices available for currencies held by this wallet');
     }

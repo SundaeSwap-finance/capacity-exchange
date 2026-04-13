@@ -10,6 +10,7 @@ export * from './ApiOffersPost201Response';
 export * from './ApiOffersPostRequest';
 export * from './ApiPricesGet200Response';
 export * from './ApiPricesGet200ResponsePricesInner';
+export * from './ApiPricesGet200ResponsePricesInnerCurrency';
 export * from './ApiPricesGet400Response';
 export * from './ApiSponsorPost200Response';
 export * from './ApiSponsorPostRequest';

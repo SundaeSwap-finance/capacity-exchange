@@ -1,9 +1,9 @@
 import { Type } from '@sinclair/typebox';
-import { ErrorResponse } from './common.js';
+import { Currency, ErrorResponse } from './common.js';
 
 const Price = Type.Object({
   amount: Type.String(),
-  currency: Type.String(),
+  currency: Currency,
 });
 
 export const PricesResponse = Type.Object({

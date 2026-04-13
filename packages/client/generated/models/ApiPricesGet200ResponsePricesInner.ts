@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ApiPricesGet200ResponsePricesInnerCurrency } from './ApiPricesGet200ResponsePricesInnerCurrency';
+import {
+    ApiPricesGet200ResponsePricesInnerCurrencyFromJSON,
+    ApiPricesGet200ResponsePricesInnerCurrencyFromJSONTyped,
+    ApiPricesGet200ResponsePricesInnerCurrencyToJSON,
+    ApiPricesGet200ResponsePricesInnerCurrencyToJSONTyped,
+} from './ApiPricesGet200ResponsePricesInnerCurrency';
+
 /**
  * 
  * @export
@@ -27,10 +35,10 @@ export interface ApiPricesGet200ResponsePricesInner {
     amount: string;
     /**
      * 
-     * @type {string}
+     * @type {ApiPricesGet200ResponsePricesInnerCurrency}
      * @memberof ApiPricesGet200ResponsePricesInner
      */
-    currency: string;
+    currency: ApiPricesGet200ResponsePricesInnerCurrency;
 }
 
 /**
@@ -53,7 +61,7 @@ export function ApiPricesGet200ResponsePricesInnerFromJSONTyped(json: any, ignor
     return {
         
         'amount': json['amount'],
-        'currency': json['currency'],
+        'currency': ApiPricesGet200ResponsePricesInnerCurrencyFromJSON(json['currency']),
     };
 }
 
@@ -69,7 +77,7 @@ export function ApiPricesGet200ResponsePricesInnerToJSONTyped(value?: ApiPricesG
     return {
         
         'amount': value['amount'],
-        'currency': value['currency'],
+        'currency': ApiPricesGet200ResponsePricesInnerCurrencyToJSON(value['currency']),
     };
 }
 

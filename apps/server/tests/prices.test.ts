@@ -11,7 +11,11 @@ describe('Prices API', () => {
     expect(data.quoteId).toBeDefined();
     expect(data.prices).toEqual([
       {
-        currency: '1337133713371337133713371337133713371337133713371337133713371337',
+        currency: {
+          id: 'shielded:1337133713371337133713371337133713371337133713371337133713371337',
+          type: 'shielded',
+          identifier: '1337133713371337133713371337133713371337133713371337133713371337',
+        },
         amount: '112',
       },
     ]);

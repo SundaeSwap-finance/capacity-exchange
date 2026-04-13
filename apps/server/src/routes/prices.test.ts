@@ -35,7 +35,11 @@ describe('GET /api/prices', () => {
     const body = res.json();
     expect(body.quoteId).toBeDefined();
     expect(body.prices).toHaveLength(1);
-    expect(body.prices[0].currency).toBe('lovelace');
+    expect(body.prices[0].currency).toEqual({
+      id: 'shielded:lovelace',
+      type: 'shielded',
+      identifier: 'lovelace',
+    });
   });
 
   it('returns a quoteId that decodes to the correct specks and prices', async () => {
