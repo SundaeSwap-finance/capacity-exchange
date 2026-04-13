@@ -11,7 +11,15 @@ describe('GET /api/prices', () => {
   const app = useRouteTestApp({
     decorations: {
       priceService: new PriceService([
-        { currency: 'lovelace', basePrice: '1000', rateNumerator: '1', rateDenominator: '1' },
+        {
+          currency: {
+            type: 'shielded',
+            identifier: 'lovelace',
+          },
+          basePrice: '1000',
+          rateNumerator: '1',
+          rateDenominator: '1',
+        },
       ]),
       quoteService,
     },
@@ -43,6 +51,10 @@ describe('GET /api/prices', () => {
       return;
     }
     expect(result.quote.specks).toBe(5000n);
-    expect(result.quote.prices[0].currency).toBe('lovelace');
+    expect(result.quote.prices[0].currency).toEqual({
+      id: 'shielded:lovelace',
+      type: 'shielded',
+      identifier: 'lovelace',
+    });
   });
 });

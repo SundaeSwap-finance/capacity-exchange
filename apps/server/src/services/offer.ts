@@ -140,7 +140,10 @@ export class OfferService {
     );
 
     const getPriceResult = this.priceService.getPrice(request.offerCurrency, request.specks);
-    if (getPriceResult.status === 'unsupported-currency') {
+    if (
+      getPriceResult.status === 'unsupported-currency' ||
+      getPriceResult.currency.type !== 'shielded'
+    ) {
       return { status: 'unsupported-currency', currency: request.offerCurrency };
     }
 
@@ -151,7 +154,7 @@ export class OfferService {
     const lockedInfo = lockResult.value;
 
     try {
-      const coin = createShieldedCoinInfo(request.offerCurrency, getPriceResult.price);
+      const coin = createShieldedCoinInfo(getPriceResult.currency.identifier, getPriceResult.price);
       const expiration = new Date(lockedInfo.expiresAtMillis);
       const tx = await this.txService.createOfferTx(
         coin,
@@ -163,7 +166,7 @@ export class OfferService {
       const offer: OfferResponse = {
         offerId: lockedInfo.id,
         offerAmount: getPriceResult.price.toString(),
-        offerCurrency: request.offerCurrency,
+        offerCurrency: getPriceResult.currency.identifier, // TODO: return full currency object
         serializedTx: Buffer.from(tx.serialize()).toString('hex'),
         expiresAt: expiration.toISOString(),
       };

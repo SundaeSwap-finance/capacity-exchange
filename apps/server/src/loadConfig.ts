@@ -8,7 +8,7 @@ import {
   type WalletStateStore,
 } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { loadPriceConfig, type PriceFormula, type SponsoredContract } from './config/prices.js';
+import { loadPriceConfig, type RawPriceFormula, type SponsoredContract } from './config/prices.js';
 import { parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
@@ -22,7 +22,7 @@ export interface AppConfig {
   otelEndpoint?: string;
   otelMetricExportIntervalMs?: number;
   endpoints: NetworkEndpoints;
-  priceFormulas: PriceFormula[];
+  priceFormulas: RawPriceFormula[];
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
   quoteSecretFile: string;

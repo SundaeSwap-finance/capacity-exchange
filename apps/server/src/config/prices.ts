@@ -2,8 +2,13 @@ import { Value } from '@sinclair/typebox/value';
 import { Type, type Static } from '@sinclair/typebox';
 import { readFileOrError } from './files.js';
 
-const PriceFormulaSchema = Type.Object({
-  currency: Type.String(),
+const RawCurrencySchema = Type.Object({
+  type: Type.Literal('shielded'),
+  identifier: Type.String(),
+});
+
+const RawPriceFormulaSchema = Type.Object({
+  currency: RawCurrencySchema,
   basePrice: Type.String(),
   rateNumerator: Type.String(),
   rateDenominator: Type.String(),
@@ -20,12 +25,13 @@ const SponsoredContractSchema = Type.Object({
 });
 
 const PriceConfigSchema = Type.Object({
-  priceFormulas: Type.Array(PriceFormulaSchema),
+  priceFormulas: Type.Array(RawPriceFormulaSchema),
   sponsorAll: Type.Optional(Type.Boolean()),
   sponsoredContracts: Type.Array(SponsoredContractSchema),
 });
 
-export type PriceFormula = Static<typeof PriceFormulaSchema>;
+export type RawCurrency = Static<typeof RawCurrencySchema>;
+export type RawPriceFormula = Static<typeof RawPriceFormulaSchema>;
 export type SponsoredContract = Static<typeof SponsoredContractSchema>;
 export type PriceConfig = Static<typeof PriceConfigSchema>;
 
