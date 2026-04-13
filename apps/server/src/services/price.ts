@@ -33,8 +33,8 @@ export class PriceService {
     }
   }
 
-  getPrice(currency: string, specks: bigint): GetPriceResult {
-    const formula = this.#formulas.get(currency);
+  getPrice(id: string, specks: bigint): GetPriceResult {
+    const formula = this.#formulas.get(id);
     if (!formula) {
       return { status: 'unsupported-currency' };
     }

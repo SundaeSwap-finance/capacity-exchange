@@ -15,9 +15,9 @@ stub.createOffer = vi.fn(async (req) => ({
     offerId: 'test-id',
     offerAmount: '1000',
     offerCurrency: {
-      id: `shielded:${req.offerCurrency}`,
+      id: req.offerCurrency,
       type: 'shielded' as const,
-      identifier: req.offerCurrency,
+      identifier: req.offerCurrency.substring('shielded:').length,
     },
     serializedTx: 'deadbeef',
     expiresAt: new Date().toISOString(),

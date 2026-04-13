@@ -35,7 +35,7 @@ export function CurrencySelectionModal({ prices, specksRequired, onSelect }: Cur
       <div className="space-y-2 mb-6">
         {prices.map((exchangePrice, index) => (
           <CurrencyOption
-            key={`${exchangePrice.price.currency}-${index}`}
+            key={`${exchangePrice.price.currency.id}-${index}`}
             exchangePrice={exchangePrice}
             onSelect={() => onSelect({ status: 'selected', exchangePrice })}
           />

@@ -15,7 +15,7 @@ export interface ExchangePrice {
    */
   price: {
     /**
-     * A 32-byte hex-encoded token identifier.
+     * The currency in which to pay this price.
      */
     currency: Currency;
     /**

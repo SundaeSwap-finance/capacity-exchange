@@ -290,7 +290,7 @@ function CesPlaygroundAction({
                   const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);
                   return (
                     <button
-                      key={`${ep.price.currency}-${i}`}
+                      key={`${ep.price.currency.id}-${i}`}
                       onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
                       disabled={!canAfford}
                       className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-gold/40 hover:bg-ces-surface-raised hover:border-ces-gold' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}
