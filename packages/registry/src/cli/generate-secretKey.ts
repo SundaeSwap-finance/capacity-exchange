@@ -3,7 +3,7 @@ import { program } from 'commander';
 import { runCli } from '@capacity-exchange/midnight-node';
 import { generateMnemonic, parseMnemonic } from '@capacity-exchange/midnight-core';
 
-import { generateRandomSecretKey, type SecretKey } from '../types.js';
+import { generateRandomRegistryKey, type RegistryKey } from '../types.js';
 
 function main(): Promise<void> {
   program
@@ -14,7 +14,7 @@ function main(): Promise<void> {
 
   const [outputFile] = program.args;
 
-  const secretKey: SecretKey = generateRandomSecretKey();
+  const secretKey: RegistryKey = generateRandomRegistryKey();
   console.log(`Generated secret key: ${Buffer.from(secretKey).toString('hex').slice(0, 16)}...`);
 
   fs.writeFileSync(outputFile, Buffer.from(secretKey).toString('hex'));

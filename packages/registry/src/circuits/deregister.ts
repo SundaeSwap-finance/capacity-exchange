@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 
 import { AppContext, buildProviders, createLogger } from "@capacity-exchange/midnight-node";
 import { toTxResult, TxResult } from '@capacity-exchange/midnight-core';
-import { SecretKey } from "../types";
+import { RegistryKey } from "../types";
 import { CompiledRegistryContract, createPrivateState, RegistryContract } from '../contract';
 import { SucceedEntirely, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
 import { createUnprovenCallTx, submitTx } from "@midnight-ntwrk/midnight-js-contracts";
@@ -24,7 +24,7 @@ const descriptor_1 = new CompactTypeBytes(32);
 const descriptor_0 = new CompactTypeBytes(64);
 
 /**
- * In the generated contract, used as the input type for `persistentHash` in `hashKey`.
+ * In the registry contract, used as the input type for `persistentHash` in `hashKey`.
  */
 const descriptor_12: CompactType<[Uint8Array, Uint8Array]> = {
     alignment(): Alignment { return descriptor_1.alignment().concat(descriptor_0.alignment()); },
@@ -38,7 +38,6 @@ const descriptor_12: CompactType<[Uint8Array, Uint8Array]> = {
 
 /**
  * `pad(32, "registry:pkh")` from the registry contract, converted to bytes.
- * "registry:pkh" is 12 ASCII bytes zero-padded to 32 bytes.
  * Copied from `_hashKey_0` in the generated contract JS.
  */
 const REGISTRY_PREFIX = new Uint8Array([
@@ -47,7 +46,6 @@ const REGISTRY_PREFIX = new Uint8Array([
 ]);
 
 export interface DeregisterParams {
-    /** On-chain address of the deployed registry contract. */
     contractAddress: string;
     
     privateStateId: string;
@@ -55,7 +53,7 @@ export interface DeregisterParams {
      * 64-byte secret key that determines the on-chain registry key via `hashKey(secretKey())`.
      * Must match the key used when registering.
      */
-    secretKey: SecretKey;
+    secretKey: RegistryKey;
     /**
      * Bech32m-encoded unshielded address that will receive the collateral refund
      * sent by `sendUnshielded` in the `deregisterServer` circuit.
@@ -88,9 +86,6 @@ export async function deregister(ctx: AppContext, params: DeregisterParams): Pro
 
 /**
  * Builds, proves, and submits the `deregisterServer` call transaction.
- *
- * uses `sendUnshielded` since the contract pays the caller, 
- * so no unshielded offer is needed from the wallet side.
  */
 async function submitUnprovedTransaction(
     providers: DeregisterServerProvider,
@@ -102,7 +97,7 @@ async function submitUnprovedTransaction(
     const recipientAddress = parseAddress(params.recipientAddress);
     logger.info(`Recipient address: ${Buffer.from(recipientAddress.bytes).toString('hex')}`);
 
-    const callTxData = await createUnprovenCallTx(providers as MidnightProviders<'deregisterServer'>, {
+    const callTxData = await createUnprovenCallTx(providers as DeregisterServerProvider, {
         contractAddress: params.contractAddress,
         compiledContract: CompiledRegistryContract,
         circuitId,
@@ -124,9 +119,8 @@ async function submitUnprovedTransaction(
 
 /**
  * Replicates the `hashKey` circuit to compute the 32-byte registry key
- * for a given secret key.
  */
-function computeRegistryKey(secretKey: SecretKey): Uint8Array {
+function computeRegistryKey(secretKey: RegistryKey): Uint8Array {
     return persistentHash(descriptor_12, [REGISTRY_PREFIX, secretKey]);
 }
 

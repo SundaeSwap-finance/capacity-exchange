@@ -6,7 +6,7 @@ import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext, buildProviders } from '@capacity-exchange/midnight-node';
 import { createLogger } from '@capacity-exchange/midnight-node';
 import { CompiledRegistryContract, constructorArgs, createPrivateState, RegistryContract } from './contract.js';
-import { SecretKey, RegistryConstructorArgs, generateRandomSecretKey } from './types.js';
+import { RegistryKey, RegistryConstructorArgs, generateRandomRegistryKey } from './types.js';
 
 const logger = createLogger(import.meta);
 
@@ -24,7 +24,7 @@ export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Pr
   const privateStateId = crypto.randomBytes(32).toString('hex');
   logger.info(`Generated private state ID: ${privateStateId}`);
 
-  const secretKey: SecretKey = generateRandomSecretKey();
+  const secretKey: RegistryKey = generateRandomRegistryKey();
   logger.info(`Generated secret key: ${Buffer.from(secretKey).toString('hex').slice(0, 16)}...`);
 
   const initialPrivateState = createPrivateState(secretKey);

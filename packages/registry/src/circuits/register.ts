@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 
 import { AppContext, buildProviders, createLogger, WalletContext } from "@capacity-exchange/midnight-node";
 import { DEFAULT_TTL_MS, toTxResult } from '@capacity-exchange/midnight-core';
-import { entryToContract, RegistryEntry, SecretKey } from "../types";
+import { entryToContract, RegistryEntry, RegistryKey } from "../types";
 import { CompiledRegistryContract, createPrivateState, Registry, RegistryContract } from "../contract";
 
 import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from "@midnight-ntwrk/midnight-js-types";
@@ -21,7 +21,7 @@ export interface RegisterParams {
     entry: RegistryEntry;
 }
 
-export async function register(ctx: AppContext, secretKey: SecretKey, params: RegisterParams) {
+export async function register(ctx: AppContext, secretKey: RegistryKey, params: RegisterParams) {
     const { contractAddress, privateStateId, entry } = params;
 
     logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
@@ -90,7 +90,7 @@ async function provenCallTx(providers: RegisterServerProvider, params: RegisterP
  * Balances, signs, and submits a proven unbound transaction that includes a
  * `receiveUnshielded` call.
  *
- * @returns The submitted transaction ID.
+ * @returns The submitted transaction ID as string.
  */
 async function submitUnboundTransaction(walletContext: WalletContext, tx: UnboundTransaction) {
     const { walletFacade, keys } = walletContext;

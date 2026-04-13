@@ -24,7 +24,7 @@ export type ContractEntry = {
 
 export type RegistryKey = Uint8Array;
 
-export type SecretKey = Uint8Array;
+
 
 export type RegistryMapping = Map<string, RegistryEntry>;
 
@@ -33,7 +33,7 @@ export interface RegistryConstructorArgs {
   maxValidityInterval: bigint;
 }
 
-export function generateRandomSecretKey(): SecretKey {
+export function generateRandomRegistryKey(): RegistryKey {
   return crypto.randomBytes(64);
 }
 
