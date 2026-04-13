@@ -1,11 +1,11 @@
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-import { AppContext, buildProviders, createLogger } from "@capacity-exchange/midnight-node";
+import { AppContext, buildProviders, createLogger } from '@capacity-exchange/midnight-node';
 import { RegistryKey } from '../types';
 import { CompiledRegistryContract, createPrivateState, RegistryContract } from '../contract';
 import { SucceedEntirely, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
-import { createUnprovenCallTx, submitTx } from "@midnight-ntwrk/midnight-js-contracts";
+import { createUnprovenCallTx, submitTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { toTxResult, TxResult } from '@capacity-exchange/midnight-core';
 
 const logger = createLogger(import.meta);
@@ -14,18 +14,18 @@ type RefreshValidityProvider = MidnightProviders<'refreshValidity'>;
 const circuitId = 'refreshValidity';
 
 export interface RefreshValidityParams {
-    contractAddress: string;
+  contractAddress: string;
 
-    privateStateId: string;
+  privateStateId: string;
 
-    /**
-     * New expiry as a Unix timestamp in seconds, passed directly to the `refreshValidity`
-     * circuit as `UnixTimestampSeconds` (`Uint<64>`).
-     */
-    validToInt: bigint;
+  /**
+   * New expiry as a Unix timestamp in seconds, passed directly to the `refreshValidity`
+   * circuit as `UnixTimestampSeconds` (`Uint<64>`).
+   */
+  validToInt: bigint;
 
-    /** New expiry date for the registry entry. Used only for logging. */
-    validTo: Date;
+  /** New expiry date for the registry entry. Used only for logging. */
+  validTo: Date;
 }
 
 /**
@@ -36,55 +36,53 @@ export interface RefreshValidityParams {
  *
  * @returns A {@link TxResult} with the transaction ID, hash, contract address, and block info.
  */
-export async function refreshValidity(ctx: AppContext, secretKey: RegistryKey, params: RefreshValidityParams): Promise<TxResult> {
-    const { contractAddress, privateStateId, validTo } = params;
+export async function refreshValidity(
+  ctx: AppContext,
+  secretKey: RegistryKey,
+  params: RefreshValidityParams
+): Promise<TxResult> {
+  const { contractAddress, privateStateId, validTo } = params;
 
-    logger.info(`Refreshing validity to ${validTo.toISOString()} in registry ${contractAddress}...`);
+  logger.info(`Refreshing validity to ${validTo.toISOString()} in registry ${contractAddress}...`);
 
-    const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
-    logger.debug(`Contract output directory: ${contractOutDir}`);
+  const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
+  logger.debug(`Contract output directory: ${contractOutDir}`);
 
-    const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
-    providers.privateStateProvider.setContractAddress(contractAddress);
-    // Load the secret key into the private state provider so the `secretKey()` witness
-    // has a value to read during circuit execution.
-    await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
+  const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
+  providers.privateStateProvider.setContractAddress(contractAddress);
+  // Load the secret key into the private state provider so the `secretKey()` witness
+  // has a value to read during circuit execution.
+  await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
 
-    const result = await submitUnprovedTransaction(
-        providers as RefreshValidityProvider,
-        params
-    );
+  const result = await submitUnprovedTransaction(providers as RefreshValidityProvider, params);
 
-    return toTxResult(contractAddress, result);
+  return toTxResult(contractAddress, result);
 }
 
 /**
  * Unlike `registerServer`, this circuit does not call `receiveUnshielded`, so the
  * standard `submitTx` flow just works.
  */
-async function submitUnprovedTransaction(
-    providers: RefreshValidityProvider,
-    params: RefreshValidityParams
-) {
-    const { contractAddress, privateStateId, validToInt } = params;
+async function submitUnprovedTransaction(providers: RefreshValidityProvider, params: RefreshValidityParams) {
+  const { contractAddress, privateStateId, validToInt } = params;
 
-    const callTxData = await createUnprovenCallTx(providers, {
-        contractAddress,
-        compiledContract: CompiledRegistryContract,
-        circuitId,
-        privateStateId,
-        args: [validToInt],
-    });
+  const callTxData = await createUnprovenCallTx(providers, {
+    contractAddress,
+    compiledContract: CompiledRegistryContract,
+    circuitId,
+    privateStateId,
+    args: [validToInt],
+  });
 
-    logger.info('Proving transaction...');
-    const result = await submitTx(providers, {
-        unprovenTx: callTxData.private.unprovenTx,
-        circuitId,
-    });
+  logger.info('Proving transaction...');
+  const result = await submitTx(providers, {
+    unprovenTx: callTxData.private.unprovenTx,
+    circuitId,
+  });
 
-    if (result.status !== SucceedEntirely) {
-        throw new Error(`${circuitId} transaction failed with status ${result.status}`);
-    }
+  if (result.status !== SucceedEntirely) {
+    throw new Error(`${circuitId} transaction failed with status ${result.status}`);
+  }
 
-    return result;
+  return result;
 }

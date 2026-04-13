@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import { program } from 'commander';
 import { runCli } from '@capacity-exchange/midnight-node';
-import { generateMnemonic, parseMnemonic } from '@capacity-exchange/midnight-core';
 
 import { generateRandomRegistryKey, type RegistryKey } from '../types.js';
 

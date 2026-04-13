@@ -1,13 +1,13 @@
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-import { AppContext, buildProviders, createLogger, WalletContext } from "@capacity-exchange/midnight-node";
+import { AppContext, buildProviders, createLogger, WalletContext } from '@capacity-exchange/midnight-node';
 import { DEFAULT_TTL_MS, toTxResult } from '@capacity-exchange/midnight-core';
-import { entryToContract, RegistryEntry, RegistryKey } from "../types";
-import { CompiledRegistryContract, createPrivateState, Registry, RegistryContract } from "../contract";
+import { entryToContract, RegistryEntry, RegistryKey } from '../types';
+import { CompiledRegistryContract, createPrivateState, RegistryContract } from '../contract';
 
-import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from "@midnight-ntwrk/midnight-js-types";
-import { createUnprovenCallTx } from "@midnight-ntwrk/midnight-js-contracts";
+import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
+import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 
 const logger = createLogger(import.meta);
 
@@ -15,75 +15,66 @@ type RegisterServerProvider = MidnightProviders<'registerServer'>;
 const circuitId = 'registerServer';
 
 export interface RegisterParams {
-    contractAddress: string;
-    privateStateId: string;
-    /** Server entry to register (IP, port, validity expiry). */
-    entry: RegistryEntry;
+  contractAddress: string;
+  privateStateId: string;
+  /** Server entry to register (IP, port, validity expiry). */
+  entry: RegistryEntry;
 }
 
 export async function register(ctx: AppContext, secretKey: RegistryKey, params: RegisterParams) {
-    const { contractAddress, privateStateId, entry } = params;
+  const { contractAddress, privateStateId, entry } = params;
 
-    logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
+  logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
 
-    const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
-    logger.debug(`Building providers with contract output directory: ${contractOutDir}`);
+  const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
+  logger.debug(`Building providers with contract output directory: ${contractOutDir}`);
 
-    const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
-    providers.privateStateProvider.setContractAddress(contractAddress);
-    // Restore the private state so the `secretKey` witness is available during circuit execution
-    logger.info(`Setting private state for privateStateId: ${privateStateId}`);
-    await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
+  const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
+  providers.privateStateProvider.setContractAddress(contractAddress);
+  // Restore the private state so the `secretKey` witness is available during circuit execution
+  logger.info(`Setting private state for privateStateId: ${privateStateId}`);
+  await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
 
-    const result = await _register(
-        ctx.walletContext,
-        providers as RegisterServerProvider,
-        params,
-    );
+  const result = await _register(ctx.walletContext, providers as RegisterServerProvider, params);
 
-    return toTxResult(contractAddress, result);
+  return toTxResult(contractAddress, result);
 }
 
+async function _register(walletContext: WalletContext, providers: RegisterServerProvider, params: RegisterParams) {
+  const { contractAddress, privateStateId, entry } = params;
 
-async function _register(
-    walletContext: WalletContext,
-    providers: RegisterServerProvider,
-    params: RegisterParams
-) {
-    const { contractAddress, privateStateId, entry } = params;
+  const provenTx = await provenCallTx(providers, { contractAddress, privateStateId, entry });
 
-    const provenTx = await provenCallTx(providers, { contractAddress, privateStateId, entry });
+  const txId = await submitUnboundTransaction(walletContext, provenTx);
 
-    const txId = await submitUnboundTransaction(walletContext, provenTx);
+  logger.info('Waiting for confirmation...');
+  const txData = await providers.publicDataProvider.watchForTxData(txId);
 
-    logger.info('Waiting for confirmation...');
-    const txData = await providers.publicDataProvider.watchForTxData(txId);
+  if (txData.status !== SucceedEntirely) {
+    throw new Error(`RegisterServer transaction failed with status: ${txData.status}`);
+  }
 
-    if (txData.status !== SucceedEntirely) {
-        throw new Error(`RegisterServer transaction failed with status: ${txData.status}`);
-    }
-
-    return txData;
+  return txData;
 }
 
 /**
  * Builds and proves the `registerServer` unproven call transaction.
  */
 async function provenCallTx(providers: RegisterServerProvider, params: RegisterParams) {
-    const { contractAddress, privateStateId, entry } = params;
+  const { contractAddress, privateStateId, entry } = params;
 
-    const callTxData = await createUnprovenCallTx(providers, {
-        contractAddress,
-        compiledContract: CompiledRegistryContract,
-        circuitId,
-        privateStateId,
-        args: [entryToContract(entry)],
-    });
+  const callTxData = await createUnprovenCallTx(providers, {
+    contractAddress,
+    compiledContract: CompiledRegistryContract,
+    circuitId,
+    privateStateId,
+    args: [entryToContract(entry)],
+  });
 
-    logger.info('Proving transaction (this may take several minutes)...');
-    const provenTx = await providers.proofProvider.proveTx(callTxData.private.unprovenTx);
+  logger.info('Proving transaction (this may take several minutes)...');
+  const provenTx = await providers.proofProvider.proveTx(callTxData.private.unprovenTx);
 
-    return provenTx;
+  return provenTx;
 }
 
 /**
@@ -93,24 +84,24 @@ async function provenCallTx(providers: RegisterServerProvider, params: RegisterP
  * @returns The submitted transaction ID as string.
  */
 async function submitUnboundTransaction(walletContext: WalletContext, tx: UnboundTransaction) {
-    const { walletFacade, keys } = walletContext;
+  const { walletFacade, keys } = walletContext;
 
-    const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
+  const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
 
-    logger.info('Balancing transaction...');
-    const recipe = await walletFacade.balanceUnboundTransaction(
-        tx,
-        { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-        { ttl }
-    );
+  logger.info('Balancing transaction...');
+  const recipe = await walletFacade.balanceUnboundTransaction(
+    tx,
+    { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
+    { ttl }
+  );
 
-    logger.info('Signing unshielded offer...');
-    const signedRecipe = await walletFacade.signRecipe(recipe, (payload: Uint8Array) =>
-        keys.unshieldedKeystore.signData(payload)
-    );
+  logger.info('Signing unshielded offer...');
+  const signedRecipe = await walletFacade.signRecipe(recipe, (payload: Uint8Array) =>
+    keys.unshieldedKeystore.signData(payload)
+  );
 
-    logger.info('Finalizing transaction...');
-    const finalizedTx = await walletFacade.finalizeRecipe(signedRecipe);
+  logger.info('Finalizing transaction...');
+  const finalizedTx = await walletFacade.finalizeRecipe(signedRecipe);
 
-   return await walletFacade.submitTransaction(finalizedTx);
+  return await walletFacade.submitTransaction(finalizedTx);
 }

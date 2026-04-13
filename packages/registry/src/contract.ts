@@ -4,7 +4,6 @@ import * as Registry from '../contract/out/contract/index.js';
 import type { Ledger, Witnesses } from '../contract/out/contract/index.js';
 import type { RegistryKey, RegistryConstructorArgs } from './types.js';
 
-
 export type CircuitPrivateState = {
   secretKey: RegistryKey;
 };

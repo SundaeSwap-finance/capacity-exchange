@@ -24,8 +24,6 @@ export type ContractEntry = {
 
 export type RegistryKey = Uint8Array;
 
-
-
 export type RegistryMapping = Map<string, RegistryEntry>;
 
 export interface RegistryConstructorArgs {
@@ -37,14 +35,14 @@ export function generateRandomRegistryKey(): RegistryKey {
   return crypto.randomBytes(64);
 }
 
-export function timestampToDate(dateInString:string) {
-    const validToSecs = Number(dateInString);
+export function timestampToDate(dateInString: string) {
+  const validToSecs = Number(dateInString);
 
-    if (!Number.isInteger(validToSecs) || validToSecs <= 0) {
-        throw new Error(`Invalid validTo value: "${dateInString}". Expected a Unix timestamp in seconds.`);
-    }
+  if (!Number.isInteger(validToSecs) || validToSecs <= 0) {
+    throw new Error(`Invalid validTo value: "${dateInString}". Expected a Unix timestamp in seconds.`);
+  }
 
-    return new Date(validToSecs * 1000);
+  return new Date(validToSecs * 1000);
 }
 
 export function ipToContract(ip: IpAddress): ContractIpAddress {

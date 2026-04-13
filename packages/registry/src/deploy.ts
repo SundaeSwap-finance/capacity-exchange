@@ -10,7 +10,6 @@ import { RegistryKey, RegistryConstructorArgs, generateRandomRegistryKey } from 
 
 const logger = createLogger(import.meta);
 
-
 export interface DeployOutput {
   contractAddress: string;
   txHash: string;
@@ -42,7 +41,7 @@ export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Pr
   const privateKeys = {
     privateStateId,
     secretKey: Buffer.from(secretKey).toString('hex'),
-    contractAddress
+    contractAddress,
   };
   fs.writeFileSync('.registry-private-keys.json', JSON.stringify(privateKeys, null, 2));
   logger.info('Saved private keys to .registry-private-keys.json');
