@@ -33,7 +33,7 @@ export function useCesReadiness(tokenColor: string | null): CesReadiness {
     }
 
     try {
-      const pricesData = await api.apiPricesGet({ specks: '1' });
+      const pricesData = await api.apiPricesGet({ currency: 'DUST', amount: '1' });
       const hasCurrency = pricesData.prices.some(
         (p) => p.currency.type === 'shielded' && p.currency.identifier === tokenColor
       );

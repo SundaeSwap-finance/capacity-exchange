@@ -13,7 +13,8 @@ export const PricesResponse = Type.Object({
 
 const PricesRequestQuery = Type.Object({
   // Enforce the string to be one or more digits
-  specks: Type.String({ pattern: '^\\d+$' }),
+  amount: Type.String({ pattern: '^\\d+$' }),
+  currency: Type.Literal('DUST'),
 });
 
 // For /api/prices

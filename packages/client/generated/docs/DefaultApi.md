@@ -143,7 +143,7 @@ No authorization required
 
 ## apiPricesGet
 
-> ApiPricesGet200Response apiPricesGet(specks)
+> ApiPricesGet200Response apiPricesGet(amount, currency)
 
 
 
@@ -162,7 +162,9 @@ async function example() {
 
   const body = {
     // string
-    specks: specks_example,
+    amount: amount_example,
+    // 'DUST'
+    currency: currency_example,
   } satisfies ApiPricesGetRequest;
 
   try {
@@ -182,7 +184,8 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **specks** | `string` |  | [Defaults to `undefined`] |
+| **amount** | `string` |  | [Defaults to `undefined`] |
+| **currency** | `DUST` |  | [Defaults to `undefined`] [Enum: DUST] |
 
 ### Return type
 

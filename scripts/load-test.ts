@@ -308,7 +308,7 @@ async function checkServer(server: string): Promise<void> {
 }
 
 async function discoverCurrency(config: Config): Promise<string> {
-  const res = await fetch(`${config.server}/api/prices?specks=${config.specks}`);
+  const res = await fetch(`${config.server}/api/prices?currency=DUST&amount=${config.specks}`);
   if (res.status !== 200) {
     const text = await res.text().catch(() => '');
     throw new Error(`/api/prices returned ${res.status}: ${text}`);

@@ -13,10 +13,13 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     if (quoteResult.status === 'expired') {
       return reply.gone('Quote has expired. Please request a new price quote.');
     }
+    if (quoteResult.quote.currency !== 'DUST') {
+      return reply.badRequest('Invalid currency');
+    }
 
     const result = await fastify.offerService.createOffer({
       quoteId: request.body.quoteId,
-      specks: quoteResult.quote.specks,
+      specks: quoteResult.quote.amount,
       offerCurrency: request.body.offerCurrency,
     });
 
