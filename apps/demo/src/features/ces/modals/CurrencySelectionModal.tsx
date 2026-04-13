@@ -10,7 +10,7 @@ function CurrencyOption({ exchangePrice, onSelect }: { exchangePrice: ExchangePr
       className="w-full p-3 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-left transition-colors"
     >
       <div className="flex justify-between items-center">
-        <span className="text-white font-medium font-mono text-sm break-all">{exchangePrice.price.currency}</span>
+        <span className="text-white font-medium font-mono text-sm break-all">{exchangePrice.price.currency.rawId}</span>
         <span className="text-dark-300 font-mono">{exchangePrice.price.amount}</span>
       </div>
     </button>
@@ -33,7 +33,7 @@ export function CurrencySelectionModal({ prices, specksRequired, onSelect }: Cur
       <div className="space-y-2 mb-6">
         {prices.map((exchangePrice, index) => (
           <CurrencyOption
-            key={`${exchangePrice.price.currency}-${index}`}
+            key={`${exchangePrice.price.currency.id}-${index}`}
             exchangePrice={exchangePrice}
             onSelect={() => onSelect({ status: 'selected', exchangePrice })}
           />

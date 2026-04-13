@@ -33,9 +33,7 @@ export class PriceService {
     }
   }
 
-  getPrice(currency: string, specks: bigint): GetPriceResult {
-    // TODO: expect "currency" to be an ID
-    const id = computeCurrencyId({ type: 'shielded', identifier: currency });
+  getPrice(id: string, specks: bigint): GetPriceResult {
     const formula = this.#formulas.get(id);
     if (!formula) {
       return { status: 'unsupported-currency' };
@@ -69,5 +67,5 @@ export class PriceService {
 }
 
 function computeCurrencyId(currency: RawCurrency): string {
-  return `${currency.type}:${currency.identifier}`;
+  return `${currency.type}:${currency.rawId}`;
 }

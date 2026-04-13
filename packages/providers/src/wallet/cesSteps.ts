@@ -76,7 +76,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
   const offerResponse = await exchangePrice.exchangeApi.api.apiOffersPost({
     apiOffersPostRequest: {
       quoteId: exchangePrice.quoteId,
-      offerCurrency: exchangePrice.price.currency,
+      offerCurrency: exchangePrice.price.currency.id,
     },
   });
   console.debug('[CESSteps] Offer received:', offerResponse);

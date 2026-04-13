@@ -12,7 +12,7 @@ export async function getQuoteId(specks: string): Promise<{ quoteId: string; cur
     throw new Error(`Failed to get prices: ${res.status}`);
   }
   const data = res.data as typeof PricesResponse.static;
-  return { quoteId: data.quoteId, currency: data.prices[0].currency };
+  return { quoteId: data.quoteId, currency: data.prices[0].currency.id };
 }
 
 export async function waitForLocksToRelease() {

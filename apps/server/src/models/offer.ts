@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { ErrorResponse } from './common.js';
+import { Currency, ErrorResponse } from './common.js';
 
 export const CreateOfferRequest = Type.Object({
   quoteId: Type.String({ minLength: 1 }),
@@ -9,7 +9,7 @@ export const CreateOfferRequest = Type.Object({
 export const CreateOfferResponse = Type.Object({
   offerId: Type.String(),
   offerAmount: Type.String(),
-  offerCurrency: Type.String(),
+  offerCurrency: Currency,
   serializedTx: Type.String(),
   expiresAt: Type.String({ format: 'date-time' }),
 });

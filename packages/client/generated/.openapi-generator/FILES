@@ -10,6 +10,7 @@ docs/ApiOffersPost201Response.md
 docs/ApiOffersPostRequest.md
 docs/ApiPricesGet200Response.md
 docs/ApiPricesGet200ResponsePricesInner.md
+docs/ApiPricesGet200ResponsePricesInnerCurrency.md
 docs/ApiPricesGet400Response.md
 docs/ApiSponsorPost200Response.md
 docs/ApiSponsorPostRequest.md
@@ -31,6 +32,7 @@ models/ApiOffersPost201Response.ts
 models/ApiOffersPostRequest.ts
 models/ApiPricesGet200Response.ts
 models/ApiPricesGet200ResponsePricesInner.ts
+models/ApiPricesGet200ResponsePricesInnerCurrency.ts
 models/ApiPricesGet400Response.ts
 models/ApiSponsorPost200Response.ts
 models/ApiSponsorPostRequest.ts

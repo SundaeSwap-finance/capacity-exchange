@@ -2,8 +2,8 @@
   "priceFormulas": [
     {
       "currency": {
-        "type": "shielded",
-        "identifier": "1337133713371337133713371337133713371337133713371337133713371337"
+        "type": "midnight:shielded",
+        "rawId": "1337133713371337133713371337133713371337133713371337133713371337"
       },
       "basePrice": "101",
       "rateNumerator": "11",

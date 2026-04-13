@@ -13,8 +13,8 @@ describe('GET /api/prices', () => {
       priceService: new PriceService([
         {
           currency: {
-            type: 'shielded',
-            identifier: 'lovelace',
+            type: 'midnight:shielded',
+            rawId: 'lovelace',
           },
           basePrice: '1000',
           rateNumerator: '1',
@@ -35,7 +35,11 @@ describe('GET /api/prices', () => {
     const body = res.json();
     expect(body.quoteId).toBeDefined();
     expect(body.prices).toHaveLength(1);
-    expect(body.prices[0].currency).toBe('lovelace');
+    expect(body.prices[0].currency).toEqual({
+      id: 'midnight:shielded:lovelace',
+      type: 'midnight:shielded',
+      rawId: 'lovelace',
+    });
   });
 
   it('returns a quoteId that decodes to the correct specks and prices', async () => {
@@ -52,9 +56,9 @@ describe('GET /api/prices', () => {
     }
     expect(result.quote.specks).toBe(5000n);
     expect(result.quote.prices[0].currency).toEqual({
-      id: 'shielded:lovelace',
-      type: 'shielded',
-      identifier: 'lovelace',
+      id: 'midnight:shielded:lovelace',
+      type: 'midnight:shielded',
+      rawId: 'lovelace',
     });
   });
 });

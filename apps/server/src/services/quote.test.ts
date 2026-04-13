@@ -12,9 +12,9 @@ describe('QuoteService', () => {
       {
         amount: '1000',
         currency: {
-          id: 'shielded:lovelace',
-          type: 'shielded' as const,
-          identifier: 'lovelace',
+          id: 'midnight:shielded:lovelace',
+          type: 'midnight:shielded' as const,
+          rawId: 'lovelace',
         },
       },
     ];

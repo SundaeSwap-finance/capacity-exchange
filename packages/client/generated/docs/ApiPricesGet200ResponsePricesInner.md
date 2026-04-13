@@ -7,7 +7,7 @@
 Name | Type
 ------------ | -------------
 `amount` | string
-`currency` | string
+`currency` | [ApiPricesGet200ResponsePricesInnerCurrency](ApiPricesGet200ResponsePricesInnerCurrency.md)
 
 ## Example
 

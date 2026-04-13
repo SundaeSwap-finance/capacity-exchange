@@ -14,7 +14,11 @@ stub.createOffer = vi.fn(async (req) => ({
   offer: {
     offerId: 'test-id',
     offerAmount: '1000',
-    offerCurrency: req.offerCurrency,
+    offerCurrency: {
+      id: req.offerCurrency,
+      type: 'midnight:shielded' as const,
+      rawId: req.offerCurrency.substring('midnight:shielded:').length,
+    },
     serializedTx: 'deadbeef',
     expiresAt: new Date().toISOString(),
   },
@@ -33,9 +37,9 @@ describe('POST /api/offers', () => {
       {
         amount: '100',
         currency: {
-          id: 'shielded:lovelace',
-          type: 'shielded',
-          identifier: 'lovelace',
+          id: 'midnight:shielded:lovelace',
+          type: 'midnight:shielded',
+          rawId: 'lovelace',
         },
       },
     ]);

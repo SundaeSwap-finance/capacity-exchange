@@ -1,3 +1,5 @@
+import { Currency } from '@sundaeswap/capacity-exchange-providers';
+
 /** Well-known Midnight token colors. */
 const KNOWN_TOKENS: Record<string, { label: string; className: string }> = {
   // NIGHT — 64 hex zeros
@@ -13,21 +15,21 @@ const KNOWN_TOKENS: Record<string, { label: string; className: string }> = {
  *  3. Falls back to truncated hex
  */
 export function resolveTokenLabel(
-  currencyHex: string,
+  currency: Currency,
   mintedTokenColor: string | null
 ): { label: string; className: string } {
-  if (mintedTokenColor && currencyHex === mintedTokenColor) {
+  if (mintedTokenColor && currency.type === 'midnight:shielded' && currency.rawId === mintedTokenColor) {
     return { label: 'Tutorial Tokens', className: 'text-ces-gold' };
   }
 
-  const known = KNOWN_TOKENS[currencyHex];
+  const known = KNOWN_TOKENS[currency.rawId];
   if (known) {
     return known;
   }
 
   // Truncated hex fallback
   return {
-    label: `${currencyHex.slice(0, 8)}...${currencyHex.slice(-6)}`,
+    label: `${currency.rawId.slice(0, 8)}...${currency.rawId.slice(-6)}`,
     className: 'text-ces-text-muted',
   };
 }

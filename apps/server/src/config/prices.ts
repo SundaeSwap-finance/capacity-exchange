@@ -3,8 +3,8 @@ import { Type, type Static } from '@sinclair/typebox';
 import { readFileOrError } from './files.js';
 
 const RawCurrencySchema = Type.Object({
-  type: Type.Literal('shielded'),
-  identifier: Type.String(),
+  type: Type.Literal('midnight:shielded'),
+  rawId: Type.String(),
 });
 
 const RawPriceFormulaSchema = Type.Object({

@@ -22,7 +22,7 @@ export function OfferSummary({ offer, specksRequired }: OfferSummaryProps) {
       <BoxedLabelValue label="DUST required">{formatDust(specksRequired)}</BoxedLabelValue>
       <BoxedLabelValue label="Payment Amount">
         <div className="text-lg">{offer.offerAmount}</div>
-        <div className="text-dark-400 text-xs mt-1">{offer.offerCurrency}</div>
+        <div className="text-dark-400 text-xs mt-1">{offer.offerCurrency.rawId}</div>
       </BoxedLabelValue>
     </>
   );

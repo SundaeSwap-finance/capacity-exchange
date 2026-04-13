@@ -272,8 +272,8 @@ function CesPlaygroundAction({
             <div className="ces-compact-stack ces-input-pulse">
               {[...currencySelection.prices]
                 .sort((a, b) => {
-                  const balA = shieldedBalances[a.price.currency] ?? 0n;
-                  const balB = shieldedBalances[b.price.currency] ?? 0n;
+                  const balA = shieldedBalances[a.price.currency.rawId] ?? 0n;
+                  const balB = shieldedBalances[b.price.currency.rawId] ?? 0n;
                   const canA = balA >= BigInt(a.price.amount);
                   const canB = balB >= BigInt(b.price.amount);
                   if (canA && !canB) {
@@ -285,12 +285,12 @@ function CesPlaygroundAction({
                   return 0;
                 })
                 .map((ep, i) => {
-                  const balance = shieldedBalances[ep.price.currency] ?? 0n;
+                  const balance = shieldedBalances[ep.price.currency.rawId] ?? 0n;
                   const canAfford = balance >= BigInt(ep.price.amount);
                   const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);
                   return (
                     <button
-                      key={`${ep.price.currency}-${i}`}
+                      key={`${ep.price.currency.id}-${i}`}
                       onClick={() => onCurrencySelected({ status: 'selected', exchangePrice: ep })}
                       disabled={!canAfford}
                       className={`w-full p-2 rounded-lg border text-left transition-colors text-sm ${canAfford ? 'border-ces-gold/40 hover:bg-ces-surface-raised hover:border-ces-gold' : 'border-ces-border/30 opacity-40 cursor-not-allowed'}`}

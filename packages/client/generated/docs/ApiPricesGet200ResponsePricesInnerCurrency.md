@@ -1,30 +1,26 @@
 
-# ApiOffersPost201Response
+# ApiPricesGet200ResponsePricesInnerCurrency
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`offerId` | string
-`offerAmount` | string
-`offerCurrency` | [ApiPricesGet200ResponsePricesInnerCurrency](ApiPricesGet200ResponsePricesInnerCurrency.md)
-`serializedTx` | string
-`expiresAt` | Date
+`id` | string
+`type` | string
+`rawId` | string
 
 ## Example
 
 ```typescript
-import type { ApiOffersPost201Response } from ''
+import type { ApiPricesGet200ResponsePricesInnerCurrency } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "offerId": null,
-  "offerAmount": null,
-  "offerCurrency": null,
-  "serializedTx": null,
-  "expiresAt": null,
-} satisfies ApiOffersPost201Response
+  "id": null,
+  "type": null,
+  "rawId": null,
+} satisfies ApiPricesGet200ResponsePricesInnerCurrency
 
 console.log(example)
 
@@ -33,7 +29,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ApiOffersPost201Response
+const exampleParsed = JSON.parse(exampleJSON) as ApiPricesGet200ResponsePricesInnerCurrency
 console.log(exampleParsed)
 ```
 
