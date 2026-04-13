@@ -1,0 +1,26 @@
+{
+  "name": "@capacity-exchange/prototype-midnight-mint-disclose",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype: prove Midnight mint-with-disclosure + balance-check enforcement for the bridgeless ADA↔DUST transaction",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf out .midnight-private-state .wallet-state .contracts.*.json",
+    "compile": "\"$COMPACTC\" mint_disclose.compact out",
+    "build": "tsc --noEmit",
+    "e2e": "bun src/cli/e2e.ts"
+  },
+  "dependencies": {
+    "@sundaeswap/capacity-exchange-core": "1.0.0",
+    "@capacity-exchange/midnight-node": "1.0.0",
+    "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/compact-runtime": "0.15.0",
+    "@midnight-ntwrk/ledger-v8": "8.0.3",
+    "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
+    "@midnight-ntwrk/midnight-js-types": "4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "typescript": "^5.9.3"
+  }
+}

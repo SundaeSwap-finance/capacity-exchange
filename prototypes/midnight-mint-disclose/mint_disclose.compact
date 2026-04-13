@@ -1,0 +1,64 @@
+pragma language_version >= 0.22;
+
+import CompactStandardLibrary;
+
+// Proof-of-concept for the bridgeless ADA↔DUST transaction on the Midnight side.
+//
+// Claim being tested:
+//   A Compact circuit can mint an unshielded token of color derived from
+//   h = hash(s), while publicly disclosing s, where s is supplied as a
+//   witness (private input) by the caller. The disclosed s lands on-chain
+//   and is observable by any external party.
+//
+// Three scenarios we exercise in our tests:
+//   A. mintReveal alone   → tx succeeds, s appears in
+//                                      disclosedPreimages[h], user wallet
+//                                      gets 1 token of color tokenType(h, self)
+//   B. absorb alone                 → tx fails (balance overspend — there is
+//                                      no h-token to pull from the intent pool)
+//   C. mintReveal + absorb → tx succeeds, mint's +1 nets against
+//                                      absorb's -1, contract holds 1 token,
+//                                      s still visible in disclosedPreimages[h]
+//
+// Scenarios A and C prove the disclose-with-mint primitive composes.
+// Scenario B proves the ledger balance check enforces "receive requires
+// matching supply", which is the real security property: LP's receive
+// cannot succeed without the user's disclosing mint.
+
+// Public ledger: H → revealed preimage s.
+// Exists so we can query contract state after a tx and verify s is on-chain
+// in plaintext, independent of any uncertainty about whether `disclose()`
+// alone emits s into the public transcript.
+export ledger disclosedPreimages: Map<Bytes<32>, Bytes<32>>;
+
+// The user-supplied preimage. Private until disclose().
+witness preimage(): Bytes<32>;
+
+// Empty constructor — no initial state needed.
+constructor() {}
+
+// Circuit A: mint with disclosure.
+// Caller provides s via the witness and h as a public arg. Circuit checks
+// hash(s) == h, records s in the ledger (guaranteeing on-chain visibility),
+// and mints 1 unshielded token with domain separator h.
+export circuit mintReveal(
+  h: Bytes<32>,
+  recipient: Either<ContractAddress, UserAddress>
+): Bytes<32> {
+  const s = preimage();
+  const ds = disclose(s);
+  const dh = disclose(h);
+  assert(persistentHash<Bytes<32>>(ds) == dh, "preimage mismatch");
+  disclosedPreimages.insert(dh, ds);
+  return mintUnshieldedToken(dh, 1, disclose(recipient));
+}
+
+// Circuit B: absorb.
+// Pulls 1 token of color = tokenType(h, self) from the intent pool into the
+// contract. For this to balance, the intent must also contain a matching
+// supply, either a preceding mintReveal(h, …) in the same intent
+// or a pre-existing h-token held by a signer of the intent.
+export circuit absorb(h: Bytes<32>): [] {
+  const color = tokenType(disclose(h), kernel.self());
+  receiveUnshielded(color, 1);
+}
