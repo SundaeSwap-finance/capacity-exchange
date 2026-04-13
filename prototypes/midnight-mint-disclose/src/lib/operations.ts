@@ -1,19 +1,10 @@
 import * as crypto from 'crypto';
 import { persistentHash as ledgerPersistentHash } from '@midnight-ntwrk/ledger-v8';
-import {
-  submitCallTx,
-  withContractScopedTransaction,
-  getPublicStates,
-} from '@midnight-ntwrk/midnight-js-contracts';
-import {
-  AppContext,
-  buildProviders,
-  deployContractWithDryRun,
-  createLogger,
-} from '@capacity-exchange/midnight-node';
+import { submitCallTx, withContractScopedTransaction, getPublicStates } from '@midnight-ntwrk/midnight-js-contracts';
+import { AppContext, buildProviders, deployContractWithDryRun, createLogger } from '@capacity-exchange/midnight-node';
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledMintDiscloseContract, MintDiscloseContract } from './contract.js';
-import { createPrivateState, type CircuitPrivateState } from './witnesses.js';
+import { createPrivateState } from './witnesses.js';
 import { ledger as decodeLedger } from '../../out/contract/index.js';
 
 const logger = createLogger(import.meta);
@@ -170,33 +161,30 @@ export async function mintAndAbsorbAtomic(
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
   await stagePreimage(providers, privateStateId, s);
 
-  const finalized = await withContractScopedTransaction<MintDiscloseContract>(
-    providers,
-    async (txCtx) => {
-      await submitCallTx<MintDiscloseContract, 'mintReveal'>(
-        providers,
-        {
-          compiledContract: CompiledMintDiscloseContract,
-          contractAddress,
-          circuitId: 'mintReveal',
-          privateStateId,
-          args: [h, recipient],
-        },
-        txCtx
-      );
-      await submitCallTx<MintDiscloseContract, 'absorb'>(
-        providers,
-        {
-          compiledContract: CompiledMintDiscloseContract,
-          contractAddress,
-          circuitId: 'absorb',
-          privateStateId,
-          args: [h],
-        },
-        txCtx
-      );
-    }
-  );
+  const finalized = await withContractScopedTransaction<MintDiscloseContract>(providers, async (txCtx) => {
+    await submitCallTx<MintDiscloseContract, 'mintReveal'>(
+      providers,
+      {
+        compiledContract: CompiledMintDiscloseContract,
+        contractAddress,
+        circuitId: 'mintReveal',
+        privateStateId,
+        args: [h, recipient],
+      },
+      txCtx
+    );
+    await submitCallTx<MintDiscloseContract, 'absorb'>(
+      providers,
+      {
+        compiledContract: CompiledMintDiscloseContract,
+        contractAddress,
+        circuitId: 'absorb',
+        privateStateId,
+        args: [h],
+      },
+      txCtx
+    );
+  });
 
   return {
     tx: toTxResult(contractAddress, finalized.public),

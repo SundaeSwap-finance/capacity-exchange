@@ -4,10 +4,7 @@ import { Contract } from '../../out/contract/index.js';
 
 export type MintDiscloseContract = Contract<CircuitPrivateState>;
 
-export const CompiledMintDiscloseContract = CompiledContract.make<MintDiscloseContract>(
-  'MintDisclose',
-  Contract
-).pipe(
+export const CompiledMintDiscloseContract = CompiledContract.make<MintDiscloseContract>('MintDisclose', Contract).pipe(
   CompiledContract.withWitnesses(witnesses),
   CompiledContract.withCompiledFileAssets('./out')
 );

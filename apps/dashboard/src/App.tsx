@@ -55,7 +55,7 @@ export default function App() {
   const { data, error, secondsUntilRefresh } = useMetrics();
 
   const walletStatus = data?.health.wallet.status ?? 'unknown';
-  const dotColor = error ? 'bg-red-500' : (statusColor[walletStatus] ?? 'bg-gray-500');
+  const dotColor = error ? 'bg-red-500' : statusColor[walletStatus] ?? 'bg-gray-500';
   const statusLabel = error ? 'disconnected' : data ? walletStatus : 'connecting';
 
   return (

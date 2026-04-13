@@ -16,9 +16,7 @@ export const createPrivateState = (preimage: Uint8Array): CircuitPrivateState =>
 });
 
 export const witnesses: Witnesses<CircuitPrivateState> = {
-  preimage: ({
-    privateState,
-  }: WitnessContext<Ledger, CircuitPrivateState>): [CircuitPrivateState, Uint8Array] => [
+  preimage: ({ privateState }: WitnessContext<Ledger, CircuitPrivateState>): [CircuitPrivateState, Uint8Array] => [
     privateState,
     privateState.preimage,
   ],
