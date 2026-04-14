@@ -3,7 +3,8 @@ export type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { NetworkConfig } from '../../../config';
-import { loadSnapshots, buildSyntheticState } from '../../../lib/walletSnapshot';
+import { loadSnapshots } from '../../../lib/walletSnapshot';
+import { buildSyntheticWalletState } from '@sundaeswap/capacity-exchange-core';
 
 // Lazy-load the heavy midnight-core module (pulls in 10MB+ WASM) only when needed
 async function loadMidnightCore() {
@@ -71,7 +72,7 @@ export async function connectSeedWallet(
     console.debug('[WalletService] New wallet — loading chain state snapshots...');
     const snapshots = await loadSnapshots(config.networkId);
     if (snapshots) {
-      const synthetic = buildSyntheticState(snapshots, keys, config.networkId);
+      const synthetic = buildSyntheticWalletState(snapshots, keys, config.networkId);
       saved = synthetic;
       console.debug('[WalletService] Using pre-synced snapshot at offset', snapshots.shielded.offset);
     } else {

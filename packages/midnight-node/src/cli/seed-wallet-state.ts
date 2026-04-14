@@ -1,75 +1,20 @@
 import { program } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-import { deriveWalletKeys, toNetworkIdEnum, type WalletKeys } from '@sundaeswap/capacity-exchange-core';
-import { PublicKey } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+import {
+  deriveWalletKeys,
+  toNetworkIdEnum,
+  buildSyntheticWalletState,
+  type ChainSnapshot,
+} from '@sundaeswap/capacity-exchange-core';
 import { loadWalletSeed } from '../walletFile.js';
 import { createLogger } from '../createLogger.js';
 
 const logger = createLogger(import.meta);
 
-interface ShieldedSnap {
-  state: string;
-  offset: number;
-  protocolVersion: number;
-}
-
-interface DustSnap {
-  state: string;
-  offset: number;
-  protocolVersion: number;
-}
-
-interface UnshieldedSnap {
-  appliedId: number;
-  protocolVersion: number;
-}
-
-/** Builds synthetic wallet state from chain snapshots + wallet keys, with empty balances. */
-function buildSyntheticState(
-  shieldedSnap: ShieldedSnap,
-  dustSnap: DustSnap,
-  unshieldedSnap: UnshieldedSnap,
-  keys: WalletKeys,
-  networkId: string
-) {
-  const unshieldedPub = PublicKey.fromKeyStore(keys.unshieldedKeystore);
-  return {
-    shielded: JSON.stringify({
-      publicKeys: {
-        coinPublicKey: keys.shieldedSecretKeys.coinPublicKey,
-        encryptionPublicKey: keys.shieldedSecretKeys.encryptionPublicKey,
-      },
-      state: shieldedSnap.state,
-      protocolVersion: shieldedSnap.protocolVersion,
-      offset: shieldedSnap.offset,
-      networkId,
-      coinHashes: {},
-    }),
-    dust: JSON.stringify({
-      publicKey: { publicKey: keys.dustSecretKey.publicKey.toString() },
-      state: dustSnap.state,
-      protocolVersion: dustSnap.protocolVersion,
-      networkId,
-      offset: dustSnap.offset,
-    }),
-    unshielded: JSON.stringify({
-      publicKey: {
-        publicKey: unshieldedPub.publicKey,
-        addressHex: unshieldedPub.addressHex,
-        address: unshieldedPub.address,
-      },
-      state: { availableUtxos: [], pendingUtxos: [] },
-      protocolVersion: unshieldedSnap.protocolVersion,
-      appliedId: unshieldedSnap.appliedId,
-      networkId,
-    }),
-  };
-}
-
-/** Seeds a wallet state directory with chain snapshots so withAppContext syncs from the snapshot offset,
- * not genesis. */
-function main() {
+/** Seeds a wallet state directory with chain snapshots so withAppContext syncs
+ * from the snapshot offset, not genesis. */
+async function main() {
   program
     .name('seed-wallet-state')
     .description('Write synthetic wallet state from chain snapshots to skip syncing from genesis')
@@ -89,28 +34,27 @@ function main() {
   const coinPubKey = keys.shieldedSecretKeys.coinPublicKey;
   const prefix = `${networkIdEnum}-${coinPubKey}`;
 
+  // Load chain snapshots
   const snapshotFiles = ['shielded', 'dust', 'unshielded'].map((k) => path.join(snapshotDir, `${networkId}-${k}.json`));
   if (snapshotFiles.some((f) => !fs.existsSync(f))) {
     logger.info(`Incomplete or missing snapshots in ${snapshotDir} — skipping (wallet will sync from genesis)`);
     return;
   }
 
-  const [shieldedSnap, dustSnap, unshieldedSnap] = snapshotFiles.map((f) => JSON.parse(fs.readFileSync(f, 'utf-8')));
+  const snapshot: ChainSnapshot = {
+    shielded: JSON.parse(fs.readFileSync(snapshotFiles[0], 'utf-8')),
+    dust: JSON.parse(fs.readFileSync(snapshotFiles[1], 'utf-8')),
+    unshielded: JSON.parse(fs.readFileSync(snapshotFiles[2], 'utf-8')),
+  };
 
-  const saved = buildSyntheticState(
-    shieldedSnap as ShieldedSnap,
-    dustSnap as DustSnap,
-    unshieldedSnap as UnshieldedSnap,
-    keys,
-    String(networkIdEnum)
-  );
+  const saved = buildSyntheticWalletState(snapshot, keys, String(networkIdEnum));
 
   fs.mkdirSync(stateDir, { recursive: true });
-  fs.writeFileSync(path.join(stateDir, `${prefix}-shielded.data`), saved.shielded);
-  fs.writeFileSync(path.join(stateDir, `${prefix}-dust.data`), saved.dust);
-  fs.writeFileSync(path.join(stateDir, `${prefix}-unshielded.data`), saved.unshielded);
+  fs.writeFileSync(path.join(stateDir, `${prefix}-shielded.data`), saved.savedShieldedState!);
+  fs.writeFileSync(path.join(stateDir, `${prefix}-dust.data`), saved.savedDustState!);
+  fs.writeFileSync(path.join(stateDir, `${prefix}-unshielded.data`), saved.savedUnshieldedState!);
 
-  logger.info(`Seeded wallet state in ${stateDir} at shielded offset ${(shieldedSnap as ShieldedSnap).offset}`);
+  logger.info(`Seeded wallet state in ${stateDir} at shielded offset ${snapshot.shielded.offset}`);
 }
 
 main();
