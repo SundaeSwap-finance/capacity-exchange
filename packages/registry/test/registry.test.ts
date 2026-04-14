@@ -1,17 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { RegistrySimulator, randomSecretKey, makeRecipient, ocrt } from './simulator.js';
-import { entryFromContract, type IpAddress } from '../src/types.js';
-
-const COLLATERAL = 1000n;
-const MAX_VALIDITY = 2_592_000n; // 30 days in seconds
-
-// ensure validTo - maximumValidityInterval never underflows,
-// which is not possible in production, but could happen in sims
-const BASE_TIME = 10_000_000n;
-
-function futureDate(offsetSeconds: bigint): Date {
-  return new Date(Number(BASE_TIME + offsetSeconds) * 1000);
-}
+import { entryFromContract } from '../src/types.js';
+import { BASE_TIME, COLLATERAL, MAX_VALIDITY, defaultEntry, futureDate } from './helper.js';
 
 function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffects']>): bigint {
   let total = 0n;
@@ -19,14 +9,6 @@ function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffe
     total += amount;
   }
   return total;
-}
-
-function defaultEntry(opts: { validTo?: Date; ip?: IpAddress; port?: number } = {}) {
-  return {
-    validTo: opts.validTo ?? futureDate(MAX_VALIDITY),
-    ip: opts.ip ?? { kind: 'ipv4' as const, address: '192.168.1.1' },
-    port: opts.port ?? 8080,
-  };
 }
 
 // Invariant: the contract's unshielded balance always equals registry.size() * collateralAmount
@@ -194,14 +176,14 @@ describe('socket address uniqueness', () => {
   });
 });
 
-// Invariant: no entry can have a validTo more than maximumValidityInterval ahead of the block time
+// Invariant: no entry can have an expiry more than maximumRegistrationPeriod ahead of the block time
 describe('validity bounded', () => {
   it('register at exact max boundary succeeds', () => {
     const key = randomSecretKey();
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ validTo: futureDate(MAX_VALIDITY) }));
+    sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY) }));
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 
@@ -210,35 +192,37 @@ describe('validity bounded', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    expect(() => sim.register(defaultEntry({ validTo: futureDate(MAX_VALIDITY + 1n) }))).toThrow(/validity interval/);
+    expect(() => sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY + 1n) }))).toThrow(
+      /period cannot be larger/,
+    );
   });
 
-  it('refresh past max boundary fails', () => {
+  it('renewRegistration past max boundary fails', () => {
     const key = randomSecretKey();
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
     sim.register(defaultEntry());
 
-    expect(() => sim.refresh(futureDate(MAX_VALIDITY + 1n))).toThrow(/validity interval/);
+    expect(() => sim.renewRegistration(futureDate(MAX_VALIDITY + 1n))).toThrow(/period cannot be larger/);
   });
 
-  it('refresh within max boundary succeeds', () => {
+  it('renewRegistration within max boundary succeeds', () => {
     const key = randomSecretKey();
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ validTo: futureDate(MAX_VALIDITY - 100n) }));
+    sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY - 100n) }));
 
-    sim.refresh(futureDate(MAX_VALIDITY));
+    sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const entry = entryFromContract(raw);
-    expect(entry.validTo).toEqual(futureDate(MAX_VALIDITY));
+    expect(entry.expiry).toEqual(futureDate(MAX_VALIDITY));
   });
 });
 
-// Invariant: a non-expired entry can only be refreshed or removed by the holder of the corresponding secret key
+// Invariant: a non-expired entry can only be renewed or removed by the holder of the corresponding secret key
 describe('ownership', () => {
   it('owner can deregister before expiry', () => {
     const key = randomSecretKey();
@@ -266,7 +250,7 @@ describe('ownership', () => {
     expect(() => sim.deregister(registryKey)).toThrow(/you can only deregister your own entry/);
   });
 
-  it('refresh with wrong key fails', () => {
+  it('renewRegistration with wrong key fails', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
@@ -276,7 +260,7 @@ describe('ownership', () => {
     sim.register(defaultEntry());
 
     sim.useKey(keyB);
-    expect(() => sim.refresh(futureDate(MAX_VALIDITY))).toThrow(/you don't have a registered server/);
+    expect(() => sim.renewRegistration(futureDate(MAX_VALIDITY))).toThrow(/you don't have a registered server/);
   });
 });
 
@@ -289,8 +273,8 @@ describe('liveness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    const validTo = futureDate(100n);
-    sim.register(defaultEntry({ validTo }));
+    const expiry = futureDate(100n);
+    sim.register(defaultEntry({ expiry }));
     const registryKey = [...sim.getLedger().registry][0][0];
 
     // Advance past expiry

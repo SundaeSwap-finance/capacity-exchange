@@ -3,20 +3,20 @@ import {
   buildProviders,
   createLogger,
   requireNetworkId,
+  runCli,
   withAppContext,
 } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { Registry } from '../contract';
-import { RegistryMapping, entryFromContract } from '../types';
+
+import { getContractOutDir, Registry } from '../contract';
+import { RegistryMapping, registryEntries } from '../types';
 
 const logger = createLogger(import.meta);
 
 async function listRegisteredServers(ctx: AppContext, contractAddress: string): Promise<RegistryMapping> {
   logger.info(`Querying registered servers from registry ${contractAddress}...`);
 
-  const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../contract/out');
+  const contractOutDir = getContractOutDir(logger);
   const providers = buildProviders(ctx, contractOutDir);
   const contractState = await providers.publicDataProvider.queryContractState(contractAddress);
   if (!contractState) {
@@ -27,10 +27,9 @@ async function listRegisteredServers(ctx: AppContext, contractAddress: string): 
   const entries: RegistryMapping = new Map();
 
   logger.info('Registered servers:');
-  for (const [key, value] of ledgerState.registry) {
-    const entry = entryFromContract(value);
+  for (const { key, entry } of registryEntries(ledgerState)) {
     const keyHex = Buffer.from(key).toString('hex');
-    logger.info(`  key: ${keyHex}, ip: ${entry.ip.address}:${entry.port}, validTo: ${entry.validTo.toISOString()}`);
+    // logger.info(`  key: ${keyHex}, ip: ${entry.ip.address}:${entry.port}, validTo: ${entry.validTo.toISOString()}`);
     entries.set(keyHex, entry);
   }
 
@@ -61,7 +60,4 @@ async function main(): Promise<void> {
   process.exit(0);
 }
 
-main().catch((err) => {
-  console.error(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
-  process.exit(1);
-});
+runCli(main);

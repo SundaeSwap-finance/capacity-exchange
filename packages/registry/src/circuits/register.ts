@@ -1,10 +1,7 @@
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-import { AppContext, buildProviders, createLogger, WalletContext } from '@capacity-exchange/midnight-node';
+import { AppContext, createLogger, WalletContext } from '@capacity-exchange/midnight-node';
 import { DEFAULT_TTL_MS, toTxResult } from '@capacity-exchange/midnight-core';
 import { entryToContract, RegistryEntry, RegistryKey } from '../types';
-import { CompiledRegistryContract, createPrivateState, RegistryContract } from '../contract';
+import { CompiledRegistryContract, getProviders } from '../contract';
 
 import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
 import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
@@ -26,14 +23,7 @@ export async function register(ctx: AppContext, secretKey: RegistryKey, params: 
 
   logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
 
-  const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
-  logger.debug(`Building providers with contract output directory: ${contractOutDir}`);
-
-  const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
-  providers.privateStateProvider.setContractAddress(contractAddress);
-  // Restore the private state so the `secretKey` witness is available during circuit execution
-  logger.info(`Setting private state for privateStateId: ${privateStateId}`);
-  await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
+  const providers = await getProviders(ctx, contractAddress, privateStateId, secretKey, logger);
 
   const result = await _register(ctx.walletContext, providers as RegisterServerProvider, params);
 

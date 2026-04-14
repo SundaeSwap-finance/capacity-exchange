@@ -1,19 +1,13 @@
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-import { AppContext, buildProviders, createLogger } from '@capacity-exchange/midnight-node';
+import { AppContext, createLogger, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { toTxResult, TxResult } from '@capacity-exchange/midnight-core';
 import { RegistryKey } from '../types';
-import { CompiledRegistryContract, createPrivateState, RegistryContract } from '../contract';
-import { SucceedEntirely, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
-import { createUnprovenCallTx, submitTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { CompiledRegistryContract, getProviders } from '../contract';
 import { persistentHash, CompactTypeBytes, type CompactType } from '@midnight-ntwrk/compact-runtime';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { Value, Alignment } from '@midnight-ntwrk/onchain-runtime-v3';
 
 const logger = createLogger(import.meta);
 
-type DeregisterServerProvider = MidnightProviders<'deregisterServer'>;
 const circuitId = 'deregisterServer';
 
 /** CompactType descriptor for Bytes<32> — copied from the index.js of registry contract */
@@ -97,49 +91,23 @@ export async function deregister(ctx: AppContext, params: DeregisterParams): Pro
 
   logger.info(`Deregistering from registry ${contractAddress}...`);
 
-  const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../../contract/out');
-  logger.debug(`Contract output directory: ${contractOutDir}`);
+  const providers = await getProviders(ctx, contractAddress, privateStateId, secretKey, logger);
 
-  const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
-  providers.privateStateProvider.setContractAddress(contractAddress);
-  // Load the secret key into the private state provider so the `secretKey()` witness
-  // has a value to read during circuit execution.
-  logger.info(`Setting private state for privateStateId: ${privateStateId}`);
-  await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
+  const registryKey = computeRegistryKey(secretKey);
+  logger.info(`Registry key: ${Buffer.from(registryKey).toString('hex')}`);
 
-  const result = await submitUnprovedTransaction(providers as DeregisterServerProvider, params);
+  const recipient = parseAddress(params.recipientAddress);
+  logger.info(`Recipient address: ${Buffer.from(recipient.bytes).toString('hex')}`);
 
-  return toTxResult(contractAddress, result);
-}
-
-/**
- * Builds, proves, and submits the `deregisterServer` call transaction.
- */
-async function submitUnprovedTransaction(providers: DeregisterServerProvider, params: DeregisterParams) {
-  const registerKey = computeRegistryKey(params.secretKey);
-  logger.info(`Registry key: ${Buffer.from(registerKey).toString('hex')}`);
-
-  const recipientAddress = parseAddress(params.recipientAddress);
-  logger.info(`Recipient address: ${Buffer.from(recipientAddress.bytes).toString('hex')}`);
-
-  const callTxData = await createUnprovenCallTx(providers as DeregisterServerProvider, {
-    contractAddress: params.contractAddress,
+  const result = await submitStatefulCallTxDirect(providers, {
+    contractAddress,
     compiledContract: CompiledRegistryContract,
     circuitId,
-    privateStateId: params.privateStateId,
-    args: [registerKey, recipientAddress],
+    privateStateId,
+    args: [registryKey, recipient],
   });
 
-  const result = await submitTx(providers, {
-    unprovenTx: callTxData.private.unprovenTx,
-    circuitId,
-  });
-
-  if (result.status !== SucceedEntirely) {
-    throw new Error(`${circuitId} transaction failed with status: ${result.status}`);
-  }
-
-  return result;
+  return toTxResult(contractAddress, result.public);
 }
 
 /**

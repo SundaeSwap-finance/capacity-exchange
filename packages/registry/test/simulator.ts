@@ -82,10 +82,10 @@ export class RegistrySimulator {
     return effects;
   }
 
-  refresh(validTo: Date) {
-    const result = this.contract.impureCircuits.refreshValidity(
+  renewRegistration(expiry: Date) {
+    const result = this.contract.impureCircuits.renewRegistration(
       this.context,
-      BigInt(Math.floor(validTo.getTime() / 1000))
+      BigInt(Math.floor(expiry.getTime() / 1000))
     );
     const effects = result.context.currentQueryContext.effects;
     this.syncContext(result.context);
