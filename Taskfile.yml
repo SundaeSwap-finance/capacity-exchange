@@ -194,6 +194,11 @@ tasks:
     requires:
       vars: [NETWORK_ID]
 
+  build:libs:
+    desc: Build all library packages (core, node, providers, react-sdk)
+    cmds:
+      - task: _build:libs
+
   build-all:
     desc: Typecheck all TypeScript packages (compiles contracts first)
     cmds:
