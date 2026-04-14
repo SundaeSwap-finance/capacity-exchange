@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { program } from 'commander';
 import { timestampToDate, type RegistryEntry } from '../types.js';
-import { register } from '../circuits/register';
+import { register } from '../circuits/register.js';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { TxResult } from '@capacity-exchange/midnight-core';
 
@@ -11,18 +11,18 @@ function main(): Promise<TxResult> {
     .name('register')
     .description('Registers a server to the registry contract')
     .argument('<contractAddress>', 'address of the registry contract')
-    .argument('<registryKeyFile>', 'registry secret key file')
+    .argument('<secretKeyFile>', 'registry secret key file')
     .argument('<entryDetailsFile>', 'path to a JSON file with the registry entry details')
     .option('--private-state-id <id>', 'private state ID (defaults to a random value)')
     .parse();
 
   const networkId = requireNetworkId();
 
-  const [contractAddress, registryKeyFile, entryDetailsFile] = program.args;
+  const [contractAddress, secretKeyFile, entryDetailsFile] = program.args;
   const opts = program.opts<{ privateStateId?: string }>();
   const privateStateId = opts.privateStateId ?? crypto.randomBytes(32).toString('hex');
 
-  const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(registryKeyFile, 'utf-8').trim(), 'hex'));
+  const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(secretKeyFile, 'utf-8').trim(), 'hex'));
 
   const raw = JSON.parse(fs.readFileSync(entryDetailsFile, 'utf-8'));
 

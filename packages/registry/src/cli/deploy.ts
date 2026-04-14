@@ -5,7 +5,7 @@ import { deploy, DeployOutput } from '../deploy.js';
 function main(): Promise<DeployOutput> {
   program
     .name('registry:deploy')
-    .description('[Internal] Deploys a new registry contract with multisig public keys')
+    .description('[Internal] Deploys a new registry contract')
     .argument('<collateral>', 'required collateral for each offer')
     .argument('[validityInterval]', 'max validity interval for offers, in seconds (default: 30 days)')
     .parse();

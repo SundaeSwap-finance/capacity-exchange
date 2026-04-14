@@ -1,6 +1,6 @@
 import { AppContext, createLogger, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
-import { RegistryKey } from '../types';
-import { CompiledRegistryContract, getProviders } from '../contract';
+import { RegistrySecretKey } from '../types.js';
+import { CompiledRegistryContract, getProviders } from '../contract.js';
 import { toTxResult, TxResult } from '@capacity-exchange/midnight-core';
 
 const logger = createLogger(import.meta);
@@ -31,7 +31,7 @@ export interface RefreshValidityParams {
  */
 export async function refreshValidity(
   ctx: AppContext,
-  secretKey: RegistryKey,
+  secretKey: RegistrySecretKey,
   params: RefreshValidityParams
 ): Promise<TxResult> {
   const { contractAddress, privateStateId, validTo } = params;

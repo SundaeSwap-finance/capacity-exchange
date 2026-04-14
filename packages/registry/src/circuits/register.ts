@@ -1,7 +1,7 @@
 import { AppContext, createLogger, WalletContext } from '@capacity-exchange/midnight-node';
 import { DEFAULT_TTL_MS, toTxResult } from '@capacity-exchange/midnight-core';
-import { entryToContract, RegistryEntry, RegistryKey } from '../types';
-import { CompiledRegistryContract, getProviders } from '../contract';
+import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types';
+import { CompiledRegistryContract, getProviders } from '../contract.js';
 
 import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
 import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
@@ -18,7 +18,7 @@ export interface RegisterParams {
   entry: RegistryEntry;
 }
 
-export async function register(ctx: AppContext, secretKey: RegistryKey, params: RegisterParams) {
+export async function register(ctx: AppContext, secretKey: RegistrySecretKey, params: RegisterParams) {
   const { contractAddress, privateStateId, entry } = params;
 
   logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);

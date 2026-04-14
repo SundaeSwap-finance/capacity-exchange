@@ -1,7 +1,7 @@
 import { AppContext, createLogger, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { toTxResult, TxResult } from '@capacity-exchange/midnight-core';
-import { RegistryKey } from '../types';
-import { CompiledRegistryContract, getProviders } from '../contract';
+import { RegistryKey, RegistrySecretKey } from '../types.js';
+import { CompiledRegistryContract, getProviders } from '../contract.js';
 import { persistentHash, CompactTypeBytes, type CompactType } from '@midnight-ntwrk/compact-runtime';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import type { Value, Alignment } from '@midnight-ntwrk/onchain-runtime-v3';
@@ -78,7 +78,7 @@ export interface DeregisterParams {
    * 64-byte secret key that determines the on-chain registry key via `hashKey(secretKey())`.
    * Must match the key used when registering.
    */
-  secretKey: RegistryKey;
+  secretKey: RegistrySecretKey;
   /**
    * Bech32m-encoded unshielded address that will receive the collateral refund
    * sent by `sendUnshielded` in the `deregisterServer` circuit.
@@ -113,7 +113,7 @@ export async function deregister(ctx: AppContext, params: DeregisterParams): Pro
 /**
  * Replicates the `hashKey` circuit to compute the 32-byte registry key
  */
-export function computeRegistryKey(secretKey: RegistryKey): Uint8Array {
+export function computeRegistryKey(secretKey: RegistrySecretKey): RegistryKey {
   return persistentHash(descriptor_12, [REGISTRY_PREFIX, secretKey]);
 }
 

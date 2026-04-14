@@ -22,7 +22,8 @@ export type ContractEntry = {
   port: bigint;
 };
 
-export type RegistryKey = Uint8Array;
+export type RegistryKey = Uint8Array; // 32-byte
+export type RegistrySecretKey = Uint8Array; // 64-byte
 
 export type RegistryMapping = Map<string, RegistryEntry>;
 
@@ -31,7 +32,7 @@ export interface RegistryConstructorArgs {
   maxValidityInterval: bigint;
 }
 
-export function generateRandomRegistryKey(): RegistryKey {
+export function generateRandomSecretKey(): RegistrySecretKey {
   return crypto.randomBytes(64);
 }
 

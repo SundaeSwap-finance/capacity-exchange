@@ -8,8 +8,8 @@ import {
 } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
 
-import { getContractOutDir, Registry } from '../contract';
-import { RegistryMapping, registryEntries } from '../types';
+import { getContractOutDir, Registry } from '../contract.js';
+import { RegistryMapping, registryEntries } from '../types.js';
 
 const logger = createLogger(import.meta);
 
@@ -26,10 +26,8 @@ async function listRegisteredServers(ctx: AppContext, contractAddress: string): 
   const ledgerState = Registry.ledger(contractState.data);
   const entries: RegistryMapping = new Map();
 
-  logger.info('Registered servers:');
   for (const { key, entry } of registryEntries(ledgerState)) {
     const keyHex = Buffer.from(key).toString('hex');
-    // logger.info(`  key: ${keyHex}, ip: ${entry.ip.address}:${entry.port}, validTo: ${entry.validTo.toISOString()}`);
     entries.set(keyHex, entry);
   }
 
@@ -57,7 +55,6 @@ async function main(): Promise<void> {
     };
   }
   console.log(JSON.stringify(output, null, 2));
-  process.exit(0);
 }
 
 runCli(main);

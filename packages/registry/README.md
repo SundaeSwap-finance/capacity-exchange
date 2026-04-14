@@ -22,7 +22,7 @@ NETWORK_ID=preview bun run generate-secret <outputFile>
 
 ### `deploy`
 
-Deploys a new registry contract.
+Deploys a new registry contract. Outputs the contract address, transaction hash, generated secret key, and private state ID to stdout — save these for use with the other commands.
 
 ```sh
 NETWORK_ID=preview bun run deploy <collateral> [validityInterval]
@@ -35,6 +35,17 @@ NETWORK_ID=preview bun run deploy <collateral> [validityInterval]
 | `collateral` | Required collateral amount (in tDUST) per registered entry |
 | `validityInterval` | Max validity interval in seconds (default: 30 days) |
 
+**Output**
+
+```json
+{
+  "contractAddress": "3470c638...",
+  "txHash": "95a41b5e...",
+  "secretKey": "...",
+  "privateStateId": "..."
+}
+```
+
 -- 
 
 ### `register`
@@ -43,7 +54,7 @@ Registers a server entry in the registry contract. Requires collateral.
 The entry contains the server's IP address, port, and validity expiry.
 
 ```sh
-NETWORK_ID=preview bun run register <contractAddress> <registryKeyFile> <entryDetailsFile> [--private-state-id <id>]
+NETWORK_ID=preview bun run register <contractAddress> <secretKeyFile> <entryDetailsFile> [--private-state-id <id>]
 ```
 
 **Arguments**
@@ -51,7 +62,7 @@ NETWORK_ID=preview bun run register <contractAddress> <registryKeyFile> <entryDe
 | Argument | Description |
 |---|---|
 | `contractAddress` | address of the registry contract |
-| `registryKeyFile` | Path to the registry key file (the outputFile of `generate-secret`) |
+| `secretKeyFile` | Path to the registry key file (the outputFile of `generate-secret`) |
 | `entryDetailsFile` | Path to a JSON file with the entry details (see below) |
 
 **Options**
@@ -90,7 +101,7 @@ NETWORK_ID=preview bun run register \
 Removes a server entry from the registry and refunds the collateral to the recipient address.
 
 ```sh
-NETWORK_ID=preview bun run deregister <contractAddress> <registryKeyFile> <recipientAddress> [--private-state-id <id>]
+NETWORK_ID=preview bun run deregister <contractAddress> <secretKeyFile> <recipientAddress> [--private-state-id <id>]
 ```
 
 **Arguments**
@@ -98,7 +109,7 @@ NETWORK_ID=preview bun run deregister <contractAddress> <registryKeyFile> <recip
 | Argument | Description |
 |---|---|
 | `contractAddress` | address of the registry contract |
-| `registryKeyFile` | Path to the registry key file used when registering |
+| `secretKeyFile` | Path to the registry key file used when registering |
 | `recipientAddress` | Bech32m unshielded address |
 
 **Options**
@@ -123,7 +134,7 @@ NETWORK_ID=preview bun run deregister \
 Extends the validity of an existing registry entry. The new expiry must be within the contract's `maximumValidityInterval`.
 
 ```sh
-NETWORK_ID=preview bun run refresh-validity <contractAddress> <registryKeyFile> <validTo> [--private-state-id <id>]
+NETWORK_ID=preview bun run refresh-validity <contractAddress> <secretKeyFile> <validTo> [--private-state-id <id>]
 ```
 
 **Arguments**
@@ -131,7 +142,7 @@ NETWORK_ID=preview bun run refresh-validity <contractAddress> <registryKeyFile> 
 | Argument | Description |
 |---|---|
 | `contractAddress` | On-chain address of the registry contract |
-| `registryKeyFile` | Path to the registry key file used when registering |
+| `secretKeyFile` | Path to the registry key file used when registering |
 | `validTo` | New expiry as a Unix timestamp in seconds (e.g. `1776297600`) |
 
 **Options**

@@ -5,15 +5,15 @@ import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import type { WitnessContext } from '@midnight-ntwrk/compact-runtime';
 import * as Registry from '../contract/out/contract/index.js';
 import type { Ledger, Witnesses } from '../contract/out/contract/index.js';
-import type { RegistryKey, RegistryConstructorArgs } from './types.js';
+import type { RegistrySecretKey, RegistryConstructorArgs } from './types.js';
 import { AppContext, buildProviders } from '@capacity-exchange/midnight-node';
 import { Logger } from '@capacity-exchange/midnight-core';
 
 export type CircuitPrivateState = {
-  secretKey: RegistryKey;
+  secretKey: RegistrySecretKey;
 };
 
-export function createPrivateState(secretKey: RegistryKey): CircuitPrivateState {
+export function createPrivateState(secretKey: RegistrySecretKey): CircuitPrivateState {
   if (secretKey.length !== 64) {
     throw new Error(`secretKey must be 64 bytes, got ${secretKey.length}`);
   }
@@ -49,7 +49,7 @@ export async function getProviders(
   ctx: AppContext,
   contractAddress: string,
   privateStateId: string,
-  secretKey: RegistryKey,
+  secretKey: RegistrySecretKey,
   logger: Logger
 ) {
   const providers = buildProviders<RegistryContract>(ctx, getContractOutDir(logger));
