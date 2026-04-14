@@ -8,6 +8,8 @@ Contains the registry contract on the Midnight network.
 
 Note: Each command requires a `NETWORK_ID` (`preview` or `mainnet`) environment variable and a wallet (from `wallet-mnemonic.preview.txt` or `wallet-mnemonic.mainnet.txt`) with unshielded NIGHT funds.
 
+--
+
 ### `generate-secret`
 
 Generates random 64-byte secret key and writes to file. Acts as the registry key, authorizing `register`, `deregister`, and `refresh-validity` operations.
@@ -15,6 +17,8 @@ Generates random 64-byte secret key and writes to file. Acts as the registry key
 ```sh
 NETWORK_ID=preview bun run generate-secret <outputFile>
 ```
+
+-- 
 
 ### `deploy`
 
@@ -31,6 +35,7 @@ NETWORK_ID=preview bun run deploy <collateral> [validityInterval]
 | `collateral` | Required collateral amount (in tDUST) per registered entry |
 | `validityInterval` | Max validity interval in seconds (default: 30 days) |
 
+-- 
 
 ### `register`
 
@@ -78,6 +83,8 @@ NETWORK_ID=preview bun run register \
   ./entry.json
 ```
 
+--  
+
 ### `deregister`
 
 Removes a server entry from the registry and refunds the collateral to the recipient address.
@@ -108,6 +115,8 @@ NETWORK_ID=preview bun run deregister \
   ./registryKey \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
+
+-- 
 
 ### `refresh-validity`
 
@@ -140,6 +149,7 @@ NETWORK_ID=preview bun run refresh-validity \
   1776297600
 ```
 
+--  
 
 ### `list-servers`
 
