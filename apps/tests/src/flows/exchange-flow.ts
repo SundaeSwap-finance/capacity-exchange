@@ -61,6 +61,7 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
   });
 }
 
+// TODO: extract shared balanceSealedTransaction helper from walletConnectedApi.ts
 function createBalanceCallback(ctx: AppContext) {
   return async (txHex: string) => {
     const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(

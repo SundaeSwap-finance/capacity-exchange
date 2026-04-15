@@ -1,5 +1,5 @@
 import { runCli, withAppContext, createLogger, type AppContext } from '@capacity-exchange/midnight-node';
-import { getIntegTestConfig, type IntegTestConfig } from './config.js';
+import { getTestConfig, type TestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runExchangeFlow } from './flows/exchange-flow.js';
 
@@ -33,7 +33,7 @@ async function runFlow(name: string, fn: () => Promise<unknown>): Promise<FlowRe
   }
 }
 
-async function runAllFlows(ctx: AppContext, config: IntegTestConfig): Promise<FlowResult[]> {
+async function runAllFlows(ctx: AppContext, config: TestConfig): Promise<FlowResult[]> {
   const flows: FlowResult[] = [];
 
   flows.push(await runFlow('sponsor', () => runSponsorFlow(ctx, config.tokenMintAddress, config.cesUrl)));
@@ -54,7 +54,7 @@ function summarize(flows: FlowResult[]): RunnerOutput {
 }
 
 function main(): Promise<RunnerOutput> {
-  const config = getIntegTestConfig();
+  const config = getTestConfig();
 
   return withAppContext(config.networkId, async (ctx) => {
     const flows = await runAllFlows(ctx, config);

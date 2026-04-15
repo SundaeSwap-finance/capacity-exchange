@@ -1,0 +1,3 @@
+.wallet-state-*
+.env
+wallet-mnemonic.*.txt

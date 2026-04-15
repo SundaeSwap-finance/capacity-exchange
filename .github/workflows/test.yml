@@ -21,8 +21,8 @@ jobs:
       - name: Run unit tests
         run: task test
 
-  e2e:
-    name: CES e2e tests (local devnet)
+  integ:
+    name: Integration tests (local devnet)
     needs: checks
     runs-on: ubuntu-latest
     steps:
@@ -41,17 +41,20 @@ jobs:
       - name: Compile contracts
         run: task compile-contracts
 
-      - name: Run e2e tests
-        run: task test:e2e
+      - name: Run integration tests
+        run: task test:integ
       - name: Print server logs
         if: always()
         run: cat apps/server/*_server.log 2>/dev/null || true
 
-  integ:
-    name: CES + SDK integration tests (preview network)
+  smoke:
+    name: 'Smoke tests (${{ matrix.env }})'
     needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      matrix:
+        env: [preview]
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
@@ -72,13 +75,13 @@ jobs:
           path: |
             apps/server/.wallet-state-ci
             .chain-snapshots
-          key: integ-state-${{ hashFiles('bun.lock') }}
-          restore-keys: integ-state-
+          key: smoke-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}
+          restore-keys: smoke-state-${{ matrix.env }}-
 
-      - name: Run integration tests
+      - name: Run smoke tests
         env:
-          CES_WALLET_MNEMONIC: ${{ secrets.CES_WALLET_MNEMONIC }}
-          COUNTER_ADDRESS: ${{ vars.INTEG_COUNTER_ADDRESS }}
-          TOKEN_MINT_ADDRESS: ${{ vars.INTEG_TOKEN_MINT_ADDRESS }}
-          DERIVED_TOKEN_COLOR: ${{ vars.INTEG_DERIVED_TOKEN_COLOR }}
-        run: scripts/ci-integ-setup.sh
+          CES_WALLET_MNEMONIC: ${{ secrets[format('CES_WALLET_MNEMONIC_{0}', matrix.env)] }}
+          COUNTER_ADDRESS: ${{ vars[format('E2E_COUNTER_ADDRESS_{0}', matrix.env)] }}
+          TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
+          DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
+        run: scripts/ci-test-setup.sh ${{ matrix.env }}

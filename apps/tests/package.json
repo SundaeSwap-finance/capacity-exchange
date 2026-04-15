@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/integ-tests",
+  "name": "@capacity-exchange/tests",
   "version": "1.0.0",
   "private": true,
   "type": "module",
