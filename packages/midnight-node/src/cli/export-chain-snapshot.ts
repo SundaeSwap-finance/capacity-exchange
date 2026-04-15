@@ -11,25 +11,6 @@ import { createLogger } from '../createLogger.js';
 
 const logger = createLogger(import.meta);
 
-/** Find wallet state files by scanning for known suffixes, regardless of the wallet identity prefix. */
-function loadWalletStateFromDir(dir: string) {
-  const files = fs.readdirSync(dir);
-  const find = (suffix: string) => files.find((f) => f.endsWith(suffix));
-  const shieldedFile = find('-shielded.data') ?? find('-shielded.json');
-  const dustFile = find('-dust.data') ?? find('-dust.json');
-  const unshieldedFile = find('-unshielded.data') ?? find('-unshielded.json');
-
-  if (!shieldedFile || !dustFile || !unshieldedFile) {
-    return null;
-  }
-
-  return {
-    savedShieldedState: fs.readFileSync(path.join(dir, shieldedFile), 'utf-8'),
-    savedDustState: fs.readFileSync(path.join(dir, dustFile), 'utf-8'),
-    savedUnshieldedState: fs.readFileSync(path.join(dir, unshieldedFile), 'utf-8'),
-  };
-}
-
 function main() {
   program
     .name('export-chain-snapshot')
@@ -41,13 +22,21 @@ function main() {
 
   const [networkId, stateDir, snapshotDir] = program.args;
 
-  const saved = loadWalletStateFromDir(stateDir);
-  if (!saved) {
+  const files = fs.readdirSync(stateDir).filter((f) => f.endsWith('.data'));
+  const shieldedFile = files.find((f) => f.includes('-shielded.data'));
+  const dustFile = files.find((f) => f.includes('-dust.data'));
+  const unshieldedFile = files.find((f) => f.includes('-unshielded.data'));
+
+  if (!shieldedFile || !dustFile || !unshieldedFile) {
     logger.info('No complete wallet state found — skipping snapshot export');
     return;
   }
 
-  const snapshot = extractChainSnapshot(saved);
+  const snapshot = extractChainSnapshot({
+    savedShieldedState: fs.readFileSync(path.join(stateDir, shieldedFile), 'utf-8'),
+    savedDustState: fs.readFileSync(path.join(stateDir, dustFile), 'utf-8'),
+    savedUnshieldedState: fs.readFileSync(path.join(stateDir, unshieldedFile), 'utf-8'),
+  });
 
   fs.mkdirSync(snapshotDir, { recursive: true });
   fs.writeFileSync(path.join(snapshotDir, `${networkId}-shielded.json`), JSON.stringify(snapshot.shielded));

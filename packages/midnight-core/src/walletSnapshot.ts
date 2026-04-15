@@ -51,10 +51,10 @@ export function buildSyntheticWalletState(
 }
 
 /** Extract chain-only state from serialized wallet state, stripping wallet-specific keys and balances. */
-export function extractChainSnapshot(saved: SavedWalletState): ChainSnapshot {
-  const shielded = JSON.parse(saved.savedShieldedState!);
-  const dust = JSON.parse(saved.savedDustState!);
-  const unshielded = JSON.parse(saved.savedUnshieldedState!);
+export function extractChainSnapshot(saved: Required<SavedWalletState>): ChainSnapshot {
+  const shielded = JSON.parse(saved.savedShieldedState);
+  const dust = JSON.parse(saved.savedDustState);
+  const unshielded = JSON.parse(saved.savedUnshieldedState);
 
   return {
     shielded: {
