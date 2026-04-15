@@ -53,12 +53,30 @@ export function findWalletMnemonicFile(network: string, startDir: string = proce
 }
 
 /**
- * Finds and reads a wallet seed or mnemonic file for the given network,
- * walking up the directory tree from `startDir`.
- * Prefers `wallet-seed.{network}.hex` over `wallet-mnemonic.{network}.txt`.
+ * Finds and reads a wallet seed or mnemonic file for the given network.
+ *
+ * Resolution order:
+ *   1. WALLET_SEED_FILE env var (explicit hex seed file path)
+ *   2. WALLET_MNEMONIC_FILE env var (explicit mnemonic file path)
+ *   3. Walk up from `startDir` looking for `wallet-seed.{network}.hex`
+ *   4. Walk up from `startDir` looking for `wallet-mnemonic.{network}.txt`
+ *
  * Returns the parsed seed as a Uint8Array.
+ *
+ * TODO: The server (apps/server/src/config/wallet.ts) has its own resolution
+ * logic that duplicates steps 1-4 plus AWS Secrets Manager support. Unify
+ * the file-based resolution into this function so the server only needs
+ * its own code for the AWS secrets path.
  */
 export function loadWalletSeed(network: string, startDir: string = process.cwd()): Uint8Array {
+  if (process.env.WALLET_SEED_FILE) {
+    const hex = fs.readFileSync(process.env.WALLET_SEED_FILE, 'utf-8').trim();
+    return parseSeedHex(hex);
+  }
+  if (process.env.WALLET_MNEMONIC_FILE) {
+    const mnemonic = fs.readFileSync(process.env.WALLET_MNEMONIC_FILE, 'utf-8').trim();
+    return parseMnemonic(mnemonic);
+  }
   const seedFile = findFileUp(seedFilename(network), startDir);
   if (seedFile) {
     const hex = fs.readFileSync(seedFile, 'utf-8').trim();
@@ -71,6 +89,7 @@ export function loadWalletSeed(network: string, startDir: string = process.cwd()
   }
   throw new Error(
     `No wallet file found for network '${network}'. ` +
-      `Create either ${seedFilename(network)} or ${mnemonicFilename(network)} at the project root.`
+      `Set WALLET_SEED_FILE or WALLET_MNEMONIC_FILE, or create ` +
+      `${seedFilename(network)} or ${mnemonicFilename(network)} in the project tree.`
   );
 }

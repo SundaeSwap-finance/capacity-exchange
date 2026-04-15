@@ -47,8 +47,12 @@ export async function fetchCesPrices(
   const ledgerParameters = await getLedgerParameters(indexerUrl);
 
   const estimated = tx.feesWithMargin(ledgerParameters, margin);
+  // TODO: feesWithMargin underestimates because it doesn't account for tx growth
+  // from shielded balancing. Add padding until proper size-aware estimation lands.
+  const FEE_PADDING = 50_000_000_000_000n; // 50T specks — covers tx growth from shielded balancing
+  const padded = estimated + FEE_PADDING;
   // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
-  const specksRequired = estimated > 0n ? estimated : 1n;
+  const specksRequired = padded > 0n ? padded : 1n;
   console.debug(
     '[CESSteps] Specks required (with margin):',
     specksRequired.toString(),

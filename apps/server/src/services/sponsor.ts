@@ -78,7 +78,10 @@ export class SponsorService {
     }
 
     const ledgerParams = await getLedgerParameters(this.indexerUrl);
-    const estimatedSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS);
+    // TODO: feesWithMargin underestimates because it doesn't account for tx growth
+    // from shielded balancing. Add padding until proper size-aware estimation lands.
+    const FEE_PADDING = 50_000_000_000_000n; // 50T specks — covers tx growth from shielded balancing
+    const estimatedSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS) + FEE_PADDING;
     this.logger.debug(
       { estimatedSpecks: estimatedSpecks.toString() },
       'Estimated dust cost for sponsored tx',

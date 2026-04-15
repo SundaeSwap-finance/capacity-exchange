@@ -1,10 +1,10 @@
 {
-  "name": "@capacity-exchange/integ-tests",
+  "name": "@capacity-exchange/e2e-tests",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test:integ": "bun src/runner.ts"
+    "test:e2e:sdk": "bun src/runner.ts"
   },
   "dependencies": {
     "@capacity-exchange/demo-contracts": "1.0.0",
@@ -18,7 +18,8 @@
     "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
     "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
-    "commander": "^14.0.2"
+    "commander": "^14.0.2",
+    "rxjs": "^7.5"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

@@ -1,5 +1,5 @@
 import { runCli, withAppContext, createLogger, type AppContext } from '@capacity-exchange/midnight-node';
-import { getIntegTestConfig, type IntegTestConfig } from './config.js';
+import { getE2eTestConfig, type E2eTestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runExchangeFlow } from './flows/exchange-flow.js';
 
@@ -33,10 +33,16 @@ async function runFlow(name: string, fn: () => Promise<unknown>): Promise<FlowRe
   }
 }
 
-async function runAllFlows(ctx: AppContext, config: IntegTestConfig): Promise<FlowResult[]> {
+async function runAllFlows(ctx: AppContext, config: E2eTestConfig): Promise<FlowResult[]> {
   const flows: FlowResult[] = [];
 
   flows.push(await runFlow('sponsor', () => runSponsorFlow(ctx, config.tokenMintAddress, config.cesUrl)));
+
+  // After sponsor flow mints tokens, wait for the runner's wallet to see them
+  logger.info('Waiting for runner wallet to re-sync after sponsor flow...');
+  await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
+  await ctx.walletContext.walletFacade.dust.waitForSyncedState();
+  logger.info('Runner wallet re-synced');
 
   flows.push(
     await runFlow('exchange', () =>
@@ -54,7 +60,7 @@ function summarize(flows: FlowResult[]): RunnerOutput {
 }
 
 function main(): Promise<RunnerOutput> {
-  const config = getIntegTestConfig();
+  const config = getE2eTestConfig();
 
   return withAppContext(config.networkId, async (ctx) => {
     const flows = await runAllFlows(ctx, config);

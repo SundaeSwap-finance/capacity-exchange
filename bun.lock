@@ -126,8 +126,8 @@
         "typescript": "^5.9.3",
       },
     },
-    "apps/integ-tests": {
-      "name": "@capacity-exchange/integ-tests",
+    "apps/e2e-tests": {
+      "name": "@capacity-exchange/e2e-tests",
       "version": "1.0.0",
       "dependencies": {
         "@capacity-exchange/demo-contracts": "1.0.0",
@@ -142,6 +142,7 @@
         "@sundaeswap/capacity-exchange-core": "1.0.0",
         "@sundaeswap/capacity-exchange-providers": "1.2.0",
         "commander": "^14.0.2",
+        "rxjs": "^7.5",
       },
       "devDependencies": {
         "@types/node": "^25.1.0",
@@ -459,9 +460,9 @@
 
     "@capacity-exchange/demo-contracts": ["@capacity-exchange/demo-contracts@workspace:apps/demo/contracts"],
 
-    "@capacity-exchange/example-react-vite": ["@capacity-exchange/example-react-vite@workspace:examples/react-vite"],
+    "@capacity-exchange/e2e-tests": ["@capacity-exchange/e2e-tests@workspace:apps/e2e-tests"],
 
-    "@capacity-exchange/integ-tests": ["@capacity-exchange/integ-tests@workspace:apps/integ-tests"],
+    "@capacity-exchange/example-react-vite": ["@capacity-exchange/example-react-vite@workspace:examples/react-vite"],
 
     "@capacity-exchange/midnight-node": ["@capacity-exchange/midnight-node@workspace:packages/midnight-node"],
 

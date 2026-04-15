@@ -1,4 +1,4 @@
-export interface IntegTestConfig {
+export interface E2eTestConfig {
   networkId: string;
   cesUrl: string;
   counterAddress: string;
@@ -6,7 +6,7 @@ export interface IntegTestConfig {
   derivedTokenColor: string;
 }
 
-export function getIntegTestConfig(): IntegTestConfig {
+export function getE2eTestConfig(): E2eTestConfig {
   return {
     networkId: requireEnv('NETWORK_ID'),
     cesUrl: requireEnv('CES_URL'),

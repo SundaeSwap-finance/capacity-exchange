@@ -63,13 +63,41 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
 
 function createBalanceCallback(ctx: AppContext) {
   return async (txHex: string) => {
+    logger.debug('balanceCallback: deserializing merged tx');
     const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
       'signature',
       'proof',
       'binding',
       Buffer.from(txHex, 'hex')
     );
+    logger.debug({ segments: tx.segmentCount, txSize: txHex.length / 2 }, 'balanceCallback: merged tx info');
+
+    const { first: rxFirst } = await import('rxjs');
+    const shieldedState = await ctx.walletContext.walletFacade.shielded.state.pipe(rxFirst()).toPromise();
+    logger.debug(
+      {
+        shieldedCoins: shieldedState?.coins?.length ?? 'unknown',
+        shieldedProgress: shieldedState?.progress
+          ? {
+              appliedIndex: shieldedState.progress.appliedIndex.toString(),
+              highestRelevantWalletIndex: shieldedState.progress.highestRelevantWalletIndex.toString(),
+              complete: shieldedState.progress.isStrictlyComplete(),
+            }
+          : 'unknown',
+      },
+      'balanceCallback: shielded wallet state'
+    );
+
+    const dustState = await ctx.walletContext.walletFacade.dust.state.pipe(rxFirst()).toPromise();
+    logger.debug(
+      {
+        dustCoins: dustState?.coins?.length ?? 'unknown',
+      },
+      'balanceCallback: dust wallet state'
+    );
+
     const ttl = new Date(Date.now() + BALANCE_TTL_MS);
+    logger.debug('balanceCallback: calling balanceFinalizedTransaction');
     const recipe = await ctx.walletContext.walletFacade.balanceFinalizedTransaction(
       tx,
       {
@@ -78,7 +106,9 @@ function createBalanceCallback(ctx: AppContext) {
       },
       { ttl, tokenKindsToBalance: ['shielded'] }
     );
+    logger.debug('balanceCallback: calling finalizeRecipe');
     const balancedTx = await ctx.walletContext.walletFacade.finalizeRecipe(recipe);
+    logger.debug('balanceCallback: done');
     return { tx: uint8ArrayToHex(balancedTx.serialize()) };
   };
 }
