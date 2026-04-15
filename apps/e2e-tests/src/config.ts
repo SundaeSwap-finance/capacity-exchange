@@ -4,6 +4,7 @@ export interface E2eTestConfig {
   counterAddress: string;
   tokenMintAddress: string;
   derivedTokenColor: string;
+  registryAddress?: string;
 }
 
 export function getE2eTestConfig(): E2eTestConfig {
@@ -13,6 +14,7 @@ export function getE2eTestConfig(): E2eTestConfig {
     counterAddress: requireEnv('COUNTER_ADDRESS'),
     tokenMintAddress: requireEnv('TOKEN_MINT_ADDRESS'),
     derivedTokenColor: requireEnv('DERIVED_TOKEN_COLOR'),
+    registryAddress: process.env.REGISTRY_ADDRESS,
   };
 }
 

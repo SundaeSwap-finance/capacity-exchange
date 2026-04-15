@@ -9,6 +9,7 @@
   "dependencies": {
     "@capacity-exchange/demo-contracts": "1.0.0",
     "@capacity-exchange/midnight-node": "1.0.0",
+    "@capacity-exchange/registry": "1.0.0",
     "@sundaeswap/capacity-exchange-core": "1.0.0",
     "@sundaeswap/capacity-exchange-providers": "1.2.0",
     "@midnight-ntwrk/compact-js": "2.5.0",

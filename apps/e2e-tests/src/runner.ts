@@ -2,6 +2,7 @@ import { runCli, withAppContext, createLogger, type AppContext } from '@capacity
 import { getE2eTestConfig, type E2eTestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runExchangeFlow } from './flows/exchange-flow.js';
+import { runRegistryFlow } from './flows/registry-flow.js';
 
 const logger = createLogger(import.meta);
 
@@ -49,6 +50,14 @@ async function runAllFlows(ctx: AppContext, config: E2eTestConfig): Promise<Flow
       runExchangeFlow(ctx, config.networkId, config.counterAddress, config.cesUrl, config.derivedTokenColor)
     )
   );
+
+  if (config.registryAddress) {
+    flows.push(
+      await runFlow('registry', () =>
+        runRegistryFlow(ctx, config.networkId, config.registryAddress!, config.cesUrl, config.derivedTokenColor)
+      )
+    );
+  }
 
   return flows;
 }
