@@ -96,7 +96,7 @@ export function buildCesWalletProvider(
     networkId,
     coinPublicKey,
     encryptionPublicKey,
-    balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
+    balanceTransaction: (tx) => walletService.balanceSealedTransaction(tx),
     indexerUrl: endpoints.indexerHttpUrl,
     additionalCapacityExchangeUrls,
     promptForCurrency: createAutoSelectCurrency(log, walletService),

@@ -7,7 +7,7 @@ import {
   type FinalizedTransaction,
   Binding,
 } from '@midnight-ntwrk/ledger-v8';
-import type { ExchangePrice, Offer, BalanceSealedTransaction } from './types';
+import type { ExchangePrice, Offer, BalanceTransaction } from './types';
 import { isOfferExpired } from './utils';
 import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, resolveCesUrls } from './exchangeApi';
@@ -96,12 +96,13 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
 
 /**
  * Processes the user transaction with the confirmed offer.
- * Binds the tx, merges with the dust tx from the offer, then has the wallet balance and seal.
+ * Merges the user tx with the dust tx from the offer (both unbound),
+ * then has the wallet balance and finalize.
  */
 export async function processTransactionWithOffer(
   tx: UnboundTransaction,
   offer: Offer,
-  balanceSealedTransaction: BalanceSealedTransaction
+  balanceTransaction: BalanceTransaction
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const txBytes = hexToBytes(offer.serializedTx);
@@ -110,17 +111,16 @@ export async function processTransactionWithOffer(
     'proof',
     'pre-binding',
     txBytes
-  ).bind();
+  );
   console.debug('[CESSteps] DUST transaction deserialized');
 
-  console.debug('[CESSteps] Binding and merging transactions');
-  const boundTx = tx.bind();
-  const mergedTx = boundTx.merge(dustTx);
-  console.debug('[CESSteps] Transactions merged, calling wallet to balance and seal');
+  console.debug('[CESSteps] Merging transactions (unbound)');
+  const mergedTx = tx.merge(dustTx);
+  console.debug('[CESSteps] Transactions merged, calling wallet to balance and finalize');
 
   const mergedTxHex = Buffer.from(mergedTx.serialize()).toString('hex');
-  const { tx: result } = await balanceSealedTransaction(mergedTxHex);
-  console.debug('[CESSteps] Wallet balanced and sealed transaction');
+  const { tx: result } = await balanceTransaction(mergedTxHex);
+  console.debug('[CESSteps] Wallet balanced and finalized transaction');
 
   console.debug('[CESSteps] Transaction processing complete');
   return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hexToBytes(result));

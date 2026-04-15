@@ -5,7 +5,8 @@ import { buildProviders, getAppConfigById, createLogger } from '@capacity-exchan
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
 import { uint8ArrayToHex, DEFAULT_TTL_MS } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { Transaction, SignatureEnabled, type Proof, type Binding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction, SignatureEnabled, type Proof, type PreBinding } from '@midnight-ntwrk/ledger-v8';
+import type { UnboundTransactionRecipe } from '@midnight-ntwrk/wallet-sdk-facade';
 import {
   CompiledRegistryContract,
   createPrivateState,
@@ -79,7 +80,7 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
     networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
     encryptionPublicKey: ctx.walletContext.walletProvider.getEncryptionPublicKey(),
-    balanceSealedTransaction: createBalanceCallback(ctx),
+    balanceTransaction: createBalanceCallback(ctx),
     indexerUrl: appConfig.endpoints.indexerHttpUrl,
     additionalCapacityExchangeUrls: [cesUrl],
     promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor),
@@ -88,27 +89,39 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
 }
 
 /**
- * Balances shielded only via balanceFinalizedTransaction (bound tx approach).
- * Fails for receiveUnshielded contracts — only balances segment 0.
+ * Balances shielded + unshielded (skipping dust, which CES provides).
+ * Signs only baseTransaction because signRecipe errors on the balancingTransaction
+ * which has no unshielded segments.
  */
 function createBalanceCallback(ctx: AppContext) {
   return async (txHex: string) => {
-    const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+    const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
       'signature',
       'proof',
-      'binding',
+      'pre-binding',
       Buffer.from(txHex, 'hex')
     );
     const { walletFacade, keys } = ctx.walletContext;
     const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
 
-    const recipe = await walletFacade.balanceFinalizedTransaction(
+    const recipe = await walletFacade.balanceUnboundTransaction(
       tx,
       { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-      { ttl, tokenKindsToBalance: ['shielded'] }
+      { ttl, tokenKindsToBalance: ['shielded', 'unshielded'] }
     );
 
-    const balancedTx = await walletFacade.finalizeRecipe(recipe);
+    const { baseTransaction, balancingTransaction } = recipe as UnboundTransactionRecipe;
+    const signedBaseTx = await walletFacade.signUnboundTransaction(
+      baseTransaction,
+      (payload: Uint8Array) => keys.unshieldedKeystore.signData(payload)
+    );
+
+    const signedRecipe: UnboundTransactionRecipe = {
+      type: 'UNBOUND_TRANSACTION',
+      baseTransaction: signedBaseTx,
+      balancingTransaction,
+    };
+    const balancedTx = await walletFacade.finalizeRecipe(signedRecipe);
     return { tx: uint8ArrayToHex(balancedTx.serialize()) };
   };
 }

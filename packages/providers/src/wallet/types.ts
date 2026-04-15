@@ -104,7 +104,10 @@ export type PromptForCurrency = (
 
 export type ConfirmOffer = (offer: Offer, dustRequired: bigint, requestId: string) => Promise<OfferConfirmationResult>;
 
-export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
+/**
+ * Balances a serialized unbound transaction and returns a serialized finalized transaction.
+ */
+export type BalanceTransaction = (tx: string) => Promise<{ tx: string }>;
 
 export interface CapacityExchangeConfig {
   /**
@@ -120,9 +123,9 @@ export interface CapacityExchangeConfig {
    */
   encryptionPublicKey: EncPublicKey;
   /**
-   * The `balanceSealedTransaction` method from the user's wallet.
+   * A callback that balances an unbound transaction and returns a finalized transaction.
    */
-  balanceSealedTransaction: BalanceSealedTransaction;
+  balanceTransaction: BalanceTransaction;
   /**
    * An indexer URL for the given environment.
    */

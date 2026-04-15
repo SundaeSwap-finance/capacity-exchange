@@ -4,7 +4,7 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
-  type BalanceSealedTransaction,
+  type BalanceTransaction,
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@sundaeswap/capacity-exchange-providers';
@@ -74,7 +74,7 @@ export async function incrementCounter(
 export async function findAndIncrementCounter(
   walletProvider: WalletProvider,
   midnightProvider: MidnightProvider,
-  balanceSealedTransaction: BalanceSealedTransaction,
+  balanceTransaction: BalanceTransaction,
   contractAddress: string,
   promptForCurrency: PromptForCurrency,
   confirmOffer: ConfirmOffer,
@@ -84,7 +84,7 @@ export async function findAndIncrementCounter(
     networkId: config.networkId,
     coinPublicKey: walletProvider.getCoinPublicKey(),
     encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
-    balanceSealedTransaction,
+    balanceTransaction,
     indexerUrl: config.indexerUrl,
     additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
     promptForCurrency,

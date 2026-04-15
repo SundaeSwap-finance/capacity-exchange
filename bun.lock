@@ -139,6 +139,7 @@
         "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
         "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
+        "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
         "@sundaeswap/capacity-exchange-client": "1.0.0",
         "@sundaeswap/capacity-exchange-core": "1.0.0",
         "@sundaeswap/capacity-exchange-providers": "1.2.0",

@@ -16,10 +16,8 @@ export function createMockUnboundTransaction(dustRequired: bigint = 50000n): Unb
   return {
     feesWithMargin: (ledgerParams: LedgerParameters, multiplier: number) => dustRequired,
     identifiers: () => ['mock-tx-id'],
-    bind: () => ({
-      merge: (dustTx: any) => ({
-        serialize: () => new Uint8Array([1, 2, 3, 4, 5]),
-      }),
+    merge: (other: any) => ({
+      serialize: () => new Uint8Array([1, 2, 3, 4, 5]),
     }),
     serialize: () => new Uint8Array([1, 2, 3]),
   } as unknown as UnboundTransaction;

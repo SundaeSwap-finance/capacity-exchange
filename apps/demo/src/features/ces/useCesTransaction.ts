@@ -7,7 +7,7 @@ import {
   CapacityExchangeNoPricesAvailableError,
 } from '@sundaeswap/capacity-exchange-providers';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { BalanceSealedTransaction } from '@sundaeswap/capacity-exchange-providers';
+import type { BalanceTransaction } from '@sundaeswap/capacity-exchange-providers';
 import type { CesFlowStatus, CurrencySelectionState } from './types';
 import { findAndIncrementCounter } from './counterContract';
 import { useNetworkConfig } from '../../config';
@@ -77,7 +77,7 @@ function createAutoConfirmOffer(
 export function useCesTransaction(
   walletProvider: WalletProvider | null,
   midnightProvider: MidnightProvider | null,
-  balanceSealedTransaction: BalanceSealedTransaction | null,
+  balanceTransaction: BalanceTransaction | null,
   contractAddress: string | null
 ): UseCesTransactionResult {
   const config = useNetworkConfig();
@@ -108,7 +108,7 @@ export function useCesTransaction(
   }, []);
 
   const incrementCounter = useCallback(async () => {
-    if (!walletProvider || !midnightProvider || !balanceSealedTransaction || !contractAddress) {
+    if (!walletProvider || !midnightProvider || !balanceTransaction || !contractAddress) {
       setError('Providers or contract address not available');
       return;
     }
@@ -125,7 +125,7 @@ export function useCesTransaction(
           findAndIncrementCounter(
             walletProvider,
             midnightProvider,
-            balanceSealedTransaction,
+            balanceTransaction,
             contractAddress,
             promptForCurrency,
             confirmOffer,
@@ -147,7 +147,7 @@ export function useCesTransaction(
         setStatus('error');
       }
     }
-  }, [walletProvider, midnightProvider, balanceSealedTransaction, contractAddress, config]);
+  }, [walletProvider, midnightProvider, balanceTransaction, contractAddress, config]);
 
   return {
     status,

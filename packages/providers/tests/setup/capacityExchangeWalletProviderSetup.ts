@@ -5,13 +5,13 @@ import type {
   Offer,
   CurrencySelectionResult,
   OfferConfirmationResult,
-  BalanceSealedTransaction,
+  BalanceTransaction,
 } from '../../src/wallet/types';
 import { createMockWalletProvider } from '../mocks/mockProviders';
 
 export interface TestContext {
   mockWalletProvider: ReturnType<typeof createMockWalletProvider>;
-  mockBalanceSealedTransaction: BalanceSealedTransaction;
+  mockBalanceTransaction: BalanceTransaction;
   promptForCurrency: (prices: ExchangePrice[], dustRequired: bigint) => Promise<CurrencySelectionResult>;
   confirmOffer: (offer: Offer, dustRequired: bigint) => Promise<OfferConfirmationResult>;
 }
@@ -20,7 +20,7 @@ export function createTestContext(): TestContext {
   const mockWalletProvider = createMockWalletProvider();
   return {
     mockWalletProvider,
-    mockBalanceSealedTransaction: vi.fn().mockResolvedValue({ tx: '' } as any),
+    mockBalanceTransaction: vi.fn().mockResolvedValue({ tx: '' } as any),
     promptForCurrency: vi.fn().mockImplementation((exchangePrices: ExchangePrice[]) => {
       const selectedPrice = exchangePrices.find((ep) => ep.price.currency.rawId === 'ADA') || exchangePrices[0];
       return Promise.resolve({ status: 'selected', exchangePrice: selectedPrice });
@@ -90,7 +90,7 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
     networkId: 'undeployed',
     coinPublicKey: ctx.mockWalletProvider.getCoinPublicKey(),
     encryptionPublicKey: ctx.mockWalletProvider.getEncryptionPublicKey(),
-    balanceSealedTransaction: ctx.mockBalanceSealedTransaction,
+    balanceTransaction: ctx.mockBalanceTransaction,
     indexerUrl: 'http://localhost:8080/graphql',
     additionalCapacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
