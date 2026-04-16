@@ -28,7 +28,7 @@ function main(): Promise<TxResult> {
   }
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
-  console.log(`New expiry:${expiry}`);
+  console.log(`New expiry: ${expiry.toISOString()}`);
 
   const expiryInt = BigInt(Math.floor(expiry.getTime() / 1000));
 

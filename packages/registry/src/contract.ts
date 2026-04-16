@@ -39,7 +39,8 @@ export function constructorArgs(args: RegistryConstructorArgs): [bigint, bigint]
 }
 
 export function getContractOutDir(logger: Logger) {
-  const contractOutDir = path.resolve(fileURLToPath(import.meta.url), '../../contract/out');
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const contractOutDir = path.resolve(moduleDir, '../../contract/out');
   logger.debug(`Contract output directory: ${contractOutDir}`);
 
   return contractOutDir;

@@ -22,7 +22,9 @@ function main(): Promise<DeployOutput> {
     requiredCollateral: BigInt(collateral),
     maxPeriod: BigInt(Math.floor(days * 24 * 60 * 60)),
   };
-  console.log(`set arguments: ${args}`);
+  console.log(
+    `set arguments: ${JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value))}`,
+  );
 
   return withAppContext(networkId, (ctx) => deploy(ctx, args));
 }

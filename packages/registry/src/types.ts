@@ -37,13 +37,13 @@ export function generateRandomSecretKey(): RegistrySecretKey {
 }
 
 export function timestampToDate(dateInString: string) {
-  const validToSecs = Number(dateInString);
+  const expirySecs = Number(dateInString);
 
-  if (!Number.isInteger(validToSecs) || validToSecs <= 0) {
+  if (!Number.isInteger(expirySecs) || expirySecs <= 0) {
     throw new Error(`Invalid expiry value: "${dateInString}". Expected a Unix timestamp in seconds.`);
   }
 
-  return new Date(validToSecs * 1000);
+  return new Date(expirySecs * 1000);
 }
 
 export function ipToContract(ip: IpAddress): ContractIpAddress {
