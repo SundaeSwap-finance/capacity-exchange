@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: Lint, typecheck & unit tests
+    name: build
     runs-on: ubuntu-latest
     steps:
       # Setup
