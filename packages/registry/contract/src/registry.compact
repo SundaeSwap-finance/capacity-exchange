@@ -36,7 +36,6 @@ constructor(requiredCollateral: Uint<128>, maxPeriod: UnixTimestampSeconds) {
   collateralAmount = disclose(requiredCollateral);
   maximumRegistrationPeriod = disclose(maxPeriod);
 }
-                 
 export circuit registerServer(entry: Entry): [] {
   const disclosedEntry = disclose(entry);
   assert(blockTimeGte((disclosedEntry.expiry - maximumRegistrationPeriod) as Uint<64>),
