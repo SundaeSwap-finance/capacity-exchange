@@ -1,9 +1,8 @@
-import * as fs from 'fs';
-
 import { TxResult } from '@capacity-exchange/midnight-core';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
 import { deregister } from '../circuits/deregister.js';
+import { readSecretKeyFile } from '../types.js';
 
 function main(): Promise<TxResult> {
   program
@@ -18,7 +17,7 @@ function main(): Promise<TxResult> {
 
   const [contractAddress, secretKeyFile, recipientAddress] = program.args;
 
-  const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(secretKeyFile, 'utf-8').trim(), 'hex'));
+  const secretKey = readSecretKeyFile(secretKeyFile);
 
   return withAppContext(networkId, (ctx) =>
     deregister(ctx, {

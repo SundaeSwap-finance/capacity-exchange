@@ -2,6 +2,7 @@ import { TxResult } from '@capacity-exchange/midnight-core';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
 import { claimExpired } from '../circuits/claim-expired.js';
+import { parseRegistryKeyHex } from '../types.js';
 
 function main(): Promise<TxResult> {
   program
@@ -16,7 +17,7 @@ function main(): Promise<TxResult> {
 
   const [contractAddress, registryKeyHex, recipientAddress] = program.args;
 
-  const registryKey = new Uint8Array(Buffer.from(registryKeyHex, 'hex'));
+  const registryKey = parseRegistryKeyHex(registryKeyHex);
 
   return withAppContext(networkId, (ctx) =>
     claimExpired(ctx, {

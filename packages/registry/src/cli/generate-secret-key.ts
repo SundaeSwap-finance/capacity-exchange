@@ -4,7 +4,7 @@ import { runCli } from '@capacity-exchange/midnight-node';
 
 import { generateRandomSecretKey, type RegistrySecretKey } from '../types.js';
 
-function main(): Promise<void> {
+async function main(): Promise<void> {
   program
     .name('generate-secret')
     .description('Generates a random secret key for the registry contract')
@@ -16,8 +16,6 @@ function main(): Promise<void> {
   const secretKey: RegistrySecretKey = generateRandomSecretKey();
 
   fs.writeFileSync(outputFile, Buffer.from(secretKey).toString('hex'));
-
-  return Promise.resolve();
 }
 
 runCli(main);

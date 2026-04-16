@@ -1,9 +1,8 @@
-import * as fs from 'fs';
-
 import { TxResult } from '@capacity-exchange/midnight-core';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
 import { renewRegistration } from '../circuits/renew-registration.js';
+import { readSecretKeyFile } from '../types.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 
@@ -20,7 +19,7 @@ function main(): Promise<TxResult> {
 
   const [contractAddress, secretKeyFile, periodArg] = program.args;
 
-  const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(secretKeyFile, 'utf-8').trim(), 'hex'));
+  const secretKey = readSecretKeyFile(secretKeyFile);
 
   const days = Number(periodArg);
   if (!Number.isFinite(days) || days <= 0) {
