@@ -4,7 +4,7 @@
 # generates a fresh runner wallet, runs tests, cleans up.
 #
 # Usage:
-#   scripts/ci-test-setup.sh <network_id>
+#   scripts/ci-test.sh <network_id>
 #
 # Prerequisites:
 #   - bun installed
@@ -18,7 +18,7 @@
 
 set -euo pipefail
 
-NETWORK_ID="${1:?Usage: ci-test-setup.sh <network_id>}"
+NETWORK_ID="${1:?Usage: ci-test.sh <network_id>}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CES_SERVER_PID=""
 CES_PORT=3000
