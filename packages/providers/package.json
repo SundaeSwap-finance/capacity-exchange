@@ -2,6 +2,7 @@
   "name": "@sundaeswap/capacity-exchange-providers",
   "version": "1.2.0",
   "description": "Capacity Exchange providers for midnight transactions",
+  "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

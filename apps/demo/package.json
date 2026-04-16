@@ -5,7 +5,7 @@
   "description": "Demo Webapp for the Capacity Exchange",
   "type": "module",
   "main": "index.js",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "clean": "rm -rf dist public/midnight public/contracts",
     "typecheck": "tsc --noEmit",

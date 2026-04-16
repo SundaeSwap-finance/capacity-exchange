@@ -1,6 +1,7 @@
 {
   "name": "@capacity-exchange/midnight-node",
   "version": "1.0.0",
+  "license": "SEE LICENSE IN LICENSE.md",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
