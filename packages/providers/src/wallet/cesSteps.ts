@@ -7,7 +7,7 @@ import {
   type FinalizedTransaction,
   Binding,
 } from '@midnight-ntwrk/ledger-v8';
-import type { ExchangePrice, Offer, BalanceSealedTransaction } from './types';
+import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
 import { isOfferExpired } from './utils';
 import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, resolveCesUrls } from './exchangeApi';
@@ -97,22 +97,34 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
 export async function processTransactionWithOffer(
   tx: UnboundTransaction,
   offer: Offer,
+  balanceUnsealedTransaction: BalanceUnsealedTransaction,
   balanceSealedTransaction: BalanceSealedTransaction
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
-  const txBytes = hexToBytes(offer.serializedTx);
+  const dustTxBytes = hexToBytes(offer.serializedTx);
   const dustTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
     'signature',
     'proof',
     'pre-binding',
-    txBytes
+    dustTxBytes
   ).bind();
   console.debug('[CESSteps] DUST transaction deserialized');
 
+  console.debug('[CESSteps] Balancing user transaction');
+  const txHex = Buffer.from(tx.serialize()).toString('hex');
+  const { tx: balancedTxHex } = await balanceUnsealedTransaction(txHex);
+  const balancedTxBytes = hexToBytes(balancedTxHex);
+  const balancedTx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+    'signature',
+    'proof',
+    'binding',
+    balancedTxBytes
+  );
+  console.debug('[CESSteps] User transaction balanced');
+
   console.debug('[CESSteps] Binding and merging transactions');
-  const boundTx = tx.bind();
-  const mergedTx = boundTx.merge(dustTx);
-  console.debug('[CESSteps] Transactions merged, calling wallet to balance and seal');
+  const mergedTx = balancedTx.merge(dustTx);
+  console.debug('[CESSteps] Transactions merged, calling wallet to balance');
 
   const mergedTxHex = Buffer.from(mergedTx.serialize()).toString('hex');
   const { tx: result } = await balanceSealedTransaction(mergedTxHex);

@@ -41,7 +41,8 @@ function useProviders<PCK extends string>(
     // These are necessary for the user to receive shielded tokens.
     coinPublicKey: addresses.shieldedCoinPublicKey,
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
-    // balanceSealedTransaction is necessary for the user to spend shielded or unshielded tokens.
+    // These balance functions are necessary for the user to spend shielded or unshielded tokens.
+    balanceUnsealedTransaction: wallet.balanceUnsealedTransaction,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
     // indexerUrl also available from your wallet's configuration.
     indexerUrl: configuration.indexerUri,
