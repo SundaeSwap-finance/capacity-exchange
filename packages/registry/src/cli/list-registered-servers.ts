@@ -46,15 +46,15 @@ async function main(): Promise<void> {
 
   const entries = await withAppContext(networkId, (ctx) => listRegisteredServers(ctx, contractAddress));
 
-  const output: Record<string, unknown> = {};
   for (const [key, entry] of entries) {
-    output[key] = {
+    const details = {
       ip: entry.ip,
       port: entry.port,
       expiry: entry.expiry.toISOString(),
     };
+
+    console.log(`${key}: ${JSON.stringify(details, null, 2)},`);
   }
-  console.log(JSON.stringify(output, null, 2));
 }
 
 runCli(main);
