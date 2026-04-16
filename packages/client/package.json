@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-client",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Capacity Exchange Client",
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "generated/dist/index.js",

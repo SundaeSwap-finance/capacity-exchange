@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/demo",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "Demo Webapp for the Capacity Exchange",
   "type": "module",
@@ -14,9 +14,9 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@sundaeswap/capacity-exchange-client": "1.0.0",
-    "@sundaeswap/capacity-exchange-core": "1.0.0",
-    "@sundaeswap/capacity-exchange-providers": "1.2.0",
+    "@sundaeswap/capacity-exchange-client": "1.1.0",
+    "@sundaeswap/capacity-exchange-core": "1.1.0",
+    "@sundaeswap/capacity-exchange-providers": "1.3.0",
     "@fontsource/geist": "^5.2.8",
     "@fontsource/space-mono": "^5.2.9",
     "@midnight-ntwrk/compact-js": "2.5.0",
@@ -46,7 +46,7 @@
     "unicornstudio-react": "^2.1.4-1"
   },
   "devDependencies": {
-    "@capacity-exchange/midnight-node": "1.0.0",
+    "@capacity-exchange/midnight-node": "1.0.1",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
