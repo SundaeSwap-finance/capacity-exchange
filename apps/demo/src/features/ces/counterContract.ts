@@ -4,10 +4,10 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
+  type BalanceUnsealedTransaction,
   type BalanceSealedTransaction,
   type PromptForCurrency,
   type ConfirmOffer,
-  BalanceUnsealedTransaction,
 } from '@sundaeswap/capacity-exchange-providers';
 import { buildMidnightProviders } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkConfig } from '../../config';

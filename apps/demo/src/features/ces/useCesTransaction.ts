@@ -112,8 +112,8 @@ export function useCesTransaction(
     if (
       !walletProvider ||
       !midnightProvider ||
-      !balanceSealedTransaction ||
       !balanceUnsealedTransaction ||
+      !balanceSealedTransaction ||
       !contractAddress
     ) {
       setError('Providers or contract address not available');
