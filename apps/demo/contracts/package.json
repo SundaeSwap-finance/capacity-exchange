@@ -5,7 +5,10 @@
   "description": "Midnight contracts for capacity exchange demos",
   "type": "module",
   "exports": {
+    "./counter": "./src/counter/lib/contract.ts",
     "./counter/out/contract/*": "./counter/out/contract/*",
+    "./token-mint": "./src/token-mint/lib/contract.ts",
+    "./token-mint/witnesses": "./src/token-mint/lib/witnesses.ts",
     "./token-mint/out/contract/*": "./token-mint/out/contract/*"
   },
   "scripts": {

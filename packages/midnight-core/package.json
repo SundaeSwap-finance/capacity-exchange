@@ -5,8 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
     "./seed": {
+      "bun": "./src/seed.ts",
       "types": "./dist/seed.d.ts",
       "default": "./dist/seed.js"
     }
