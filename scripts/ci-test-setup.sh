@@ -47,6 +47,7 @@ cleanup() {
   rm -f "$CES_SERVER_SEED_FILE"
   rm -f "$TEST_RUNNER_MNEMONIC_FILE"
   rm -f "$CES_SERVER_QUOTE_SECRET"
+  rm -f "$CES_SERVER_PRICE_CONFIG"
 }
 
 validate_env() {
@@ -95,6 +96,9 @@ EOF
 
 start_ces_server() {
   log "Starting CES server against $NETWORK_ID"
+  local old_umask
+  old_umask="$(umask)"
+  umask 077
   openssl rand -hex 32 > "$CES_SERVER_QUOTE_SECRET"
 
   if [ -n "${CES_WALLET_SEED:-}" ]; then
@@ -104,6 +108,7 @@ start_ces_server() {
     echo "$CES_WALLET_MNEMONIC" > "$CES_SERVER_MNEMONIC_FILE"
     export WALLET_MNEMONIC_FILE="$CES_SERVER_MNEMONIC_FILE"
   fi
+  umask "$old_umask"
 
   MIDNIGHT_NETWORK="$NETWORK_ID" \
   QUOTE_SECRET_FILE="$CES_SERVER_QUOTE_SECRET" \
@@ -139,7 +144,11 @@ wait_for_ces_server() {
 
 seed_runner_wallet_state() {
   log "Seeding runner wallet state from cached chain snapshot"
+  local old_umask
+  old_umask="$(umask)"
+  umask 077
   echo "$RUNNER_MNEMONIC" > "$TEST_RUNNER_MNEMONIC_FILE"
+  umask "$old_umask"
   bun packages/midnight-node/src/cli/seed-wallet-state.ts "$NETWORK_ID" "$TEST_RUNNER_WALLET_STATE" "$CHAIN_SNAPSHOT_DIR"
 }
 

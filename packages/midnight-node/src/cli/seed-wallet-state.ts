@@ -8,11 +8,28 @@ import { createLogger } from '../createLogger.js';
 
 const logger = createLogger(import.meta);
 
+interface ShieldedSnap {
+  state: string;
+  offset: number;
+  protocolVersion: number;
+}
+
+interface DustSnap {
+  state: string;
+  offset: number;
+  protocolVersion: number;
+}
+
+interface UnshieldedSnap {
+  appliedId: number;
+  protocolVersion: number;
+}
+
 /** Builds synthetic wallet state from chain snapshots + wallet keys, with empty balances. */
 function buildSyntheticState(
-  shieldedSnap: Record<string, unknown>,
-  dustSnap: Record<string, unknown>,
-  unshieldedSnap: Record<string, unknown>,
+  shieldedSnap: ShieldedSnap,
+  dustSnap: DustSnap,
+  unshieldedSnap: UnshieldedSnap,
   keys: WalletKeys,
   networkId: string
 ) {
@@ -80,14 +97,20 @@ function main() {
 
   const [shieldedSnap, dustSnap, unshieldedSnap] = snapshotFiles.map((f) => JSON.parse(fs.readFileSync(f, 'utf-8')));
 
-  const saved = buildSyntheticState(shieldedSnap, dustSnap, unshieldedSnap, keys, String(networkIdEnum));
+  const saved = buildSyntheticState(
+    shieldedSnap as ShieldedSnap,
+    dustSnap as DustSnap,
+    unshieldedSnap as UnshieldedSnap,
+    keys,
+    String(networkIdEnum)
+  );
 
   fs.mkdirSync(stateDir, { recursive: true });
   fs.writeFileSync(path.join(stateDir, `${prefix}-shielded.data`), saved.shielded);
   fs.writeFileSync(path.join(stateDir, `${prefix}-dust.data`), saved.dust);
   fs.writeFileSync(path.join(stateDir, `${prefix}-unshielded.data`), saved.unshielded);
 
-  logger.info(`Seeded wallet state in ${stateDir} at shielded offset ${shieldedSnap.offset}`);
+  logger.info(`Seeded wallet state in ${stateDir} at shielded offset ${(shieldedSnap as ShieldedSnap).offset}`);
 }
 
 main();
