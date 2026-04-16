@@ -28,13 +28,9 @@ function main(): Promise<TxResult> {
   if (!Number.isFinite(days) || days <= 0) {
     throw new Error(`Invalid period: "${periodArg}". Expected a positive number of days.`);
   }
-  console.log("NUMBER OF DAYS: ", days);
-
-  
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
-
-  console.log("expiry date: ", expiry);
+  console.log(`expiry date: ${expiry}`);
 
   const entry: RegistryEntry = {
     ip: ipStr.includes(':') ? { kind: 'ipv6', address: ipStr } : { kind: 'ipv4', address: ipStr },

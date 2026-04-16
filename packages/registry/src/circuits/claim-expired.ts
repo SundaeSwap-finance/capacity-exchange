@@ -7,7 +7,6 @@ import { circuitId } from './deregister.js';
 
 const logger = createLogger(import.meta);
 
-
 export interface ClaimExpiredParams {
   contractAddress: string;
   /**
