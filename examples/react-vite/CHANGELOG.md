@@ -1,5 +1,12 @@
 # @capacity-exchange/example-react-vite
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [2027d29]
+  - @sundaeswap/capacity-exchange-react-sdk@1.3.0
+
 ## 1.0.2
 
 ### Patch Changes

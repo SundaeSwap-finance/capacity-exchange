@@ -1,5 +1,14 @@
 # @capacity-exchange/server
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [2027d29]
+  - @sundaeswap/capacity-exchange-core@1.1.0
+  - @sundaeswap/capacity-exchange-providers@1.3.0
+  - @capacity-exchange/midnight-node@1.0.1
+
 ## 1.0.2
 
 ### Patch Changes

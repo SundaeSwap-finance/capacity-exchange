@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "main": "dist/index.js",
