@@ -11,5 +11,5 @@ echo "Building project"
 bun run build
 
 echo "Running E2E tests"
-bun run test:e2e
+bun run test:integ
 echo "Complete"

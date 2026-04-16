@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "clean": "rm -rf dist .sync_cache midnight-level-db .wallet-state",
     "test": "vitest run",
-    "test:e2e": "vitest run -c vitest.e2e.config.ts",
+    "test:integ": "vitest run -c vitest.e2e.config.ts",
     "run-servers": "bun scripts/run-servers.ts",
     "test:sponsor": "bun scripts/test-prove-and-sponsor.ts"
   },
