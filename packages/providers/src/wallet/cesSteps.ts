@@ -3,9 +3,8 @@ import {
   Proof,
   SignatureEnabled,
   Transaction,
-  type PreBinding,
+  type Binding,
   type FinalizedTransaction,
-  Binding,
 } from '@midnight-ntwrk/ledger-v8';
 import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
 import { isOfferExpired } from './utils';
@@ -102,12 +101,12 @@ export async function processTransactionWithOffer(
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
   const dustTxBytes = hexToBytes(offer.serializedTx);
-  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
     'signature',
     'proof',
-    'pre-binding',
+    'binding',
     dustTxBytes
-  ).bind();
+  );
   console.debug('[CESSteps] DUST transaction deserialized');
 
   console.debug('[CESSteps] Balancing user transaction');
