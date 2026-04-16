@@ -28,12 +28,13 @@ function main(): Promise<TxResult> {
   }
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
+  console.log(`New expiry:${expiry}`);
+
   const expiryInt = BigInt(Math.floor(expiry.getTime() / 1000));
 
   return withAppContext(networkId, (ctx) =>
     renewRegistration(ctx, secretKey, {
       contractAddress,
-      expiry,
       expiryInt,
     })
   );

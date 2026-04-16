@@ -16,9 +16,6 @@ export interface RenewRegistrationParams {
    * `renewRegistration` circuit as `UnixTimestampSeconds` (`Uint<64>`).
    */
   expiryInt: bigint;
-
-  /** New expiry date for the registry entry. Used only for logging. */
-  expiry: Date;
 }
 
 /**
@@ -35,9 +32,9 @@ export async function renewRegistration(
   secretKey: RegistrySecretKey,
   params: RenewRegistrationParams
 ): Promise<TxResult> {
-  const { contractAddress, expiry } = params;
+  const { contractAddress, expiryInt } = params;
 
-  logger.info(`Renewing registration to ${expiry.toISOString()} in registry ${contractAddress}...`);
+  logger.info(`Renewing registration...`);
 
   const { providers, privateStateId } = await getProviders(ctx, contractAddress, secretKey, logger);
 
@@ -46,7 +43,7 @@ export async function renewRegistration(
     compiledContract: CompiledRegistryContract,
     circuitId: circuitId,
     privateStateId,
-    args: [params.expiryInt],
+    args: [expiryInt],
   });
 
   return toTxResult(contractAddress, result.public);
