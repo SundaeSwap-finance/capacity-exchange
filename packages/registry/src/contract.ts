@@ -40,7 +40,7 @@ export function constructorArgs(args: RegistryConstructorArgs): [bigint, bigint]
 
 export function getContractOutDir(logger: Logger) {
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-  const contractOutDir = path.resolve(moduleDir, '../../contract/out');
+  const contractOutDir = path.resolve(moduleDir, '../contract/out');
   logger.debug(`Contract output directory: ${contractOutDir}`);
 
   return contractOutDir;
@@ -62,7 +62,6 @@ export async function getProviders(
   // Load the secret key into the private state provider so the `secretKey()` witness
   // has a value to read during circuit execution.
   await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
-  logger.debug(`Setting private state for privateStateId: ${privateStateId.slice(0, 16)}...`);
 
   return { providers, privateStateId };
 }

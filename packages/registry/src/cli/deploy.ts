@@ -11,7 +11,7 @@ function main(): Promise<DeployOutput> {
     .parse();
 
   const networkId = requireNetworkId();
-  const [collateral, registrationPeriod] = program.args;
+  const [collateral, registrationPeriod] = program.processedArgs;
 
   const days = Number(registrationPeriod);
   if (!Number.isFinite(days) || days <= 0) {
@@ -23,7 +23,7 @@ function main(): Promise<DeployOutput> {
     maxPeriod: BigInt(Math.floor(days * 24 * 60 * 60)),
   };
   console.log(
-    `set arguments: ${JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value))}`,
+    `set arguments: ${JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value))}`
   );
 
   return withAppContext(networkId, (ctx) => deploy(ctx, args));

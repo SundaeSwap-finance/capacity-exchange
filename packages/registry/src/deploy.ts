@@ -1,9 +1,13 @@
 import * as crypto from 'crypto';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { AppContext, buildProviders, createLogger } from '@capacity-exchange/midnight-node';
-import { CompiledRegistryContract, constructorArgs, createPrivateState, RegistryContract } from './contract.js';
+import {
+  CompiledRegistryContract,
+  constructorArgs,
+  createPrivateState,
+  getContractOutDir,
+  RegistryContract,
+} from './contract.js';
 import { RegistrySecretKey, RegistryConstructorArgs, generateRandomSecretKey } from './types.js';
 
 const logger = createLogger(import.meta);
@@ -16,7 +20,7 @@ export interface DeployOutput {
 
 export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Promise<DeployOutput> {
   logger.info('Deploying registry contract...');
-  const contractOutDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../contract/out');
+  const contractOutDir = getContractOutDir(logger);
   const providers = buildProviders<RegistryContract>(ctx, contractOutDir);
 
   const privateStateId = crypto.randomBytes(32).toString('hex');
