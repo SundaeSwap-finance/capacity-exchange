@@ -86,7 +86,7 @@ If you would like to provide DUST for user transactions yourself, consider the `
 | `config.networkId` | yes | The ID of the midnight network you're connecting to. Usually `preview`, `preprod`, or `mainnet`.
 | `config.coinPublicKey` | yes | The `coinPublicKey` of the user's Shielded wallet. |
 | `config.encryptionPublicKey` | yes | The `encryptionPublicKey` of the user's Shielded wallet. |
-| `config.balanceSealedTransaction` | yes | A callback which can balance an unsealed transaction. You can pass `balanceUnsealedTransaction` from the user's wallet. |
+| `config.balanceUnsealedTransaction` | yes | A callback which can balance an unsealed transaction. You can pass `balanceUnsealedTransaction` from the user's wallet. |
 | `config.balanceSealedTransaction` | yes | A callback which can balance a sealed transaction. You can pass `balanceSealedTransaction` from the user's wallet. |
 | `config.indexerUrl` | yes | The address of an indexer for your network. |
 | `config.additionalCapacityExchangeUrls` | no | The URLs for any additional Capacity Exchange servers to use. |

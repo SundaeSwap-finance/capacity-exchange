@@ -44,7 +44,7 @@ function buildSeedWalletProviders(
   };
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
 
-  const balanceUnsealedTransaction: BalanceSealedTransaction = async (txHex) => {
+  const balanceUnsealedTransaction: BalanceUnsealedTransaction = async (txHex) => {
     const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
       'signature',
       'proof',
