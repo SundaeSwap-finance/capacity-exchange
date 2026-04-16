@@ -59,6 +59,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     networkId,
     coinPublicKey,
     encryptionPublicKey,
+    balanceUnsealedTransaction,
     balanceSealedTransaction,
     indexerUrl,
     additionalCapacityExchangeUrls = [],
@@ -89,7 +90,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
         const result = await confirmOfferWithUser(offer, specksRequired, requestId, confirmOffer);
 
         if (result === 'confirmed') {
-          return processTransactionWithOffer(tx, offer, balanceSealedTransaction);
+          return processTransactionWithOffer(tx, offer, balanceUnsealedTransaction, balanceSealedTransaction);
         }
       }
     },

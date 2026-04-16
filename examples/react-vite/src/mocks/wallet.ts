@@ -1,6 +1,7 @@
 import { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { useMemo } from 'react';
 import { MOCK_PRICE_1 } from './constants';
+import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
 
 export function useMockWallet(): ConnectedAPI {
   return useMemo(() => {
@@ -42,7 +43,14 @@ export function useMockWallet(): ConnectedAPI {
         return [];
       },
       async balanceUnsealedTransaction(tx: string) {
-        return { tx };
+        const parsed = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+          'signature',
+          'proof',
+          'pre-binding',
+          Uint8Array.fromHex(tx)
+        );
+        const bound = parsed.bind();
+        return { tx: bound.serialize().toHex() };
       },
       async balanceSealedTransaction(tx: string) {
         return { tx };

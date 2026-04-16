@@ -9,12 +9,14 @@ import { FastifyBaseLogger } from 'fastify';
 import {
   Binding,
   nativeToken,
+  PreBinding,
   Proof,
   SignatureEnabled,
   Transaction,
-  type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
 import {
+  balanceFinalizedTransaction,
+  balanceUnboundTransaction,
   hexToBytes,
   uint8ArrayToHex,
   WalletConnection,
@@ -139,6 +141,18 @@ export class WalletService {
     return state.balances;
   }
 
+  public async balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
+    const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+      'signature',
+      'proof',
+      'pre-binding',
+      hexToBytes(txHex),
+    );
+    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
+    const balancedTx = await balanceUnboundTransaction(this.walletConnection, tx, ttl);
+    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
+  }
+
   public async balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
     const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
       'signature',
@@ -146,21 +160,9 @@ export class WalletService {
       'binding',
       hexToBytes(txHex),
     );
-    const balancedTx = await this.balanceFinalizedTransaction(tx);
-    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
-  }
-
-  public async balanceFinalizedTransaction(
-    tx: FinalizedTransaction,
-  ): Promise<FinalizedTransaction> {
-    const { walletFacade, keys } = this.walletConnection;
     const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const recipe = await walletFacade.balanceFinalizedTransaction(
-      tx,
-      { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-      { ttl, tokenKindsToBalance: ['shielded'] },
-    );
-    return walletFacade.finalizeRecipe(recipe);
+    const balancedTx = await balanceFinalizedTransaction(this.walletConnection, tx, ttl);
+    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
   }
 
   get shieldedPublicKeys() {

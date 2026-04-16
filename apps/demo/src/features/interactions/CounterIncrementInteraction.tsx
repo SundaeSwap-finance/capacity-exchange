@@ -24,6 +24,7 @@ export function CounterIncrementInteraction({ wallet, walletConnection }: Counte
   const ces = useCesTransaction(
     providers?.walletProvider ?? null,
     providers?.midnightProvider ?? null,
+    providers?.balanceUnsealedTransaction ?? null,
     providers?.balanceSealedTransaction ?? null,
     contractAddress
   );

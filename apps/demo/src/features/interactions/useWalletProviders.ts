@@ -7,8 +7,9 @@ import {
   type Proof,
   type Binding,
   Transaction,
+  PreBinding,
 } from '@midnight-ntwrk/ledger-v8';
-import type { BalanceSealedTransaction } from '@sundaeswap/capacity-exchange-providers';
+import type { BalanceSealedTransaction, BalanceUnsealedTransaction } from '@sundaeswap/capacity-exchange-providers';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
 import type { WalletCapabilities, WalletInfoState } from '../wallet/types';
@@ -17,6 +18,8 @@ import {
   createConnectedAPI,
   type WalletIdentity,
   uint8ArrayToHex,
+  balanceFinalizedTransaction,
+  balanceUnboundTransaction,
 } from '@sundaeswap/capacity-exchange-core';
 import { useNetworkConfig } from '../../config';
 
@@ -25,6 +28,7 @@ const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 export interface WalletProviders {
   walletProvider: WalletProvider;
   midnightProvider: MidnightProvider;
+  balanceUnsealedTransaction: BalanceUnsealedTransaction;
   balanceSealedTransaction: BalanceSealedTransaction;
 }
 
@@ -40,6 +44,20 @@ function buildSeedWalletProviders(
   };
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
 
+  const balanceUnsealedTransaction: BalanceSealedTransaction = async (txHex) => {
+    const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+      'signature',
+      'proof',
+      'pre-binding',
+      Buffer.from(txHex, 'hex')
+    );
+    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
+    const balancedTx = await balanceUnboundTransaction(walletConnection, tx, ttl);
+    return {
+      tx: uint8ArrayToHex(balancedTx.serialize()),
+    };
+  };
+
   const balanceSealedTransaction: BalanceSealedTransaction = async (txHex) => {
     const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
       'signature',
@@ -48,18 +66,13 @@ function buildSeedWalletProviders(
       Buffer.from(txHex, 'hex')
     );
     const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const recipe = await walletFacade.balanceFinalizedTransaction(
-      tx,
-      { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-      { ttl, tokenKindsToBalance: ['shielded'] }
-    );
-    const balancedTx = await walletFacade.finalizeRecipe(recipe);
+    const balancedTx = await balanceFinalizedTransaction(walletConnection, tx, ttl);
     return {
       tx: uint8ArrayToHex(balancedTx.serialize()),
     };
   };
 
-  return { walletProvider, midnightProvider, balanceSealedTransaction };
+  return { walletProvider, midnightProvider, balanceUnsealedTransaction, balanceSealedTransaction };
 }
 
 function buildExtensionWalletProviders(
@@ -69,9 +82,10 @@ function buildExtensionWalletProviders(
   const { connectedAPI } = walletConnection;
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
 
+  const balanceUnsealedTransaction = connectedAPI.balanceUnsealedTransaction.bind(connectedAPI);
   const balanceSealedTransaction = connectedAPI.balanceSealedTransaction.bind(connectedAPI);
 
-  return { walletProvider, midnightProvider, balanceSealedTransaction };
+  return { walletProvider, midnightProvider, balanceUnsealedTransaction, balanceSealedTransaction };
 }
 
 export function useWalletProviders(

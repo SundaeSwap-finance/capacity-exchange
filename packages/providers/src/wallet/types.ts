@@ -104,6 +104,7 @@ export type PromptForCurrency = (
 
 export type ConfirmOffer = (offer: Offer, dustRequired: bigint, requestId: string) => Promise<OfferConfirmationResult>;
 
+export type BalanceUnsealedTransaction = (tx: string) => Promise<{ tx: string }>;
 export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
 
 export interface CapacityExchangeConfig {
@@ -119,6 +120,10 @@ export interface CapacityExchangeConfig {
    * The `shieldedEncryptionPublicKey` from the user's wallet.
    */
   encryptionPublicKey: EncPublicKey;
+  /**
+   * The `balanceUnsealedTransaction` method from the user's wallet.
+   */
+  balanceUnsealedTransaction: BalanceUnsealedTransaction;
   /**
    * The `balanceSealedTransaction` method from the user's wallet.
    */

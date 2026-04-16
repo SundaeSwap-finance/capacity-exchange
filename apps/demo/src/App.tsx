@@ -133,6 +133,7 @@ function TutorialInner({
   const realCesTransaction = useCesTransaction(
     providers?.walletProvider ?? null,
     providers?.midnightProvider ?? null,
+    providers?.balanceUnsealedTransaction ?? null,
     providers?.balanceSealedTransaction ?? null,
     counterAddress
   );

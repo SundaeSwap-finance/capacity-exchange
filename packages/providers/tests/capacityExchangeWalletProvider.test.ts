@@ -22,8 +22,8 @@ vi.mock('@midnight-ntwrk/ledger-v8', async () => {
     ...actual,
     Transaction: {
       deserialize: vi.fn(() => ({
-        bind: () => ({
-          merge: vi.fn(),
+        bind: vi.fn(),
+        merge: () => ({
           serialize: () => new Uint8Array([1, 2, 3, 4, 5]),
         }),
       })),
