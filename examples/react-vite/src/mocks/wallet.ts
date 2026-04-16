@@ -3,6 +3,21 @@ import { useMemo } from 'react';
 import { MOCK_PRICE_1 } from './constants';
 import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
 
+function hexToBytes(hex: string): Uint8Array {
+  const cleaned = hex.replace(/^0x/, '');
+  if (cleaned.length % 2 !== 0) {
+    throw new Error(`Invalid hex: odd length (${cleaned.length})`);
+  }
+  if (!/^[0-9a-fA-F]*$/.test(cleaned)) {
+    throw new Error('Invalid hex: contains non-hex characters');
+  }
+  const bytes = new Uint8Array(cleaned.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(cleaned.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
 export function useMockWallet(): ConnectedAPI {
   return useMemo(() => {
     return {
@@ -47,10 +62,10 @@ export function useMockWallet(): ConnectedAPI {
           'signature',
           'proof',
           'pre-binding',
-          Uint8Array.fromHex(tx)
+          hexToBytes(tx)
         );
         const bound = parsed.bind();
-        return { tx: bound.serialize().toHex() };
+        return { tx: Buffer.from(bound.serialize()).toString('hex') };
       },
       async balanceSealedTransaction(tx: string) {
         return { tx };
