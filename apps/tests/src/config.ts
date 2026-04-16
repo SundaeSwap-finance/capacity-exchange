@@ -1,4 +1,4 @@
-export interface IntegTestConfig {
+export interface TestConfig {
   networkId: string;
   cesUrl: string;
   counterAddress: string;
@@ -6,7 +6,7 @@ export interface IntegTestConfig {
   derivedTokenColor: string;
 }
 
-export function getIntegTestConfig(): IntegTestConfig {
+export function getTestConfig(): TestConfig {
   return {
     networkId: requireEnv('NETWORK_ID'),
     cesUrl: requireEnv('CES_URL'),

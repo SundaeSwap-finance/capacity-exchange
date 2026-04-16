@@ -1,11 +1,9 @@
 {
-  "name": "@capacity-exchange/integ-tests",
+  "name": "@capacity-exchange/tests",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "test:integ": "bun src/runner.ts"
-  },
+  "scripts": {},
   "dependencies": {
     "@capacity-exchange/demo-contracts": "1.0.0",
     "@capacity-exchange/midnight-node": "1.0.0",

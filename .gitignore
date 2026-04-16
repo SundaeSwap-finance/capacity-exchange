@@ -19,3 +19,4 @@ load-test-results.json
 .admin-key.json
 .wallet-state-*/
 .quote-secret.key
+.chain-snapshots/
