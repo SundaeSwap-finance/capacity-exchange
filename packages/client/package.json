@@ -2,11 +2,13 @@
   "name": "@sundaeswap/capacity-exchange-client",
   "version": "1.0.0",
   "description": "Capacity Exchange Client",
+  "license": "SEE LICENSE IN LICENSE.md",
   "main": "generated/dist/index.js",
   "module": "generated/dist/index.js",
   "types": "generated/dist/index.d.ts",
   "files": [
-    "generated/dist"
+    "generated/dist",
+    "LICENSE.md"
   ],
   "publishConfig": {
     "access": "public"

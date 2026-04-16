@@ -24,7 +24,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1018.0",
     "@sundaeswap/capacity-exchange-core": "1.0.0",
