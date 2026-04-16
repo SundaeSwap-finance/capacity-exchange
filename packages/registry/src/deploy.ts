@@ -10,8 +10,7 @@ const logger = createLogger(import.meta);
 
 export interface DeployOutput {
   contractAddress: string;
-  privateStateId: string;
-  secretKey: RegistrySecretKey;
+  secretKey: string;
   txHash: string;
 }
 
@@ -24,7 +23,6 @@ export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Pr
   logger.info(`Generated private state ID: ${privateStateId}`);
 
   const secretKey: RegistrySecretKey = generateRandomSecretKey();
-  logger.info(`Generated secret key: ${Buffer.from(secretKey).toString('hex').slice(0, 16)}...`);
 
   const initialPrivateState = createPrivateState(secretKey);
 
@@ -40,8 +38,7 @@ export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Pr
 
   return {
     contractAddress,
-    secretKey,
-    privateStateId,
+    secretKey: Buffer.from(secretKey).toString('hex'),
     txHash: deployed.deployTxData.public.txHash,
   };
 }

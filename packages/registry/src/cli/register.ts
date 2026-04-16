@@ -1,10 +1,11 @@
 import * as fs from 'fs';
-import * as crypto from 'crypto';
 import { program } from 'commander';
-import { timestampToDate, type RegistryEntry } from '../types.js';
+import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { TxResult } from '@capacity-exchange/midnight-core';
+
+const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 
 function main(): Promise<TxResult> {
   program
@@ -12,31 +13,38 @@ function main(): Promise<TxResult> {
     .description('Registers a server to the registry contract')
     .argument('<contractAddress>', 'address of the registry contract')
     .argument('<secretKeyFile>', 'registry secret key file')
-    .argument('<entryDetailsFile>', 'path to a JSON file with the registry entry details')
-    .option('--private-state-id <id>', 'private state ID (defaults to a random value)')
+    .argument('<ip>', 'server IP address (IPv4 or IPv6)')
+    .argument('<port>', 'server port number')
+    .argument('[period]', 'registration period in days (default: 30)', '30')
     .parse();
 
   const networkId = requireNetworkId();
 
-  const [contractAddress, secretKeyFile, entryDetailsFile] = program.args;
-  const opts = program.opts<{ privateStateId?: string }>();
-  const privateStateId = opts.privateStateId ?? crypto.randomBytes(32).toString('hex');
+  const [contractAddress, secretKeyFile, ipStr, portStr, periodArg] = program.args;
 
   const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(secretKeyFile, 'utf-8').trim(), 'hex'));
 
-  const raw = JSON.parse(fs.readFileSync(entryDetailsFile, 'utf-8'));
+  const days = Number(periodArg);
+  if (!Number.isFinite(days) || days <= 0) {
+    throw new Error(`Invalid period: "${periodArg}". Expected a positive number of days.`);
+  }
+  console.log("NUMBER OF DAYS: ", days);
 
-  const ipStr: string = typeof raw.ip === 'string' ? raw.ip : raw.ip.address;
+  
+
+  const expiry = new Date(Date.now() + days * DAYS_TO_MS);
+
+  console.log("expiry date: ", expiry);
+
   const entry: RegistryEntry = {
     ip: ipStr.includes(':') ? { kind: 'ipv6', address: ipStr } : { kind: 'ipv4', address: ipStr },
-    port: raw.port,
-    validTo: timestampToDate(raw.validTo),
+    port: Number(portStr),
+    expiry,
   };
 
   return withAppContext(networkId, (ctx) =>
     register(ctx, secretKey, {
       contractAddress,
-      privateStateId,
       entry,
     })
   );

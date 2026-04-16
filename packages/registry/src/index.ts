@@ -20,6 +20,8 @@ export {
   type RegistryContract,
 } from './contract.js';
 
+export { computeRegistryKey } from './compact-types.js';
+
 export {
   type IPv4,
   type IPv6,

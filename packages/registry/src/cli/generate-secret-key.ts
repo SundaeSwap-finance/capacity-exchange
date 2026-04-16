@@ -14,7 +14,6 @@ function main(): Promise<void> {
   const [outputFile] = program.args;
 
   const secretKey: RegistrySecretKey = generateRandomSecretKey();
-  console.log(`Generated secret key: ${Buffer.from(secretKey).toString('hex').slice(0, 16)}...`);
 
   fs.writeFileSync(outputFile, Buffer.from(secretKey).toString('hex'));
 

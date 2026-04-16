@@ -1,31 +1,47 @@
 # @capacity-exchange/registry
 
-Contains the registry contract on the Midnight network.
+The registry is a contract, acting as a directory of capacity exchange servers. Each entry maps a server's secret key (hashed on-chain) to an entry: its IP address, port, and expiry. 
+
+Servers must lock collateral to register, and gets refunded after deregistering. 
+
+Entries expire after a configurable maximum period — expired entries can be removed by anyone to reclaim their collateral.
 
 ---
 
 ## Commands
 
-Note: Each command requires a `NETWORK_ID` (`preview` or `mainnet`) environment variable and a wallet (from `wallet-mnemonic.preview.txt` or `wallet-mnemonic.mainnet.txt`) with unshielded NIGHT funds.
+Note: Each command requires a `NETWORK_ID` (`preview`, `preprod` or `mainnet`) environment variable and a wallet (from `wallet-mnemonic.preview.txt` or `wallet-mnemonic.mainnet.txt`) with unshielded NIGHT funds.
 
---
+---
 
 ### `generate-secret`
 
-Generates random 64-byte secret key and writes to file. Acts as the registry key, authorizing `register`, `deregister`, and `refresh-validity` operations.
+Generates a random 64-byte secret key and writes it hex-encoded to a file. This secret key is hashed and used as a registry key to identify an entry. This is required to `deregister` or `renew-registration`, and losing it means the collateral can only be recovered after the entry expires.
 
 ```sh
 NETWORK_ID=preview bun run generate-secret <outputFile>
 ```
 
--- 
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `outputFile` | Path to write the generated secret key (hex) to |
+
+**Example**
+
+```sh
+NETWORK_ID=preview bun run generate-secret ./registryKey
+```
+
+---
 
 ### `deploy`
 
-Deploys a new registry contract. Outputs the contract address, transaction hash, generated secret key, and private state ID to stdout — save these for use with the other commands.
+Deploys a new instance of the registry contract to the network. It also sets the required collateral amount and the maximum registration period that all future entries must respect.
 
 ```sh
-NETWORK_ID=preview bun run deploy <collateral> [validityInterval]
+NETWORK_ID=preview bun run deploy <collateral> [registrationPeriod]
 ```
 
 **Arguments**
@@ -33,7 +49,7 @@ NETWORK_ID=preview bun run deploy <collateral> [validityInterval]
 | Argument | Description |
 |---|---|
 | `collateral` | Required collateral amount (in tDUST) per registered entry |
-| `validityInterval` | Max validity interval in seconds (default: 30 days) |
+| `registrationPeriod` | Max registration period in days (default: 30) |
 
 **Output**
 
@@ -41,49 +57,29 @@ NETWORK_ID=preview bun run deploy <collateral> [validityInterval]
 {
   "contractAddress": "3470c638...",
   "txHash": "95a41b5e...",
-  "secretKey": "...",
-  "privateStateId": "..."
+  "secretKey": "..."
 }
 ```
 
--- 
+---
 
 ### `register`
 
-Registers a server entry in the registry contract. Requires collateral.  
-The entry contains the server's IP address, port, and validity expiry.
+Adds a server to the registry. The server's entry -- IP, port, and expiry -- a key derived from the secret key. The required collateral is locked in the contract and returned on deregistration. The `period` argument controls how long the entry is valid — it must not exceed the contract's `maximumRegistrationPeriod`.
 
 ```sh
-NETWORK_ID=preview bun run register <contractAddress> <secretKeyFile> <entryDetailsFile> [--private-state-id <id>]
+NETWORK_ID=preview bun run register <contractAddress> <secretKeyFile> <ip> <port> [period]
 ```
 
 **Arguments**
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | address of the registry contract |
-| `secretKeyFile` | Path to the registry key file (the outputFile of `generate-secret`) |
-| `entryDetailsFile` | Path to a JSON file with the entry details (see below) |
-
-**Options**
-
-| Option | Description |
-|---|---|
-| `--private-state-id <id>` | defaults to a random hex string |
-
-**Entry details JSON**
-
-```json
-{
-  "ip": "192.168.0.1",
-  "port": 8080,
-  "validTo": "1776297600"
-}
-```
-
-- `ip` — IPv4 or IPv6 address
-- `port`
-- `validTo` — Unix timestamp in seconds (must be within the contract's `maximumValidityInterval`)
+| `contractAddress` | Address of the registry contract |
+| `secretKeyFile` | Path to the secret key file (output of `generate-secret`) |
+| `ip` | Server IP address (IPv4 or IPv6) |
+| `port` | Server port number |
+| `period` | Registration period in days (default: 30) |
 
 **Example**
 
@@ -91,32 +87,28 @@ NETWORK_ID=preview bun run register <contractAddress> <secretKeyFile> <entryDeta
 NETWORK_ID=preview bun run register \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
   ./registryKey \
-  ./entry.json
+  192.168.1.1 \
+  8080 \
+  30
 ```
 
---  
+---
 
 ### `deregister`
 
-Removes a server entry from the registry and refunds the collateral to the recipient address.
+Removes a server entry from the registry and refunds the collateral to the recipient address. Requires the secret key used when registering.
 
 ```sh
-NETWORK_ID=preview bun run deregister <contractAddress> <secretKeyFile> <recipientAddress> [--private-state-id <id>]
+NETWORK_ID=preview bun run deregister <contractAddress> <secretKeyFile> <recipientAddress>
 ```
 
 **Arguments**
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | address of the registry contract |
-| `secretKeyFile` | Path to the registry key file used when registering |
-| `recipientAddress` | Bech32m unshielded address |
-
-**Options**
-
-| Option | Description |
-|---|---|
-| `--private-state-id <id>` | defaults to a random hex string |
+| `contractAddress` | Address of the registry contract |
+| `secretKeyFile` | Path to the secret key file used when registering |
+| `recipientAddress` | Bech32m unshielded address to receive the collateral refund |
 
 **Example**
 
@@ -127,44 +119,65 @@ NETWORK_ID=preview bun run deregister \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
 
--- 
+---
 
-### `refresh-validity`
+### `claim-expired`
 
-Extends the validity of an existing registry entry. The new expiry must be within the contract's `maximumValidityInterval`.
+Claims the collateral from an expired registry entry. No secret key is required — anyone can call this once an entry's expiry has passed.
 
 ```sh
-NETWORK_ID=preview bun run refresh-validity <contractAddress> <secretKeyFile> <validTo> [--private-state-id <id>]
+NETWORK_ID=preview bun run claim-expired <contractAddress> <registryKey> <recipientAddress>
 ```
 
 **Arguments**
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | On-chain address of the registry contract |
-| `secretKeyFile` | Path to the registry key file used when registering |
-| `validTo` | New expiry as a Unix timestamp in seconds (e.g. `1776297600`) |
-
-**Options**
-
-| Option | Description |
-|---|---|
-| `--private-state-id <id>` | defaults to a random hex string |
+| `contractAddress` | Address of the registry contract |
+| `registryKey` | Hex-encoded 32-byte registry key of the expired entry (from `list-servers`) |
+| `recipientAddress` | Bech32m unshielded address to receive the collateral refund |
 
 **Example**
 
 ```sh
-NETWORK_ID=preview bun run refresh-validity \
+NETWORK_ID=preview bun run claim-expired \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
-  ./registryKey \
-  1776297600
+  080f88efc90226cb61600e5f1708794dbfe453360855e501201a1dead35e99ab \
+  mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
 
---  
+---
+
+### `renew-registration`
+
+Extends the expiry of an existing registry entry. The new expiry must be within the contract's `maximumRegistrationPeriod`.
+
+```sh
+NETWORK_ID=preview bun run renew-registration <contractAddress> <secretKeyFile> <period>
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `contractAddress` | Address of the registry contract |
+| `secretKeyFile` | Path to the secret key file used when registering |
+| `period` | New registration period in days (e.g. `30`) |
+
+**Example**
+
+```sh
+NETWORK_ID=preview bun run renew-registration \
+  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
+  ./registryKey \
+  30
+```
+
+---
 
 ### `list-servers`
 
-Returns a list of registered servers from the registry contract.
+Returns all registered servers from the registry contract as JSON.
 
 ```sh
 NETWORK_ID=preview bun run list-servers <contractAddress>
@@ -174,7 +187,7 @@ NETWORK_ID=preview bun run list-servers <contractAddress>
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | address of the registry contract |
+| `contractAddress` | Address of the registry contract |
 
 **Example**
 
@@ -187,10 +200,10 @@ NETWORK_ID=preview bun run list-servers \
 
 ```json
 {
-  "dabdf14e23bc3e770810ad1f911e68a02f7572a2098da7b9463a150b613a70e4": {
-    "ip": { "kind": "ipv4", "address": "192.168.0.1" },
+  "080f88efc90226cb61600e5f1708794dbfe453360855e501201a1dead35e99ab": {
+    "ip": { "kind": "ipv4", "address": "192.168.1.1" },
     "port": 8080,
-    "validTo": "2026-04-14T00:00:00.000Z"
+    "expiry": "2026-04-16T00:00:00.000Z"
   }
 }
 ```

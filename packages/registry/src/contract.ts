@@ -35,7 +35,7 @@ export const CompiledRegistryContract = CompiledContract.make<RegistryContract>(
 );
 
 export function constructorArgs(args: RegistryConstructorArgs): [bigint, bigint] {
-  return [args.requiredCollateral, args.maxValidityInterval];
+  return [args.requiredCollateral, args.maxPeriod];
 }
 
 export function getContractOutDir(logger: Logger) {
@@ -48,19 +48,22 @@ export function getContractOutDir(logger: Logger) {
 export async function getProviders(
   ctx: AppContext,
   contractAddress: string,
-  privateStateId: string,
   secretKey: RegistrySecretKey,
   logger: Logger
 ) {
+  // Derive the private state ID deterministically from the secret key so callers
+  // don't need to track a separate ID.
+  const privateStateId = Buffer.from(secretKey).toString('hex');
+
   const providers = buildProviders<RegistryContract>(ctx, getContractOutDir(logger));
   providers.privateStateProvider.setContractAddress(contractAddress);
 
   // Load the secret key into the private state provider so the `secretKey()` witness
   // has a value to read during circuit execution.
   await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
-  logger.info(`Setting private state for privateStateId: ${privateStateId}`);
+  logger.debug(`Setting private state for privateStateId: ${privateStateId.slice(0, 16)}...`);
 
-  return providers;
+  return { providers, privateStateId };
 }
 
 export { Registry };

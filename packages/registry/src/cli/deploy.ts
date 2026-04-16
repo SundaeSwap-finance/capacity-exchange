@@ -7,16 +7,23 @@ function main(): Promise<DeployOutput> {
     .name('registry:deploy')
     .description('[Internal] Deploys a new registry contract')
     .argument('<collateral>', 'required collateral for each offer')
-    .argument('[validityInterval]', 'max validity interval for offers, in seconds (default: 30 days)')
+    .argument('[registrationPeriod]', 'max registration period in days (default: 30)', '30')
     .parse();
 
   const networkId = requireNetworkId();
-  const [collateral, validityInterval] = program.args;
+  const [collateral, registrationPeriod] = program.args;
+
+  const days = Number(registrationPeriod);
+  if (!Number.isFinite(days) || days <= 0) {
+    throw new Error(`Invalid registrationPeriod: "${registrationPeriod}". Expected a positive number of days.`);
+  }
 
   const args = {
     requiredCollateral: BigInt(collateral),
-    maxValidityInterval: BigInt(validityInterval ?? 30 * 24 * 60 * 60),
+    maxPeriod: BigInt(Math.floor(days * 24 * 60 * 60)),
   };
+  console.log("ARGUMENTS: ", args);
+
 
   return withAppContext(networkId, (ctx) => deploy(ctx, args));
 }

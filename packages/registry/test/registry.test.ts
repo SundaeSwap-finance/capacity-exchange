@@ -176,6 +176,7 @@ describe('socket address uniqueness', () => {
   });
 });
 
+
 // Invariant: no entry can have an expiry more than maximumRegistrationPeriod ahead of the block time
 describe('validity bounded', () => {
   it('register at exact max boundary succeeds', () => {

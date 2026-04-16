@@ -1,29 +1,27 @@
-import * as fs from 'fs';
-
 import { TxResult } from '@capacity-exchange/midnight-core';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
-import { deregister } from '../circuits/deregister.js';
+import { claimExpired } from '../circuits/claim-expired.js';
 
 function main(): Promise<TxResult> {
   program
-    .name('deregister')
-    .description('Deregisters a server from the registry contract')
+    .name('claim-expired')
+    .description('Claims the collateral from an expired registry entry')
     .argument('<contractAddress>', 'address of the registry contract')
-    .argument('<secretKeyFile>', 'registry secret key file')
+    .argument('<registryKey>', 'hex-encoded 32-byte registry key of the expired entry')
     .argument('<recipientAddress>', 'the address that will receive the collateral refund')
     .parse();
 
   const networkId = requireNetworkId();
 
-  const [contractAddress, secretKeyFile, recipientAddress] = program.args;
+  const [contractAddress, registryKeyHex, recipientAddress] = program.args;
 
-  const secretKey = new Uint8Array(Buffer.from(fs.readFileSync(secretKeyFile, 'utf-8').trim(), 'hex'));
+  const registryKey = new Uint8Array(Buffer.from(registryKeyHex, 'hex'));
 
   return withAppContext(networkId, (ctx) =>
-    deregister(ctx, {
+    claimExpired(ctx, {
       contractAddress,
-      secretKey,
+      registryKey,
       recipientAddress,
     })
   );

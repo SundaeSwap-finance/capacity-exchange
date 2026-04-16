@@ -1,6 +1,6 @@
 import { AppContext, createLogger, WalletContext } from '@capacity-exchange/midnight-node';
 import { DEFAULT_TTL_MS, toTxResult } from '@capacity-exchange/midnight-core';
-import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types';
+import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types.js';
 import { CompiledRegistryContract, getProviders } from '../contract.js';
 
 import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
@@ -13,24 +13,37 @@ const circuitId = 'registerServer';
 
 export interface RegisterParams {
   contractAddress: string;
-  privateStateId: string;
   /** Server entry to register (IP, port, validity expiry). */
   entry: RegistryEntry;
 }
 
 export async function register(ctx: AppContext, secretKey: RegistrySecretKey, params: RegisterParams) {
-  const { contractAddress, privateStateId, entry } = params;
+  const { contractAddress, entry } = params;
 
   logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
 
-  const providers = await getProviders(ctx, contractAddress, privateStateId, secretKey, logger);
+  const { providers, privateStateId } = await getProviders(ctx, contractAddress, secretKey, logger);
 
-  const result = await _register(ctx.walletContext, providers as RegisterServerProvider, params);
+  const result = await _register(ctx.walletContext, providers as RegisterServerProvider, {
+    contractAddress,
+    privateStateId,
+    entry,
+  });
 
   return toTxResult(contractAddress, result);
 }
 
-async function _register(walletContext: WalletContext, providers: RegisterServerProvider, params: RegisterParams) {
+interface RegisterInternalParams {
+  contractAddress: string;
+  privateStateId: string;
+  entry: RegistryEntry;
+}
+
+async function _register(
+  walletContext: WalletContext,
+  providers: RegisterServerProvider,
+  params: RegisterInternalParams
+) {
   const { contractAddress, privateStateId, entry } = params;
 
   const provenTx = await provenCallTx(providers, { contractAddress, privateStateId, entry });
@@ -50,7 +63,7 @@ async function _register(walletContext: WalletContext, providers: RegisterServer
 /**
  * Builds and proves the `registerServer` unproven call transaction.
  */
-async function provenCallTx(providers: RegisterServerProvider, params: RegisterParams) {
+async function provenCallTx(providers: RegisterServerProvider, params: RegisterInternalParams) {
   const { contractAddress, privateStateId, entry } = params;
 
   const callTxData = await createUnprovenCallTx(providers, {

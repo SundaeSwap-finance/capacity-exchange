@@ -5,7 +5,7 @@ export type IPv6 = { kind: 'ipv6'; address: string };
 export type IpAddress = IPv4 | IPv6;
 
 export interface RegistryEntry {
-  validTo: Date;
+  expiry: Date;
   ip: IpAddress;
   port: number;
 }
@@ -17,7 +17,7 @@ export type ContractIpAddress = {
 };
 
 export type ContractEntry = {
-  validTo: bigint;
+  expiry: bigint;
   ip: ContractIpAddress;
   port: bigint;
 };
@@ -29,7 +29,7 @@ export type RegistryMapping = Map<string, RegistryEntry>;
 
 export interface RegistryConstructorArgs {
   requiredCollateral: bigint;
-  maxValidityInterval: bigint;
+  maxPeriod: bigint;
 }
 
 export function generateRandomSecretKey(): RegistrySecretKey {
@@ -40,7 +40,7 @@ export function timestampToDate(dateInString: string) {
   const validToSecs = Number(dateInString);
 
   if (!Number.isInteger(validToSecs) || validToSecs <= 0) {
-    throw new Error(`Invalid validTo value: "${dateInString}". Expected a Unix timestamp in seconds.`);
+    throw new Error(`Invalid expiry value: "${dateInString}". Expected a Unix timestamp in seconds.`);
   }
 
   return new Date(validToSecs * 1000);
@@ -92,7 +92,7 @@ export function ipFromContract(raw: ContractIpAddress): IpAddress {
 
 export function entryToContract(entry: RegistryEntry): ContractEntry {
   return {
-    validTo: BigInt(Math.floor(entry.validTo.getTime() / 1000)),
+    expiry: BigInt(Math.floor(entry.expiry.getTime() / 1000)),
     ip: ipToContract(entry.ip),
     port: BigInt(entry.port),
   };
@@ -100,7 +100,7 @@ export function entryToContract(entry: RegistryEntry): ContractEntry {
 
 export function entryFromContract(raw: ContractEntry): RegistryEntry {
   return {
-    validTo: new Date(Number(raw.validTo) * 1000),
+    expiry: new Date(Number(raw.expiry) * 1000),
     ip: ipFromContract(raw.ip),
     port: Number(raw.port),
   };

@@ -51,7 +51,7 @@ async function main(): Promise<void> {
     output[key] = {
       ip: entry.ip,
       port: entry.port,
-      validTo: entry.validTo.toISOString(),
+      expiry: entry.expiry.toISOString(),
     };
   }
   console.log(JSON.stringify(output, null, 2));
