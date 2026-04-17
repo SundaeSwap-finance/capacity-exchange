@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RegistrySimulator, randomSecretKey, makeRecipient, ocrt } from './simulator.js';
-import { entryFromContract } from '../src/types.js';
+import { entryFromContract, type IpAddress } from '../src/types.js';
 
 const COLLATERAL = 1000n;
 const MAX_VALIDITY = 2_592_000n; // 30 days in seconds
@@ -21,11 +21,11 @@ function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffe
   return total;
 }
 
-function defaultEntry(validTo?: Date) {
+function defaultEntry(opts: { validTo?: Date; ip?: IpAddress; port?: number } = {}) {
   return {
-    validTo: validTo ?? futureDate(MAX_VALIDITY),
-    ip: { kind: 'ipv4' as const, address: '192.168.1.1' },
-    port: 8080,
+    validTo: opts.validTo ?? futureDate(MAX_VALIDITY),
+    ip: opts.ip ?? { kind: 'ipv4' as const, address: '192.168.1.1' },
+    port: opts.port ?? 8080,
   };
 }
 
@@ -75,11 +75,11 @@ describe('collateral conservation', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    sim.register(defaultEntry({ port: 8080 }));
     sim.useKey(keyB);
-    sim.register(defaultEntry());
+    sim.register(defaultEntry({ port: 8081 }));
     sim.useKey(keyC);
-    sim.register(defaultEntry());
+    sim.register(defaultEntry({ port: 8082 }));
 
     expect(sim.getLedger().registry.size()).toBe(3n);
 
@@ -117,9 +117,9 @@ describe('registry key uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    sim.register(defaultEntry({ port: 8080 }));
     sim.useKey(keyB);
-    sim.register(defaultEntry());
+    sim.register(defaultEntry({ port: 8081 }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
@@ -148,6 +148,52 @@ describe('registry key uniqueness', () => {
   });
 });
 
+// Invariant: every (ip, port) socket address in the registry is unique
+describe('socket address uniqueness', () => {
+  it('two different keys cannot register the same socket address', () => {
+    const keyA = randomSecretKey();
+    const keyB = randomSecretKey();
+
+    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    sim.setBlockTime(BASE_TIME);
+
+    sim.register(defaultEntry());
+    sim.useKey(keyB);
+
+    expect(() => sim.register(defaultEntry())).toThrow(/socket address already registered/);
+  });
+
+  it('a deregistered socket address is available again', () => {
+    const keyA = randomSecretKey();
+    const keyB = randomSecretKey();
+
+    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    sim.setBlockTime(BASE_TIME);
+
+    sim.register(defaultEntry());
+    const registryKey = [...sim.getLedger().registry][0][0];
+    sim.deregister(registryKey);
+
+    sim.useKey(keyB);
+    sim.register(defaultEntry());
+    expect(sim.getLedger().registry.size()).toBe(1n);
+  });
+
+  it('same ip with different ports both register', () => {
+    const keyA = randomSecretKey();
+    const keyB = randomSecretKey();
+
+    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    sim.setBlockTime(BASE_TIME);
+
+    sim.register(defaultEntry({ port: 8080 }));
+    sim.useKey(keyB);
+    sim.register(defaultEntry({ port: 8081 }));
+
+    expect(sim.getLedger().registry.size()).toBe(2n);
+  });
+});
+
 // Invariant: no entry can have a validTo more than maximumValidityInterval ahead of the block time
 describe('validity bounded', () => {
   it('register at exact max boundary succeeds', () => {
@@ -155,7 +201,7 @@ describe('validity bounded', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry(futureDate(MAX_VALIDITY)));
+    sim.register(defaultEntry({ validTo: futureDate(MAX_VALIDITY) }));
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 
@@ -164,7 +210,7 @@ describe('validity bounded', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    expect(() => sim.register(defaultEntry(futureDate(MAX_VALIDITY + 1n)))).toThrow(/validity interval/);
+    expect(() => sim.register(defaultEntry({ validTo: futureDate(MAX_VALIDITY + 1n) }))).toThrow(/validity interval/);
   });
 
   it('refresh past max boundary fails', () => {
@@ -182,7 +228,7 @@ describe('validity bounded', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry(futureDate(MAX_VALIDITY - 100n)));
+    sim.register(defaultEntry({ validTo: futureDate(MAX_VALIDITY - 100n) }));
 
     sim.refresh(futureDate(MAX_VALIDITY));
 
@@ -244,7 +290,7 @@ describe('liveness', () => {
     sim.setBlockTime(BASE_TIME);
 
     const validTo = futureDate(100n);
-    sim.register(defaultEntry(validTo));
+    sim.register(defaultEntry({ validTo }));
     const registryKey = [...sim.getLedger().registry][0][0];
 
     // Advance past expiry
