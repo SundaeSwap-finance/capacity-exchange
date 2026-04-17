@@ -9,7 +9,7 @@ function formatIpHost(ip: IpAddress): string {
 }
 
 function entryToUrl(ip: IpAddress, port: number): string {
-  return `http://${formatIpHost(ip)}:${port}`;
+  return `https://${formatIpHost(ip)}:${port}`;
 }
 
 /**
@@ -24,7 +24,7 @@ export async function fetchRegistryCesUrls(
 ): Promise<string[]> {
   const contractState = await publicDataProvider.queryContractState(registryAddress);
   if (!contractState) {
-    return [];
+    throw new Error(`No contract state found at registry address ${registryAddress}`);
   }
 
   const ledgerState = ledger(contractState.data);

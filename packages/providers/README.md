@@ -19,6 +19,8 @@ import {
   capacityExchangeWalletProvider,
   sponsoredTransactionsWalletProvider,
 } from '@sundaeswap-capacity-exchange-providers';
+import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 
 async function chooseFirstCurrency(
   prices: ExchangePrice[],

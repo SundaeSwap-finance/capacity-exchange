@@ -17,6 +17,8 @@ import {
   useCapacityExchangeWalletProvider,
   useSponsoredTransactionsWalletProvider,
 } from '@sundaeswap-capacity-exchange-react-sdk';
+import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 
 // Wrap your App in CapacityExchangeRoot
 export function App() {

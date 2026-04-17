@@ -78,8 +78,11 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
       confirmOffer,
     });
   }, [
+    config.networkId,
     config.coinPublicKey,
     config.encryptionPublicKey,
+    config.balanceUnsealedTransaction,
+    config.balanceSealedTransaction,
     config.publicDataProvider,
     config.ledgerParametersProvider,
     ...(config.additionalCapacityExchangeUrls ?? []),

@@ -37,6 +37,13 @@ function useProviders<PCK extends string>(
     [configuration.indexerUri, configuration.indexerWsUri]
   );
 
+  // Provides the chain's current ledger parameters for fee estimation.
+  // The indexer URL is available from your wallet's configuration.
+  const ledgerParametersProvider = useCallback(
+    () => getLedgerParameters(configuration.indexerUri),
+    [configuration.indexerUri]
+  );
+
   // This wallet provider will not actually spend DUST from the user's wallet.
   // Instead, it will reach out to a capacity-exchange server,
   // to request dust from a Liquidity Provider.
@@ -52,9 +59,7 @@ function useProviders<PCK extends string>(
     balanceSealedTransaction: wallet.balanceSealedTransaction,
     // The SDK uses the public data provider to discover registered CES servers from the on-chain registry.
     publicDataProvider,
-    // Provides the chain's current ledger parameters for fee estimation.
-    // The indexer URL is available from your wallet's configuration.
-    ledgerParametersProvider: () => getLedgerParameters(configuration.indexerUri),
+    ledgerParametersProvider,
   });
 
   // The rest of this is standard boilerplate to construct the remaining Midnight providers.
