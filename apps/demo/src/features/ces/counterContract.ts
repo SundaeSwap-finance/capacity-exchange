@@ -88,6 +88,7 @@ export async function findAndIncrementCounter(
     encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
     balanceUnsealedTransaction,
     balanceSealedTransaction,
+    publicDataProvider: indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl),
     ledgerParametersProvider: () => getLedgerParameters(config.indexerUrl),
     additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
     promptForCurrency,

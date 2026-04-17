@@ -61,6 +61,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     encryptionPublicKey,
     balanceUnsealedTransaction,
     balanceSealedTransaction,
+    publicDataProvider,
     ledgerParametersProvider,
     additionalCapacityExchangeUrls = [],
     margin = 3,
@@ -75,13 +76,13 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     async balanceTx(tx, _ttl?) {
       console.debug('[CapacityExchange] balanceTx called');
 
-      const { prices, specksRequired } = await fetchCesPrices(
-        tx,
-        ledgerParametersProvider,
+      const { prices, specksRequired } = await fetchCesPrices(tx, {
         networkId,
+        publicDataProvider,
+        ledgerParametersProvider,
         additionalCapacityExchangeUrls,
-        margin
-      );
+        margin,
+      });
 
       while (true) {
         const requestId = crypto.randomUUID();

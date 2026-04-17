@@ -1,5 +1,5 @@
 import type { FastifyBaseLogger } from 'fastify';
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { PublicDataProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
   type ExchangePrice,
@@ -83,6 +83,7 @@ export function buildCesWalletProvider(
   walletService: WalletService,
   networkId: string,
   endpoints: NetworkEndpoints,
+  publicDataProvider: PublicDataProvider,
   additionalCapacityExchangeUrls: string[],
   log: FastifyBaseLogger,
 ): WalletProvider | null {
@@ -98,6 +99,7 @@ export function buildCesWalletProvider(
     encryptionPublicKey,
     balanceUnsealedTransaction: (tx) => walletService.balanceUnsealedTransaction(tx),
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
+    publicDataProvider,
     ledgerParametersProvider: () => getLedgerParameters(endpoints.indexerHttpUrl),
     additionalCapacityExchangeUrls,
     promptForCurrency: createAutoSelectCurrency(log, walletService),

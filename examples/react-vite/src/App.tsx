@@ -32,6 +32,11 @@ function useProviders<PCK extends string>(
   const walletDetailsPromise = useMemo(() => getWalletDetails(wallet, zkConfigProvider), [wallet, zkConfigProvider]);
   const [addresses, configuration, provingProvider] = use(walletDetailsPromise);
 
+  const publicDataProvider = useMemo(
+    () => indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri),
+    [configuration.indexerUri, configuration.indexerWsUri]
+  );
+
   // This wallet provider will not actually spend DUST from the user's wallet.
   // Instead, it will reach out to a capacity-exchange server,
   // to request dust from a Liquidity Provider.
@@ -45,6 +50,8 @@ function useProviders<PCK extends string>(
     // These balance functions are necessary for the user to spend shielded or unshielded tokens.
     balanceUnsealedTransaction: wallet.balanceUnsealedTransaction,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
+    // The SDK uses the public data provider to discover registered CES servers from the on-chain registry.
+    publicDataProvider,
     // Provides the chain's current ledger parameters for fee estimation.
     // The indexer URL is available from your wallet's configuration.
     ledgerParametersProvider: () => getLedgerParameters(configuration.indexerUri),
@@ -60,8 +67,6 @@ function useProviders<PCK extends string>(
       accountId,
       privateStoragePasswordProvider: () => storagePassword,
     });
-
-    const publicDataProvider = indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri);
 
     const proofProvider = {
       proveTx(tx: UnprovenTransaction) {
@@ -86,7 +91,7 @@ function useProviders<PCK extends string>(
       walletProvider,
       midnightProvider,
     };
-  }, [wallet, zkConfigProvider, walletProvider]);
+  }, [wallet, zkConfigProvider, walletProvider, publicDataProvider]);
 }
 
 async function buildTx(providers: MidnightProviders): Promise<UnboundTransaction> {

@@ -1,4 +1,5 @@
 import type { CoinPublicKey, EncPublicKey, LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { CesApi } from './exchangeApi';
 
 /**
@@ -129,6 +130,10 @@ export interface CapacityExchangeConfig {
    * The `balanceSealedTransaction` method from the user's wallet.
    */
   balanceSealedTransaction: BalanceSealedTransaction;
+  /**
+   * Used to query the on-chain CES registry for registered server URLs.
+   */
+  publicDataProvider: PublicDataProvider;
   /**
    * A provider for the chain's current `LedgerParameters`, used to estimate the
    * DUST speck cost of the user's transaction before quoting an exchange.
