@@ -1,6 +1,7 @@
 import { program } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
+import { extractChainSnapshot } from '@sundaeswap/capacity-exchange-core';
 import { createLogger } from '../createLogger.js';
 
 /**
@@ -31,25 +32,18 @@ function main() {
     return;
   }
 
-  const shielded = JSON.parse(fs.readFileSync(path.join(stateDir, shieldedFile), 'utf-8'));
-  const dust = JSON.parse(fs.readFileSync(path.join(stateDir, dustFile), 'utf-8'));
-  const unshielded = JSON.parse(fs.readFileSync(path.join(stateDir, unshieldedFile), 'utf-8'));
+  const snapshot = extractChainSnapshot({
+    savedShieldedState: fs.readFileSync(path.join(stateDir, shieldedFile), 'utf-8'),
+    savedDustState: fs.readFileSync(path.join(stateDir, dustFile), 'utf-8'),
+    savedUnshieldedState: fs.readFileSync(path.join(stateDir, unshieldedFile), 'utf-8'),
+  });
 
   fs.mkdirSync(snapshotDir, { recursive: true });
-  fs.writeFileSync(
-    path.join(snapshotDir, `${networkId}-shielded.json`),
-    JSON.stringify({ state: shielded.state, offset: shielded.offset, protocolVersion: shielded.protocolVersion })
-  );
-  fs.writeFileSync(
-    path.join(snapshotDir, `${networkId}-dust.json`),
-    JSON.stringify({ state: dust.state, offset: dust.offset, protocolVersion: dust.protocolVersion })
-  );
-  fs.writeFileSync(
-    path.join(snapshotDir, `${networkId}-unshielded.json`),
-    JSON.stringify({ appliedId: unshielded.appliedId, protocolVersion: unshielded.protocolVersion })
-  );
+  fs.writeFileSync(path.join(snapshotDir, `${networkId}-shielded.json`), JSON.stringify(snapshot.shielded));
+  fs.writeFileSync(path.join(snapshotDir, `${networkId}-dust.json`), JSON.stringify(snapshot.dust));
+  fs.writeFileSync(path.join(snapshotDir, `${networkId}-unshielded.json`), JSON.stringify(snapshot.unshielded));
 
-  logger.info(`Exported chain snapshot to ${snapshotDir} at offset ${shielded.offset}`);
+  logger.info(`Exported chain snapshot to ${snapshotDir} at offset ${snapshot.shielded.offset}`);
 }
 
 main();

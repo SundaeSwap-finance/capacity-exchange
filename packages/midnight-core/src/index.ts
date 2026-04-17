@@ -49,3 +49,4 @@ export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';
 export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
 export { connectedApiProvidersAdapter, type BaseProviders, type WalletIdentity } from './connectedApiProviders.js';
+export { buildSyntheticWalletState, extractChainSnapshot, type ChainSnapshot } from './walletSnapshot.js';
