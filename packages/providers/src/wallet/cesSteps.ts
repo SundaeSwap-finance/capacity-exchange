@@ -6,9 +6,15 @@ import {
   type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
-import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
+import type {
+  ExchangePrice,
+  Offer,
+  BalanceSealedTransaction,
+  BalanceUnsealedTransaction,
+  LedgerParametersProvider,
+} from './types';
 import { isOfferExpired } from './utils';
-import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
+import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, resolveCesUrls } from './exchangeApi';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
@@ -37,28 +43,33 @@ export interface FetchCesPricesResult {
  */
 export async function fetchCesPrices(
   tx: UnboundTransaction,
-  indexerUrl: string,
+  ledgerParametersProvider: LedgerParametersProvider,
   networkId: string,
   additionalCapacityExchangeUrls: string[],
   margin: number
 ): Promise<FetchCesPricesResult> {
-  console.debug('[CESSteps] Fetching ledger parameters from:', indexerUrl);
-  const ledgerParameters = await getLedgerParameters(indexerUrl);
-
-  const estimated = tx.feesWithMargin(ledgerParameters, margin);
-  // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
-  const specksRequired = estimated > 0n ? estimated : 1n;
-  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString());
-
+  const specksRequired = await estimateSpecksRequired(tx, ledgerParametersProvider, margin);
   const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls);
-  const exchangeApis = createCesApis(urls);
-  const prices = await fetchPricesFromExchanges(exchangeApis, specksRequired);
+  const prices = await fetchPricesFromExchanges(createCesApis(urls), specksRequired);
 
   if (prices.length === 0) {
     throw new CapacityExchangeNoPricesAvailableError();
   }
 
   return { prices, specksRequired };
+}
+
+async function estimateSpecksRequired(
+  tx: UnboundTransaction,
+  ledgerParametersProvider: LedgerParametersProvider,
+  margin: number
+): Promise<bigint> {
+  const ledgerParameters = await ledgerParametersProvider();
+  const estimated = tx.feesWithMargin(ledgerParameters, margin);
+  // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
+  const specksRequired = estimated > 0n ? estimated : 1n;
+  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString());
+  return specksRequired;
 }
 
 /**

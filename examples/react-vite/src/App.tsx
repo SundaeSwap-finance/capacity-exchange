@@ -10,6 +10,7 @@ import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-conf
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
 import { MidnightProviders, UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
+import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 import { useMockWallet } from './mocks/wallet';
 
 async function getWalletDetails(wallet: ConnectedAPI, zkConfigProvider: ZKConfigProvider<string>) {
@@ -44,8 +45,9 @@ function useProviders<PCK extends string>(
     // These balance functions are necessary for the user to spend shielded or unshielded tokens.
     balanceUnsealedTransaction: wallet.balanceUnsealedTransaction,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
-    // indexerUrl also available from your wallet's configuration.
-    indexerUrl: configuration.indexerUri,
+    // Provides the chain's current ledger parameters for fee estimation.
+    // The indexer URL is available from your wallet's configuration.
+    ledgerParametersProvider: () => getLedgerParameters(configuration.indexerUri),
   });
 
   // The rest of this is standard boilerplate to construct the remaining Midnight providers.

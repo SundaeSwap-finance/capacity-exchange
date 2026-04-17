@@ -1,4 +1,4 @@
-import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
+import type { CoinPublicKey, EncPublicKey, LedgerParameters } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi';
 
 /**
@@ -106,6 +106,7 @@ export type ConfirmOffer = (offer: Offer, dustRequired: bigint, requestId: strin
 
 export type BalanceUnsealedTransaction = (tx: string) => Promise<{ tx: string }>;
 export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
+export type LedgerParametersProvider = () => Promise<LedgerParameters>;
 
 export interface CapacityExchangeConfig {
   /**
@@ -129,9 +130,10 @@ export interface CapacityExchangeConfig {
    */
   balanceSealedTransaction: BalanceSealedTransaction;
   /**
-   * An indexer URL for the given environment.
+   * A provider for the chain's current `LedgerParameters`, used to estimate the
+   * DUST speck cost of the user's transaction before quoting an exchange.
    */
-  indexerUrl: string;
+  ledgerParametersProvider: LedgerParametersProvider;
   /**
    * Optional: any additional capacity exchange URLs to call,
    * in addition to the default members of the network.

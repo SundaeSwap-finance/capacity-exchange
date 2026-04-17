@@ -6,7 +6,7 @@ import {
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@sundaeswap/capacity-exchange-providers';
-import type { NetworkEndpoints } from '@sundaeswap/capacity-exchange-core';
+import { getLedgerParameters, type NetworkEndpoints } from '@sundaeswap/capacity-exchange-core';
 import type { WalletService } from '../services/wallet.js';
 
 /**
@@ -98,7 +98,7 @@ export function buildCesWalletProvider(
     encryptionPublicKey,
     balanceUnsealedTransaction: (tx) => walletService.balanceUnsealedTransaction(tx),
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
-    indexerUrl: endpoints.indexerHttpUrl,
+    ledgerParametersProvider: () => getLedgerParameters(endpoints.indexerHttpUrl),
     additionalCapacityExchangeUrls,
     promptForCurrency: createAutoSelectCurrency(log, walletService),
     confirmOffer: createAutoConfirmOffer(log),

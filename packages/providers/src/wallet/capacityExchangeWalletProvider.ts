@@ -61,7 +61,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     encryptionPublicKey,
     balanceUnsealedTransaction,
     balanceSealedTransaction,
-    indexerUrl,
+    ledgerParametersProvider,
     additionalCapacityExchangeUrls = [],
     margin = 3,
     promptForCurrency,
@@ -77,7 +77,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
 
       const { prices, specksRequired } = await fetchCesPrices(
         tx,
-        indexerUrl,
+        ledgerParametersProvider,
         networkId,
         additionalCapacityExchangeUrls,
         margin

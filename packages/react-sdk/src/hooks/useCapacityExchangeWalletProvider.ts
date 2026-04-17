@@ -80,7 +80,7 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
   }, [
     config.coinPublicKey,
     config.encryptionPublicKey,
-    config.indexerUrl,
+    config.ledgerParametersProvider,
     ...(config.additionalCapacityExchangeUrls ?? []),
     config.margin,
     promptForCurrency,

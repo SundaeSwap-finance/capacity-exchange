@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
 import type {
   CapacityExchangeConfig,
   ExchangePrice,
@@ -95,7 +96,7 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
     encryptionPublicKey: ctx.mockWalletProvider.getEncryptionPublicKey(),
     balanceUnsealedTransaction: ctx.mockBalanceUnsealedTransaction,
     balanceSealedTransaction: ctx.mockBalanceSealedTransaction,
-    indexerUrl: 'http://localhost:8080/graphql',
+    ledgerParametersProvider: async () => ({}) as LedgerParameters,
     additionalCapacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
     confirmOffer: ctx.confirmOffer,

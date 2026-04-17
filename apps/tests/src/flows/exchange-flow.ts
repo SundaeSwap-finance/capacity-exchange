@@ -1,7 +1,7 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildProviders, getAppConfigById, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { balanceUnboundTransaction, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
+import { balanceUnboundTransaction, getLedgerParameters, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { Transaction, SignatureEnabled, type Proof, type Binding, type PreBinding } from '@midnight-ntwrk/ledger-v8';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
@@ -55,7 +55,7 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
     encryptionPublicKey: ctx.walletContext.walletProvider.getEncryptionPublicKey(),
     balanceSealedTransaction: createSealedBalanceCallback(ctx),
     balanceUnsealedTransaction: createUnsealedBalanceCallback(ctx),
-    indexerUrl: appConfig.endpoints.indexerHttpUrl,
+    ledgerParametersProvider: () => getLedgerParameters(appConfig.endpoints.indexerHttpUrl),
     additionalCapacityExchangeUrls: [cesUrl],
     promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor),
     confirmOffer: autoConfirmOffer,
