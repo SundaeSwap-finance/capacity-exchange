@@ -12,6 +12,8 @@ new type Port = Uint<16>;
 
 new type RegistryKey = Bytes<32>;
 
+new type SocketAddressHash = Bytes<32>;
+
 new type UnixTimestampSeconds = Uint<64>;
 
 struct Entry {
@@ -21,6 +23,8 @@ struct Entry {
 }
 
 export ledger registry: Map<RegistryKey, Entry>;
+
+export ledger takenSocketAddresses: Set<SocketAddressHash>;
 
 export ledger collateralAmount: Uint<128>;
 
@@ -40,15 +44,19 @@ export circuit registerServer(entry: Entry): [] {
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
+  const socketAddressHash = hashSocketAddress(disclosedEntry.ip, disclosedEntry.port);
+  assert(!takenSocketAddresses.member(socketAddressHash), "socket address already registered");
   receiveUnshielded(nativeToken(), collateralAmount);
 
   registry.insert(key, disclosedEntry);
+  takenSocketAddresses.insert(socketAddressHash);
 }
 
 export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
   const disclosedKey = disclose(key);
   assert(registry.member(disclosedKey), "key does not exist");
-  if (blockTimeLt(disclose(registry.lookup(disclosedKey).validTo) as Uint<64>)) {
+  const existing = registry.lookup(disclosedKey);
+  if (blockTimeLt(disclose(existing.validTo) as Uint<64>)) {
     assert(key == disclose(hashKey(secretKey())),
            "you can only deregister your own entry before validTo"
            );
@@ -60,6 +68,7 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
     right<ContractAddress, UserAddress>(disclose(recipient))
     );
 
+  takenSocketAddresses.remove(disclose(hashSocketAddress(existing.ip, existing.port)));
   registry.remove(disclosedKey);
 }
 
@@ -77,4 +86,10 @@ export circuit refreshValidity(validTo: UnixTimestampSeconds): [] {
 
 circuit hashKey(key: Bytes<64>): RegistryKey {
   return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
+}
+
+circuit hashSocketAddress(ip: IpAddress, port: Port): SocketAddressHash {
+  return persistentHash<[Bytes<32>, IpAddress, Port]>(
+    [pad(32, "registry:socket-address"), ip, port]
+    ) as SocketAddressHash;
 }
