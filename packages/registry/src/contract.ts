@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -52,9 +53,8 @@ export async function getProviders(
   secretKey: RegistrySecretKey,
   logger: Logger
 ) {
-  // Derive the private state ID deterministically from the secret key so callers
-  // don't need to track a separate ID.
-  const privateStateId = Buffer.from(secretKey).toString('hex');
+  const privateStateId = crypto.randomBytes(32).toString('hex');
+  logger.debug(`generated private state id: ${privateStateId}`);
 
   const providers = buildProviders<RegistryContract>(ctx, getContractOutDir(logger));
   providers.privateStateProvider.setContractAddress(contractAddress);
