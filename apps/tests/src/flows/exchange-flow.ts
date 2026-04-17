@@ -1,9 +1,9 @@
 import type { AppContext } from '@capacity-exchange/midnight-node';
 import { buildProviders, getAppConfigById, createLogger } from '@capacity-exchange/midnight-node';
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
+import { balanceUnboundTransaction, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { Transaction, SignatureEnabled, type Proof, type Binding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction, SignatureEnabled, type Proof, type Binding, type PreBinding } from '@midnight-ntwrk/ledger-v8';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledCounterContract, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
 
@@ -53,7 +53,8 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
     networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
     encryptionPublicKey: ctx.walletContext.walletProvider.getEncryptionPublicKey(),
-    balanceSealedTransaction: createBalanceCallback(ctx),
+    balanceSealedTransaction: createSealedBalanceCallback(ctx),
+    balanceUnsealedTransaction: createUnsealedBalanceCallback(ctx),
     indexerUrl: appConfig.endpoints.indexerHttpUrl,
     additionalCapacityExchangeUrls: [cesUrl],
     promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor),
@@ -62,7 +63,7 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
 }
 
 // TODO: extract shared balanceSealedTransaction helper from walletConnectedApi.ts
-function createBalanceCallback(ctx: AppContext) {
+function createSealedBalanceCallback(ctx: AppContext) {
   return async (txHex: string) => {
     const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
       'signature',
@@ -80,6 +81,20 @@ function createBalanceCallback(ctx: AppContext) {
       { ttl, tokenKindsToBalance: ['shielded'] }
     );
     const balancedTx = await ctx.walletContext.walletFacade.finalizeRecipe(recipe);
+    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
+  };
+}
+
+function createUnsealedBalanceCallback(ctx: AppContext) {
+  return async (txHex: string) => {
+    const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+      'signature',
+      'proof',
+      'pre-binding',
+      Buffer.from(txHex, 'hex')
+    );
+    const ttl = new Date(Date.now() + BALANCE_TTL_MS);
+    const balancedTx = await balanceUnboundTransaction(ctx.walletContext, tx, ttl);
     return { tx: uint8ArrayToHex(balancedTx.serialize()) };
   };
 }
