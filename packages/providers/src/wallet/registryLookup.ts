@@ -1,5 +1,5 @@
 import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
-import { ledger, registryEntries, type IpAddress } from '@capacity-exchange/registry';
+import { ledger, registryEntries, type IpAddress } from '@sundaeswap/capacity-exchange-registry';
 
 function formatIpHost(ip: IpAddress): string {
   if (ip.kind === 'ipv4') {
@@ -30,5 +30,5 @@ export async function fetchRegistryCesUrls(
   const ledgerState = ledger(contractState.data);
   const entries = registryEntries(ledgerState);
   const now = new Date();
-  return entries.filter(({ entry }) => entry.validTo > now).map(({ entry }) => entryToUrl(entry.ip, entry.port));
+  return entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => entryToUrl(entry.ip, entry.port));
 }

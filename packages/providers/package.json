@@ -28,7 +28,7 @@
     "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
-    "@capacity-exchange/registry": "1.0.0",
+    "@sundaeswap/capacity-exchange-registry": "1.0.0",
     "@sundaeswap/capacity-exchange-client": "1.1.0",
     "@sundaeswap/capacity-exchange-core": "1.1.0",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",

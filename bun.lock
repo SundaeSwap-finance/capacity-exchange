@@ -61,9 +61,9 @@
         "@midnight-ntwrk/wallet-sdk-hd": "3.0.1",
         "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0",
         "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.1.0",
-        "@sundaeswap/capacity-exchange-client": "1.0.0",
-        "@sundaeswap/capacity-exchange-core": "1.0.0",
-        "@sundaeswap/capacity-exchange-providers": "1.2.0",
+        "@sundaeswap/capacity-exchange-client": "1.1.0",
+        "@sundaeswap/capacity-exchange-core": "1.1.0",
+        "@sundaeswap/capacity-exchange-providers": "1.3.0",
         "@types/react": "^19.2.9",
         "@types/react-dom": "^19.2.3",
         "effect": "^3.20.0",
@@ -73,7 +73,7 @@
         "unicornstudio-react": "^2.1.4-1",
       },
       "devDependencies": {
-        "@capacity-exchange/midnight-node": "1.0.0",
+        "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
         "@vitejs/plugin-react": "^5.1.2",
         "autoprefixer": "^10.4.23",
         "postcss": "^8.5.6",
@@ -88,7 +88,6 @@
       "name": "@capacity-exchange/demo-contracts",
       "version": "1.0.1",
       "dependencies": {
-        "@capacity-exchange/midnight-node": "1.0.0",
         "@midnight-ntwrk/compact-js": "2.5.0",
         "@midnight-ntwrk/compact-runtime": "0.15.0",
         "@midnight-ntwrk/ledger-v8": "8.0.3",
@@ -104,7 +103,8 @@
         "@midnight-ntwrk/wallet-sdk-node-client": "1.1.0",
         "@scure/bip32": "2.0.1",
         "@scure/bip39": "^2.0.1",
-        "@sundaeswap/capacity-exchange-core": "1.0.0",
+        "@sundaeswap/capacity-exchange-core": "1.1.0",
+        "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
         "cbor2": "^2.0.1",
         "commander": "^14.0.2",
         "dotenv": "17.2.3",
@@ -115,7 +115,7 @@
         "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2",
         "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0",
         "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.1.0",
-        "@sundaeswap/capacity-exchange-client": "1.0.0",
+        "@sundaeswap/capacity-exchange-client": "1.1.0",
         "@types/node": "22.10.7",
         "@types/ws": "^8.18.1",
         "@typescript-eslint/eslint-plugin": "^8.54.0",
@@ -131,7 +131,6 @@
       "version": "1.0.3",
       "dependencies": {
         "@aws-sdk/client-secrets-manager": "^3.1018.0",
-        "@capacity-exchange/midnight-node": "1.0.0",
         "@fastify/cors": "^11.2.0",
         "@fastify/swagger": "^9.6.1",
         "@fastify/swagger-ui": "^5.2.4",
@@ -147,8 +146,9 @@
         "@opentelemetry/sdk-node": "^0.214.0",
         "@opentelemetry/semantic-conventions": "^1.40.0",
         "@sinclair/typebox": "^0.34.47",
-        "@sundaeswap/capacity-exchange-core": "1.0.0",
-        "@sundaeswap/capacity-exchange-providers": "1.2.0",
+        "@sundaeswap/capacity-exchange-core": "1.1.0",
+        "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+        "@sundaeswap/capacity-exchange-providers": "1.3.0",
         "cbor2": "^2.0.1",
         "dotenv": "17.2.3",
         "fastify": "5.6.2",
@@ -174,17 +174,17 @@
       "name": "@capacity-exchange/tests",
       "version": "1.0.1",
       "dependencies": {
-        "@capacity-exchange/demo-contracts": "1.0.0",
-        "@capacity-exchange/midnight-node": "1.0.0",
+        "@capacity-exchange/demo-contracts": "1.0.1",
         "@midnight-ntwrk/compact-js": "2.5.0",
         "@midnight-ntwrk/compact-runtime": "0.15.0",
         "@midnight-ntwrk/ledger-v8": "8.0.3",
         "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
         "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
-        "@sundaeswap/capacity-exchange-client": "1.0.0",
-        "@sundaeswap/capacity-exchange-core": "1.0.0",
-        "@sundaeswap/capacity-exchange-providers": "1.2.0",
+        "@sundaeswap/capacity-exchange-client": "1.1.0",
+        "@sundaeswap/capacity-exchange-core": "1.1.0",
+        "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+        "@sundaeswap/capacity-exchange-providers": "1.3.0",
         "commander": "^14.0.2",
       },
       "devDependencies": {
@@ -256,7 +256,7 @@
       },
     },
     "packages/midnight-node": {
-      "name": "@capacity-exchange/midnight-node",
+      "name": "@sundaeswap/capacity-exchange-nodejs",
       "version": "1.0.1",
       "dependencies": {
         "@midnight-ntwrk/compact-js": "2.5.0",
@@ -269,7 +269,7 @@
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
         "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0",
         "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
-        "@sundaeswap/capacity-exchange-core": "1.0.0",
+        "@sundaeswap/capacity-exchange-core": "1.1.0",
         "dotenv": "17.2.3",
         "rxjs": "^7.5",
         "ws": "^8.18.1",
@@ -286,11 +286,11 @@
       "name": "@sundaeswap/capacity-exchange-providers",
       "version": "1.3.0",
       "dependencies": {
-        "@capacity-exchange/registry": "1.0.0",
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
         "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
         "@sundaeswap/capacity-exchange-client": "1.1.0",
         "@sundaeswap/capacity-exchange-core": "1.1.0",
+        "@sundaeswap/capacity-exchange-registry": "1.0.0",
       },
       "devDependencies": {
         "@eslint/js": "^9.39.2",
@@ -332,13 +332,19 @@
       },
     },
     "packages/registry": {
-      "name": "@capacity-exchange/registry",
+      "name": "@sundaeswap/capacity-exchange-registry",
       "version": "1.0.0",
       "dependencies": {
         "@midnight-ntwrk/compact-js": "2.5.0",
         "@midnight-ntwrk/compact-runtime": "0.15.0",
+        "@midnight-ntwrk/ledger-v8": "8.0.3",
+        "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
         "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
+        "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
+        "@sundaeswap/capacity-exchange-core": "1.0.0",
+        "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+        "commander": "^14.0.2",
       },
       "devDependencies": {
         "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
@@ -462,10 +468,6 @@
     "@capacity-exchange/demo-contracts": ["@capacity-exchange/demo-contracts@workspace:apps/demo/contracts"],
 
     "@capacity-exchange/example-react-vite": ["@capacity-exchange/example-react-vite@workspace:examples/react-vite"],
-
-    "@capacity-exchange/midnight-node": ["@capacity-exchange/midnight-node@workspace:packages/midnight-node"],
-
-    "@capacity-exchange/registry": ["@capacity-exchange/registry@workspace:packages/registry"],
 
     "@capacity-exchange/server": ["@capacity-exchange/server@workspace:apps/server"],
 
@@ -1079,9 +1081,13 @@
 
     "@sundaeswap/capacity-exchange-core": ["@sundaeswap/capacity-exchange-core@workspace:packages/midnight-core"],
 
+    "@sundaeswap/capacity-exchange-nodejs": ["@sundaeswap/capacity-exchange-nodejs@workspace:packages/midnight-node"],
+
     "@sundaeswap/capacity-exchange-providers": ["@sundaeswap/capacity-exchange-providers@workspace:packages/providers"],
 
     "@sundaeswap/capacity-exchange-react-sdk": ["@sundaeswap/capacity-exchange-react-sdk@workspace:packages/react-sdk"],
+
+    "@sundaeswap/capacity-exchange-registry": ["@sundaeswap/capacity-exchange-registry@workspace:packages/registry"],
 
     "@swc/core": ["@swc/core@1.15.24", "", { "dependencies": { "@swc/counter": "^0.1.3", "@swc/types": "^0.1.26" }, "optionalDependencies": { "@swc/core-darwin-arm64": "1.15.24", "@swc/core-darwin-x64": "1.15.24", "@swc/core-linux-arm-gnueabihf": "1.15.24", "@swc/core-linux-arm64-gnu": "1.15.24", "@swc/core-linux-arm64-musl": "1.15.24", "@swc/core-linux-ppc64-gnu": "1.15.24", "@swc/core-linux-s390x-gnu": "1.15.24", "@swc/core-linux-x64-gnu": "1.15.24", "@swc/core-linux-x64-musl": "1.15.24", "@swc/core-win32-arm64-msvc": "1.15.24", "@swc/core-win32-ia32-msvc": "1.15.24", "@swc/core-win32-x64-msvc": "1.15.24" }, "peerDependencies": { "@swc/helpers": ">=0.5.17" }, "optionalPeers": ["@swc/helpers"] }, "sha512-5Hj8aNasue7yusUt8LGCUe/AjM7RMAce8ZoyDyiFwx7Al+GbYKL+yE7g4sJk8vEr1dKIkTRARkNIJENc4CjkBQ=="],
 
@@ -2309,8 +2315,6 @@
 
     "@capacity-exchange/demo-contracts/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
-    "@capacity-exchange/registry/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
-
     "@capacity-exchange/server/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@changesets/apply-release-plan/prettier": ["prettier@2.8.8", "", { "bin": { "prettier": "bin-prettier.js" } }, "sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q=="],
@@ -2366,6 +2370,10 @@
     "@scure/sr25519/@noble/curves": ["@noble/curves@1.9.7", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw=="],
 
     "@scure/sr25519/@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
+
+    "@sundaeswap/capacity-exchange-registry/@sundaeswap/capacity-exchange-core": ["@sundaeswap/capacity-exchange-core@1.0.0", "", { "dependencies": { "@midnight-ntwrk/compact-runtime": "0.15.0", "@midnight-ntwrk/dapp-connector-api": "^4.0.1", "@midnight-ntwrk/ledger-v8": "8.0.3", "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.0.1", "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.1", "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1", "@midnight-ntwrk/midnight-js-types": "4.0.1", "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0", "@midnight-ntwrk/wallet-sdk-dust-wallet": "3.0.0", "@midnight-ntwrk/wallet-sdk-facade": "3.0.0", "@midnight-ntwrk/wallet-sdk-hd": "3.0.1", "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0", "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.1.0", "@scure/bip39": "^2.0.1", "rxjs": "^7.5" } }, "sha512-pVcglNixJHnkI9PVJ1mnZG5q7yx1Akc+YMaWl011l5raSkjaSJ7rsGep1cxPkz3OHCmRcXlVnGbl4W4ZHUf1RQ=="],
+
+    "@sundaeswap/capacity-exchange-registry/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@typescript-eslint/eslint-plugin/ignore": ["ignore@7.0.5", "", {}, "sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg=="],
 
@@ -2443,8 +2451,6 @@
 
     "@capacity-exchange/demo-contracts/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
-    "@capacity-exchange/registry/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
-
     "@capacity-exchange/server/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
     "@fastify/ajv-compiler/ajv/json-schema-traverse": ["json-schema-traverse@1.0.0", "", {}, "sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug=="],
@@ -2464,6 +2470,8 @@
     "@openapitools/openapi-generator-cli/fs-extra/universalify": ["universalify@2.0.1", "", {}, "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw=="],
 
     "@polkadot/x-fetch/node-fetch/data-uri-to-buffer": ["data-uri-to-buffer@4.0.1", "", {}, "sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A=="],
+
+    "@sundaeswap/capacity-exchange-registry/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
     "@typescript-eslint/typescript-estree/minimatch/brace-expansion": ["brace-expansion@5.0.5", "", { "dependencies": { "balanced-match": "^4.0.2" } }, "sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ=="],
 
