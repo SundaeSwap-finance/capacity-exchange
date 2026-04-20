@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/midnight-node",
+  "name": "@sundaeswap/capacity-exchange-nodejs",
   "version": "1.0.1",
   "license": "SEE LICENSE IN LICENSE.md",
   "private": true,

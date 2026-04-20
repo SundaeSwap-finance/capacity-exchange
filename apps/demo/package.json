@@ -46,7 +46,7 @@
     "unicornstudio-react": "^2.1.4-1"
   },
   "devDependencies": {
-    "@capacity-exchange/midnight-node": "1.0.1",
+    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",

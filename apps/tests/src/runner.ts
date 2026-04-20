@@ -1,4 +1,4 @@
-import { runCli, withAppContext, createLogger, type AppContext } from '@capacity-exchange/midnight-node';
+import { runCli, withAppContext, createLogger, type AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { getTestConfig, type TestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runExchangeFlow } from './flows/exchange-flow.js';

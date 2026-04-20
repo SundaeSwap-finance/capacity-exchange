@@ -37,7 +37,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@sundaeswap/capacity-exchange-core": "1.1.0",
-    "@capacity-exchange/midnight-node": "1.0.1",
+    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/ledger-v8": "8.0.3",

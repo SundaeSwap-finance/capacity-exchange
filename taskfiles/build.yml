@@ -26,7 +26,7 @@ tasks:
   midnight-node:
     deps: [midnight-core]
     cmds:
-      - bun run --filter @capacity-exchange/midnight-node build
+      - bun run --filter @sundaeswap/capacity-exchange-nodejs build
 
   client:
     deps: [install]

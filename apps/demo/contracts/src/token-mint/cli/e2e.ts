@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
+import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, mint, verify, DeployOutput, MintOutput, VerifyOutput } from '../lib/operations.js';
 
 interface E2EOutput {
