@@ -2,7 +2,11 @@ import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types';
 import { isOfferExpired } from './utils';
 import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps';
-import { CapacityExchangeUserCancelledError, CapacityExchangeOfferExpiredError } from './errors';
+import {
+  CapacityExchangeUserCancelledError,
+  CapacityExchangeNoEligibleOfferError,
+  CapacityExchangeOfferExpiredError,
+} from './errors';
 
 async function selectCurrency(
   prices: ExchangePrice[],
@@ -15,6 +19,10 @@ async function selectCurrency(
 
   if (result.status === 'cancelled') {
     throw new CapacityExchangeUserCancelledError();
+  }
+
+  if (result.status === 'no-eligible') {
+    throw new CapacityExchangeNoEligibleOfferError();
   }
 
   console.debug('[CapacityExchange] User selected currency:', result.exchangePrice.price.currency);
