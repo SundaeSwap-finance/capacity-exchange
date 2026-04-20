@@ -1,7 +1,7 @@
 import { AppContext, createLogger, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
 import { RegistrySecretKey } from '../types.js';
 import { CompiledRegistryContract, getProviders } from '../contract.js';
-import { toTxResult, TxResult } from '@capacity-exchange/midnight-core';
+import { toTxResult, TxResult } from '@sundaeswap/capacity-exchange-core';
 
 const logger = createLogger(import.meta);
 

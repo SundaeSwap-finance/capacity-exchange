@@ -1,5 +1,5 @@
 import { AppContext, createLogger, WalletContext } from '@capacity-exchange/midnight-node';
-import { DEFAULT_TTL_MS, toTxResult } from '@capacity-exchange/midnight-core';
+import { DEFAULT_TTL_MS, toTxResult } from '@sundaeswap/capacity-exchange-core';
 import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types.js';
 import { CompiledRegistryContract, getProviders } from '../contract.js';
 

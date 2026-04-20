@@ -2,7 +2,7 @@ import { program } from 'commander';
 import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
-import { TxResult } from '@capacity-exchange/midnight-core';
+import { TxResult } from '@sundaeswap/capacity-exchange-core';
 import { readSecretKeyFile } from '../types.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;

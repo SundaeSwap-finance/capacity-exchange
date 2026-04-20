@@ -1,4 +1,4 @@
-import { TxResult } from '@capacity-exchange/midnight-core';
+import { TxResult } from '@sundaeswap/capacity-exchange-core';
 import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
 import { program } from 'commander';
 import { deregister } from '../circuits/deregister.js';
