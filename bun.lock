@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "capacity-exchange-sdk",
@@ -39,7 +38,7 @@
     },
     "apps/demo": {
       "name": "@capacity-exchange/demo",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "dependencies": {
         "@fontsource/geist": "^5.2.8",
         "@fontsource/space-mono": "^5.2.9",
@@ -128,7 +127,7 @@
     },
     "apps/server": {
       "name": "@capacity-exchange/server",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "dependencies": {
         "@aws-sdk/client-secrets-manager": "^3.1018.0",
         "@capacity-exchange/midnight-node": "1.0.0",
@@ -172,7 +171,7 @@
     },
     "examples/react-vite": {
       "name": "@capacity-exchange/example-react-vite",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "dependencies": {
         "@midnight-ntwrk/dapp-connector-api": "4.0.1",
         "@midnight-ntwrk/ledger-v8": "8.0.3",
@@ -260,7 +259,7 @@
     },
     "packages/providers": {
       "name": "@sundaeswap/capacity-exchange-providers",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "dependencies": {
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
         "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
@@ -291,7 +290,7 @@
     },
     "packages/react-sdk": {
       "name": "@sundaeswap/capacity-exchange-react-sdk",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "dependencies": {
         "@midnight-ntwrk/ledger-v8": "8.0.3",
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
@@ -320,6 +319,23 @@
         "@types/node": "22.10.7",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18",
+      },
+    },
+    "prototypes/midnight-mint-disclose": {
+      "name": "@capacity-exchange/prototype-midnight-mint-disclose",
+      "version": "0.0.1",
+      "dependencies": {
+        "@capacity-exchange/midnight-node": "1.0.0",
+        "@midnight-ntwrk/compact-js": "2.5.0",
+        "@midnight-ntwrk/compact-runtime": "0.15.0",
+        "@midnight-ntwrk/ledger-v8": "8.0.3",
+        "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
+        "@midnight-ntwrk/midnight-js-types": "4.0.1",
+        "@sundaeswap/capacity-exchange-core": "1.0.0",
+      },
+      "devDependencies": {
+        "@types/node": "22.10.7",
+        "typescript": "^5.9.3",
       },
     },
   },
@@ -439,6 +455,8 @@
     "@capacity-exchange/example-react-vite": ["@capacity-exchange/example-react-vite@workspace:examples/react-vite"],
 
     "@capacity-exchange/midnight-node": ["@capacity-exchange/midnight-node@workspace:packages/midnight-node"],
+
+    "@capacity-exchange/prototype-midnight-mint-disclose": ["@capacity-exchange/prototype-midnight-mint-disclose@workspace:prototypes/midnight-mint-disclose"],
 
     "@capacity-exchange/registry": ["@capacity-exchange/registry@workspace:packages/registry"],
 
@@ -2282,6 +2300,8 @@
 
     "@capacity-exchange/demo-contracts/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
+    "@capacity-exchange/prototype-midnight-mint-disclose/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
+
     "@capacity-exchange/server/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@changesets/apply-release-plan/prettier": ["prettier@2.8.8", "", { "bin": { "prettier": "bin-prettier.js" } }, "sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q=="],
@@ -2425,6 +2445,8 @@
     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
 
     "@capacity-exchange/demo-contracts/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
+
+    "@capacity-exchange/prototype-midnight-mint-disclose/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
     "@capacity-exchange/server/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
