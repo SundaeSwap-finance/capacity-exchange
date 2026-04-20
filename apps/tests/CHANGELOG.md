@@ -1,5 +1,14 @@
 # @capacity-exchange/tests
 
+## 1.0.2
+
+### Patch Changes
+
+- 3ae76c4: Rename package to `@sundaeswap/capacity-exchange-nodejs`
+- Updated dependencies [3ae76c4]
+  - @sundaeswap/capacity-exchange-nodejs@1.0.2
+  - @capacity-exchange/demo-contracts@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes
