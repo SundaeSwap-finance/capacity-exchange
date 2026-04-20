@@ -93,7 +93,7 @@ describe('deregister with computed key', () => {
 
     sim.register(defaultEntry());
     sim.useKey(keyB);
-    sim.register(defaultEntry());
+    sim.register(defaultEntry({ port: 8081 }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     sim.deregister(computeRegistryKey(keyB));
@@ -113,7 +113,7 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
     sim.setBlockTime(BASE_TIME);
 
     const expiry = futureDate(100n);
-    sim.register(defaultEntry(expiry));
+    sim.register(defaultEntry({ expiry }));
     expect(sim.getLedger().registry.size()).toBe(1n);
 
     const registryKey = computeRegistryKey(ownerKey);
@@ -134,7 +134,7 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
     sim.setBlockTime(BASE_TIME);
 
     const expiry = futureDate(100n);
-    sim.register(defaultEntry(expiry));
+    sim.register(defaultEntry({ expiry }));
 
     const registryKey = computeRegistryKey(ownerKey);
     sim.setBlockTime(BASE_TIME + 101n);
@@ -156,7 +156,7 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
 
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, ownerKey);
     sim.setBlockTime(BASE_TIME);
-    sim.register(defaultEntry(futureDate(100n)));
+    sim.register(defaultEntry({ expiry: futureDate(100n) }));
 
     const registryKey = computeRegistryKey(ownerKey);
 
@@ -172,9 +172,9 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry(futureDate(100n)));
+    sim.register(defaultEntry({ expiry: futureDate(100n) }));
     sim.useKey(keyB);
-    sim.register(defaultEntry(futureDate(200n)));
+    sim.register(defaultEntry({ expiry: futureDate(200n), port: 8081 }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     // Advance past both entries' expiry
@@ -197,7 +197,7 @@ describe('renewRegistration circuit', () => {
     sim.setBlockTime(BASE_TIME);
 
     const initialValidTo = futureDate(100n);
-    sim.register(defaultEntry(initialValidTo));
+    sim.register(defaultEntry({ expiry: initialValidTo }));
 
     const newValidTo = futureDate(MAX_VALIDITY);
     sim.renewRegistration(newValidTo);
@@ -212,7 +212,7 @@ describe('renewRegistration circuit', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, secretKey);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry(futureDate(100n)));
+    sim.register(defaultEntry({ expiry: futureDate(100n) }));
 
     const [keyBefore] = [...sim.getLedger().registry][0];
     sim.renewRegistration(futureDate(MAX_VALIDITY));
@@ -229,9 +229,9 @@ describe('renewRegistration circuit', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry(futureDate(100n)));
+    sim.register(defaultEntry({ expiry: futureDate(100n) }));
     sim.useKey(keyB);
-    sim.register(defaultEntry(futureDate(200n)));
+    sim.register(defaultEntry({ expiry: futureDate(200n), port: 8081 }));
 
     // Only refresh keyB's entry
     const newValidTo = futureDate(MAX_VALIDITY);
