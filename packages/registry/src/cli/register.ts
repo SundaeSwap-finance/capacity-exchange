@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
-import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
+import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
 import { readSecretKeyFile } from '../types.js';
 

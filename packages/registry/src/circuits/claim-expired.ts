@@ -1,4 +1,4 @@
-import { AppContext, createLogger, submitStatefulCallTxDirect } from '@capacity-exchange/midnight-node';
+import { AppContext, createLogger, submitStatefulCallTxDirect } from '@sundaeswap/capacity-exchange-nodejs';
 import { toTxResult, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { generateRandomSecretKey } from '../types.js';
 import { CompiledRegistryContract, getProviders } from '../contract.js';

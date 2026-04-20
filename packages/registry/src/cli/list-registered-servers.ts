@@ -5,7 +5,7 @@ import {
   requireNetworkId,
   runCli,
   withAppContext,
-} from '@capacity-exchange/midnight-node';
+} from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 
 import { getContractOutDir, Registry } from '../contract.js';

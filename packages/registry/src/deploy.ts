@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { AppContext, buildProviders, createLogger } from '@capacity-exchange/midnight-node';
+import { AppContext, buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import {
   CompiledRegistryContract,
   constructorArgs,

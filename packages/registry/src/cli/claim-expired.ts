@@ -1,5 +1,5 @@
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
-import { requireNetworkId, runCli, withAppContext } from '@capacity-exchange/midnight-node';
+import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { claimExpired } from '../circuits/claim-expired.js';
 import { parseRegistryKeyHex } from '../types.js';

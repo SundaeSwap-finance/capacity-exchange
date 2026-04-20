@@ -7,7 +7,7 @@ import type { WitnessContext } from '@midnight-ntwrk/compact-runtime';
 import * as Registry from '../contract/out/contract/index.js';
 import type { Ledger, Witnesses } from '../contract/out/contract/index.js';
 import type { RegistrySecretKey, RegistryConstructorArgs } from './types.js';
-import { AppContext, buildProviders } from '@capacity-exchange/midnight-node';
+import { AppContext, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
 import { Logger } from '@sundaeswap/capacity-exchange-core';
 
 export type CircuitPrivateState = {

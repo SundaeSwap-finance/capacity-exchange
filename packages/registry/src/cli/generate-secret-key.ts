@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { program } from 'commander';
-import { runCli } from '@capacity-exchange/midnight-node';
+import { runCli } from '@sundaeswap/capacity-exchange-nodejs';
 
 import { generateRandomSecretKey, type RegistrySecretKey } from '../types.js';
 

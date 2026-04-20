@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext, requireNetworkId } from '@capacity-exchange/midnight-node';
+import { runCli, withAppContext, requireNetworkId } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, DeployOutput } from '../deploy.js';
 
 function main(): Promise<DeployOutput> {

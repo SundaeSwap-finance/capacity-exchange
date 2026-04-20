@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/registry",
+  "name": "@sundaeswap/capacity-exchange-registry",
   "version": "1.0.0",
   "description": "Registry contract types and utilities for the capacity exchange SDK",
   "type": "module",
@@ -24,7 +24,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@sundaeswap/capacity-exchange-core": "1.0.0",
-    "@capacity-exchange/midnight-node": "1.0.1",
+    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
     "commander": "^14.0.2",
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
