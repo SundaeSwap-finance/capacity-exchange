@@ -1,5 +1,5 @@
 ---
-'@capacity-exchange/registry': minor
+'@sundaeswap/capacity-exchange-registry': minor
 ---
 
 - Rename `refreshValidity` → `renewRegistration` and `validTo` → `expiry` throughout

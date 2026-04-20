@@ -1,4 +1,4 @@
-# @capacity-exchange/registry
+# @sundaeswap/capacity-exchange-registry
 
 The registry is a contract, acting as a directory of capacity exchange servers. Each entry maps a server's secret key (hashed on-chain) to an entry: its IP address, port, and expiry. 
 
