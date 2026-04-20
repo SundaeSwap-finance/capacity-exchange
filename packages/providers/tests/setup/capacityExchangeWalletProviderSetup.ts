@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
 import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
-import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
 import type {
   CapacityExchangeConfig,
   ExchangePrice,
@@ -10,6 +9,7 @@ import type {
   BalanceSealedTransaction,
   BalanceUnsealedTransaction,
 } from '../../src/wallet/types';
+import type { ChainStateProvider } from '../../src/wallet/chainStateProvider';
 import { createMockWalletProvider } from '../mocks/mockProviders';
 
 export interface TestContext {
@@ -97,8 +97,10 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
     encryptionPublicKey: ctx.mockWalletProvider.getEncryptionPublicKey(),
     balanceUnsealedTransaction: ctx.mockBalanceUnsealedTransaction,
     balanceSealedTransaction: ctx.mockBalanceSealedTransaction,
-    publicDataProvider: {} as PublicDataProvider,
-    ledgerParametersProvider: async () => ({}) as LedgerParameters,
+    chainStateProvider: {
+      queryContractState: async () => null,
+      getLedgerParameters: async () => ({}) as LedgerParameters,
+    } satisfies ChainStateProvider,
     additionalCapacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,
     confirmOffer: ctx.confirmOffer,

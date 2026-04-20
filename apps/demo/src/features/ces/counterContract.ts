@@ -82,14 +82,17 @@ export async function findAndIncrementCounter(
   confirmOffer: ConfirmOffer,
   config: NetworkConfig
 ) {
+  const publicData = indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl);
   const cesWalletProvider = capacityExchangeWalletProvider({
     networkId: config.networkId,
     coinPublicKey: walletProvider.getCoinPublicKey(),
     encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
     balanceUnsealedTransaction,
     balanceSealedTransaction,
-    publicDataProvider: indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl),
-    ledgerParametersProvider: () => getLedgerParameters(config.indexerUrl),
+    chainStateProvider: {
+      queryContractState: (addr, cfg) => publicData.queryContractState(addr, cfg),
+      getLedgerParameters: () => getLedgerParameters(config.indexerUrl),
+    },
     additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
     promptForCurrency,
     confirmOffer,

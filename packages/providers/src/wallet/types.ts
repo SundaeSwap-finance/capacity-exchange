@@ -1,6 +1,6 @@
-import type { CoinPublicKey, EncPublicKey, LedgerParameters } from '@midnight-ntwrk/ledger-v8';
-import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi';
+import type { ChainStateProvider } from './chainStateProvider';
 
 /**
  * A price which the caller may pay to sponsor their transaction.
@@ -107,7 +107,6 @@ export type ConfirmOffer = (offer: Offer, dustRequired: bigint, requestId: strin
 
 export type BalanceUnsealedTransaction = (tx: string) => Promise<{ tx: string }>;
 export type BalanceSealedTransaction = (tx: string) => Promise<{ tx: string }>;
-export type LedgerParametersProvider = () => Promise<LedgerParameters>;
 
 export interface CapacityExchangeConfig {
   /**
@@ -131,14 +130,11 @@ export interface CapacityExchangeConfig {
    */
   balanceSealedTransaction: BalanceSealedTransaction;
   /**
-   * Used to query the on-chain CES registry for registered server URLs.
+   * Provides read-only on-chain state needed by the SDK:
+   * contract state (for registry lookups) and current ledger parameters
+   * (for DUST speck estimation).
    */
-  publicDataProvider: PublicDataProvider;
-  /**
-   * A provider for the chain's current `LedgerParameters`, used to estimate the
-   * DUST speck cost of the user's transaction before quoting an exchange.
-   */
-  ledgerParametersProvider: LedgerParametersProvider;
+  chainStateProvider: ChainStateProvider;
   /**
    * Optional: any additional capacity exchange URLs to call,
    * in addition to the default members of the network.

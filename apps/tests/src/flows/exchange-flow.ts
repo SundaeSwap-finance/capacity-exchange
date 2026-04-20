@@ -55,8 +55,10 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
     encryptionPublicKey: ctx.walletContext.walletProvider.getEncryptionPublicKey(),
     balanceSealedTransaction: createSealedBalanceCallback(ctx),
     balanceUnsealedTransaction: createUnsealedBalanceCallback(ctx),
-    publicDataProvider: ctx.publicDataProvider,
-    ledgerParametersProvider: () => getLedgerParameters(appConfig.endpoints.indexerHttpUrl),
+    chainStateProvider: {
+      queryContractState: (addr, cfg) => ctx.publicDataProvider.queryContractState(addr, cfg),
+      getLedgerParameters: () => getLedgerParameters(appConfig.endpoints.indexerHttpUrl),
+    },
     additionalCapacityExchangeUrls: [cesUrl],
     promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor),
     confirmOffer: autoConfirmOffer,

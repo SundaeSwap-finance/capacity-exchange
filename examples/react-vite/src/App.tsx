@@ -37,11 +37,15 @@ function useProviders<PCK extends string>(
     [configuration.indexerUri, configuration.indexerWsUri]
   );
 
-  // Provides the chain's current ledger parameters for fee estimation.
-  // The indexer URL is available from your wallet's configuration.
-  const ledgerParametersProvider = useCallback(
-    () => getLedgerParameters(configuration.indexerUri),
-    [configuration.indexerUri]
+  // Provides on-chain state the SDK needs: contract state for the registry lookup
+  // and current ledger parameters for fee estimation. The indexer URL is
+  // available from your wallet's configuration.
+  const chainStateProvider = useMemo(
+    () => ({
+      queryContractState: (addr, cfg) => publicDataProvider.queryContractState(addr, cfg),
+      getLedgerParameters: () => getLedgerParameters(configuration.indexerUri),
+    }),
+    [publicDataProvider, configuration.indexerUri]
   );
 
   // This wallet provider will not actually spend DUST from the user's wallet.
@@ -57,9 +61,9 @@ function useProviders<PCK extends string>(
     // These balance functions are necessary for the user to spend shielded or unshielded tokens.
     balanceUnsealedTransaction: wallet.balanceUnsealedTransaction,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
-    // The SDK uses the public data provider to discover registered CES servers from the on-chain registry.
-    publicDataProvider,
-    ledgerParametersProvider,
+    // Used by the SDK to discover registered CES servers from the on-chain registry
+    // and to estimate fees.
+    chainStateProvider,
   });
 
   // The rest of this is standard boilerplate to construct the remaining Midnight providers.

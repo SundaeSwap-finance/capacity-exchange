@@ -1,4 +1,4 @@
-import type { PublicDataProvider, UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import {
   Proof,
   SignatureEnabled,
@@ -6,13 +6,8 @@ import {
   type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
-import type {
-  ExchangePrice,
-  Offer,
-  BalanceSealedTransaction,
-  BalanceUnsealedTransaction,
-  LedgerParametersProvider,
-} from './types';
+import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
+import type { ChainStateProvider } from './chainStateProvider';
 import { isOfferExpired } from './utils';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi';
@@ -38,8 +33,7 @@ export interface FetchCesPricesResult {
 
 export interface FetchCesPricesOptions {
   networkId: string;
-  publicDataProvider: PublicDataProvider;
-  ledgerParametersProvider: LedgerParametersProvider;
+  chainStateProvider: ChainStateProvider;
   additionalCapacityExchangeUrls: string[];
   margin: number;
 }
@@ -54,9 +48,9 @@ export async function fetchCesPrices(
   tx: UnboundTransaction,
   options: FetchCesPricesOptions
 ): Promise<FetchCesPricesResult> {
-  const { networkId, publicDataProvider, ledgerParametersProvider, additionalCapacityExchangeUrls, margin } = options;
-  const specksRequired = await estimateSpecksRequired(tx, ledgerParametersProvider, margin);
-  const registeredUrls = await resolveRegisteredCesUrls(networkId, publicDataProvider);
+  const { networkId, chainStateProvider, additionalCapacityExchangeUrls, margin } = options;
+  const specksRequired = await estimateSpecksRequired(tx, chainStateProvider, margin);
+  const registeredUrls = await resolveRegisteredCesUrls(networkId, chainStateProvider);
   const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls, registeredUrls);
   const prices = await fetchPricesFromExchanges(createCesApis(urls), specksRequired);
 
@@ -69,10 +63,10 @@ export async function fetchCesPrices(
 
 async function estimateSpecksRequired(
   tx: UnboundTransaction,
-  ledgerParametersProvider: LedgerParametersProvider,
+  chainStateProvider: ChainStateProvider,
   margin: number
 ): Promise<bigint> {
-  const ledgerParameters = await ledgerParametersProvider();
+  const ledgerParameters = await chainStateProvider.getLedgerParameters();
   const estimated = tx.feesWithMargin(ledgerParameters, margin);
   // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
   const specksRequired = estimated > 0n ? estimated : 1n;
@@ -80,7 +74,7 @@ async function estimateSpecksRequired(
   return specksRequired;
 }
 
-async function resolveRegisteredCesUrls(networkId: string, publicDataProvider: PublicDataProvider): Promise<string[]> {
+async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: ChainStateProvider): Promise<string[]> {
   const registryAddress = getDefaultRegistryAddress(networkId);
   if (!registryAddress) {
     console.debug('[CESSteps] No canonical registry address for network', networkId);
@@ -88,7 +82,7 @@ async function resolveRegisteredCesUrls(networkId: string, publicDataProvider: P
   }
   try {
     console.debug('[CESSteps] Looking up registered CES URLs from registry', registryAddress);
-    const urls = await fetchRegistryCesUrls(publicDataProvider, registryAddress);
+    const urls = await fetchRegistryCesUrls(chainStateProvider, registryAddress);
     console.debug('[CESSteps] Registry returned', urls.length, 'URLs');
     return urls;
   } catch (err) {
