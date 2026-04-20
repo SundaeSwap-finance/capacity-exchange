@@ -6,9 +6,10 @@ import CompactStandardLibrary;
 //
 // Claim being tested:
 //   A Compact circuit can mint an unshielded token of color derived from
-//   h = hash(s), while publicly disclosing s, where s is supplied as a
-//   witness (private input) by the caller. The disclosed s lands on-chain
-//   and is observable by any external party.
+//   h = hash(s), where s is supplied as a public circuit argument (so it
+//   lands in the on-chain extrinsic call data verbatim). The Cardano-side
+//   verifier proves block-finality via BEEFY → MMR → extrinsics_root →
+//   extrinsic, then byte-extracts s from the call args.
 //
 // Three scenarios we exercise in our tests:
 //   A. mintReveal alone   → tx succeeds, s appears in
@@ -20,32 +21,31 @@ import CompactStandardLibrary;
 //                                      absorb's -1, contract holds 1 token,
 //                                      s still visible in disclosedPreimages[h]
 //
-// Scenarios A and C prove the disclose-with-mint primitive composes.
+// Scenarios A and C prove the public-input + mint primitive composes.
 // Scenario B proves the ledger balance check enforces "receive requires
 // matching supply", which is the real security property: LP's receive
 // cannot succeed without the user's disclosing mint.
 
 // Public ledger: H → revealed preimage s.
-// Exists so we can query contract state after a tx and verify s is on-chain
-// in plaintext, independent of any uncertainty about whether `disclose()`
-// alone emits s into the public transcript.
+// Now redundant for the protocol (s rides as a public argument in the
+// extrinsic call data), but kept as a convenient post-tx state-query target
+// for sim/preprod tests that want to verify on-chain visibility without
+// decoding the raw extrinsic. Candidate for removal once the e2e proof
+// pipeline is wired up.
 export ledger disclosedPreimages: Map<Bytes<32>, Bytes<32>>;
-
-// The user-supplied preimage. Private until disclose().
-witness preimage(): Bytes<32>;
 
 // Empty constructor — no initial state needed.
 constructor() {}
 
 // Circuit A: mint with disclosure.
-// Caller provides s via the witness and h as a public arg. Circuit checks
-// hash(s) == h, records s in the ledger (guaranteeing on-chain visibility),
-// and mints 1 unshielded token with domain separator h.
+// Caller passes s and h as public args. Circuit checks hash(s) == h,
+// records s in the ledger (for test-side state queries), and mints 1
+// unshielded token with domain separator h.
 export circuit mintReveal(
+  s: Bytes<32>,
   h: Bytes<32>,
   recipient: Either<ContractAddress, UserAddress>
 ): Bytes<32> {
-  const s = preimage();
   const ds = disclose(s);
   const dh = disclose(h);
   assert(persistentHash<Bytes<32>>(ds) == dh, "preimage mismatch");

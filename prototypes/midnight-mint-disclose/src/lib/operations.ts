@@ -21,15 +21,6 @@ export function randomBytes32(): Uint8Array {
   return crypto.randomBytes(32);
 }
 
-/** Update the stored private state so the next `preimage()` witness call returns `s`. */
-async function stagePreimage(
-  providers: ReturnType<typeof buildProviders<MintDiscloseContract>>,
-  privateStateId: string,
-  s: Uint8Array
-): Promise<void> {
-  await providers.privateStateProvider.set(privateStateId, createPrivateState(s));
-}
-
 // ---------- deploy ----------
 
 export interface DeployOutput {
@@ -42,7 +33,7 @@ export async function deploy(ctx: AppContext): Promise<DeployOutput> {
   logger.info('Deploying mint-disclose prototype contract...');
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
   const privateStateId = crypto.randomBytes(32).toString('hex');
-  const initialPrivateState = createPrivateState(new Uint8Array(32));
+  const initialPrivateState = createPrivateState();
 
   const deployed = await deployContractWithDryRun(
     providers,
@@ -84,14 +75,13 @@ export async function mintReveal(
   logger.info(`mintReveal: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
 
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
-  await stagePreimage(providers, privateStateId, s);
 
   const result = await submitCallTx<MintDiscloseContract, 'mintReveal'>(providers, {
     compiledContract: CompiledMintDiscloseContract,
     contractAddress,
     circuitId: 'mintReveal',
     privateStateId,
-    args: [h, recipient],
+    args: [s, h, recipient],
   });
 
   if (!result.private.result) {
@@ -159,7 +149,6 @@ export async function mintAndAbsorbAtomic(
   logger.info(`mint+absorb atomic: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
 
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
-  await stagePreimage(providers, privateStateId, s);
 
   const finalized = await withContractScopedTransaction<MintDiscloseContract>(providers, async (txCtx) => {
     await submitCallTx<MintDiscloseContract, 'mintReveal'>(
@@ -169,7 +158,7 @@ export async function mintAndAbsorbAtomic(
         contractAddress,
         circuitId: 'mintReveal',
         privateStateId,
-        args: [h, recipient],
+        args: [s, h, recipient],
       },
       txCtx
     );
