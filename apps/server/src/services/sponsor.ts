@@ -16,6 +16,7 @@ import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { MetricsService } from './metrics.js';
 import type { SponsoredContract } from '../config/prices.js';
+import { isCapacityExchangeError } from '@sundaeswap/capacity-exchange-providers';
 
 export type SponsorTxResult =
   | { status: 'ok'; tx: FinalizedTransaction; specksCommitted: bigint }
@@ -90,9 +91,26 @@ export class SponsorService {
       this.logger.info(
         'Insufficient dust funds; fallback to other CES peers for dust sponsorship...',
       );
-      const tx = await this.cesWalletProvider.balanceTx(userTx);
-
-      return { status: 'ok', tx, specksCommitted: estimatedSpecks };
+      try {
+        const tx = await this.cesWalletProvider.balanceTx(userTx);
+        return { status: 'ok', tx, specksCommitted: estimatedSpecks };
+      } catch (err) {
+        if (!isCapacityExchangeError(err)) throw err;
+        switch (err.type) {
+          case 'no-eligible-offer':
+          case 'no-prices-available':
+            this.logger.info({ reason: err.message }, 'Peer fallback exhausted');
+            return { status: 'insufficient-funds', requested: estimatedSpecks };
+          case 'user-cancelled':
+          case 'offer-expired':
+          case 'server-error':
+            this.logger.error({ err }, 'Peer fallback failed');
+            return { status: 'illegal-state', error: `peer-fallback:${err.type}` };
+          default:
+            err.type satisfies never;
+            throw err;
+        }
+      }
     }
 
     if (lockResult.status !== 'ok') {

@@ -8,7 +8,12 @@ import {
   type WalletStateStore,
 } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { loadPriceConfig, type RawPriceFormula, type SponsoredContract } from './config/prices.js';
+import {
+  loadPriceConfig,
+  type PeerConfig,
+  type RawPriceFormula,
+  type SponsoredContract,
+} from './config/prices.js';
 import { parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
@@ -25,6 +30,7 @@ export interface AppConfig {
   priceFormulas: RawPriceFormula[];
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
+  peer?: PeerConfig;
   quoteSecretFile: string;
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
@@ -60,6 +66,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     quoteSecretFile: env.QUOTE_SECRET_FILE,
     sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,
+    peer: priceConfig.peer,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS

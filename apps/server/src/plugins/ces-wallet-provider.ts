@@ -1,11 +1,14 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-// import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
+import type { ChainStateProvider } from '@sundaeswap/capacity-exchange-providers';
+import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    cesWalletProvider: WalletProvider | null;
+    cesWalletProvider: WalletProvider;
   }
 }
 
@@ -13,21 +16,26 @@ export default fp(async (fastify: FastifyInstance) => {
   if (!fastify.walletService) {
     throw new Error("CesWalletProviderPlugin requires WalletService to be init'd first");
   }
+  if (!fastify.peerPriceService) {
+    throw new Error("CesWalletProviderPlugin requires PeerPriceService to be init'd first");
+  }
 
-  // TODO: renable fallback feature in the future.
-  // const cesWalletProvider = buildCesWalletProvider(
-  //   fastify.walletService,
-  //   fastify.config.networkId,
-  //   fastify.config.endpoints,
-  //   fastify.config.capacityExchangeUrls,
-  //   fastify.log,
-  // );
-  const cesWalletProvider = null;
+  const { indexerHttpUrl, indexerWsUrl } = fastify.config.endpoints;
+  const publicDataProvider = indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl);
+  const chainStateProvider: ChainStateProvider = {
+    queryContractState: (addr, cfg) => publicDataProvider.queryContractState(addr, cfg),
+    getLedgerParameters: () => getLedgerParameters(indexerHttpUrl),
+  };
+
+  const cesWalletProvider = buildCesWalletProvider(
+    fastify.walletService,
+    fastify.peerPriceService,
+    fastify.config.networkId,
+    chainStateProvider,
+    fastify.config.capacityExchangeUrls,
+    fastify.log,
+  );
 
   fastify.decorate('cesWalletProvider', cesWalletProvider);
-  fastify.log.trace(
-    cesWalletProvider
-      ? "CES wallet provider init'd"
-      : 'No CAPACITY_EXCHANGE_PEER_URLS configured to initialize CES wallet provider',
-  );
+  fastify.log.trace("CES wallet provider init'd");
 });

@@ -24,15 +24,21 @@ const SponsoredContractSchema = Type.Object({
   circuits: CircuitFilterSchema,
 });
 
+const PeerConfigSchema = Type.Object({
+  maxPrices: Type.Array(RawPriceFormulaSchema),
+});
+
 const PriceConfigSchema = Type.Object({
   priceFormulas: Type.Array(RawPriceFormulaSchema),
   sponsorAll: Type.Optional(Type.Boolean()),
   sponsoredContracts: Type.Array(SponsoredContractSchema),
+  peer: Type.Optional(PeerConfigSchema),
 });
 
 export type RawCurrency = Static<typeof RawCurrencySchema>;
 export type RawPriceFormula = Static<typeof RawPriceFormulaSchema>;
 export type SponsoredContract = Static<typeof SponsoredContractSchema>;
+export type PeerConfig = Static<typeof PeerConfigSchema>;
 export type PriceConfig = Static<typeof PriceConfigSchema>;
 
 /** Load and validate the price config JSON file. */
