@@ -1,5 +1,5 @@
-import type { AppContext } from '@capacity-exchange/midnight-node';
-import { buildProviders, getAppConfigById, createLogger } from '@capacity-exchange/midnight-node';
+import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { buildProviders, getAppConfigById, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
 import { balanceUnboundTransaction, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';

@@ -7,12 +7,12 @@ import {
   buildProviders,
   submitStatefulCallTxDirect,
   deployContractWithDryRun,
-} from '@capacity-exchange/midnight-node';
+} from '@sundaeswap/capacity-exchange-nodejs';
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
 import { createPrivateState } from './witnesses.js';
-import { createLogger } from '@capacity-exchange/midnight-node';
+import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
 const logger = createLogger(import.meta);
 

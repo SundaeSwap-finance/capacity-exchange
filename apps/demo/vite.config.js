@@ -3,7 +3,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { loadWalletSeed, requireNodeEnv } from '@capacity-exchange/midnight-node';
+import { loadWalletSeed, requireNodeEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 
 // https://vitejs.dev/config/

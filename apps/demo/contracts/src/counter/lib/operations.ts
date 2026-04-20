@@ -3,10 +3,10 @@ import {
   buildProviders,
   submitCallTxDirect,
   deployContractWithDryRun,
-} from '@capacity-exchange/midnight-node';
+} from '@sundaeswap/capacity-exchange-nodejs';
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
-import { createLogger } from '@capacity-exchange/midnight-node';
+import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
 const logger = createLogger(import.meta);
 

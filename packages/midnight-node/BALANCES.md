@@ -32,5 +32,5 @@ printf "WALLET_STATE_DIR=./.wallet-state\nPROOF_SERVER_URL=https://your-proof-se
 ## Run
 
 ```bash
-bun run --filter @capacity-exchange/midnight-node balances preview
+bun run --filter @sundaeswap/capacity-exchange-nodejs balances preview
 ```

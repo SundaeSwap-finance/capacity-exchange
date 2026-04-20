@@ -10,7 +10,7 @@ import {
   type WalletConnection,
 } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { FileStateStore, loadWalletSeed } from '@capacity-exchange/midnight-node';
+import { FileStateStore, loadWalletSeed } from '@sundaeswap/capacity-exchange-nodejs';
 import type { AppEnv } from './env.js';
 import { readFileOrError } from './files.js';
 import { fetchSecret } from './secrets.js';
