@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import {
   createConstructorContext,
   createCircuitContext,
@@ -33,18 +34,18 @@ export class RegistrySimulator {
   private activeSecretKey: Uint8Array;
 
   readonly collateralAmount: bigint;
-  readonly maxValidityInterval: bigint;
+  readonly maxPeriod: bigint;
 
-  constructor(collateralAmount: bigint, maxValidityInterval: bigint, secretKey: Uint8Array) {
+  constructor(collateralAmount: bigint, maxPeriod: bigint, secretKey: Uint8Array) {
     this.collateralAmount = collateralAmount;
-    this.maxValidityInterval = maxValidityInterval;
+    this.maxPeriod = maxPeriod;
     this.activeSecretKey = secretKey;
 
     this.contract = new Registry.Contract(makeWitnesses(secretKey));
 
     const constructorCtx = createConstructorContext<PrivateState>({ secretKey }, DUMMY_COIN_PUBLIC_KEY);
 
-    const result = this.contract.initialState(constructorCtx, collateralAmount, maxValidityInterval);
+    const result = this.contract.initialState(constructorCtx, collateralAmount, maxPeriod);
 
     this.context = createCircuitContext(
       ocrt.dummyContractAddress(),
@@ -82,10 +83,10 @@ export class RegistrySimulator {
     return effects;
   }
 
-  refresh(validTo: Date) {
-    const result = this.contract.impureCircuits.refreshValidity(
+  renewRegistration(expiry: Date) {
+    const result = this.contract.impureCircuits.renewRegistration(
       this.context,
-      BigInt(Math.floor(validTo.getTime() / 1000))
+      BigInt(Math.floor(expiry.getTime() / 1000))
     );
     const effects = result.context.currentQueryContext.effects;
     this.syncContext(result.context);

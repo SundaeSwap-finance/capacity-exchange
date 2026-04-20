@@ -64,7 +64,7 @@ describe('IPv6 round trip', () => {
 describe('entry round trip', () => {
   it('preserves all fields', () => {
     const entry = {
-      validTo: new Date('2026-05-01T00:00:00Z'),
+      expiry: new Date('2026-05-01T00:00:00Z'),
       ip: { kind: 'ipv4' as const, address: '10.0.0.1' },
       port: 443,
     };
@@ -72,6 +72,6 @@ describe('entry round trip', () => {
     expect(result.ip).toEqual(entry.ip);
     expect(result.port).toBe(entry.port);
     // Date round trip truncates to seconds
-    expect(result.validTo.getTime()).toBe(Math.floor(entry.validTo.getTime() / 1000) * 1000);
+    expect(result.expiry.getTime()).toBe(Math.floor(entry.expiry.getTime() / 1000) * 1000);
   });
 });

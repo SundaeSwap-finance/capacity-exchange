@@ -1,5 +1,5 @@
 {
-  "name": "@capacity-exchange/registry",
+  "name": "@sundaeswap/capacity-exchange-registry",
   "version": "1.0.0",
   "description": "Registry contract types and utilities for the capacity exchange SDK",
   "type": "module",
@@ -7,6 +7,13 @@
     "clean": "rm -rf contract/out/",
     "compile": "\"$COMPACTC\" contract/src/registry.compact contract/out",
     "build": "tsc --noEmit",
+    "generate-secret": "bun src/cli/generate-secret-key.ts",
+    "deploy": "bun src/cli/deploy.ts",
+    "register": "bun src/cli/register.ts",
+    "deregister": "bun src/cli/deregister.ts",
+    "claim-expired": "bun src/cli/claim-expired.ts",
+    "renew-registration": "bun src/cli/renew-registration.ts",
+    "list-servers": "bun src/cli/list-registered-servers.ts",
     "test": "vitest run"
   },
   "exports": {
@@ -16,9 +23,15 @@
   "author": "",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
+    "@sundaeswap/capacity-exchange-core": "1.0.0",
+    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+    "commander": "^14.0.2",
     "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@midnight-ntwrk/ledger-v8": "8.0.3",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
     "@midnight-ntwrk/onchain-runtime-v3": "3.0.0"
   },
   "devDependencies": {

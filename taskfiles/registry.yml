@@ -11,4 +11,4 @@ tasks:
     env:
       COMPACTC: '{{.COMPACTC_BIN}}'
     cmds:
-      - bun run --filter "@capacity-exchange/registry" compile
+      - bun run --filter "@sundaeswap/capacity-exchange-registry" compile

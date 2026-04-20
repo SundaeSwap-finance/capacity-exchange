@@ -17,7 +17,7 @@ new type SocketAddressHash = Bytes<32>;
 new type UnixTimestampSeconds = Uint<64>;
 
 struct Entry {
-  validTo: UnixTimestampSeconds,
+  expiry: UnixTimestampSeconds,
   ip: IpAddress,
   port: Port,
 }
@@ -28,19 +28,18 @@ export ledger takenSocketAddresses: Set<SocketAddressHash>;
 
 export ledger collateralAmount: Uint<128>;
 
-export ledger maximumValidityInterval: UnixTimestampSeconds;
+export ledger maximumRegistrationPeriod: UnixTimestampSeconds;
 
 witness secretKey(): Bytes<64>;
 
-constructor(requiredCollateral: Uint<128>, maxValidityInterval: UnixTimestampSeconds) {
+constructor(requiredCollateral: Uint<128>, maxPeriod: UnixTimestampSeconds) {
   collateralAmount = disclose(requiredCollateral);
-  maximumValidityInterval = disclose(maxValidityInterval);
+  maximumRegistrationPeriod = disclose(maxPeriod);
 }
-
 export circuit registerServer(entry: Entry): [] {
   const disclosedEntry = disclose(entry);
-  assert(blockTimeGte((disclosedEntry.validTo - maximumValidityInterval) as Uint<64>),
-         "validity interval cannot be larger than maximumValidityInterval"
+  assert(blockTimeGte((disclosedEntry.expiry - maximumRegistrationPeriod) as Uint<64>),
+         "period cannot be larger than maximumRegistrationPeriod"
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
@@ -56,9 +55,9 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
   const disclosedKey = disclose(key);
   assert(registry.member(disclosedKey), "key does not exist");
   const existing = registry.lookup(disclosedKey);
-  if (blockTimeLt(disclose(existing.validTo) as Uint<64>)) {
+  if (blockTimeLt(disclose(existing.expiry) as Uint<64>)) {
     assert(key == disclose(hashKey(secretKey())),
-           "you can only deregister your own entry before validTo"
+           "you can only deregister your own entry before expiry"
            );
   }
 
@@ -72,14 +71,14 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
   registry.remove(disclosedKey);
 }
 
-export circuit refreshValidity(validTo: UnixTimestampSeconds): [] {
+export circuit renewRegistration(expiry: UnixTimestampSeconds): [] {
   const key = disclose(hashKey(secretKey()));
   assert(registry.member(key), "you don't have a registered server");
   const currentEntry = registry.lookup(key);
-  assert(blockTimeGte((disclose(validTo) - maximumValidityInterval) as Uint<64>),
-         "validity interval cannot be larger than maximumValidityInterval"
+  assert(blockTimeGte((disclose(expiry) - maximumRegistrationPeriod) as Uint<64>),
+         "period cannot be larger than maximumRegistrationPeriod"
          );
-  const newEntry = Entry { validTo: validTo, ip: currentEntry.ip, port: currentEntry.port, };
+  const newEntry = Entry { expiry: expiry, ip: currentEntry.ip, port: currentEntry.port, };
 
   registry.insert(key, disclose(newEntry));
 }

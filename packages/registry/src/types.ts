@@ -1,11 +1,12 @@
+import * as fs from 'fs';
+import * as crypto from 'crypto';
 import type { Ledger } from '../contract/out/contract/index.js';
-
 export type IPv4 = { kind: 'ipv4'; address: string };
 export type IPv6 = { kind: 'ipv6'; address: string };
 export type IpAddress = IPv4 | IPv6;
 
 export interface RegistryEntry {
-  validTo: Date;
+  expiry: Date;
   ip: IpAddress;
   port: number;
 }
@@ -17,16 +18,63 @@ export type ContractIpAddress = {
 };
 
 export type ContractEntry = {
-  validTo: bigint;
+  expiry: bigint;
   ip: ContractIpAddress;
   port: bigint;
 };
 
-export type RegistryKey = Uint8Array;
+export type RegistryKey = Uint8Array; // 32-byte
+export type RegistrySecretKey = Uint8Array; // 64-byte
+
+export type RegistryMapping = Map<string, RegistryEntry>;
 
 export interface RegistryConstructorArgs {
   requiredCollateral: bigint;
-  maxValidityInterval: bigint;
+  maxPeriod: bigint;
+}
+
+export function generateRandomSecretKey(): RegistrySecretKey {
+  return crypto.randomBytes(64);
+}
+
+const SECRET_KEY_BYTES = 64;
+const REGISTRY_KEY_BYTES = 32;
+
+/**
+ * Reads a hex-encoded secret key from a file, validating that it contains exactly 64 bytes.
+ */
+export function readSecretKeyFile(filePath: string): RegistrySecretKey {
+  const hexStr = fs.readFileSync(filePath, 'utf-8').trim();
+  const bytes = new Uint8Array(Buffer.from(hexStr, 'hex'));
+  if (bytes.length !== SECRET_KEY_BYTES) {
+    throw new Error(
+      `Invalid secret key in "${filePath}": expected ${SECRET_KEY_BYTES} bytes (${SECRET_KEY_BYTES * 2} hex chars), got ${bytes.length}`
+    );
+  }
+  return bytes;
+}
+
+/**
+ * Parses a hex-encoded registry key string, validating that it is exactly 32 bytes.
+ */
+export function parseRegistryKeyHex(hex: string): RegistryKey {
+  const bytes = new Uint8Array(Buffer.from(hex, 'hex'));
+  if (bytes.length !== REGISTRY_KEY_BYTES) {
+    throw new Error(
+      `Invalid registry key: expected ${REGISTRY_KEY_BYTES} bytes (${REGISTRY_KEY_BYTES * 2} hex chars), got ${bytes.length}`
+    );
+  }
+  return bytes;
+}
+
+export function timestampToDate(dateInString: string) {
+  const expirySecs = Number(dateInString);
+
+  if (!Number.isInteger(expirySecs) || expirySecs <= 0) {
+    throw new Error(`Invalid expiry value: "${dateInString}". Expected a Unix timestamp in seconds.`);
+  }
+
+  return new Date(expirySecs * 1000);
 }
 
 export function ipToContract(ip: IpAddress): ContractIpAddress {
@@ -75,7 +123,7 @@ export function ipFromContract(raw: ContractIpAddress): IpAddress {
 
 export function entryToContract(entry: RegistryEntry): ContractEntry {
   return {
-    validTo: BigInt(Math.floor(entry.validTo.getTime() / 1000)),
+    expiry: BigInt(Math.floor(entry.expiry.getTime() / 1000)),
     ip: ipToContract(entry.ip),
     port: BigInt(entry.port),
   };
@@ -83,7 +131,7 @@ export function entryToContract(entry: RegistryEntry): ContractEntry {
 
 export function entryFromContract(raw: ContractEntry): RegistryEntry {
   return {
-    validTo: new Date(Number(raw.validTo) * 1000),
+    expiry: new Date(Number(raw.expiry) * 1000),
     ip: ipFromContract(raw.ip),
     port: Number(raw.port),
   };
