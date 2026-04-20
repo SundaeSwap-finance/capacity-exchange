@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { deriveTokenColor, sendShieldedTokens } from '@sundaeswap/capacity-exchange-core';
-import { runCli, withAppContext } from '@capacity-exchange/midnight-node';
+import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { MidnightBech32m, ShieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 
 function main() {

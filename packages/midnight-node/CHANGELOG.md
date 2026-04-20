@@ -1,4 +1,4 @@
-# @capacity-exchange/midnight-node
+# @sundaeswap/capacity-exchange-nodejs
 
 ## 1.0.1
 

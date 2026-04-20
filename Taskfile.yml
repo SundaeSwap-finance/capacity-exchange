@@ -177,7 +177,7 @@ tasks:
         bunx concurrently --kill-others
         -n {{.NAMES}} -c {{.COLORS}}
         "bun run --filter @sundaeswap/capacity-exchange-core build:watch"
-        "bun run --filter @capacity-exchange/midnight-node build:watch"
+        "bun run --filter @sundaeswap/capacity-exchange-nodejs build:watch"
         {{.EXTRA}}
 
   build:demo:

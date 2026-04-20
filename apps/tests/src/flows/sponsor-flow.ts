@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
-import type { AppContext } from '@capacity-exchange/midnight-node';
-import { buildProviders, createLogger } from '@capacity-exchange/midnight-node';
+import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { sponsoredTransactionsWalletProvider } from '@sundaeswap/capacity-exchange-providers';
 import { findDeployedContract, createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';

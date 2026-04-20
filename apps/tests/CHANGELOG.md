@@ -9,4 +9,4 @@
   - @sundaeswap/capacity-exchange-providers@1.3.0
   - @sundaeswap/capacity-exchange-client@1.1.0
   - @capacity-exchange/demo-contracts@1.0.1
-  - @capacity-exchange/midnight-node@1.0.1
+  - @sundaeswap/capacity-exchange-nodejs@1.0.1

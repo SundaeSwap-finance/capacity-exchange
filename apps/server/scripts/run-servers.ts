@@ -27,7 +27,7 @@ import { tmpdir } from 'os';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createWalletFromMnemonic } from '@sundaeswap/capacity-exchange-core';
-import { FileStateStore, createLogger } from '@capacity-exchange/midnight-node';
+import { FileStateStore, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
