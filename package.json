@@ -20,7 +20,8 @@
     "apps/*",
     "apps/demo/contracts",
     "packages/*",
-    "examples/*"
+    "examples/*",
+    "prototypes/*"
   ],
   "overrides": {
     "whatwg-url": "14.1.1",
