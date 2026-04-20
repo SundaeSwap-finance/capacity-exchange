@@ -176,7 +176,6 @@ describe('socket address uniqueness', () => {
   });
 });
 
-
 // Invariant: no entry can have an expiry more than maximumRegistrationPeriod ahead of the block time
 describe('validity bounded', () => {
   it('register at exact max boundary succeeds', () => {
@@ -194,7 +193,7 @@ describe('validity bounded', () => {
     sim.setBlockTime(BASE_TIME);
 
     expect(() => sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY + 1n) }))).toThrow(
-      /period cannot be larger/,
+      /period cannot be larger/
     );
   });
 
