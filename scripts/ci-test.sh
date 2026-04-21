@@ -101,24 +101,27 @@ start_ces_server() {
   umask 077
   openssl rand -hex 32 > "$CES_SERVER_QUOTE_SECRET"
 
+  local wallet_env_var
   if [ -n "${CES_WALLET_SEED:-}" ]; then
     echo "$CES_WALLET_SEED" > "$CES_SERVER_SEED_FILE"
-    export WALLET_SEED_FILE="$CES_SERVER_SEED_FILE"
+    wallet_env_var="WALLET_SEED_FILE=$CES_SERVER_SEED_FILE"
   else
     echo "$CES_WALLET_MNEMONIC" > "$CES_SERVER_MNEMONIC_FILE"
-    export WALLET_MNEMONIC_FILE="$CES_SERVER_MNEMONIC_FILE"
+    wallet_env_var="WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
   fi
   umask "$old_umask"
 
-  MIDNIGHT_NETWORK="$NETWORK_ID" \
-  QUOTE_SECRET_FILE="$CES_SERVER_QUOTE_SECRET" \
-  PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
-  QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
-  OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
-  WALLET_STATE_DIR="$CES_SERVER_WALLET_STATE" \
-  LOG_LEVEL=info \
-  PORT="$CES_PORT" \
-  NODE_ENV=dev \
+  env \
+    "$wallet_env_var" \
+    MIDNIGHT_NETWORK="$NETWORK_ID" \
+    QUOTE_SECRET_FILE="$CES_SERVER_QUOTE_SECRET" \
+    PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
+    QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
+    OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
+    WALLET_STATE_DIR="$CES_SERVER_WALLET_STATE" \
+    LOG_LEVEL=info \
+    PORT="$CES_PORT" \
+    NODE_ENV=dev \
     bun apps/server/src/server.ts &
 
   CES_SERVER_PID=$!
@@ -142,14 +145,14 @@ wait_for_ces_server() {
   exit 1
 }
 
-seed_runner_wallet_state() {
-  log "Seeding runner wallet state from cached chain snapshot"
+prime_runner_wallet_state() {
+  log "Priming runner wallet state from cached chain snapshot"
   local old_umask
   old_umask="$(umask)"
   umask 077
   echo "$RUNNER_MNEMONIC" > "$TEST_RUNNER_MNEMONIC_FILE"
   umask "$old_umask"
-  bun packages/midnight-node/src/cli/seed-wallet-state.ts "$NETWORK_ID" "$TEST_RUNNER_WALLET_STATE" "$CHAIN_SNAPSHOT_DIR"
+  bun packages/midnight-node/src/cli/restore-from-chain-snapshot.ts "$NETWORK_ID" "$TEST_RUNNER_WALLET_STATE" "$CHAIN_SNAPSHOT_DIR" --mnemonic-file "$TEST_RUNNER_MNEMONIC_FILE"
 }
 
 export_chain_snapshot() {
@@ -181,6 +184,6 @@ generate_runner_wallet
 generate_price_config
 start_ces_server
 wait_for_ces_server
-seed_runner_wallet_state
+prime_runner_wallet_state
 run_tests
 export_chain_snapshot

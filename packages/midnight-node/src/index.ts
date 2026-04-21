@@ -1,7 +1,21 @@
 export { requireNodeEnv } from './envNode.js';
-export { findWalletSeedFile, findWalletMnemonicFile, loadWalletSeed } from './walletFile.js';
+export {
+  findWalletSeedFile,
+  findWalletMnemonicFile,
+  loadWalletSeed,
+  loadWalletSeedFromEnv,
+  type Env,
+} from './walletFile.js';
 export { FileStateStore } from './fileStateStore.js';
-export { type AppConfig, getAppConfigById } from './appConfig.js';
+export {
+  type AppConfig,
+  type NetworkConfig,
+  type WalletConfig,
+  getAppConfigFromEnv,
+  buildAppConfig,
+  buildNetworkConfig,
+  buildWalletConfig,
+} from './appConfig.js';
 export { createLogger } from './createLogger.js';
 export { checkWebSocket, checkProofServer, checkIndexerFreshness } from './connectivity.js';
 export { createPrivateStateProvider } from './levelPrivateStateProvider.js';

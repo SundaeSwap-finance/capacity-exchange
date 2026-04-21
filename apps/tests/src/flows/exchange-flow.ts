@@ -1,5 +1,5 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { buildProviders, getAppConfigById, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
 import { balanceUnboundTransaction, getLedgerParameters, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
@@ -47,8 +47,6 @@ export async function runExchangeFlow(
 }
 
 function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: string, derivedTokenColor: string) {
-  const appConfig = getAppConfigById(networkId);
-
   return capacityExchangeWalletProvider({
     networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
@@ -57,7 +55,7 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
     balanceUnsealedTransaction: createUnsealedBalanceCallback(ctx),
     chainStateProvider: {
       queryContractState: (addr, cfg) => ctx.publicDataProvider.queryContractState(addr, cfg),
-      getLedgerParameters: () => getLedgerParameters(appConfig.endpoints.indexerHttpUrl),
+      getLedgerParameters: () => getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl),
     },
     additionalCapacityExchangeUrls: [cesUrl],
     promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor),

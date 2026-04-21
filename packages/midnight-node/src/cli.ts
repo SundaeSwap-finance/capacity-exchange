@@ -1,6 +1,6 @@
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { AppContext, createAppContext } from './appContext.js';
-import { getAppConfigById } from './appConfig.js';
+import { getAppConfigFromEnv } from './appConfig.js';
 import { createLogger } from './createLogger.js';
 
 const logger = createLogger(import.meta);
@@ -15,10 +15,10 @@ export function requireNetworkId(): string {
 
 export async function withAppContext<T>(networkId: string, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
   logger.info(`Process ID: ${process.pid}`);
-  const config = getAppConfigById(networkId);
-  const { seed: _, ...loggableConfig } = config;
-  logger.info('Config:', loggableConfig);
-  setNetworkId(config.networkId);
+  const config = getAppConfigFromEnv(networkId);
+  const { seed: _, ...loggableWallet } = config.wallet;
+  logger.info('Config:', { network: config.network, wallet: loggableWallet });
+  setNetworkId(config.network.networkId);
   logger.info('Starting app context...');
   const ctx = await createAppContext(config);
   logger.info('App context ready');

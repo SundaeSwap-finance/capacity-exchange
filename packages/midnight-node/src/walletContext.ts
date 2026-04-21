@@ -20,11 +20,11 @@ export interface WalletContext {
 }
 
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
-  const seedHex = uint8ArrayToHex(config.seed);
-  const store = new FileStateStore(config.walletStateDir, logger);
-  const timeoutMs = config.walletSyncTimeoutMs ?? 120_000;
+  const seedHex = uint8ArrayToHex(config.wallet.seed);
+  const store = new FileStateStore(config.wallet.walletStateDir, logger);
+  const timeoutMs = config.wallet.walletSyncTimeoutMs ?? 120_000;
 
-  const walletConfig = resolveWalletConfig(config.networkId, config.endpoints.proofServerUrl);
+  const walletConfig = resolveWalletConfig(config.network.networkId, config.network.endpoints.proofServerUrl);
   logger.info('Creating and syncing wallets...');
   let walletFacade: WalletFacade;
   let keys: WalletKeys;
@@ -32,7 +32,7 @@ export async function createWalletContext(config: AppConfig): Promise<WalletCont
     ({ walletFacade, keys } = await createAndSyncWalletWithStore({ seedHex, walletConfig }, store, timeoutMs));
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    const endpoints = config.endpoints;
+    const endpoints = config.network.endpoints;
     throw new Error(
       `Wallet sync failed: ${msg}\n` +
         `  node:       ${endpoints.nodeUrl}\n` +

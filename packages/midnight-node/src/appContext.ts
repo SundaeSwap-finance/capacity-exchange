@@ -6,15 +6,15 @@ import { createPrivateStateProvider } from './levelPrivateStateProvider.js';
 import { WalletContext, createWalletContext } from './walletContext.js';
 
 export interface AppContext {
+  config: AppConfig;
   privateStateProvider: PrivateStateProvider;
   publicDataProvider: PublicDataProvider;
   midnightProvider: MidnightProvider;
   walletContext: WalletContext;
-  proofServerUrl: string;
 }
 
 export async function createAppContext(config: AppConfig): Promise<AppContext> {
-  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config.endpoints;
+  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config.network.endpoints;
 
   await Promise.all([checkWebSocket(nodeUrl), checkProofServer(proofServerUrl), checkIndexerFreshness(indexerHttpUrl)]);
 
@@ -28,10 +28,10 @@ export async function createAppContext(config: AppConfig): Promise<AppContext> {
   };
 
   return {
+    config,
     privateStateProvider: createPrivateStateProvider(),
     publicDataProvider: indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl),
     midnightProvider,
     walletContext,
-    proofServerUrl,
   };
 }
