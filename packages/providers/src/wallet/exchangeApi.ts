@@ -43,8 +43,10 @@ const DEFAULT_CAPACITY_EXCHANGE_SERVERS: Record<string, string[] | undefined> = 
   mainnet: ['https://capacity-exchange.sundae.fi'],
 };
 
-// TODO: populate with the deployed registry contract address per network.
-const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {};
+// TODO: populate preprod and mainnet as those registries get deployed.
+const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {
+  preview: '5dd587ef26568349f5cf79b4f5339f044e945475456582e5b1949b82f06f54e6',
+};
 
 export function getDefaultRegistryAddress(networkId: string): string | undefined {
   return DEFAULT_REGISTRY_ADDRESSES[networkId];

@@ -41,3 +41,6 @@ export {
   registryEntries,
   timestampToDate,
 } from './types.js';
+
+export { register, type RegisterParams } from './circuits/register.js';
+export { deregister, type DeregisterParams } from './circuits/deregister.js';

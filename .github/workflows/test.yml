@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            apps/server/.wallet-state-ci
+            .wallet-states
             .chain-snapshots
           key: smoke-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}
           restore-keys: smoke-state-${{ matrix.env }}-
@@ -84,6 +84,7 @@ jobs:
       - name: Run smoke tests
         env:
           CES_WALLET_MNEMONIC: ${{ secrets[format('CES_WALLET_MNEMONIC_{0}', matrix.env)] }}
+          REGISTRY_WALLET_MNEMONIC: ${{ secrets[format('REGISTRY_WALLET_MNEMONIC_{0}', matrix.env)] }}
           COUNTER_ADDRESS: ${{ vars[format('E2E_COUNTER_ADDRESS_{0}', matrix.env)] }}
           TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
           DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
