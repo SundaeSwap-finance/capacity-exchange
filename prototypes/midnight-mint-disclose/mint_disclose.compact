@@ -40,17 +40,19 @@ constructor() {}
 // Circuit A: mint with disclosure.
 // Caller passes s and h as public args. Circuit checks hash(s) == h,
 // records s in the ledger (for test-side state queries), and mints 1
-// unshielded token with domain separator h.
+// unshielded token with domain separator h to the contract itself.
+// Recipient is hardcoded to kernel.self() — the minted token only exists
+// to be consumed by absorb() in the same intent, so the recipient is not
+// a meaningful protocol parameter.
 export circuit mintReveal(
   s: Bytes<32>,
-  h: Bytes<32>,
-  recipient: Either<ContractAddress, UserAddress>
+  h: Bytes<32>
 ): Bytes<32> {
   const ds = disclose(s);
   const dh = disclose(h);
   assert(persistentHash<Bytes<32>>(ds) == dh, "preimage mismatch");
   disclosedPreimages.insert(dh, ds);
-  return mintUnshieldedToken(dh, 1, disclose(recipient));
+  return mintUnshieldedToken(dh, 1, left<ContractAddress, UserAddress>(kernel.self()));
 }
 
 // Circuit B: absorb.

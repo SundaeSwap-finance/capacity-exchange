@@ -31,14 +31,6 @@ interface E2EOutput {
   };
 }
 
-function userAddrRecipient(userAddressBytes: Uint8Array) {
-  return {
-    is_left: false,
-    left: { bytes: new Uint8Array(32) },
-    right: { bytes: userAddressBytes },
-  };
-}
-
 function main(): Promise<E2EOutput> {
   program
     .name('midnight-mint-disclose:e2e')
@@ -49,18 +41,12 @@ function main(): Promise<E2EOutput> {
   const [networkId] = program.args;
 
   return withAppContext(networkId, async (ctx) => {
-    // Raw 32-byte unshielded address of the signer wallet — used as the
-    // recipient for minted tokens in Tests A and C.
-    const unshieldedState = await ctx.walletContext.walletFacade.unshielded.waitForSyncedState();
-    const userAddressBytes: Uint8Array = unshieldedState.address;
-    const recipient = userAddrRecipient(userAddressBytes);
-
     const deployed = await deploy(ctx);
 
-    // Test A: mint alone
+    // Test A: mint alone (recipient is hardcoded to contract self in mintReveal)
     const sA = randomBytes32();
     const hA = persistentHashBytes32(sA);
-    const mintA = await mintReveal(ctx, deployed.contractAddress, deployed.privateStateId, sA, recipient);
+    const mintA = await mintReveal(ctx, deployed.contractAddress, deployed.privateStateId, sA);
     const lookupA = await queryDisclosedPreimage(ctx, deployed.contractAddress, hA);
     const testA = {
       label: 'A: mintReveal alone; s should be observable on-chain',
@@ -82,7 +68,7 @@ function main(): Promise<E2EOutput> {
     // Test C: mint + absorb atomic in a single intent
     const sC = randomBytes32();
     const hC = persistentHashBytes32(sC);
-    const txC = await mintAndAbsorbAtomic(ctx, deployed.contractAddress, deployed.privateStateId, sC, recipient);
+    const txC = await mintAndAbsorbAtomic(ctx, deployed.contractAddress, deployed.privateStateId, sC);
     const lookupC = await queryDisclosedPreimage(ctx, deployed.contractAddress, hC);
     const testC = {
       label: 'C: mintReveal + absorb in the same intent; should succeed with s observable',

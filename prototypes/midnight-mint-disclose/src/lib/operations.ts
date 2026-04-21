@@ -68,8 +68,7 @@ export async function mintReveal(
   ctx: AppContext,
   contractAddress: string,
   privateStateId: string,
-  s: Uint8Array,
-  recipient: { is_left: boolean; left: Uint8Array; right: Uint8Array }
+  s: Uint8Array
 ): Promise<MintOutput> {
   const h = persistentHashBytes32(s);
   logger.info(`mintReveal: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
@@ -81,7 +80,7 @@ export async function mintReveal(
     contractAddress,
     circuitId: 'mintReveal',
     privateStateId,
-    args: [s, h, recipient],
+    args: [s, h],
   });
 
   if (!result.private.result) {
@@ -142,8 +141,7 @@ export async function mintAndAbsorbAtomic(
   ctx: AppContext,
   contractAddress: string,
   privateStateId: string,
-  s: Uint8Array,
-  recipient: { is_left: boolean; left: Uint8Array; right: Uint8Array }
+  s: Uint8Array
 ): Promise<MintAndAbsorbOutput> {
   const h = persistentHashBytes32(s);
   logger.info(`mint+absorb atomic: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
@@ -158,7 +156,7 @@ export async function mintAndAbsorbAtomic(
         contractAddress,
         circuitId: 'mintReveal',
         privateStateId,
-        args: [s, h, recipient],
+        args: [s, h],
       },
       txCtx
     );

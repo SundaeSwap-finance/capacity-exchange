@@ -41,13 +41,6 @@ const S = new Uint8Array(32).fill(sFill);
 const H = persistentHashBytes32(S);
 console.log(`Using s = 0x${sFill.toString(16)} × 32`);
 
-// Recipient: UserAddress (Right side of Either) with a distinctive 0xbb pattern.
-const RECIPIENT = {
-  is_left: false,
-  left: { bytes: new Uint8Array(32) },
-  right: { bytes: new Uint8Array(32).fill(0xbb) },
-};
-
 function hexDump(bytes: Uint8Array, label: string): void {
   console.log(`\n=== ${label} (${bytes.length} bytes) ===`);
   const lines: string[] = [];
@@ -85,14 +78,14 @@ async function main(): Promise<void> {
   const outDir = path.resolve(__dirname, '../../out');
   const zkConfigProvider = new NodeZkConfigProvider<'mintReveal' | 'absorb'>(outDir);
 
-  // 3. Build the unproven call tx for mintReveal(s, h, recipient).
+  // 3. Build the unproven call tx for mintReveal(s, h).
   const unsubmitted = await createUnprovenCallTxFromInitialStates(
     zkConfigProvider,
     {
       compiledContract: CompiledMintDiscloseContract,
       circuitId: 'mintReveal',
       contractAddress: dummyContractAddress(),
-      args: [S, H, RECIPIENT],
+      args: [S, H],
       coinPublicKey: DUMMY_COIN_PK,
       initialContractState,
       initialZswapChainState: new ZswapChainState(),
@@ -139,10 +132,8 @@ async function main(): Promise<void> {
   console.log('\n=== Pattern search ===');
   const sOffsets = findOffsets(raw, S);
   const hOffsets = findOffsets(raw, H);
-  const rOffsets = findOffsets(raw, new Uint8Array(32).fill(0xbb));
   console.log(`s (0x${sFill.toString(16).padStart(2, '0')} × 32)        offsets: ${JSON.stringify(sOffsets)}`);
   console.log(`h = hash(s) (${Buffer.from(H).toString('hex').slice(0, 8)}…) offsets: ${JSON.stringify(hOffsets)}`);
-  console.log(`recipient (0xbb × 32) offsets: ${JSON.stringify(rOffsets)}`);
   console.log(`tx total size: ${raw.length} bytes`);
 
   // 6. Distance between s and h gives a hint at the input AlignedValue layout.
