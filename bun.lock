@@ -286,6 +286,7 @@
       "name": "@sundaeswap/capacity-exchange-providers",
       "version": "1.3.0",
       "dependencies": {
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",
         "@midnight-ntwrk/midnight-js-types": "4.0.1",
         "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
         "@sundaeswap/capacity-exchange-client": "1.1.0",

@@ -14,11 +14,10 @@ For more complete example usage, see [our React example app](../../examples/reac
 import { use, useCallback, useMemo } from 'react';
 import {
   CapacityExchangeRoot,
+  indexerChainStateProvider,
   useCapacityExchangeWalletProvider,
   useSponsoredTransactionsWalletProvider,
 } from '@sundaeswap-capacity-exchange-react-sdk';
-import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
-import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 
 // Wrap your App in CapacityExchangeRoot
 export function App() {
@@ -35,13 +34,10 @@ function useWalletProvider(wallet: ConnectedAPI) {
     wallet.getConfiguration(),
   ]), [wallet]);
   const [addresses, configuration] = use(walletDetailsPromise);
-  const chainStateProvider = useMemo(() => {
-    const publicData = indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri);
-    return {
-      queryContractState: publicData.queryContractState.bind(publicData),
-      getLedgerParameters: () => getLedgerParameters(configuration.indexerUri),
-    };
-  }, [configuration.indexerUri, configuration.indexerWsUri]);
+  const chainStateProvider = useMemo(
+    () => indexerChainStateProvider(configuration.indexerUri, configuration.indexerWsUri),
+    [configuration.indexerUri, configuration.indexerWsUri]
+  );
   return useCapacityExchangeWalletProvider({
     networkId: configuration.networkId,
     coinPublicKey: addresses.shieldedCoinPublicKey,
@@ -120,7 +116,7 @@ If you would like to provide DUST for user transactions yourself, consider the `
 | `config.encryptionPublicKey` | yes | The `encryptionPublicKey` of the user's Shielded wallet. |
 | `config.balanceUnsealedTransaction` | yes | A callback which can balance an unsealed transaction. You can pass `balanceUnsealedTransaction` from the user's wallet. |
 | `config.balanceSealedTransaction` | yes | A callback which can balance a sealed transaction. You can pass `balanceSealedTransaction` from the user's wallet. |
-| `config.chainStateProvider` | yes | A `ChainStateProvider`, used to query the on-chain CES registry for registered server URLs and to fetch current `LedgerParameters` for DUST speck cost estimation. `queryContractState` can come from a Midnight `PublicDataProvider`; `getLedgerParameters` can wrap `getLedgerParameters(indexerUrl)` from `@sundaeswap/capacity-exchange-core`. |
+| `config.chainStateProvider` | yes | A `ChainStateProvider`, used to query the on-chain CES registry for registered server URLs and to fetch current `LedgerParameters` for DUST speck cost estimation. Most dApps can pass `indexerChainStateProvider(indexerUri, indexerWsUri)`, which builds one backed by a Midnight indexer. |
 | `config.additionalCapacityExchangeUrls` | no | The URLs for any additional Capacity Exchange servers to use. |
 | `config.margin` | no | A safety margin in blocks, used when estimating fees. Defaults to `3`. |
 

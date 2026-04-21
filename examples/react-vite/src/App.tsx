@@ -1,6 +1,7 @@
 import { use, useCallback, useMemo } from 'react';
 import {
   CapacityExchangeRoot,
+  indexerChainStateProvider,
   useCapacityExchangeWalletProvider,
   useSponsoredTransactionsWalletProvider,
 } from '@sundaeswap/capacity-exchange-react-sdk';
@@ -10,7 +11,6 @@ import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-conf
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
 import { MidnightProviders, UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
-import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 import { useMockWallet } from './mocks/wallet';
 
 async function getWalletDetails(wallet: ConnectedAPI, zkConfigProvider: ZKConfigProvider<string>) {
@@ -38,14 +38,11 @@ function useProviders<PCK extends string>(
   );
 
   // Provides on-chain state the SDK needs: contract state for the registry lookup
-  // and current ledger parameters for fee estimation. The indexer URL is
+  // and current ledger parameters for fee estimation. The indexer URIs are
   // available from your wallet's configuration.
   const chainStateProvider = useMemo(
-    () => ({
-      queryContractState: (addr, cfg) => publicDataProvider.queryContractState(addr, cfg),
-      getLedgerParameters: () => getLedgerParameters(configuration.indexerUri),
-    }),
-    [publicDataProvider, configuration.indexerUri]
+    () => indexerChainStateProvider(configuration.indexerUri, configuration.indexerWsUri),
+    [configuration.indexerUri, configuration.indexerWsUri]
   );
 
   // This wallet provider will not actually spend DUST from the user's wallet.
