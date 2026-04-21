@@ -17,6 +17,7 @@ import {
   Offer,
   OfferConfirmationResult,
   capacityExchangeWalletProvider,
+  indexerChainStateProvider,
   sponsoredTransactionsWalletProvider,
 } from '@sundaeswap-capacity-exchange-providers';
 
@@ -57,7 +58,7 @@ async function getWalletProvider(wallet: ConnectedAPI) {
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
     balanceUnsealedTransaction: wallet.balanceUnsealedTransaction,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
-    indexerUrl: configuration.indexerUri,
+    chainStateProvider: indexerChainStateProvider(configuration.indexerUri, configuration.indexerWsUri),
     promptForCurrency: chooseFirstCurrency,
     confirmOffer: alwaysConfirmOffer,
   });
@@ -88,7 +89,7 @@ If you would like to provide DUST for user transactions yourself, consider the `
 | `config.encryptionPublicKey` | yes | The `encryptionPublicKey` of the user's Shielded wallet. |
 | `config.balanceUnsealedTransaction` | yes | A callback which can balance an unsealed transaction. You can pass `balanceUnsealedTransaction` from the user's wallet. |
 | `config.balanceSealedTransaction` | yes | A callback which can balance a sealed transaction. You can pass `balanceSealedTransaction` from the user's wallet. |
-| `config.indexerUrl` | yes | The address of an indexer for your network. |
+| `config.chainStateProvider` | yes | A `ChainStateProvider`, used to query the on-chain CES registry for registered server URLs and to fetch current `LedgerParameters` for DUST speck cost estimation. Most dApps can pass `indexerChainStateProvider(indexerUri, indexerWsUri)`, which builds one backed by a Midnight indexer. |
 | `config.additionalCapacityExchangeUrls` | no | The URLs for any additional Capacity Exchange servers to use. |
 | `config.margin` | no | A safety margin in blocks, used when estimating fees. Defaults to `3`. |
 | `config.promptForCurrency` | yes | A function called when the user must choose which currency to pay. |

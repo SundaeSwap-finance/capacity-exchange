@@ -2,11 +2,11 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
+  type ChainStateProvider,
   type ExchangePrice,
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@sundaeswap/capacity-exchange-providers';
-import type { NetworkEndpoints } from '@sundaeswap/capacity-exchange-core';
 import type { WalletService } from '../services/wallet.js';
 
 /**
@@ -82,7 +82,7 @@ function createAutoConfirmOffer(log: FastifyBaseLogger): ConfirmOffer {
 export function buildCesWalletProvider(
   walletService: WalletService,
   networkId: string,
-  endpoints: NetworkEndpoints,
+  chainStateProvider: ChainStateProvider,
   additionalCapacityExchangeUrls: string[],
   log: FastifyBaseLogger,
 ): WalletProvider | null {
@@ -98,7 +98,7 @@ export function buildCesWalletProvider(
     encryptionPublicKey,
     balanceUnsealedTransaction: (tx) => walletService.balanceUnsealedTransaction(tx),
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
-    indexerUrl: endpoints.indexerHttpUrl,
+    chainStateProvider,
     additionalCapacityExchangeUrls,
     promptForCurrency: createAutoSelectCurrency(log, walletService),
     confirmOffer: createAutoConfirmOffer(log),

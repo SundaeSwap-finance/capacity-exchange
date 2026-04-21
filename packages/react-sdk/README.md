@@ -14,6 +14,7 @@ For more complete example usage, see [our React example app](../../examples/reac
 import { use, useCallback, useMemo } from 'react';
 import {
   CapacityExchangeRoot,
+  indexerChainStateProvider,
   useCapacityExchangeWalletProvider,
   useSponsoredTransactionsWalletProvider,
 } from '@sundaeswap-capacity-exchange-react-sdk';
@@ -33,13 +34,17 @@ function useWalletProvider(wallet: ConnectedAPI) {
     wallet.getConfiguration(),
   ]), [wallet]);
   const [addresses, configuration] = use(walletDetailsPromise);
+  const chainStateProvider = useMemo(
+    () => indexerChainStateProvider(configuration.indexerUri, configuration.indexerWsUri),
+    [configuration.indexerUri, configuration.indexerWsUri]
+  );
   return useCapacityExchangeWalletProvider({
     networkId: configuration.networkId,
     coinPublicKey: addresses.shieldedCoinPublicKey,
     encryptionPublicKey: addresses.shieldedEncryptionPublicKey,
     balanceUnsealedTransaction: wallet.balanceUnsealedTransaction,
     balanceSealedTransaction: wallet.balanceSealedTransaction,
-    indexerUrl: configuration.indexerUri,
+    chainStateProvider,
   });
 }
 
@@ -111,7 +116,7 @@ If you would like to provide DUST for user transactions yourself, consider the `
 | `config.encryptionPublicKey` | yes | The `encryptionPublicKey` of the user's Shielded wallet. |
 | `config.balanceUnsealedTransaction` | yes | A callback which can balance an unsealed transaction. You can pass `balanceUnsealedTransaction` from the user's wallet. |
 | `config.balanceSealedTransaction` | yes | A callback which can balance a sealed transaction. You can pass `balanceSealedTransaction` from the user's wallet. |
-| `config.indexerUrl` | yes | The address of an indexer for your network. |
+| `config.chainStateProvider` | yes | A `ChainStateProvider`, used to query the on-chain CES registry for registered server URLs and to fetch current `LedgerParameters` for DUST speck cost estimation. Most dApps can pass `indexerChainStateProvider(indexerUri, indexerWsUri)`, which builds one backed by a Midnight indexer. |
 | `config.additionalCapacityExchangeUrls` | no | The URLs for any additional Capacity Exchange servers to use. |
 | `config.margin` | no | A safety margin in blocks, used when estimating fees. Defaults to `3`. |
 

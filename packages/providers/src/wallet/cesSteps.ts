@@ -7,9 +7,11 @@ import {
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
 import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
+import type { ChainStateProvider } from './chainStateProvider';
 import { isOfferExpired } from './utils';
-import { getLedgerParameters, hexToBytes } from '@sundaeswap/capacity-exchange-core';
-import { createCesApis, resolveCesUrls } from './exchangeApi';
+import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
+import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi';
+import { fetchRegistryCesUrls } from './registryLookup';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
@@ -29,6 +31,13 @@ export interface FetchCesPricesResult {
   specksRequired: bigint;
 }
 
+export interface FetchCesPricesOptions {
+  networkId: string;
+  chainStateProvider: ChainStateProvider;
+  additionalCapacityExchangeUrls: string[];
+  margin: number;
+}
+
 /**
  * Fetches CES prices for a transaction.
  * Calculates the DUST required (with margin) and queries all exchanges for prices.
@@ -37,28 +46,49 @@ export interface FetchCesPricesResult {
  */
 export async function fetchCesPrices(
   tx: UnboundTransaction,
-  indexerUrl: string,
-  networkId: string,
-  additionalCapacityExchangeUrls: string[],
-  margin: number
+  options: FetchCesPricesOptions
 ): Promise<FetchCesPricesResult> {
-  console.debug('[CESSteps] Fetching ledger parameters from:', indexerUrl);
-  const ledgerParameters = await getLedgerParameters(indexerUrl);
-
-  const estimated = tx.feesWithMargin(ledgerParameters, margin);
-  // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
-  const specksRequired = estimated > 0n ? estimated : 1n;
-  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString());
-
-  const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls);
-  const exchangeApis = createCesApis(urls);
-  const prices = await fetchPricesFromExchanges(exchangeApis, specksRequired);
+  const { networkId, chainStateProvider, additionalCapacityExchangeUrls, margin } = options;
+  const specksRequired = await estimateSpecksRequired(tx, chainStateProvider, margin);
+  const registeredUrls = await resolveRegisteredCesUrls(networkId, chainStateProvider);
+  const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls, registeredUrls);
+  const prices = await fetchPricesFromExchanges(createCesApis(urls), specksRequired);
 
   if (prices.length === 0) {
     throw new CapacityExchangeNoPricesAvailableError();
   }
 
   return { prices, specksRequired };
+}
+
+async function estimateSpecksRequired(
+  tx: UnboundTransaction,
+  chainStateProvider: ChainStateProvider,
+  margin: number
+): Promise<bigint> {
+  const ledgerParameters = await chainStateProvider.getLedgerParameters();
+  const estimated = tx.feesWithMargin(ledgerParameters, margin);
+  // Ensure at least 1 speck so the CES provides a real dust input for the merged tx
+  const specksRequired = estimated > 0n ? estimated : 1n;
+  console.debug('[CESSteps] Specks required (with margin):', specksRequired.toString());
+  return specksRequired;
+}
+
+async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: ChainStateProvider): Promise<string[]> {
+  const registryAddress = getDefaultRegistryAddress(networkId);
+  if (!registryAddress) {
+    console.debug('[CESSteps] No canonical registry address for network', networkId);
+    return [];
+  }
+  try {
+    console.debug('[CESSteps] Looking up registered CES URLs from registry', registryAddress);
+    const urls = await fetchRegistryCesUrls(chainStateProvider, registryAddress);
+    console.debug('[CESSteps] Registry returned', urls.length, 'URLs');
+    return urls;
+  } catch (err) {
+    console.warn('[CESSteps] Registered CES URLs lookup failed, continuing without them:', err);
+    return [];
+  }
 }
 
 /**

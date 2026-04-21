@@ -43,9 +43,20 @@ const DEFAULT_CAPACITY_EXCHANGE_SERVERS: Record<string, string[] | undefined> = 
   mainnet: ['https://capacity-exchange.sundae.fi'],
 };
 
-export function resolveCesUrls(networkId: string, additionalCapacityExchangeUrls: string[]): string[] {
+// TODO: populate with the deployed registry contract address per network.
+const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {};
+
+export function getDefaultRegistryAddress(networkId: string): string | undefined {
+  return DEFAULT_REGISTRY_ADDRESSES[networkId];
+}
+
+export function resolveCesUrls(
+  networkId: string,
+  additionalCapacityExchangeUrls: string[],
+  registryUrls: string[] = []
+): string[] {
   const servers = [...(DEFAULT_CAPACITY_EXCHANGE_SERVERS[networkId] ?? [])];
-  for (const url of additionalCapacityExchangeUrls) {
+  for (const url of [...additionalCapacityExchangeUrls, ...registryUrls]) {
     if (!servers.includes(url)) {
       servers.push(url);
     }

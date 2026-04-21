@@ -37,7 +37,7 @@ tasks:
     deps: [react-sdk]
 
   providers:
-    deps: [midnight-node, client]
+    deps: [midnight-node, client, ':_registry:compile']
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-providers build
 

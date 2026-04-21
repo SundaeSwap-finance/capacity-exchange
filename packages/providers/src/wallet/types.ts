@@ -1,5 +1,6 @@
 import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi';
+import type { ChainStateProvider } from './chainStateProvider';
 
 /**
  * A price which the caller may pay to sponsor their transaction.
@@ -129,9 +130,11 @@ export interface CapacityExchangeConfig {
    */
   balanceSealedTransaction: BalanceSealedTransaction;
   /**
-   * An indexer URL for the given environment.
+   * Provides read-only on-chain state needed by the SDK:
+   * contract state (for registry lookups) and current ledger parameters
+   * (for DUST speck estimation).
    */
-  indexerUrl: string;
+  chainStateProvider: ChainStateProvider;
   /**
    * Optional: any additional capacity exchange URLs to call,
    * in addition to the default members of the network.

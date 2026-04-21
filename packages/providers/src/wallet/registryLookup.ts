@@ -1,0 +1,34 @@
+import { ledger, registryEntries, type IpAddress } from '@sundaeswap/capacity-exchange-registry';
+import type { ChainStateProvider } from './chainStateProvider';
+
+function formatIpHost(ip: IpAddress): string {
+  if (ip.kind === 'ipv4') {
+    return ip.address;
+  }
+  return `[${ip.address}]`;
+}
+
+function entryToUrl(ip: IpAddress, port: number): string {
+  return `https://${formatIpHost(ip)}:${port}`;
+}
+
+/**
+ * Queries the on-chain registry contract and returns CES server URLs
+ * for entries that haven't expired. Used internally by the SDK when a
+ * `chainStateProvider` is supplied and the network has a canonical registry
+ * contract address.
+ */
+export async function fetchRegistryCesUrls(
+  chainStateProvider: ChainStateProvider,
+  registryAddress: string
+): Promise<string[]> {
+  const contractState = await chainStateProvider.queryContractState(registryAddress);
+  if (!contractState) {
+    throw new Error(`No contract state found at registry address ${registryAddress}`);
+  }
+
+  const ledgerState = ledger(contractState.data);
+  const entries = registryEntries(ledgerState);
+  const now = new Date();
+  return entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => entryToUrl(entry.ip, entry.port));
+}

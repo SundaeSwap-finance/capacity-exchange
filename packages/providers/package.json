@@ -28,8 +28,10 @@
     "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
+    "@sundaeswap/capacity-exchange-registry": "1.0.0",
     "@sundaeswap/capacity-exchange-client": "1.1.0",
     "@sundaeswap/capacity-exchange-core": "1.1.0",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
     "@midnight-ntwrk/wallet-sdk-facade": "3.0.0"
   },

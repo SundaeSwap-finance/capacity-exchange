@@ -9,7 +9,7 @@ import {
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@sundaeswap/capacity-exchange-providers';
-import { buildMidnightProviders } from '@sundaeswap/capacity-exchange-core';
+import { buildMidnightProviders, getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';
 
@@ -82,13 +82,17 @@ export async function findAndIncrementCounter(
   confirmOffer: ConfirmOffer,
   config: NetworkConfig
 ) {
+  const publicData = indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl);
   const cesWalletProvider = capacityExchangeWalletProvider({
     networkId: config.networkId,
     coinPublicKey: walletProvider.getCoinPublicKey(),
     encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
     balanceUnsealedTransaction,
     balanceSealedTransaction,
-    indexerUrl: config.indexerUrl,
+    chainStateProvider: {
+      queryContractState: (addr, cfg) => publicData.queryContractState(addr, cfg),
+      getLedgerParameters: () => getLedgerParameters(config.indexerUrl),
+    },
     additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
     promptForCurrency,
     confirmOffer,
