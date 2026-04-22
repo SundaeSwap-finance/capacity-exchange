@@ -6,6 +6,7 @@ import {
   resolveEndpoints,
   toNetworkIdEnum,
   type NetworkEndpoints,
+  type ChainSnapshot,
 } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import type { Env } from './env.js';
@@ -17,9 +18,16 @@ export interface NetworkConfig {
   endpoints: NetworkEndpoints;
 }
 
+/** Where wallet state should come from
+ *  - `inMemory`: in-memory only. Optionally primed from a chain snapshot.
+ *  - `onDisk`: disk-backed via `walletStateDir`. State loads from and saves to disk. */
+export type WalletStateSource =
+  | { kind: 'inMemory'; chainSnapshot?: ChainSnapshot }
+  | { kind: 'onDisk'; walletStateDir: string };
+
 export interface WalletConfig {
   seed: Uint8Array;
-  walletStateDir: string;
+  stateSource: WalletStateSource;
   /** Wallet sync timeout in milliseconds. Defaults to 120_000 (2 minutes). */
   walletSyncTimeoutMs?: number;
 }
@@ -42,17 +50,29 @@ export function buildNetworkConfig(networkName: string, env: Env): NetworkConfig
   return { networkName, networkId, endpoints };
 }
 
-/** Requires one of WALLET_SEED_FILE or WALLET_MNEMONIC_FILE, plus WALLET_STATE_DIR. */
-export function buildWalletConfig(env: Env): WalletConfig {
-  const seed = loadWalletSeedFromEnv(env);
+/** Reads WALLET_SYNC_TIMEOUT_MS from env, returning undefined if unset. */
+export function readWalletSyncTimeoutMs(env: Env): number | undefined {
+  return env.WALLET_SYNC_TIMEOUT_MS
+    ? parsePositiveNumber('WALLET_SYNC_TIMEOUT_MS', env.WALLET_SYNC_TIMEOUT_MS)
+    : undefined;
+}
+
+/** Builds an on-disk WalletStateSource from env. Requires WALLET_STATE_DIR. */
+export function onDiskStateSourceFromEnv(env: Env): WalletStateSource {
   const walletStateDir = env.WALLET_STATE_DIR;
   if (!walletStateDir) {
     throw new Error('WALLET_STATE_DIR is required');
   }
-  const walletSyncTimeoutMs = env.WALLET_SYNC_TIMEOUT_MS
-    ? parsePositiveNumber('WALLET_SYNC_TIMEOUT_MS', env.WALLET_SYNC_TIMEOUT_MS)
-    : undefined;
-  return { seed, walletStateDir, walletSyncTimeoutMs };
+  return { kind: 'onDisk', walletStateDir };
+}
+
+/** Requires one of WALLET_SEED_FILE / WALLET_MNEMONIC_FILE plus WALLET_STATE_DIR. Builds an on-disk WalletConfig. */
+export function buildWalletConfig(env: Env): WalletConfig {
+  return {
+    seed: loadWalletSeedFromEnv(env),
+    stateSource: onDiskStateSourceFromEnv(env),
+    walletSyncTimeoutMs: readWalletSyncTimeoutMs(env),
+  };
 }
 
 export function buildAppConfig(network: string, env: Env): AppConfig {

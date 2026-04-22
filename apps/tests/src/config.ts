@@ -6,6 +6,7 @@ export interface TestConfig {
   counterAddress: string;
   tokenMintAddress: string;
   derivedTokenColor: string;
+  chainSnapshotDir: string;
 }
 
 export function getTestConfig(env: Env): TestConfig {
@@ -15,5 +16,6 @@ export function getTestConfig(env: Env): TestConfig {
     counterAddress: requireEnvVar(env, 'COUNTER_ADDRESS'),
     tokenMintAddress: requireEnvVar(env, 'TOKEN_MINT_ADDRESS'),
     derivedTokenColor: requireEnvVar(env, 'DERIVED_TOKEN_COLOR'),
+    chainSnapshotDir: requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR'),
   };
 }

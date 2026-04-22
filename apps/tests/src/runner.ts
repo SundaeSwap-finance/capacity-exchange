@@ -1,11 +1,17 @@
 import {
   runCli,
   withAppContext,
-  buildAppConfig,
+  buildNetworkConfig,
+  readWalletSyncTimeoutMs,
   resolveEnv,
   createLogger,
+  loadChainSnapshot,
+  exportChainSnapshot,
+  type AppConfig,
   type AppContext,
+  type WalletConfig,
 } from '@sundaeswap/capacity-exchange-nodejs';
+import { generateMnemonic, parseMnemonic, type ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
 import { getTestConfig, type TestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runExchangeFlow } from './flows/exchange-flow.js';
@@ -60,22 +66,41 @@ function summarize(flows: FlowResult[]): RunnerOutput {
   return { passed, failed, flows };
 }
 
+function buildRunnerAppConfig(config: TestConfig, chainSnapshot: ChainSnapshot | undefined): AppConfig {
+  const env = resolveEnv();
+  logger.info('Generating in-memory runner wallet');
+  const walletConfig: WalletConfig = {
+    seed: parseMnemonic(generateMnemonic()),
+    stateSource: { kind: 'inMemory', chainSnapshot },
+    walletSyncTimeoutMs: readWalletSyncTimeoutMs(env),
+  };
+  return {
+    network: buildNetworkConfig(config.networkId, env),
+    wallet: walletConfig,
+  };
+}
+
+async function runAndExport(ctx: AppContext, config: TestConfig): Promise<RunnerOutput> {
+  const flows = await runAllFlows(ctx, config);
+  const output = summarize(flows);
+  logger.info({ passed: output.passed, failed: output.failed, total: flows.length }, 'All flows complete');
+  if (output.failed > 0) {
+    throw new Error(`${output.failed} flow(s) failed`);
+  }
+  const snapshot = await exportChainSnapshot(ctx.walletContext.walletFacade, config.networkId, config.chainSnapshotDir);
+  logger.info(`Exported chain snapshot to ${config.chainSnapshotDir} at offset ${snapshot.shielded.offset}`);
+  return output;
+}
+
 function main(): Promise<RunnerOutput> {
   const env = resolveEnv();
   const config = getTestConfig(env);
-
-  return withAppContext(buildAppConfig(config.networkId, env), async (ctx) => {
-    const flows = await runAllFlows(ctx, config);
-    const output = summarize(flows);
-
-    logger.info({ passed: output.passed, failed: output.failed, total: flows.length }, 'All flows complete');
-
-    if (output.failed > 0) {
-      throw new Error(`${output.failed} flow(s) failed`);
-    }
-
-    return output;
-  });
+  const chainSnapshot = loadChainSnapshot(config.networkId, config.chainSnapshotDir);
+  if (!chainSnapshot) {
+    logger.info(`No cached chain snapshot in ${config.chainSnapshotDir} — wallet will sync from genesis`);
+  }
+  const appConfig = buildRunnerAppConfig(config, chainSnapshot);
+  return withAppContext(appConfig, (ctx) => runAndExport(ctx, config));
 }
 
 runCli(main, { pretty: true });
