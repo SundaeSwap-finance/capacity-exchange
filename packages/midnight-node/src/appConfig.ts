@@ -36,14 +36,21 @@ export function buildNetworkConfig(networkName: string, env: Env): NetworkConfig
   return { networkName, networkId, endpoints };
 }
 
-/** Requires one of WALLET_SEED_FILE WALLET_MNEMONIC_FILE plus WALLET_STATE_DIR. */
+/** Requires one of WALLET_SEED_FILE or WALLET_MNEMONIC_FILE, plus WALLET_STATE_DIR. */
 export function buildWalletConfig(env: Env): WalletConfig {
   const seed = loadWalletSeedFromEnv(env);
   const walletStateDir = env.WALLET_STATE_DIR;
   if (!walletStateDir) {
     throw new Error('WALLET_STATE_DIR is required');
   }
-  const walletSyncTimeoutMs = env.WALLET_SYNC_TIMEOUT_MS ? Number(env.WALLET_SYNC_TIMEOUT_MS) : undefined;
+  let walletSyncTimeoutMs: number | undefined;
+  if (env.WALLET_SYNC_TIMEOUT_MS) {
+    const parsed = Number(env.WALLET_SYNC_TIMEOUT_MS);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      throw new Error(`WALLET_SYNC_TIMEOUT_MS must be a positive number, got: ${env.WALLET_SYNC_TIMEOUT_MS}`);
+    }
+    walletSyncTimeoutMs = parsed;
+  }
   return { seed, walletStateDir, walletSyncTimeoutMs };
 }
 

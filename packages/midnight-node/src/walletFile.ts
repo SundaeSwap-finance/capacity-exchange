@@ -86,22 +86,18 @@ export function loadWalletSeedFromEnv(env: Env): Uint8Array {
 // TODO: unify with server wallet loading (apps/server/src/config/wallet.ts resolveWalletSeedHex)
 export function loadWalletSeed(network: string, env: Env = process.env, startDir: string = process.cwd()): Uint8Array {
   if (env.WALLET_SEED_FILE) {
-    const hex = fs.readFileSync(env.WALLET_SEED_FILE, 'utf-8').trim();
-    return parseSeedHex(hex);
+    return loadSeedFromFile(env.WALLET_SEED_FILE);
   }
   if (env.WALLET_MNEMONIC_FILE) {
-    const mnemonic = fs.readFileSync(env.WALLET_MNEMONIC_FILE, 'utf-8').trim();
-    return parseMnemonic(mnemonic);
+    return loadMnemonicFromFile(env.WALLET_MNEMONIC_FILE);
   }
   const seedFile = findFileUp(seedFilename(network), startDir);
   if (seedFile) {
-    const hex = fs.readFileSync(seedFile, 'utf-8').trim();
-    return parseSeedHex(hex);
+    return loadSeedFromFile(seedFile);
   }
   const mnemonicFile = findFileUp(mnemonicFilename(network), startDir);
   if (mnemonicFile) {
-    const mnemonic = fs.readFileSync(mnemonicFile, 'utf-8').trim();
-    return parseMnemonic(mnemonic);
+    return loadMnemonicFromFile(mnemonicFile);
   }
   throw new Error(
     `No wallet file found for network '${network}'. ` +
