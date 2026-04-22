@@ -5,13 +5,8 @@ import { checkWebSocket, checkIndexerFreshness, checkProofServer } from './conne
 import { createPrivateStateProvider } from './levelPrivateStateProvider.js';
 import { WalletContext, createWalletContext } from './walletContext.js';
 
-/**
- * Builds a read-only `PublicDataProvider` from a `NetworkConfig` without wallet
- * bootstrap. Use for read-only CLIs querying public contract state.
- * TODO: fold into a proper `withNetworkContext`/`withNetworkContextFromEnv`
- * helper alongside the `AppContext` rework so read-only callers don't have
- * to assemble providers by hand.
- */
+/** Public data provider for read-only callers; no wallet bootstrap. */
+// TODO: wrap in `withNetworkContext` helper.
 export function createPublicDataProvider(network: NetworkConfig): PublicDataProvider {
   const { indexerHttpUrl, indexerWsUrl } = network.endpoints;
   return indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl);

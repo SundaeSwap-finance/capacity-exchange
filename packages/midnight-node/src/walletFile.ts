@@ -75,15 +75,9 @@ export function loadWalletSeedFromEnv(env: Env): Uint8Array {
   return hasSeed ? loadSeedFromFile(env.WALLET_SEED_FILE!) : loadMnemonicFromFile(env.WALLET_MNEMONIC_FILE!);
 }
 
-/**
- * Loads a wallet seed for the given network. Checks WALLET_SEED_FILE,
- * WALLET_MNEMONIC_FILE, then walks up from `startDir` for seed/mnemonic files.
- */
-// TODO: deprecate walk-up fallback; callers should set WALLET_SEED_FILE or
-// WALLET_MNEMONIC_FILE explicitly. Only `apps/demo/vite.config.js` and
-// `apps/server/src/config/wallet.ts` still rely on walk-up. Remove after
-// migrating those callers.
-// TODO: unify with server wallet loading (apps/server/src/config/wallet.ts resolveWalletSeedHex)
+/** Loads a seed from env vars; falls back to walking up from `startDir`. */
+// TODO: remove walk-up once `apps/demo` and `apps/server` set env explicitly.
+// TODO: unify with `apps/server/src/config/wallet.ts` resolveWalletSeedHex.
 export function loadWalletSeed(network: string, env: Env = process.env, startDir: string = process.cwd()): Uint8Array {
   if (env.WALLET_SEED_FILE) {
     return loadSeedFromFile(env.WALLET_SEED_FILE);
