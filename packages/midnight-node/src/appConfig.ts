@@ -1,7 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseDotenv } from 'dotenv';
-import { resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from '@sundaeswap/capacity-exchange-core';
+import {
+  parsePositiveNumber,
+  resolveEndpoints,
+  toNetworkIdEnum,
+  type NetworkEndpoints,
+} from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { loadWalletSeedFromEnv, type Env } from './walletFile.js';
 
@@ -43,14 +48,9 @@ export function buildWalletConfig(env: Env): WalletConfig {
   if (!walletStateDir) {
     throw new Error('WALLET_STATE_DIR is required');
   }
-  let walletSyncTimeoutMs: number | undefined;
-  if (env.WALLET_SYNC_TIMEOUT_MS) {
-    const parsed = Number(env.WALLET_SYNC_TIMEOUT_MS);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      throw new Error(`WALLET_SYNC_TIMEOUT_MS must be a positive number, got: ${env.WALLET_SYNC_TIMEOUT_MS}`);
-    }
-    walletSyncTimeoutMs = parsed;
-  }
+  const walletSyncTimeoutMs = env.WALLET_SYNC_TIMEOUT_MS
+    ? parsePositiveNumber('WALLET_SYNC_TIMEOUT_MS', env.WALLET_SYNC_TIMEOUT_MS)
+    : undefined;
   return { seed, walletStateDir, walletSyncTimeoutMs };
 }
 

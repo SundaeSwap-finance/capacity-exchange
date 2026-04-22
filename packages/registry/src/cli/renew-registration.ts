@@ -1,4 +1,4 @@
-import { TxResult } from '@sundaeswap/capacity-exchange-core';
+import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { renewRegistration } from '../circuits/renew-registration.js';
@@ -21,10 +21,7 @@ function main(): Promise<TxResult> {
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 
-  const days = Number(periodArg);
-  if (!Number.isFinite(days) || days <= 0) {
-    throw new Error(`Invalid period: "${periodArg}". Expected a positive number of days.`);
-  }
+  const days = parsePositiveNumber('period', periodArg);
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
   console.log(`New expiry: ${expiry.toISOString()}`);
