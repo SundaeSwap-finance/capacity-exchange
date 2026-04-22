@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext, requireNetworkId } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv, requireNetworkId } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, DeployOutput } from '../deploy.js';
 
 function main(): Promise<DeployOutput> {
@@ -26,7 +26,7 @@ function main(): Promise<DeployOutput> {
     `set arguments: ${JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value))}`
   );
 
-  return withAppContext(networkId, (ctx) => deploy(ctx, args));
+  return withAppContextFromEnv(networkId, (ctx) => deploy(ctx, args));
 }
 
 runCli(main);

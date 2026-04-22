@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
-import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
 import { readSecretKeyFile } from '../types.js';
 
@@ -43,7 +43,7 @@ function main(): Promise<TxResult> {
     expiry,
   };
 
-  return withAppContext(networkId, (ctx) =>
+  return withAppContextFromEnv(networkId, (ctx) =>
     register(ctx, secretKey, {
       contractAddress,
       entry,

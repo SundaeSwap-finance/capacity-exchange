@@ -1,5 +1,5 @@
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
-import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { renewRegistration } from '../circuits/renew-registration.js';
 import { readSecretKeyFile } from '../types.js';
@@ -31,7 +31,7 @@ function main(): Promise<TxResult> {
 
   const expiryInt = BigInt(Math.floor(expiry.getTime() / 1000));
 
-  return withAppContext(networkId, (ctx) =>
+  return withAppContextFromEnv(networkId, (ctx) =>
     renewRegistration(ctx, secretKey, {
       contractAddress,
       expiryInt,

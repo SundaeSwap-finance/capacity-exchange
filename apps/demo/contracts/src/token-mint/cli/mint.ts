@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { mint, MintOutput } from '../lib/operations.js';
 
 function main(): Promise<MintOutput> {
@@ -14,7 +14,7 @@ function main(): Promise<MintOutput> {
 
   const [networkId, contractAddress, privateStateId, amountStr] = program.args;
   const amount = BigInt(amountStr);
-  return withAppContext(networkId, (ctx) => mint(ctx, contractAddress, privateStateId, amount));
+  return withAppContextFromEnv(networkId, (ctx) => mint(ctx, contractAddress, privateStateId, amount));
 }
 
 runCli(main);

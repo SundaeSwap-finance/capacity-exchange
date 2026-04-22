@@ -4,7 +4,7 @@ import {
   createLogger,
   requireNetworkId,
   runCli,
-  withAppContext,
+  withAppContextFromEnv,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 
@@ -44,7 +44,7 @@ async function main(): Promise<void> {
   const networkId = requireNetworkId();
   const [contractAddress] = program.args;
 
-  const entries = await withAppContext(networkId, (ctx) => listRegisteredServers(ctx, contractAddress));
+  const entries = await withAppContextFromEnv(networkId, (ctx) => listRegisteredServers(ctx, contractAddress));
 
   for (const [key, entry] of entries) {
     const details = {

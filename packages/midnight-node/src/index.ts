@@ -27,7 +27,7 @@ export {
   submitStatefulCallTxDirect,
   deployContractWithDryRun,
 } from './providers.js';
-export { withAppContext, runCli, requireNetworkId, type RunCliOptions } from './cli.js';
+export { withAppContext, withAppContextFromEnv, runCli, requireNetworkId, type RunCliOptions } from './cli.js';
 export {
   registerAllForDust,
   registerEachForDust,
