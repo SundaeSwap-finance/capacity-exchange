@@ -6,6 +6,7 @@ import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { loadWalletSeedFromEnv, type Env } from './walletFile.js';
 
 export interface NetworkConfig {
+  networkName: string;
   networkId: NetworkId.NetworkId;
   endpoints: NetworkEndpoints;
 }
@@ -29,10 +30,10 @@ export function resolveEnv(): Env {
   return { ...dotEnv, ...process.env };
 }
 
-export function buildNetworkConfig(network: string, env: Env): NetworkConfig {
-  const networkId = toNetworkIdEnum(network);
+export function buildNetworkConfig(networkName: string, env: Env): NetworkConfig {
+  const networkId = toNetworkIdEnum(networkName);
   const endpoints = resolveEndpoints(networkId, env.PROOF_SERVER_URL);
-  return { networkId, endpoints };
+  return { networkName, networkId, endpoints };
 }
 
 /** Requires one of WALLET_SEED_FILE WALLET_MNEMONIC_FILE plus WALLET_STATE_DIR. */
