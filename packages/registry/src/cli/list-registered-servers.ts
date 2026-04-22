@@ -1,39 +1,21 @@
 import {
-  AppContext,
-  buildProviders,
+  buildNetworkConfig,
   createLogger,
+  createPublicDataProvider,
   requireNetworkId,
+  resolveEnv,
   runCli,
-  withAppContextFromEnv,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 
-import { getContractOutDir, Registry } from '../contract.js';
+import { Registry } from '../contract.js';
 import { RegistryMapping, registryEntries } from '../types.js';
 
 const logger = createLogger(import.meta);
 
-async function listRegisteredServers(ctx: AppContext, contractAddress: string): Promise<RegistryMapping> {
-  logger.info(`Querying registered servers from registry ${contractAddress}...`);
-
-  const contractOutDir = getContractOutDir(logger);
-  const providers = buildProviders(ctx, contractOutDir);
-  const contractState = await providers.publicDataProvider.queryContractState(contractAddress);
-  if (!contractState) {
-    throw new Error(`Contract not found at address: ${contractAddress}`);
-  }
-
-  const ledgerState = Registry.ledger(contractState.data);
-  const entries: RegistryMapping = new Map();
-
-  for (const { key, entry } of registryEntries(ledgerState)) {
-    const keyHex = Buffer.from(key).toString('hex');
-    entries.set(keyHex, entry);
-  }
-
-  return entries;
-}
-
+// TODO: migrate to a shared `withNetworkContext` / `withNetworkContextFromEnv`
+// helper once that exists. Building the public data provider inline here keeps
+// this read-only CLI from forcing wallet bootstrap via `withAppContextFromEnv`.
 async function main(): Promise<void> {
   program
     .name('list-servers')
@@ -44,7 +26,21 @@ async function main(): Promise<void> {
   const networkId = requireNetworkId();
   const [contractAddress] = program.args;
 
-  const entries = await withAppContextFromEnv(networkId, (ctx) => listRegisteredServers(ctx, contractAddress));
+  const network = buildNetworkConfig(networkId, resolveEnv());
+  const publicDataProvider = createPublicDataProvider(network);
+
+  logger.info(`Querying registered servers from registry ${contractAddress}...`);
+  const contractState = await publicDataProvider.queryContractState(contractAddress);
+  if (!contractState) {
+    throw new Error(`Contract not found at address: ${contractAddress}`);
+  }
+
+  const ledgerState = Registry.ledger(contractState.data);
+  const entries: RegistryMapping = new Map();
+  for (const { key, entry } of registryEntries(ledgerState)) {
+    const keyHex = Buffer.from(key).toString('hex');
+    entries.set(keyHex, entry);
+  }
 
   for (const [key, entry] of entries) {
     const details = {
@@ -52,7 +48,6 @@ async function main(): Promise<void> {
       port: entry.port,
       expiry: entry.expiry.toISOString(),
     };
-
     console.log(`${key}: ${JSON.stringify(details, null, 2)},`);
   }
 }
