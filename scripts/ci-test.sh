@@ -33,7 +33,6 @@ CES_SERVER_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.ci.json"
 CES_SERVER_QUOTE_SECRET="$ROOT_DIR/apps/server/.quote-secret.ci.key"
 
 CACHED_WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
-TEMP_WALLET_STATE_DIR=""
 CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
 
 log() { echo "=== [ci-test] $*"; }
@@ -47,9 +46,6 @@ cleanup() {
   rm -f "$CES_SERVER_SEED_FILE"
   rm -f "$CES_SERVER_QUOTE_SECRET"
   rm -f "$CES_SERVER_PRICE_CONFIG"
-  if [ -n "$TEMP_WALLET_STATE_DIR" ]; then
-    rm -rf "$TEMP_WALLET_STATE_DIR"
-  fi
 }
 
 validate_env() {
@@ -66,9 +62,8 @@ validate_env() {
 }
 
 generate_runner_wallet() {
-  log "Generating temp test runner wallet"
+  log "Generating ephemeral runner wallet for sponsor+exchange flows"
   RUNNER_MNEMONIC=$(bun -e "import { generateMnemonic } from '$ROOT_DIR/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());")
-  TEMP_WALLET_STATE_DIR=$(mktemp -d)
 }
 
 generate_price_config() {
@@ -148,27 +143,16 @@ wait_for_ces_server() {
   exit 1
 }
 
-seed_temp_wallet_state() {
-  log "Seeding temp wallet state from cached chain snapshot"
-  bun packages/midnight-node/src/cli/restore-from-chain-snapshot.ts "$NETWORK_ID" "$TEMP_WALLET_STATE_DIR" "$CHAIN_SNAPSHOT_DIR"
-}
-
-export_chain_snapshot() {
-  log "Exporting updated chain snapshot for next run"
-  bun packages/midnight-node/src/cli/export-chain-snapshot.ts "$NETWORK_ID" "$TEMP_WALLET_STATE_DIR" "$CHAIN_SNAPSHOT_DIR"
-}
-
 run_tests() {
   log "Running tests against $NETWORK_ID"
 
-  # Sponsor + exchange use a fresh-per-run wallet (needs 0 DUST to exercise buying DUST).
-  # Registry uses a funded, long-lived wallet (needs NIGHT for collateral + DUST for tx fees).
+  # Sponsor + exchange use a fresh-per-run ephemeral wallet (needs 0 DUST to exercise buying DUST).
+  # Registry uses a funded, long-lived persistent wallet (needs NIGHT for collateral + DUST for tx fees).
   env \
     NETWORK_ID="$NETWORK_ID" \
     SPONSOR_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     EXCHANGE_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     REGISTRY_WALLET_MNEMONIC="$REGISTRY_WALLET_MNEMONIC" \
-    TEMP_WALLET_STATE_DIR="$TEMP_WALLET_STATE_DIR" \
     CACHED_WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
     CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
     CES_URL=http://localhost:${CES_PORT} \
@@ -189,5 +173,4 @@ generate_runner_wallet
 generate_price_config
 start_ces_server
 wait_for_ces_server
-seed_temp_wallet_state
 run_tests

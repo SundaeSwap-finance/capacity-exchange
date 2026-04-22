@@ -1,4 +1,5 @@
-import { requireEnvVar, type Env } from '@sundaeswap/capacity-exchange-nodejs';
+import { loadChainSnapshot, requireEnvVar, type Env } from '@sundaeswap/capacity-exchange-nodejs';
+import type { ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
 import type { FlowCtxConfig } from './util/testUtils.js';
 
 export interface TestConfig {
@@ -8,6 +9,7 @@ export interface TestConfig {
   tokenMintAddress: string;
   derivedTokenColor: string;
   chainSnapshotDir: string;
+  chainSnapshot: ChainSnapshot | undefined;
   sponsorFlowConfig: FlowCtxConfig;
   exchangeFlowConfig: FlowCtxConfig;
   registryFlowConfig: FlowCtxConfig;
@@ -15,26 +17,28 @@ export interface TestConfig {
 
 export function getTestConfig(env: Env): TestConfig {
   const networkId = requireEnvVar(env, 'NETWORK_ID');
-  const tempWalletStateDir = requireEnvVar(env, 'TEMP_WALLET_STATE_DIR');
+  const chainSnapshotDir = requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR');
   const cachedWalletStateDir = requireEnvVar(env, 'CACHED_WALLET_STATE_DIR');
+  const chainSnapshot = loadChainSnapshot(networkId, chainSnapshotDir);
   return {
     networkId,
     cesUrl: requireEnvVar(env, 'CES_URL'),
     counterAddress: requireEnvVar(env, 'COUNTER_ADDRESS'),
     tokenMintAddress: requireEnvVar(env, 'TOKEN_MINT_ADDRESS'),
     derivedTokenColor: requireEnvVar(env, 'DERIVED_TOKEN_COLOR'),
-    chainSnapshotDir: requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR'),
+    chainSnapshotDir,
+    chainSnapshot,
     sponsorFlowConfig: {
       mnemonic: requireEnvVar(env, 'SPONSOR_WALLET_MNEMONIC'),
-      walletStateDir: tempWalletStateDir,
+      stateSource: { kind: 'inMemory', chainSnapshot },
     },
     exchangeFlowConfig: {
       mnemonic: requireEnvVar(env, 'EXCHANGE_WALLET_MNEMONIC'),
-      walletStateDir: tempWalletStateDir,
+      stateSource: { kind: 'inMemory', chainSnapshot },
     },
     registryFlowConfig: {
       mnemonic: requireEnvVar(env, 'REGISTRY_WALLET_MNEMONIC'),
-      walletStateDir: cachedWalletStateDir,
+      stateSource: { kind: 'onDisk', walletStateDir: cachedWalletStateDir },
     },
   };
 }

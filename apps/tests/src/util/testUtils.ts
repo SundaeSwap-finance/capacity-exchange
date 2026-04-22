@@ -1,16 +1,27 @@
-import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { getAppConfigById, createAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import type { AppContext, WalletStateSource } from '@sundaeswap/capacity-exchange-nodejs';
+import {
+  buildNetworkConfig,
+  createAppContext,
+  readWalletSyncTimeoutMs,
+  resolveEnv,
+} from '@sundaeswap/capacity-exchange-nodejs';
 import { parseMnemonic } from '@sundaeswap/capacity-exchange-core';
 
 export interface FlowCtxConfig {
   mnemonic: string;
-  walletStateDir: string;
+  stateSource: WalletStateSource;
 }
 
 export async function buildFlowCtx(networkId: string, config: FlowCtxConfig): Promise<AppContext> {
-  const seed = parseMnemonic(config.mnemonic);
-  const baseConfig = getAppConfigById(networkId);
-  return createAppContext({ ...baseConfig, seed, walletStateDir: config.walletStateDir });
+  const env = resolveEnv();
+  return createAppContext({
+    network: buildNetworkConfig(networkId, env),
+    wallet: {
+      seed: parseMnemonic(config.mnemonic),
+      stateSource: config.stateSource,
+      walletSyncTimeoutMs: readWalletSyncTimeoutMs(env),
+    },
+  });
 }
 
 export interface PollUntilOptions {

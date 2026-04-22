@@ -5,13 +5,12 @@ import {
   readWalletSyncTimeoutMs,
   resolveEnv,
   createLogger,
-  loadChainSnapshot,
   exportChainSnapshot,
   type AppConfig,
   type AppContext,
   type WalletConfig,
 } from '@sundaeswap/capacity-exchange-nodejs';
-import { generateMnemonic, parseMnemonic, type ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
+import { generateMnemonic, parseMnemonic } from '@sundaeswap/capacity-exchange-core';
 import { getTestConfig, type TestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runRegistryFlow } from './flows/registry-flow.js';
@@ -79,12 +78,12 @@ function summarize(flows: FlowResult[]): RunnerOutput {
   return { passed, failed, flows };
 }
 
-function buildRunnerAppConfig(config: TestConfig, chainSnapshot: ChainSnapshot | undefined): AppConfig {
+function buildRunnerAppConfig(config: TestConfig): AppConfig {
   const env = resolveEnv();
   logger.info('Generating in-memory runner wallet');
   const walletConfig: WalletConfig = {
     seed: parseMnemonic(generateMnemonic()),
-    stateSource: { kind: 'inMemory', chainSnapshot },
+    stateSource: { kind: 'inMemory', chainSnapshot: config.chainSnapshot },
     walletSyncTimeoutMs: readWalletSyncTimeoutMs(env),
   };
   return {
@@ -110,11 +109,10 @@ async function runAndExport(ctx: AppContext, config: TestConfig): Promise<Runner
 function main(): Promise<RunnerOutput> {
   const env = resolveEnv();
   const config = getTestConfig(env);
-  const chainSnapshot = loadChainSnapshot(config.networkId, config.chainSnapshotDir);
-  if (!chainSnapshot) {
+  if (!config.chainSnapshot) {
     logger.info(`No cached chain snapshot in ${config.chainSnapshotDir} — wallet will sync from genesis`);
   }
-  const appConfig = buildRunnerAppConfig(config, chainSnapshot);
+  const appConfig = buildRunnerAppConfig(config);
   return withAppContext(appConfig, (ctx) => runAndExport(ctx, config));
 }
 
