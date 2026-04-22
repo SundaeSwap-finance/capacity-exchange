@@ -2,7 +2,7 @@ import {
   buildNetworkConfig,
   createLogger,
   createPublicDataProvider,
-  requireNetworkId,
+  requireEnvVar,
   resolveEnv,
   runCli,
 } from '@sundaeswap/capacity-exchange-nodejs';
@@ -43,10 +43,11 @@ async function main(): Promise<void> {
     .argument('<contractAddress>', 'address of the registry contract')
     .parse();
 
-  const networkId = requireNetworkId();
+  const env = resolveEnv();
+  const networkId = requireEnvVar(env, 'NETWORK_ID');
   const [contractAddress] = program.args;
 
-  const network = buildNetworkConfig(networkId, resolveEnv());
+  const network = buildNetworkConfig(networkId, env);
   const publicDataProvider = createPublicDataProvider(network);
 
   const entries = await listRegisteredServers(publicDataProvider, contractAddress);
