@@ -23,7 +23,7 @@ export interface AppConfig {
 }
 
 /** Merges process.env with .env files. process.env wins. */
-function resolveEnv(): Env {
+export function resolveEnv(): Env {
   const envPath = path.join(process.cwd(), '.env');
   const dotEnv: Record<string, string> = fs.existsSync(envPath) ? parseDotenv(fs.readFileSync(envPath, 'utf-8')) : {};
   return { ...dotEnv, ...process.env };
@@ -48,9 +48,4 @@ export function buildWalletConfig(env: Env): WalletConfig {
 
 export function buildAppConfig(network: string, env: Env): AppConfig {
   return { network: buildNetworkConfig(network, env), wallet: buildWalletConfig(env) };
-}
-
-/** Builds app config from process.env and .env.*/
-export function getAppConfigFromEnv(network: string): AppConfig {
-  return buildAppConfig(network, resolveEnv());
 }

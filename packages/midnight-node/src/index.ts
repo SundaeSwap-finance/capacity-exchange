@@ -11,10 +11,10 @@ export {
   type AppConfig,
   type NetworkConfig,
   type WalletConfig,
-  getAppConfigFromEnv,
-  buildAppConfig,
+  resolveEnv,
   buildNetworkConfig,
   buildWalletConfig,
+  buildAppConfig,
 } from './appConfig.js';
 export { createLogger } from './createLogger.js';
 export { checkWebSocket, checkProofServer, checkIndexerFreshness } from './connectivity.js';
