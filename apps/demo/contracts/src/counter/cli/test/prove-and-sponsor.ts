@@ -20,7 +20,7 @@
  *   - The counter contract already deployed at the given address.
  */
 import { program } from 'commander';
-import { runCli, withAppContext, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
 import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledCounterContract, CounterContract } from '../../lib/contract.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
@@ -45,7 +45,7 @@ async function main(): Promise<ProveAndSponsorOutput> {
   const [networkId, contractAddress] = program.args;
   const { serverUrl } = program.opts<{ serverUrl: string }>();
 
-  return withAppContext(networkId, async (ctx) => {
+  return withAppContextFromEnv(networkId, async (ctx) => {
     logger.info('Building unproven counter increment tx...');
 
     const providers = buildProviders<CounterContract>(ctx, './counter/out');

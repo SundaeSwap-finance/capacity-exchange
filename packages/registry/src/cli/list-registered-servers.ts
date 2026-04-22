@@ -1,31 +1,32 @@
 import {
-  AppContext,
-  buildProviders,
+  buildNetworkConfig,
   createLogger,
+  createPublicDataProvider,
   requireNetworkId,
+  resolveEnv,
   runCli,
-  withAppContext,
 } from '@sundaeswap/capacity-exchange-nodejs';
+import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
 import { program } from 'commander';
 
-import { getContractOutDir, Registry } from '../contract.js';
+import { Registry } from '../contract.js';
 import { RegistryMapping, registryEntries } from '../types.js';
 
 const logger = createLogger(import.meta);
 
-async function listRegisteredServers(ctx: AppContext, contractAddress: string): Promise<RegistryMapping> {
+async function listRegisteredServers(
+  publicDataProvider: PublicDataProvider,
+  contractAddress: string
+): Promise<RegistryMapping> {
   logger.info(`Querying registered servers from registry ${contractAddress}...`);
 
-  const contractOutDir = getContractOutDir(logger);
-  const providers = buildProviders(ctx, contractOutDir);
-  const contractState = await providers.publicDataProvider.queryContractState(contractAddress);
+  const contractState = await publicDataProvider.queryContractState(contractAddress);
   if (!contractState) {
     throw new Error(`Contract not found at address: ${contractAddress}`);
   }
 
   const ledgerState = Registry.ledger(contractState.data);
   const entries: RegistryMapping = new Map();
-
   for (const { key, entry } of registryEntries(ledgerState)) {
     const keyHex = Buffer.from(key).toString('hex');
     entries.set(keyHex, entry);
@@ -34,6 +35,7 @@ async function listRegisteredServers(ctx: AppContext, contractAddress: string): 
   return entries;
 }
 
+// TODO: migrate to a shared `withNetworkContext` helper.
 async function main(): Promise<void> {
   program
     .name('list-servers')
@@ -44,7 +46,10 @@ async function main(): Promise<void> {
   const networkId = requireNetworkId();
   const [contractAddress] = program.args;
 
-  const entries = await withAppContext(networkId, (ctx) => listRegisteredServers(ctx, contractAddress));
+  const network = buildNetworkConfig(networkId, resolveEnv());
+  const publicDataProvider = createPublicDataProvider(network);
+
+  const entries = await listRegisteredServers(publicDataProvider, contractAddress);
 
   for (const [key, entry] of entries) {
     const details = {
@@ -52,7 +57,6 @@ async function main(): Promise<void> {
       port: entry.port,
       expiry: entry.expiry.toISOString(),
     };
-
     console.log(`${key}: ${JSON.stringify(details, null, 2)},`);
   }
 }

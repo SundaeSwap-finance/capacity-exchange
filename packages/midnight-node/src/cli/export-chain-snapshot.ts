@@ -4,17 +4,16 @@ import * as path from 'path';
 import { extractChainSnapshot } from '@sundaeswap/capacity-exchange-core';
 import { createLogger } from '../createLogger.js';
 
-/**
- * Extracts chain-state-only snapshots from a wallet state directory.
- * These snapshots can be used by seed-wallet-state to bootstrap new wallets.
- */
-
 const logger = createLogger(import.meta);
 
+/**
+ * Exports chain-state-only snapshots from a wallet state directory.
+ * These snapshots can be used by restore-from-chain-snapshot to bootstrap new wallets.
+ */
 function main() {
   program
     .name('export-chain-snapshot')
-    .description('Extract chain state from wallet state files into snapshot files')
+    .description('Export chain state from wallet state files into snapshot files')
     .argument('<networkId>', 'Network ID (e.g., preview)')
     .argument('<stateDir>', 'Wallet state directory to read from')
     .argument('<snapshotDir>', 'Directory to write snapshot files to')

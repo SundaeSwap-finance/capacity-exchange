@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '../cli.js';
+import { runCli, withAppContextFromEnv } from '../cli.js';
 import { splitAndRegister, type SplitNightOutput } from '../split-night.js';
 
 function main(): Promise<SplitNightOutput> {
@@ -18,7 +18,7 @@ function main(): Promise<SplitNightOutput> {
     throw new Error('count must be an integer >= 2');
   }
 
-  return withAppContext(networkId, (ctx) => {
+  return withAppContextFromEnv(networkId, (ctx) => {
     const { walletFacade, keys } = ctx.walletContext;
     return splitAndRegister(walletFacade, keys, networkId, count);
   });

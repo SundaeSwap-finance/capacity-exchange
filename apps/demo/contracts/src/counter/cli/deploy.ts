@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, DeployOutput } from '../lib/operations.js';
 
 function main(): Promise<DeployOutput> {
@@ -10,7 +10,7 @@ function main(): Promise<DeployOutput> {
     .parse();
 
   const [networkId] = program.args;
-  return withAppContext(networkId, (ctx) => deploy(ctx));
+  return withAppContextFromEnv(networkId, (ctx) => deploy(ctx));
 }
 
 runCli(main);

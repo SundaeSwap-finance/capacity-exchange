@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
-import { runCli, withAppContext } from '../cli.js';
+import { runCli, withAppContextFromEnv } from '../cli.js';
 import { createLogger } from '../createLogger.js';
 import { registerAllForDust, waitForDustBalance } from '../dust-registration.js';
 
@@ -38,7 +38,7 @@ function main(): Promise<BalancesOutput> {
   const [networkId] = program.args;
   const opts = program.opts<{ registerDust?: boolean }>();
 
-  return withAppContext(networkId, async (ctx) => {
+  return withAppContextFromEnv(networkId, async (ctx) => {
     const { walletFacade, keys } = ctx.walletContext;
 
     logger.info('Waiting for synced state...');

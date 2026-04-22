@@ -1,4 +1,4 @@
-import { runCli, withAppContext, createLogger, type AppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv, createLogger, type AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { getTestConfig, type TestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runExchangeFlow } from './flows/exchange-flow.js';
@@ -56,7 +56,7 @@ function summarize(flows: FlowResult[]): RunnerOutput {
 function main(): Promise<RunnerOutput> {
   const config = getTestConfig();
 
-  return withAppContext(config.networkId, async (ctx) => {
+  return withAppContextFromEnv(config.networkId, async (ctx) => {
     const flows = await runAllFlows(ctx, config);
     const output = summarize(flows);
 

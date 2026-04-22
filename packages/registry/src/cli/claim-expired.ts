@@ -1,5 +1,5 @@
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
-import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { claimExpired } from '../circuits/claim-expired.js';
 import { parseRegistryKeyHex } from '../types.js';
@@ -19,7 +19,7 @@ function main(): Promise<TxResult> {
 
   const registryKey = parseRegistryKeyHex(registryKeyHex);
 
-  return withAppContext(networkId, (ctx) =>
+  return withAppContextFromEnv(networkId, (ctx) =>
     claimExpired(ctx, {
       contractAddress,
       registryKey,

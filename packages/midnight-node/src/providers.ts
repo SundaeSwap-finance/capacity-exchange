@@ -32,7 +32,7 @@ export function buildProviders<C extends Contract.Any>(
   return {
     midnightProvider: ctx.midnightProvider,
     privateStateProvider: ctx.privateStateProvider,
-    proofProvider: httpClientProofProvider(ctx.proofServerUrl, zkConfigProvider),
+    proofProvider: httpClientProofProvider(ctx.config.network.endpoints.proofServerUrl, zkConfigProvider),
     publicDataProvider: ctx.publicDataProvider,
     walletProvider: ctx.walletContext.walletProvider,
     zkConfigProvider,
