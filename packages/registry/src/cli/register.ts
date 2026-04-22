@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
-import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { readSecretKeyFile } from '../types.js';
 
@@ -18,7 +18,7 @@ function main(): Promise<TxResult> {
     .argument('[period]', 'registration period in days (default: 30)', '30')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [contractAddress, secretKeyFile, ipStr, portStr, periodArg] = program.args;
 

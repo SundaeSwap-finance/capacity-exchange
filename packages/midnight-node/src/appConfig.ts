@@ -8,7 +8,8 @@ import {
   type NetworkEndpoints,
 } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { loadWalletSeedFromEnv, type Env } from './walletFile.js';
+import type { Env } from './env.js';
+import { loadWalletSeedFromEnv } from './walletFile.js';
 
 export interface NetworkConfig {
   networkName: string;

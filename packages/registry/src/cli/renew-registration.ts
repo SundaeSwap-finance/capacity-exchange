@@ -1,5 +1,5 @@
 import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
-import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { renewRegistration } from '../circuits/renew-registration.js';
 import { readSecretKeyFile } from '../types.js';
@@ -15,7 +15,7 @@ function main(): Promise<TxResult> {
     .argument('<period>', 'new registration period in days (e.g. 30)')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [contractAddress, secretKeyFile, periodArg] = program.args;
 

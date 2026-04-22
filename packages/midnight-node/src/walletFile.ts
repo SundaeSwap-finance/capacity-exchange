@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core';
-
-export type Env = Record<string, string | undefined>;
+import type { Env } from './env.js';
 
 function seedFilename(network: string): string {
   return `wallet-seed.${network.toLowerCase()}.hex`;

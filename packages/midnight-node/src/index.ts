@@ -1,11 +1,5 @@
-export { requireNodeEnv } from './envNode.js';
-export {
-  findWalletSeedFile,
-  findWalletMnemonicFile,
-  loadWalletSeed,
-  loadWalletSeedFromEnv,
-  type Env,
-} from './walletFile.js';
+export { type Env, requireEnvVar } from './env.js';
+export { findWalletSeedFile, findWalletMnemonicFile, loadWalletSeed, loadWalletSeedFromEnv } from './walletFile.js';
 export { FileStateStore } from './fileStateStore.js';
 export {
   type AppConfig,
@@ -27,7 +21,7 @@ export {
   submitStatefulCallTxDirect,
   deployContractWithDryRun,
 } from './providers.js';
-export { withAppContext, withAppContextFromEnv, runCli, requireNetworkId, type RunCliOptions } from './cli.js';
+export { withAppContext, withAppContextFromEnv, runCli, type RunCliOptions } from './cli.js';
 export {
   registerAllForDust,
   registerEachForDust,

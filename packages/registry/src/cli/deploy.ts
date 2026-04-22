@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { parsePositiveNumber } from '@sundaeswap/capacity-exchange-core';
-import { runCli, withAppContextFromEnv, requireNetworkId } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv, requireEnvVar, resolveEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, DeployOutput } from '../deploy.js';
 
 function main(): Promise<DeployOutput> {
@@ -11,7 +11,7 @@ function main(): Promise<DeployOutput> {
     .argument('[registrationPeriod]', 'max registration period in days (default: 30)', '30')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
   const [collateral, registrationPeriod] = program.processedArgs;
 
   const days = parsePositiveNumber('registrationPeriod', registrationPeriod);

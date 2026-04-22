@@ -5,14 +5,6 @@ import { createLogger } from './createLogger.js';
 
 const logger = createLogger(import.meta);
 
-export function requireNetworkId(): string {
-  const networkId = process.env.NETWORK_ID;
-  if (!networkId) {
-    throw new Error('NETWORK_ID environment variable is required (e.g., NETWORK_ID=preview)');
-  }
-  return networkId;
-}
-
 /**
  * Runs `fn` with an init'd `AppContext` from a provided `AppConfig`. Use this
  * when you've resolved your own `Env`.

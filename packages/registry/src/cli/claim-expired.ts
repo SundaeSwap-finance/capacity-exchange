@@ -1,5 +1,5 @@
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
-import { requireNetworkId, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { claimExpired } from '../circuits/claim-expired.js';
 import { parseRegistryKeyHex } from '../types.js';
@@ -13,7 +13,7 @@ function main(): Promise<TxResult> {
     .argument('<recipientAddress>', 'the address that will receive the collateral refund')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [contractAddress, registryKeyHex, recipientAddress] = program.args;
 
