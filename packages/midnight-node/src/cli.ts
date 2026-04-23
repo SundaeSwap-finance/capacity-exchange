@@ -23,7 +23,7 @@ export async function withAppContext<T>(config: AppConfig, fn: (ctx: AppContext)
     try {
       await ctx.walletContext.walletFacade.stop();
     } catch (err) {
-      logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Wallet facade stop failed');
+      logger.warn({ err: err instanceof Error ? err : String(err) }, 'Wallet facade stop failed');
     }
   }
 }
