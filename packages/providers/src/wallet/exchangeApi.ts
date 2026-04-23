@@ -45,7 +45,7 @@ const DEFAULT_CAPACITY_EXCHANGE_SERVERS: Record<string, string[] | undefined> = 
 
 // TODO: populate preprod and mainnet as those registries get deployed.
 const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {
-  preview: '5dd587ef26568349f5cf79b4f5339f044e945475456582e5b1949b82f06f54e6',
+  preview: '031f39efac81c9b656f4d91ef291a4d1c981f460a100601ae1f6a1e7b20f1b1b',
 };
 
 export function getDefaultRegistryAddress(networkId: string): string | undefined {
