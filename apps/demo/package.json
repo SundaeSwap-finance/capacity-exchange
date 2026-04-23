@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/demo",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "description": "Demo Webapp for the Capacity Exchange",
   "type": "module",
@@ -46,7 +46,7 @@
     "unicornstudio-react": "^2.1.4-1"
   },
   "devDependencies": {
-    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+    "@sundaeswap/capacity-exchange-nodejs": "1.0.2",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",

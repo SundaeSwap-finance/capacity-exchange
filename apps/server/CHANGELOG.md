@@ -1,5 +1,13 @@
 # @capacity-exchange/server
 
+## 1.0.4
+
+### Patch Changes
+
+- 3ae76c4: Rename package to `@sundaeswap/capacity-exchange-nodejs`
+- Updated dependencies [3ae76c4]
+  - @sundaeswap/capacity-exchange-nodejs@1.0.2
+
 ## 1.0.3
 
 ### Patch Changes

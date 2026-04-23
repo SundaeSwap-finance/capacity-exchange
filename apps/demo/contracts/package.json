@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/demo-contracts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Midnight contracts for capacity exchange demos",
   "type": "module",
@@ -37,7 +37,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@sundaeswap/capacity-exchange-core": "1.1.0",
-    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+    "@sundaeswap/capacity-exchange-nodejs": "1.0.2",
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/ledger-v8": "8.0.3",
