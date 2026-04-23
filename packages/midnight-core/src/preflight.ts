@@ -35,7 +35,6 @@ export async function verifyCircuitVerifierKey(
  * `createUnprovenCallTx` to prevent circuit/contract version drift from
  * silently producing transactions that will fail on submission.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export async function buildUnprovenCallTx<C extends Contract<undefined>, PCK extends Contract.ProvableCircuitId<C>>(
   providers: UnprovenCallTxProvidersBase,
   options: CallTxOptionsBase<C, PCK>
@@ -44,6 +43,7 @@ export async function buildUnprovenCallTx<C extends Contract.Any, PCK extends Co
   providers: UnprovenCallTxProvidersWithPrivateState<C>,
   options: CallTxOptionsWithPrivateStateId<C, PCK>
 ): Promise<UnsubmittedCallTxData<C, PCK>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function buildUnprovenCallTx(providers: any, options: any): Promise<any> {
   await verifyCircuitVerifierKey(providers, options.contractAddress, options.circuitId);
   return createUnprovenCallTx(providers, options);
