@@ -18,5 +18,6 @@ keys.json
 load-test-results.json
 .admin-key.json
 .wallet-state-*/
+.wallet-states/
 .quote-secret.key
 .chain-snapshots/
