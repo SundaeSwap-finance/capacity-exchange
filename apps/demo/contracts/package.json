@@ -36,8 +36,8 @@
   "author": "",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "@sundaeswap/capacity-exchange-core": "workspace:*",
-    "@sundaeswap/capacity-exchange-nodejs": "workspace:*",
+    "@sundaeswap/capacity-exchange-core": "workspace:^",
+    "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/ledger-v8": "8.0.3",
@@ -58,7 +58,7 @@
     "dotenv": "17.2.3"
   },
   "devDependencies": {
-    "@sundaeswap/capacity-exchange-client": "workspace:*",
+    "@sundaeswap/capacity-exchange-client": "workspace:^",
     "@eslint/js": "^9.39.2",
     "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
     "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2",
