@@ -51,4 +51,9 @@ export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConn
 export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
 export { buildUnprovenCallTx, verifyCircuitVerifierKey } from './preflight.js';
 export { connectedApiProvidersAdapter, type BaseProviders, type WalletIdentity } from './connectedApiProviders.js';
-export { buildSyntheticWalletState, extractChainSnapshot, type ChainSnapshot } from './walletSnapshot.js';
+export {
+  buildSyntheticWalletState,
+  extractChainSnapshot,
+  extractChainSnapshotFromFacade,
+  type ChainSnapshot,
+} from './walletSnapshot.js';

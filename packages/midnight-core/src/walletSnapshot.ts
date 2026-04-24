@@ -1,5 +1,6 @@
 import type { WalletKeys } from './keys.js';
 import { PublicKey } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { SavedWalletState } from './walletStateStore.js';
 
 export interface ChainSnapshot {
@@ -48,6 +49,15 @@ export function buildSyntheticWalletState(
   });
 
   return { savedShieldedState, savedDustState, savedUnshieldedState };
+}
+
+export async function extractChainSnapshotFromFacade(facade: WalletFacade): Promise<ChainSnapshot> {
+  const [savedShieldedState, savedUnshieldedState, savedDustState] = await Promise.all([
+    facade.shielded.serializeState(),
+    facade.unshielded.serializeState(),
+    facade.dust.serializeState(),
+  ]);
+  return extractChainSnapshot({ savedShieldedState, savedUnshieldedState, savedDustState });
 }
 
 /** Extract chain-only state from serialized wallet state, stripping wallet-specific keys and balances. */

@@ -2,6 +2,7 @@ import { program } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
 import { extractChainSnapshot } from '@sundaeswap/capacity-exchange-core';
+import { writeChainSnapshot } from '../chainSnapshot.js';
 import { createLogger } from '../createLogger.js';
 
 const logger = createLogger(import.meta);
@@ -37,11 +38,7 @@ function main() {
     savedUnshieldedState: fs.readFileSync(path.join(stateDir, unshieldedFile), 'utf-8'),
   });
 
-  fs.mkdirSync(snapshotDir, { recursive: true });
-  fs.writeFileSync(path.join(snapshotDir, `${networkId}-shielded.json`), JSON.stringify(snapshot.shielded));
-  fs.writeFileSync(path.join(snapshotDir, `${networkId}-dust.json`), JSON.stringify(snapshot.dust));
-  fs.writeFileSync(path.join(snapshotDir, `${networkId}-unshielded.json`), JSON.stringify(snapshot.unshielded));
-
+  writeChainSnapshot(networkId, snapshotDir, snapshot);
   logger.info(`Exported chain snapshot to ${snapshotDir} at offset ${snapshot.shielded.offset}`);
 }
 

@@ -17,7 +17,15 @@ export async function withAppContext<T>(config: AppConfig, fn: (ctx: AppContext)
   logger.info('Starting app context...');
   const ctx = await createAppContext(config);
   logger.info('App context ready');
-  return fn(ctx);
+  try {
+    return await fn(ctx);
+  } finally {
+    try {
+      await ctx.walletContext.walletFacade.stop();
+    } catch (err) {
+      logger.warn({ err: err instanceof Error ? err : String(err) }, 'Wallet facade stop failed');
+    }
+  }
 }
 
 /**

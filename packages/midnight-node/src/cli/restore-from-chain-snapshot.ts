@@ -1,13 +1,9 @@
 import { program } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-  deriveWalletKeys,
-  toNetworkIdEnum,
-  buildSyntheticWalletState,
-  type ChainSnapshot,
-} from '@sundaeswap/capacity-exchange-core';
+import { deriveWalletKeys, toNetworkIdEnum, buildSyntheticWalletState } from '@sundaeswap/capacity-exchange-core';
 import { loadSeedFromFile, loadMnemonicFromFile } from '../walletFile.js';
+import { loadChainSnapshot } from '../chainSnapshot.js';
 import { createLogger } from '../createLogger.js';
 
 const logger = createLogger(import.meta);
@@ -42,18 +38,11 @@ async function main() {
   const coinPubKey = keys.shieldedSecretKeys.coinPublicKey;
   const prefix = `${networkIdEnum}-${coinPubKey}`;
 
-  // Load chain snapshots
-  const snapshotFiles = ['shielded', 'dust', 'unshielded'].map((k) => path.join(snapshotDir, `${networkId}-${k}.json`));
-  if (snapshotFiles.some((f) => !fs.existsSync(f))) {
+  const snapshot = loadChainSnapshot(networkId, snapshotDir);
+  if (!snapshot) {
     logger.info(`Incomplete or missing snapshots in ${snapshotDir} — skipping (wallet will sync from genesis)`);
     return;
   }
-
-  const snapshot: ChainSnapshot = {
-    shielded: JSON.parse(fs.readFileSync(snapshotFiles[0], 'utf-8')),
-    dust: JSON.parse(fs.readFileSync(snapshotFiles[1], 'utf-8')),
-    unshielded: JSON.parse(fs.readFileSync(snapshotFiles[2], 'utf-8')),
-  };
 
   const saved = buildSyntheticWalletState(snapshot, keys, String(networkIdEnum));
 
