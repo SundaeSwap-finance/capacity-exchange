@@ -1,12 +1,7 @@
-import type { RawCurrency, RawPriceFormula } from '../config/prices.js';
+import type { RawPriceFormula } from '../config/prices.js';
+import { FormulaIndex, type IndexedCurrency } from './formulaIndex.js';
 
-export interface Currency extends RawCurrency {
-  id: string;
-}
-
-interface PriceFormula extends RawPriceFormula {
-  currency: Currency;
-}
+export type Currency = IndexedCurrency;
 
 export interface Price {
   amount: string;
@@ -18,54 +13,23 @@ export type GetPriceResult =
   | { status: 'unsupported-currency' };
 
 export class PriceService {
-  readonly #formulas: Map<string, PriceFormula>;
+  readonly #index: FormulaIndex;
   constructor(formulas: RawPriceFormula[]) {
-    this.#formulas = new Map();
-    for (const formula of formulas) {
-      const id = computeCurrencyId(formula.currency);
-      this.#formulas.set(id, {
-        ...formula,
-        currency: {
-          ...formula.currency,
-          id,
-        },
-      });
-    }
+    this.#index = new FormulaIndex(formulas);
   }
 
   getPrice(id: string, specks: bigint): GetPriceResult {
-    const formula = this.#formulas.get(id);
-    if (!formula) {
+    const result = this.#index.evaluateById(id, specks);
+    if (!result) {
       return { status: 'unsupported-currency' };
     }
-    return {
-      status: 'ok',
-      price: this.#computePrice(specks, formula),
-      currency: formula.currency,
-    };
+    return { status: 'ok', price: result.price, currency: result.currency };
   }
 
   listPrices(specks: bigint): Price[] {
-    const prices: Price[] = [];
-    for (const formula of this.#formulas.values()) {
-      prices.push({
-        amount: this.#computePrice(specks, formula).toString(),
-        currency: formula.currency,
-      });
-    }
-    return prices;
+    return this.#index.evaluateAll(specks).map(({ price, currency }) => ({
+      amount: price.toString(),
+      currency,
+    }));
   }
-
-  // price = basePrice + specks * (rateNumerator / rateDenominator)
-  // All arithmetic is bigint to avoid precision loss on large speck values.
-  #computePrice(specks: bigint, formula: PriceFormula): bigint {
-    return (
-      BigInt(formula.basePrice) +
-      (specks * BigInt(formula.rateNumerator)) / BigInt(formula.rateDenominator)
-    );
-  }
-}
-
-function computeCurrencyId(currency: RawCurrency): string {
-  return `${currency.type}:${currency.rawId}`;
 }

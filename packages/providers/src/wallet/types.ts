@@ -81,6 +81,10 @@ export type CurrencySelectionResult =
   | {
       /** The user will not pay, and will not submit the transaction. */
       status: 'cancelled';
+    }
+  | {
+      /** The caller's policy rejected every offered price (e.g., all over-max, not allowlisted, or unaffordable). */
+      status: 'no-eligible';
     };
 
 export type OfferConfirmationResult =
@@ -147,7 +151,8 @@ export interface CapacityExchangeConfig {
   margin?: number;
   /**
    * A function called when the user must choose which currency to pay.
-   * Returns the user's decision.
+   * Returns the user's decision. To pin a specific currency with max-price
+   * and balance checks, pass a {@link fixedCurrencySelector} here.
    */
   promptForCurrency: PromptForCurrency;
   /**

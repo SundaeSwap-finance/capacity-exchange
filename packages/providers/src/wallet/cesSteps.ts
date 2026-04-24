@@ -14,7 +14,11 @@ import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exch
 import { fetchRegistryCesUrls } from './registryLookup';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
-import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
+import {
+  CapacityExchangeNoPricesAvailableError,
+  CapacityExchangeOfferExpiredError,
+  CapacityExchangeServerError,
+} from './errors';
 
 function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {
   return {
@@ -98,12 +102,22 @@ async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: C
  */
 export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
-  const offerResponse = await exchangePrice.exchangeApi.api.apiOffersPost({
-    apiOffersPostRequest: {
-      quoteId: exchangePrice.quoteId,
-      offerCurrency: exchangePrice.price.currency.id,
-    },
-  });
+  let offerResponse;
+  try {
+    offerResponse = await exchangePrice.exchangeApi.api.apiOffersPost({
+      apiOffersPostRequest: {
+        quoteId: exchangePrice.quoteId,
+        offerCurrency: exchangePrice.price.currency.id,
+      },
+    });
+  } catch (err) {
+    const statusCode = (err as { response?: { status?: number } })?.response?.status ?? 0;
+    const message = err instanceof Error ? err.message : String(err);
+    throw new CapacityExchangeServerError(
+      statusCode,
+      `requestCesOffer failed for ${exchangePrice.exchangeApi.url}: ${message}`
+    );
+  }
   console.debug('[CESSteps] Offer received:', offerResponse);
 
   const offer = convertToOffer(offerResponse);

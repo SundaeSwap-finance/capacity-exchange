@@ -3,94 +3,35 @@ import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import {
   capacityExchangeWalletProvider,
   type ChainStateProvider,
-  type ExchangePrice,
-  type PromptForCurrency,
-  type ConfirmOffer,
+  type Currency,
 } from '@sundaeswap/capacity-exchange-providers';
 import type { WalletService } from '../services/wallet.js';
+import type { PeerPriceService } from '../services/peerPrice.js';
+import { createAutoSelectCurrency, fixedCurrencySelector } from './peerCurrencySelector.js';
+import { createAutoConfirmOffer } from './peerOfferConfirmer.js';
 
 /**
- * Creates a {@link PromptForCurrency} that selects the best exchange price
- * based on the currencies this server wallet holds.
+ * Defines which `PromptForCurrency` to use when buying DUST from a peer CES.
  *
- * 1. Fetches the server's current synced shielded token balances
- * 2. Filters the prices to those with non-zero balance
- * 3. Picks the lowest amount among the filtered prices
- *    (fewest tokens spent per dust acquired).
+ * - `auto`  — picks the cheapest eligible offer across ALL currencies in `peer.maxPrices`.
+ * - `fixed` — restricts selection to a single currency, pre-filtering prices beforehand.
+ *             Automatically inferred when `peer.maxPrices` has only ONE entry.
  */
-function createAutoSelectCurrency(
-  log: FastifyBaseLogger,
-  walletService: WalletService,
-): PromptForCurrency {
-  return async (prices: ExchangePrice[], dustRequired: bigint) => {
-    if (prices.length === 0) {
-      throw new Error('No exchange prices available');
-    }
+export type CurrencySelection = { mode: 'auto' } | { mode: 'fixed'; currency: Currency };
 
-    log.debug(
-      {
-        dustRequired: dustRequired.toString(),
-        prices: prices.map((p) => ({ currency: p.price.currency, amount: p.price.amount })),
-      },
-      'Available exchange prices',
-    );
-
-    const balances = await walletService.getShieldedTokenBalances();
-
-    const candidates = prices.filter((p) => (balances[p.price.currency.rawId] ?? 0n) > 0n);
-    if (candidates.length === 0) {
-      throw new Error('No exchange prices available for currencies held by this wallet');
-    }
-
-    log.debug(
-      { currencies: candidates.map((p) => p.price.currency) },
-      'Currencies with non-zero balance',
-    );
-    // TODO: allow configuring another selection strategy.
-    const selected = candidates.reduce((lowest, exchangePrice) =>
-      BigInt(exchangePrice.price.amount) < BigInt(lowest.price.amount) ? exchangePrice : lowest,
-    );
-
-    log.info(
-      { currency: selected.price.currency, amount: selected.price.amount },
-      'Auto-selected exchange currency',
-    );
-    return { status: 'selected', exchangePrice: selected };
-  };
-}
-
-function createAutoConfirmOffer(log: FastifyBaseLogger): ConfirmOffer {
-  return async (offer, dustRequired) => {
-    log.info(
-      {
-        offerId: offer.offerId,
-        amount: offer.offerAmount,
-        currency: offer.offerCurrency,
-        dustRequired: dustRequired.toString(),
-      },
-      'Auto-confirming offer',
-    );
-    return { status: 'confirmed' };
-  };
-}
-
-/**
- * Builds a `capacityExchangeWalletProvider` using the WalletService.
- * Auto-selects the currency with lowest price.
- * Returns null if no peer URLs are configured.
- */
+/** Builds the sponsor-fallback `capacityExchangeWalletProvider`: auto-select + auto-confirm. */
 export function buildCesWalletProvider(
   walletService: WalletService,
+  peerPriceService: PeerPriceService,
   networkId: string,
   chainStateProvider: ChainStateProvider,
   additionalCapacityExchangeUrls: string[],
   log: FastifyBaseLogger,
-): WalletProvider | null {
-  if (additionalCapacityExchangeUrls.length === 0) {
-    return null;
-  }
-
+  currencySelection: CurrencySelection = { mode: 'auto' },
+): WalletProvider {
   const { coinPublicKey, encryptionPublicKey } = walletService.shieldedPublicKeys;
+
+  const fixedCurrency = currencySelection.mode === 'fixed' ? currencySelection.currency : undefined;
 
   return capacityExchangeWalletProvider({
     networkId,
@@ -100,7 +41,9 @@ export function buildCesWalletProvider(
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
     chainStateProvider,
     additionalCapacityExchangeUrls,
-    promptForCurrency: createAutoSelectCurrency(log, walletService),
+    promptForCurrency: fixedCurrency
+      ? fixedCurrencySelector(log, walletService, peerPriceService, fixedCurrency)
+      : createAutoSelectCurrency(log, walletService, peerPriceService),
     confirmOffer: createAutoConfirmOffer(log),
   });
 }

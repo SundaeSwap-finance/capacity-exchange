@@ -25,7 +25,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SERVER_DIR = resolve(__dirname, '..');
-const CONTRACTS_DIR = resolve(SERVER_DIR, '..', 'example-webapp', 'contracts');
+const CONTRACTS_DIR = resolve(SERVER_DIR, '..', 'demo', 'contracts');
 
 const N = parseInt(process.argv[2] ?? '2', 10);
 const MIDNIGHT_NETWORK = process.env.MIDNIGHT_NETWORK ?? 'preview';
