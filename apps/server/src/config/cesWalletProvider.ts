@@ -41,7 +41,6 @@ export function buildCesWalletProvider(
     balanceSealedTransaction: (tx) => walletService.balanceSealedTransaction(tx),
     chainStateProvider,
     additionalCapacityExchangeUrls,
-    currency: fixedCurrency,
     promptForCurrency: fixedCurrency
       ? fixedCurrencySelector(log, walletService, peerPriceService, fixedCurrency)
       : createAutoSelectCurrency(log, walletService, peerPriceService),
