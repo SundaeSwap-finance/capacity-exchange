@@ -12,7 +12,7 @@ export type CapacityExchangeErrorType =
 export class CapacityExchangeError extends Error {
   constructor(
     readonly type: CapacityExchangeErrorType,
-    message: string,
+    message: string
   ) {
     super(message);
     this.name = 'CapacityExchangeError';
@@ -59,7 +59,7 @@ export class CapacityExchangeNoPricesAvailableError extends CapacityExchangeErro
 export class CapacityExchangeServerError extends CapacityExchangeError {
   constructor(
     readonly statusCode: number,
-    message: string,
+    message: string
   ) {
     super('server-error', `Capacity Exchange server error (${statusCode}): ${message}`);
     this.name = 'CapacityExchangeServerError';

@@ -115,7 +115,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
     const message = err instanceof Error ? err.message : String(err);
     throw new CapacityExchangeServerError(
       statusCode,
-      `requestCesOffer failed for ${exchangePrice.exchangeApi.url}: ${message}`,
+      `requestCesOffer failed for ${exchangePrice.exchangeApi.url}: ${message}`
     );
   }
   console.debug('[CESSteps] Offer received:', offerResponse);
