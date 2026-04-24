@@ -17,9 +17,7 @@ import { createAutoConfirmOffer } from './peerOfferConfirmer.js';
  * - `fixed` — restricts selection to a single currency, pre-filtering prices beforehand.
  *             Automatically inferred when `peer.maxPrices` has only ONE entry.
  */
-export type CurrencySelection =
-  | { mode: 'auto' }
-  | { mode: 'fixed'; currency: Currency };
+export type CurrencySelection = { mode: 'auto' } | { mode: 'fixed'; currency: Currency };
 
 /** Builds the sponsor-fallback `capacityExchangeWalletProvider`: auto-select + auto-confirm. */
 export function buildCesWalletProvider(

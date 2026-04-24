@@ -1,5 +1,9 @@
 import type { FastifyBaseLogger } from 'fastify';
-import type { Currency, ExchangePrice, PromptForCurrency } from '@sundaeswap/capacity-exchange-providers';
+import type {
+  Currency,
+  ExchangePrice,
+  PromptForCurrency,
+} from '@sundaeswap/capacity-exchange-providers';
 import type { WalletService } from '../services/wallet.js';
 import type { PeerPriceService } from '../services/peerPrice.js';
 
@@ -35,18 +39,26 @@ export function createAutoSelectCurrency(
       'Available exchange prices',
     );
 
-    return selectFromCandidates(prices, dustRequired, requestId, log, walletService, peerPriceService, 'Auto-selected exchange currency');
+    return selectFromCandidates(
+      prices,
+      dustRequired,
+      requestId,
+      log,
+      walletService,
+      peerPriceService,
+      'Auto-selected exchange currency',
+    );
   };
 }
 
 /**
  * {@link PromptForCurrency} pre-filters to a specific {@link Currency}.
- * by `currency.id` before applying the same allowlist, max-price, 
- * and balance checks as {@link createAutoSelectCurrency}. 
+ * by `currency.id` before applying the same allowlist, max-price,
+ * and balance checks as {@link createAutoSelectCurrency}.
  * Returns `{status:'no-eligible'}` when the currency is:
- *  - not offered, 
- *  - not in `peer.maxPrices`, 
- *  - exceeds the configured max, 
+ *  - not offered,
+ *  - not in `peer.maxPrices`,
+ *  - exceeds the configured max,
  *  - or the wallet cannot afford it.
  *
  * Automatically used when `peer.maxPrices` contains only ONE entry.
@@ -65,7 +77,15 @@ export function fixedCurrencySelector(
       return { status: 'no-eligible' };
     }
 
-    return selectFromCandidates(matching, dustRequired, requestId, log, walletService, peerPriceService, 'Fixed currency selected');
+    return selectFromCandidates(
+      matching,
+      dustRequired,
+      requestId,
+      log,
+      walletService,
+      peerPriceService,
+      'Fixed currency selected',
+    );
   };
 }
 
@@ -129,7 +149,11 @@ function filterCandidates(
     const balance = balances[price.price.currency.rawId] ?? 0n;
     if (balance < offered) {
       log.debug(
-        { currency: price.price.currency, offered: offered.toString(), balance: balance.toString() },
+        {
+          currency: price.price.currency,
+          offered: offered.toString(),
+          balance: balance.toString(),
+        },
         'Skipping price: insufficient balance',
       );
       continue;
@@ -144,8 +168,12 @@ function pickLowestRatio(candidates: Candidate[]): Candidate {
   return candidates.reduce((best, curr) => {
     const lhs = curr.offered * best.max;
     const rhs = best.offered * curr.max;
-    if (lhs < rhs) return curr;
-    if (lhs > rhs) return best;
+    if (lhs < rhs) {
+      return curr;
+    }
+    if (lhs > rhs) {
+      return best;
+    }
     return curr.price.price.currency.rawId < best.price.price.currency.rawId ? curr : best;
   });
 }

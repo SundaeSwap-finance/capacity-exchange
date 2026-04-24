@@ -95,7 +95,9 @@ export class SponsorService {
         const tx = await this.cesWalletProvider.balanceTx(userTx);
         return { status: 'ok', tx, specksCommitted: estimatedSpecks };
       } catch (err) {
-        if (!isCapacityExchangeError(err)) throw err;
+        if (!isCapacityExchangeError(err)) {
+          throw err;
+        }
         switch (err.type) {
           case 'no-eligible-offer':
           case 'no-prices-available':

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { FastifyBaseLogger } from 'fastify';
 import type { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { createAutoSelectCurrency } from './peerCurrencySelector.js';
+import { createAutoSelectCurrency, fixedCurrencySelector } from './peerCurrencySelector.js';
 import { PeerPriceService } from '../services/peerPrice.js';
 import type { WalletService } from '../services/wallet.js';
 import type { RawPriceFormula } from './prices.js';
@@ -28,7 +28,12 @@ function makePrice(rawId: string, amount: string, quoteId = `q-${rawId}`): Excha
   };
 }
 
-function makeFormula(rawId: string, basePrice: string, rateNumerator = '1', rateDenominator = '1'): RawPriceFormula {
+function makeFormula(
+  rawId: string,
+  basePrice: string,
+  rateNumerator = '1',
+  rateDenominator = '1',
+): RawPriceFormula {
   return {
     currency: { type: 'midnight:shielded', rawId },
     basePrice,
@@ -57,7 +62,11 @@ describe('createAutoSelectCurrency', () => {
     const walletService = makeWalletService({ btc: 100n, ada: 100n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
-    const result = await select([makePrice('btc', '1'), makePrice('ada', '2')], DUST_REQUIRED, REQ_ID);
+    const result = await select(
+      [makePrice('btc', '1'), makePrice('ada', '2')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
 
     expect(result).toEqual({
       status: 'selected',
@@ -85,7 +94,11 @@ describe('createAutoSelectCurrency', () => {
     const walletService = makeWalletService({ btc: 10_000n, ada: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
-    const result = await select([makePrice('btc', '1'), makePrice('ada', '500')], DUST_REQUIRED, REQ_ID);
+    const result = await select(
+      [makePrice('btc', '1'), makePrice('ada', '500')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
     expect(result).toMatchObject({
       status: 'selected',
       exchangePrice: { price: { currency: { rawId: 'ada' } } },
@@ -101,7 +114,11 @@ describe('createAutoSelectCurrency', () => {
     const walletService = makeWalletService({ btc: 0n, ada: 1_000_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
-    const result = await select([makePrice('btc', '1'), makePrice('ada', '10')], DUST_REQUIRED, REQ_ID);
+    const result = await select(
+      [makePrice('btc', '1'), makePrice('ada', '10')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
     expect(result).toMatchObject({
       status: 'selected',
       exchangePrice: { price: { currency: { rawId: 'ada' } } },
@@ -136,7 +153,11 @@ describe('createAutoSelectCurrency', () => {
     const walletService = makeWalletService({ aaa: 10_000n, bbb: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
-    const result = await select([makePrice('bbb', '1'), makePrice('aaa', '1')], DUST_REQUIRED, REQ_ID);
+    const result = await select(
+      [makePrice('bbb', '1'), makePrice('aaa', '1')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
     expect(result).toMatchObject({
       status: 'selected',
       exchangePrice: { price: { currency: { rawId: 'aaa' } } },
@@ -156,6 +177,116 @@ describe('createAutoSelectCurrency', () => {
 
     // 111 rejected
     await expect(select([makePrice('ada', '111')], DUST_REQUIRED, REQ_ID)).resolves.toEqual({
+      status: 'no-eligible',
+    });
+  });
+});
+
+describe('fixedCurrencySelector', () => {
+  const ADA_CURRENCY = { id: 'midnight:shielded:ada', type: 'midnight:shielded', rawId: 'ada' };
+
+  it('selects the pinned currency when offered and affordable', async () => {
+    const peerPriceService = new PeerPriceService([makeFormula('ada', '1000', '0', '1')]);
+    const walletService = makeWalletService({ ada: 10_000n });
+    const select = fixedCurrencySelector(
+      silentLogger,
+      walletService,
+      peerPriceService,
+      ADA_CURRENCY,
+    );
+
+    const result = await select(
+      [makePrice('btc', '1'), makePrice('ada', '100')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
+    expect(result).toMatchObject({
+      status: 'selected',
+      exchangePrice: { price: { currency: { rawId: 'ada' } } },
+    });
+  });
+
+  it('ignores other currencies even if cheaper', async () => {
+    const peerPriceService = new PeerPriceService([
+      makeFormula('ada', '1000', '0', '1'),
+      makeFormula('btc', '1000', '0', '1'),
+    ]);
+    const walletService = makeWalletService({ ada: 10_000n, btc: 10_000n });
+    const select = fixedCurrencySelector(
+      silentLogger,
+      walletService,
+      peerPriceService,
+      ADA_CURRENCY,
+    );
+
+    // btc is cheaper but we are pinned to ada
+    const result = await select(
+      [makePrice('btc', '1'), makePrice('ada', '500')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
+    expect(result).toMatchObject({
+      status: 'selected',
+      exchangePrice: { price: { currency: { rawId: 'ada' } } },
+    });
+  });
+
+  it('returns no-eligible when the pinned currency is not offered', async () => {
+    const peerPriceService = new PeerPriceService([makeFormula('ada', '1000', '0', '1')]);
+    const walletService = makeWalletService({ ada: 10_000n });
+    const select = fixedCurrencySelector(
+      silentLogger,
+      walletService,
+      peerPriceService,
+      ADA_CURRENCY,
+    );
+
+    await expect(select([makePrice('btc', '1')], DUST_REQUIRED, REQ_ID)).resolves.toEqual({
+      status: 'no-eligible',
+    });
+  });
+
+  it('returns no-eligible when the offered amount exceeds the configured max', async () => {
+    const peerPriceService = new PeerPriceService([makeFormula('ada', '100', '0', '1')]);
+    const walletService = makeWalletService({ ada: 10_000n });
+    const select = fixedCurrencySelector(
+      silentLogger,
+      walletService,
+      peerPriceService,
+      ADA_CURRENCY,
+    );
+
+    await expect(select([makePrice('ada', '200')], DUST_REQUIRED, REQ_ID)).resolves.toEqual({
+      status: 'no-eligible',
+    });
+  });
+
+  it('returns no-eligible when the pinned currency is not allowlisted in maxPrices', async () => {
+    const peerPriceService = new PeerPriceService([makeFormula('btc', '1000', '0', '1')]);
+    const walletService = makeWalletService({ ada: 10_000n });
+    const select = fixedCurrencySelector(
+      silentLogger,
+      walletService,
+      peerPriceService,
+      ADA_CURRENCY,
+    );
+
+    await expect(select([makePrice('ada', '100')], DUST_REQUIRED, REQ_ID)).resolves.toEqual({
+      status: 'no-eligible',
+    });
+  });
+
+  it('returns no-eligible when the wallet cannot afford the pinned currency', async () => {
+    const peerPriceService = new PeerPriceService([makeFormula('ada', '1000', '0', '1')]);
+    const walletService = makeWalletService({ ada: 0n });
+    const select = fixedCurrencySelector(
+      silentLogger,
+      walletService,
+      peerPriceService,
+      ADA_CURRENCY,
+    );
+
+    await expect(select([makePrice('ada', '100')], DUST_REQUIRED, REQ_ID)).resolves.toEqual({
       status: 'no-eligible',
     });
   });

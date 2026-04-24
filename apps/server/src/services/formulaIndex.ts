@@ -31,7 +31,9 @@ export class FormulaIndex {
   /** Evaluate the formula keyed by the given currency id. */
   evaluateById(id: string, specks: bigint): EvaluatedPrice | undefined {
     const formula = this.#byId.get(id);
-    if (!formula) return undefined;
+    if (!formula) {
+      return undefined;
+    }
     return { price: evaluateFormula(formula, specks), currency: formula.currency };
   }
 

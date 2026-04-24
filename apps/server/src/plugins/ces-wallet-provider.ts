@@ -32,9 +32,12 @@ export default fp(async (fastify: FastifyInstance) => {
   // use `fixed` mode to pre-filter prices and skip the auto-selection logic.
   const rawCurrency = peer?.maxPrices.length === 1 ? peer.maxPrices[0].currency : undefined;
   const currencySelection: CurrencySelection = rawCurrency
-    ? { mode: 'fixed', currency: { ...rawCurrency, id: `${rawCurrency.type}:${rawCurrency.rawId}` } }
-  // With multiple entries, fall back to `auto` so the selector picks the cheapest eligible offer.
-    : { mode: 'auto' };
+    ? {
+        mode: 'fixed',
+        currency: { ...rawCurrency, id: `${rawCurrency.type}:${rawCurrency.rawId}` },
+      }
+    : // With multiple entries, fall back to `auto` so the selector picks the cheapest eligible offer.
+      { mode: 'auto' };
 
   const cesWalletProvider = buildCesWalletProvider(
     fastify.walletService,
