@@ -150,12 +150,6 @@ export interface CapacityExchangeConfig {
    */
   margin?: number;
   /**
-   * Optional: pre-filter prices to a specific currency before passing them to
-   * {@link promptForCurrency}. When combined with {@link fixedCurrencySelector},
-   * this avoids handing the selector a list of irrelevant prices.
-   */
-  currency?: Currency;
-  /**
    * A function called when the user must choose which currency to pay.
    * Returns the user's decision. To pin a specific currency with max-price
    * and balance checks, pass a {@link fixedCurrencySelector} here.
