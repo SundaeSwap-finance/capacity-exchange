@@ -23,8 +23,8 @@
   "author": "",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "@sundaeswap/capacity-exchange-core": "1.1.0",
-    "@sundaeswap/capacity-exchange-nodejs": "1.0.1",
+    "@sundaeswap/capacity-exchange-core": "workspace:^",
+    "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "commander": "^14.0.2",
     "@midnight-ntwrk/compact-js": "2.5.0",
     "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
