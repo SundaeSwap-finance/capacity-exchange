@@ -1,8 +1,9 @@
 import * as crypto from 'crypto';
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { buildUnprovenCallTx } from '@sundaeswap/capacity-exchange-core';
 import { sponsoredTransactionsWalletProvider } from '@sundaeswap/capacity-exchange-providers';
-import { findDeployedContract, createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledTokenMintContract, type TokenMintContract } from '@capacity-exchange/demo-contracts/token-mint';
@@ -79,7 +80,7 @@ async function proveAndSponsor(
   mintAmount: bigint
 ) {
   logger.info('Building and proving mint transaction');
-  const callTxData = await createUnprovenCallTx(providers, {
+  const callTxData = await buildUnprovenCallTx(providers, {
     compiledContract: CompiledTokenMintContract,
     contractAddress,
     circuitId: 'mint_test_tokens' as const,

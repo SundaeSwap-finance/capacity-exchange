@@ -233,9 +233,11 @@
       "name": "@sundaeswap/capacity-exchange-core",
       "version": "1.1.0",
       "dependencies": {
+        "@midnight-ntwrk/compact-js": "2.5.0",
         "@midnight-ntwrk/compact-runtime": "0.15.0",
         "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
         "@midnight-ntwrk/ledger-v8": "8.0.3",
+        "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
         "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.0.1",
         "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.1",
         "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",

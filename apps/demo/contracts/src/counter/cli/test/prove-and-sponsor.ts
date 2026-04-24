@@ -21,7 +21,7 @@
  */
 import { program } from 'commander';
 import { runCli, withAppContextFromEnv, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
-import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { buildUnprovenCallTx } from '@sundaeswap/capacity-exchange-core';
 import { CompiledCounterContract, CounterContract } from '../../lib/contract.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { DefaultApi, type ApiSponsorPost200Response, Configuration } from '@sundaeswap/capacity-exchange-client';
@@ -50,7 +50,7 @@ async function main(): Promise<ProveAndSponsorOutput> {
 
     const providers = buildProviders<CounterContract>(ctx, './counter/out');
 
-    const callTxData = await createUnprovenCallTx(providers, {
+    const callTxData = await buildUnprovenCallTx(providers, {
       contractAddress,
       compiledContract: CompiledCounterContract,
       circuitId: 'increment',
