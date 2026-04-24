@@ -4,7 +4,7 @@ import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 import type { ChainStateProvider } from '@sundaeswap/capacity-exchange-providers';
-import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
+import { buildCesWalletProvider, type CurrencySelection } from '../config/cesWalletProvider.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -27,6 +27,15 @@ export default fp(async (fastify: FastifyInstance) => {
     getLedgerParameters: () => getLedgerParameters(indexerHttpUrl),
   };
 
+  const peer = fastify.config.peer;
+  // If `peer.maxPrices` has exactly ONE entry, the currency to pay with is obvious —
+  // use `fixed` mode to pre-filter prices and skip the auto-selection logic.
+  const rawCurrency = peer?.maxPrices.length === 1 ? peer.maxPrices[0].currency : undefined;
+  const currencySelection: CurrencySelection = rawCurrency
+    ? { mode: 'fixed', currency: { ...rawCurrency, id: `${rawCurrency.type}:${rawCurrency.rawId}` } }
+  // With multiple entries, fall back to `auto` so the selector picks the cheapest eligible offer.
+    : { mode: 'auto' };
+
   const cesWalletProvider = buildCesWalletProvider(
     fastify.walletService,
     fastify.peerPriceService,
@@ -34,6 +43,7 @@ export default fp(async (fastify: FastifyInstance) => {
     chainStateProvider,
     fastify.config.capacityExchangeUrls,
     fastify.log,
+    currencySelection,
   );
 
   fastify.decorate('cesWalletProvider', cesWalletProvider);

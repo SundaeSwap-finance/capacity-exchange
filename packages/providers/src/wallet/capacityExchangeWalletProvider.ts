@@ -72,6 +72,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     chainStateProvider,
     additionalCapacityExchangeUrls = [],
     margin = 3,
+    currency,
     promptForCurrency,
     confirmOffer,
   } = config;
@@ -83,12 +84,18 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     async balanceTx(tx, _ttl?) {
       console.debug('[CapacityExchange] balanceTx called');
 
-      const { prices, specksRequired } = await fetchCesPrices(tx, {
+      const { prices: allPrices, specksRequired } = await fetchCesPrices(tx, {
         networkId,
         chainStateProvider,
         additionalCapacityExchangeUrls,
         margin,
       });
+
+      // if a specific currency was configured, filter prices to that currency. 
+      // Otherwise, use all returned prices.
+      const prices = currency
+        ? allPrices.filter((p) => p.price.currency.id === currency.id)
+        : allPrices;
 
       while (true) {
         const requestId = crypto.randomUUID();
