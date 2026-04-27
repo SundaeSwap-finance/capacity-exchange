@@ -88,7 +88,7 @@ describe('createAutoSelectCurrency', () => {
     });
   });
 
-  it('skips currencies not allowlisted in sponsorFallback.maxPrices', async () => {
+  it('skips currencies not allowlisted in peer.maxPrices', async () => {
     // Only ada has a max configured; btc is not allowlisted, even if offer is cheap.
     const peerPriceService = new PeerPriceService([makeFormula('ada', '1000', '0', '1')]);
     const walletService = makeWalletService({ btc: 10_000n, ada: 10_000n });

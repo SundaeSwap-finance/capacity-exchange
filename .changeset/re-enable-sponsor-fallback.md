@@ -1,5 +1,7 @@
 ---
 '@capacity-exchange/server': minor
+'@sundaeswap/capacity-exchange-providers': minor
+'@sundaeswap/capacity-exchange-react-sdk': minor
 ---
 
 re-enable sponsor fallback

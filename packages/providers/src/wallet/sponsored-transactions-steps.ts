@@ -1,7 +1,12 @@
-import { type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
+import {
+  Transaction,
+  type SignatureEnabled,
+  type Proof,
+  type Binding,
+  type FinalizedTransaction,
+} from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
-import { serializeTx, deserializeTx } from './utils';
 import type { CesApi } from './exchangeApi';
 
 /**
@@ -9,7 +14,7 @@ import type { CesApi } from './exchangeApi';
  * The server validates eligibility, builds a dust tx, merges, binds, and returns the finalized transaction.
  */
 export async function requestSponsorship(tx: UnboundTransaction, exchangeApi: CesApi): Promise<FinalizedTransaction> {
-  const serializedTx = serializeTx(tx);
+  const serializedTx = Buffer.from(tx.serialize()).toString('hex');
   console.debug('[SponsoredTransactions] Requesting sponsorship from CES:', exchangeApi.url);
 
   const response = await exchangeApi.api.apiSponsorPost({
@@ -17,5 +22,7 @@ export async function requestSponsorship(tx: UnboundTransaction, exchangeApi: Ce
   });
 
   console.debug('[SponsoredTransactions] Sponsorship response received');
-  return deserializeTx(hexToBytes(response.tx));
+  const resultBytes = hexToBytes(response.tx);
+
+  return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', resultBytes);
 }

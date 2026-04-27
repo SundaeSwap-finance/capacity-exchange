@@ -1,14 +1,24 @@
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import { type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
+import {
+  Proof,
+  SignatureEnabled,
+  Transaction,
+  type Binding,
+  type FinalizedTransaction,
+} from '@midnight-ntwrk/ledger-v8';
 import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
 import type { ChainStateProvider } from './chainStateProvider';
-import { isOfferExpired, serializeTx, deserializeTx } from './utils';
+import { isOfferExpired } from './utils';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi';
 import { fetchRegistryCesUrls } from './registryLookup';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
+
+function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Binding> {
+  return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hex);
+}
 
 function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {
   return {
@@ -92,6 +102,7 @@ async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: C
  */
 export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
+  // WrappedDefaultApi already translates ResponseError → CapacityExchangeServerError.
   const offerResponse: ApiOffersPost201Response = await exchangePrice.exchangeApi.api.apiOffersPost({
     apiOffersPostRequest: {
       quoteId: exchangePrice.quoteId,
@@ -124,7 +135,7 @@ export async function processTransactionWithOffer(
   console.debug('[CESSteps] DUST transaction deserialized');
 
   console.debug('[CESSteps] Balancing user transaction');
-  const txHex = serializeTx(tx);
+  const txHex = Buffer.from(tx.serialize()).toString('hex');
   const { tx: balancedTxHex } = await balanceUnsealedTransaction(txHex);
   const balancedTx = deserializeTx(hexToBytes(balancedTxHex));
   console.debug('[CESSteps] User transaction balanced');
@@ -133,7 +144,7 @@ export async function processTransactionWithOffer(
   const mergedTx = balancedTx.merge(dustTx);
   console.debug('[CESSteps] Transactions merged, calling wallet to balance');
 
-  const mergedTxHex = serializeTx(mergedTx);
+  const mergedTxHex = Buffer.from(mergedTx.serialize()).toString('hex');
   const { tx: result } = await balanceSealedTransaction(mergedTxHex);
   console.debug('[CESSteps] Wallet balanced and sealed transaction');
 
