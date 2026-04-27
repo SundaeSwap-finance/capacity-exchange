@@ -1,9 +1,5 @@
 import type { FastifyBaseLogger } from 'fastify';
-import type {
-  Currency,
-  ExchangePrice,
-  PromptForCurrency,
-} from '@sundaeswap/capacity-exchange-providers';
+import type { ExchangePrice, PromptForCurrency } from '@sundaeswap/capacity-exchange-providers';
 import type { WalletService } from '../services/wallet.js';
 import type { PeerPriceService } from '../services/peerPrice.js';
 
@@ -39,53 +35,7 @@ export function createAutoSelectCurrency(
       'Available exchange prices',
     );
 
-    return selectFromCandidates(
-      prices,
-      dustRequired,
-      requestId,
-      log,
-      walletService,
-      peerPriceService,
-      'Auto-selected exchange currency',
-    );
-  };
-}
-
-/**
- * {@link PromptForCurrency} pre-filters to a specific {@link Currency}
- * by `currency.id` before applying the same allowlist, max-price,
- * and balance checks as {@link createAutoSelectCurrency}.
- * Returns `{status:'no-eligible'}` when the currency is:
- *  - not offered,
- *  - not in `peer.maxPrices`,
- *  - exceeds the configured max,
- *  - or the wallet cannot afford it.
- *
- * Automatically used when `peer.maxPrices` contains only ONE entry.
- */
-export function fixedCurrencySelector(
-  log: FastifyBaseLogger,
-  walletService: WalletService,
-  peerPriceService: PeerPriceService,
-  currency: Currency,
-): PromptForCurrency {
-  return async (prices: ExchangePrice[], dustRequired: bigint, requestId: string) => {
-    const matching = prices.filter((p) => p.price.currency.id === currency.id);
-
-    if (matching.length === 0) {
-      log.warn({ requestId, currency }, 'Fixed currency not found in offered prices');
-      return { status: 'no-eligible' };
-    }
-
-    return selectFromCandidates(
-      matching,
-      dustRequired,
-      requestId,
-      log,
-      walletService,
-      peerPriceService,
-      'Fixed currency selected',
-    );
+    return selectFromCandidates(prices, dustRequired, requestId, log, walletService, peerPriceService);
   };
 }
 
@@ -93,11 +43,10 @@ export function fixedCurrencySelector(
 async function selectFromCandidates(
   prices: ExchangePrice[],
   dustRequired: bigint,
-  requestId: string | undefined,
+  requestId: string,
   log: FastifyBaseLogger,
   walletService: WalletService,
   peerPriceService: PeerPriceService,
-  selectedMsg: string,
 ): ReturnType<PromptForCurrency> {
   const balances = await walletService.getShieldedTokenBalances();
   const candidates = filterCandidates(prices, balances, peerPriceService, dustRequired, log);
@@ -115,7 +64,7 @@ async function selectFromCandidates(
       amount: selected.price.price.amount,
       max: selected.max.toString(),
     },
-    selectedMsg,
+    'Auto-selected exchange currency',
   );
   return { status: 'selected', exchangePrice: selected.price };
 }
@@ -140,10 +89,7 @@ function filterCandidates(
       continue;
     }
     if (max === 0n) {
-      log.debug(
-        { currency: price.price.currency },
-        'Skipping price: configured max is zero',
-      );
+      log.debug({ currency: price.price.currency }, 'Skipping price: configured max is zero');
       continue;
     }
     if (offered > max) {

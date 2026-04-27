@@ -3,8 +3,7 @@ import { FastifyInstance } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { indexerChainStateProvider } from '@sundaeswap/capacity-exchange-providers';
 import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
-import { createAutoSelectCurrency, fixedCurrencySelector } from '../config/peerCurrencySelector.js';
-import { computeCurrencyId } from '../services/formulaIndex.js';
+import { createAutoSelectCurrency } from '../config/peerCurrencySelector.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -26,17 +25,9 @@ export default fp(async (fastify: FastifyInstance) => {
   const { indexerHttpUrl, indexerWsUrl } = fastify.config.endpoints;
   const chainStateProvider = indexerChainStateProvider(indexerHttpUrl, indexerWsUrl);
 
-  const peer = fastify.config.peer!;
   const { walletService, peerPriceService, log } = fastify;
 
-  const singleCurrency = peer.maxPrices.length === 1 ? peer.maxPrices[0].currency : undefined;
-  // use `fixedCurrencySelector` if `peer.maxPrices` has exactly ONE entry
-  const promptForCurrency = singleCurrency
-    ? fixedCurrencySelector(log, walletService, peerPriceService, {
-        ...singleCurrency,
-        id: computeCurrencyId(singleCurrency),
-      })
-    : createAutoSelectCurrency(log, walletService, peerPriceService);
+  const promptForCurrency = createAutoSelectCurrency(log, walletService, peerPriceService);
 
   const cesWalletProvider = buildCesWalletProvider(
     walletService,
