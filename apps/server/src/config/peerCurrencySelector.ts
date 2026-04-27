@@ -35,7 +35,14 @@ export function createAutoSelectCurrency(
       'Available exchange prices',
     );
 
-    return selectFromCandidates(prices, dustRequired, requestId, log, walletService, peerPriceService);
+    return selectFromCandidates(
+      prices,
+      dustRequired,
+      requestId,
+      log,
+      walletService,
+      peerPriceService,
+    );
   };
 }
 
