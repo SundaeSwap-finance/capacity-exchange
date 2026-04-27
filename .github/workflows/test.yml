@@ -8,6 +8,7 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -25,6 +26,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Start local devnet
         uses: hoverkraft-tech/compose-action@v2
@@ -52,6 +54,7 @@ jobs:
       matrix:
         env: [preview]
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
       - name: Compile contracts

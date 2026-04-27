@@ -4,7 +4,6 @@ description: Checkout, install Bun, install Task, and install dependencies
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
     - uses: oven-sh/setup-bun@v2
     - name: Install Task
       shell: bash
