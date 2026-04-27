@@ -38,6 +38,12 @@ async function runAllFlows(ctx: AppContext, config: TestConfig): Promise<FlowRes
 
   flows.push(await runFlow('sponsor', () => runSponsorFlow(ctx, config.tokenMintAddress, config.cesUrl)));
 
+  // The sponsor flow mints derived tokens to this wallet. Wait for the shielded
+  // wallet to sync those tokens before the exchange flow tries to spend them.
+  logger.info('Waiting for shielded wallet to sync minted tokens...');
+  await ctx.walletContext.walletFacade.shielded.waitForSyncedState();
+  logger.info('Shielded wallet synced');
+
   flows.push(
     await runFlow('exchange', () =>
       runExchangeFlow(ctx, config.networkId, config.counterAddress, config.cesUrl, config.derivedTokenColor)
