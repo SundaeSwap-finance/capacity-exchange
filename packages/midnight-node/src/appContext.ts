@@ -1,20 +1,27 @@
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { MidnightProvider, PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { AppConfig } from './appConfig.js';
+import type { AppConfig, NetworkConfig } from './appConfig.js';
 import { checkWebSocket, checkIndexerFreshness, checkProofServer } from './connectivity.js';
 import { createPrivateStateProvider } from './levelPrivateStateProvider.js';
 import { WalletContext, createWalletContext } from './walletContext.js';
 
+/** Public data provider for read-only callers; no wallet bootstrap. */
+// TODO: wrap in `withNetworkContext` helper.
+export function createPublicDataProvider(network: NetworkConfig): PublicDataProvider {
+  const { indexerHttpUrl, indexerWsUrl } = network.endpoints;
+  return indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl);
+}
+
 export interface AppContext {
+  config: AppConfig;
   privateStateProvider: PrivateStateProvider;
   publicDataProvider: PublicDataProvider;
   midnightProvider: MidnightProvider;
   walletContext: WalletContext;
-  proofServerUrl: string;
 }
 
 export async function createAppContext(config: AppConfig): Promise<AppContext> {
-  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config.endpoints;
+  const { nodeUrl, proofServerUrl, indexerHttpUrl, indexerWsUrl } = config.network.endpoints;
 
   await Promise.all([checkWebSocket(nodeUrl), checkProofServer(proofServerUrl), checkIndexerFreshness(indexerHttpUrl)]);
 
@@ -28,10 +35,10 @@ export async function createAppContext(config: AppConfig): Promise<AppContext> {
   };
 
   return {
+    config,
     privateStateProvider: createPrivateStateProvider(),
     publicDataProvider: indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl),
     midnightProvider,
     walletContext,
-    proofServerUrl,
   };
 }

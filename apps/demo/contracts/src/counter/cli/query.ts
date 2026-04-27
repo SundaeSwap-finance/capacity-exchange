@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { query, QueryOutput } from '../lib/operations.js';
 
 function main(): Promise<QueryOutput> {
@@ -11,7 +11,7 @@ function main(): Promise<QueryOutput> {
     .parse();
 
   const [networkId, contractAddress] = program.args;
-  return withAppContext(networkId, (ctx) => query(ctx, contractAddress));
+  return withAppContextFromEnv(networkId, (ctx) => query(ctx, contractAddress));
 }
 
 runCli(main);

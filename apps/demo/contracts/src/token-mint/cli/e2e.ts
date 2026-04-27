@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, mint, verify, DeployOutput, MintOutput, VerifyOutput } from '../lib/operations.js';
 
 interface E2EOutput {
@@ -20,7 +20,7 @@ function main(): Promise<E2EOutput> {
   const [networkId, amountStr, tokenColor] = program.args;
   const amount = BigInt(amountStr);
 
-  return withAppContext(networkId, async (ctx) => {
+  return withAppContextFromEnv(networkId, async (ctx) => {
     const deployResult = await deploy(ctx, tokenColor);
     const mintResult = await mint(ctx, deployResult.contractAddress, deployResult.privateStateId, amount);
     const verifyResult = await verify(ctx, deployResult.contractAddress, deployResult.tokenColor);

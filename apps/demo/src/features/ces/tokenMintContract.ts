@@ -1,9 +1,8 @@
-import { findDeployedContract, createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
-import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
+import { buildMidnightProviders, buildUnprovenCallTx, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { buildMidnightProviders } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkConfig } from '../../config';
 import * as TokenMint from '../../../contracts/token-mint/out/contract/index.js';
 
@@ -73,7 +72,7 @@ export async function findAndMintTokens(
     initialPrivateState,
   });
 
-  const callTxData = await createUnprovenCallTx(contractProviders, {
+  const callTxData = await buildUnprovenCallTx(contractProviders, {
     compiledContract: compiledTokenMintContract,
     contractAddress,
     circuitId: 'mint_test_tokens' as const,

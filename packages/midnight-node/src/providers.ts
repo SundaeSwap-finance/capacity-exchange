@@ -4,13 +4,13 @@ import type { MidnightProviders, FinalizedTxData } from '@midnight-ntwrk/midnigh
 import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import type { Contract } from '@midnight-ntwrk/compact-js';
 import {
-  createUnprovenCallTx,
   createUnprovenDeployTx,
   deployContract,
   submitTx,
   CallTxFailedError,
   type ContractProviders,
 } from '@midnight-ntwrk/midnight-js-contracts';
+import { buildUnprovenCallTx } from '@sundaeswap/capacity-exchange-core';
 import type {
   CallTxOptionsWithPrivateStateId,
   CallTxOptionsBase,
@@ -32,7 +32,7 @@ export function buildProviders<C extends Contract.Any>(
   return {
     midnightProvider: ctx.midnightProvider,
     privateStateProvider: ctx.privateStateProvider,
-    proofProvider: httpClientProofProvider(ctx.proofServerUrl, zkConfigProvider),
+    proofProvider: httpClientProofProvider(ctx.config.network.endpoints.proofServerUrl, zkConfigProvider),
     publicDataProvider: ctx.publicDataProvider,
     walletProvider: ctx.walletContext.walletProvider,
     zkConfigProvider,
@@ -88,7 +88,7 @@ export async function submitCallTxDirect<C extends Contract<undefined>, ICK exte
   options: CallTxOptionsBase<C, ICK>,
   dryRun = false
 ): Promise<FinalizedCallTxData<C, ICK>> {
-  const callTxData = await createUnprovenCallTx(providers, options);
+  const callTxData = await buildUnprovenCallTx(providers, options);
   return finalizeCallTx(providers, callTxData, options.circuitId, dryRun);
 }
 
@@ -99,7 +99,7 @@ export async function submitStatefulCallTxDirect<C extends Contract.Any, ICK ext
   options: CallTxOptionsWithPrivateStateId<C, ICK>,
   dryRun = false
 ): Promise<FinalizedCallTxData<C, ICK>> {
-  const callTxData = await createUnprovenCallTx(providers, options);
+  const callTxData = await buildUnprovenCallTx(providers, options);
   const result = await finalizeCallTx(providers, callTxData, options.circuitId, dryRun);
 
   if (!dryRun) {

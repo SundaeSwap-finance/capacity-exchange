@@ -2,19 +2,19 @@ import { program } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
 import { extractChainSnapshot } from '@sundaeswap/capacity-exchange-core';
+import { writeChainSnapshot } from '../chainSnapshot.js';
 import { createLogger } from '../createLogger.js';
-
-/**
- * Extracts chain-state-only snapshots from a wallet state directory.
- * These snapshots can be used by seed-wallet-state to bootstrap new wallets.
- */
 
 const logger = createLogger(import.meta);
 
+/**
+ * Exports chain-state-only snapshots from a wallet state directory.
+ * These snapshots can be used by restore-from-chain-snapshot to bootstrap new wallets.
+ */
 function main() {
   program
     .name('export-chain-snapshot')
-    .description('Extract chain state from wallet state files into snapshot files')
+    .description('Export chain state from wallet state files into snapshot files')
     .argument('<networkId>', 'Network ID (e.g., preview)')
     .argument('<stateDir>', 'Wallet state directory to read from')
     .argument('<snapshotDir>', 'Directory to write snapshot files to')
@@ -38,11 +38,7 @@ function main() {
     savedUnshieldedState: fs.readFileSync(path.join(stateDir, unshieldedFile), 'utf-8'),
   });
 
-  fs.mkdirSync(snapshotDir, { recursive: true });
-  fs.writeFileSync(path.join(snapshotDir, `${networkId}-shielded.json`), JSON.stringify(snapshot.shielded));
-  fs.writeFileSync(path.join(snapshotDir, `${networkId}-dust.json`), JSON.stringify(snapshot.dust));
-  fs.writeFileSync(path.join(snapshotDir, `${networkId}-unshielded.json`), JSON.stringify(snapshot.unshielded));
-
+  writeChainSnapshot(networkId, snapshotDir, snapshot);
   logger.info(`Exported chain snapshot to ${snapshotDir} at offset ${snapshot.shielded.offset}`);
 }
 

@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { verify, VerifyOutput } from '../lib/operations.js';
 
 function main(): Promise<VerifyOutput> {
@@ -12,7 +12,7 @@ function main(): Promise<VerifyOutput> {
     .parse();
 
   const [networkId, contractAddress, tokenColor] = program.args;
-  return withAppContext(networkId, (ctx) => verify(ctx, contractAddress, tokenColor));
+  return withAppContextFromEnv(networkId, (ctx) => verify(ctx, contractAddress, tokenColor));
 }
 
 runCli(main);
