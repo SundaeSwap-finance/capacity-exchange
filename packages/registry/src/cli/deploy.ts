@@ -1,5 +1,6 @@
 import { program } from 'commander';
-import { runCli, withAppContext, requireNetworkId } from '@sundaeswap/capacity-exchange-nodejs';
+import { parsePositiveNumber } from '@sundaeswap/capacity-exchange-core';
+import { runCli, withAppContextFromEnv, requireEnvVar, resolveEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, DeployOutput } from '../deploy.js';
 
 function main(): Promise<DeployOutput> {
@@ -10,13 +11,10 @@ function main(): Promise<DeployOutput> {
     .argument('[registrationPeriod]', 'max registration period in days (default: 30)', '30')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
   const [collateral, registrationPeriod] = program.processedArgs;
 
-  const days = Number(registrationPeriod);
-  if (!Number.isFinite(days) || days <= 0) {
-    throw new Error(`Invalid registrationPeriod: "${registrationPeriod}". Expected a positive number of days.`);
-  }
+  const days = parsePositiveNumber('registrationPeriod', registrationPeriod);
 
   const args = {
     requiredCollateral: BigInt(collateral),
@@ -26,7 +24,7 @@ function main(): Promise<DeployOutput> {
     `set arguments: ${JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value))}`
   );
 
-  return withAppContext(networkId, (ctx) => deploy(ctx, args));
+  return withAppContextFromEnv(networkId, (ctx) => deploy(ctx, args));
 }
 
 runCli(main);

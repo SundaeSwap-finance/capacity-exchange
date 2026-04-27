@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { increment } from '../lib/operations.js';
 
@@ -12,7 +12,7 @@ function main(): Promise<TxResult> {
     .parse();
 
   const [networkId, contractAddress] = program.args;
-  return withAppContext(networkId, (ctx) => increment(ctx, contractAddress));
+  return withAppContextFromEnv(networkId, (ctx) => increment(ctx, contractAddress));
 }
 
 runCli(main);

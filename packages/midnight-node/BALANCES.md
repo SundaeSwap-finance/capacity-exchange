@@ -26,7 +26,7 @@ echo "your mnemonic" > packages/midnight-node/wallet-mnemonic.preview.txt
 **3. Create `.env`**
 
 ```bash
-printf "WALLET_STATE_DIR=./.wallet-state\nPROOF_SERVER_URL=https://your-proof-server\n" > packages/midnight-node/.env
+printf "WALLET_MNEMONIC_FILE=./wallet-mnemonic.preview.txt\nWALLET_STATE_DIR=./.wallet-state\nPROOF_SERVER_URL=https://your-proof-server\n" > packages/midnight-node/.env
 ```
 
 ## Run

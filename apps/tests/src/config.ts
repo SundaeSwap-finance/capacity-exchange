@@ -1,25 +1,21 @@
+import { requireEnvVar, type Env } from '@sundaeswap/capacity-exchange-nodejs';
+
 export interface TestConfig {
   networkId: string;
   cesUrl: string;
   counterAddress: string;
   tokenMintAddress: string;
   derivedTokenColor: string;
+  chainSnapshotDir: string;
 }
 
-export function getTestConfig(): TestConfig {
+export function getTestConfig(env: Env): TestConfig {
   return {
-    networkId: requireEnv('NETWORK_ID'),
-    cesUrl: requireEnv('CES_URL'),
-    counterAddress: requireEnv('COUNTER_ADDRESS'),
-    tokenMintAddress: requireEnv('TOKEN_MINT_ADDRESS'),
-    derivedTokenColor: requireEnv('DERIVED_TOKEN_COLOR'),
+    networkId: requireEnvVar(env, 'NETWORK_ID'),
+    cesUrl: requireEnvVar(env, 'CES_URL'),
+    counterAddress: requireEnvVar(env, 'COUNTER_ADDRESS'),
+    tokenMintAddress: requireEnvVar(env, 'TOKEN_MINT_ADDRESS'),
+    derivedTokenColor: requireEnvVar(env, 'DERIVED_TOKEN_COLOR'),
+    chainSnapshotDir: requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR'),
   };
-}
-
-function requireEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
 }

@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { deploy, increment, query, DeployOutput, QueryOutput } from '../lib/operations.js';
 
@@ -24,7 +24,7 @@ function main(): Promise<E2EOutput> {
     throw new Error('incrementCount must be a positive integer');
   }
 
-  return withAppContext(networkId, async (ctx) => {
+  return withAppContextFromEnv(networkId, async (ctx) => {
     const deployResult = await deploy(ctx);
 
     const incrementResults: TxResult[] = [];

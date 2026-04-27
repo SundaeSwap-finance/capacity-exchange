@@ -28,6 +28,7 @@ export type { Logger } from './logger.js';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
 export { resolveEndpoints, toNetworkIdEnum, type NetworkEndpoints } from './networks.js';
 export { parseSeedHex, parseMnemonic, generateMnemonic, mnemonicToSeedHex } from './seed.js';
+export { parsePositiveNumber } from './parseNumber.js';
 export {
   parseCoinPublicKey,
   type ParseCoinPublicKeyResult,
@@ -48,5 +49,11 @@ export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';
 export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
+export { buildUnprovenCallTx, verifyCircuitVerifierKey } from './preflight.js';
 export { connectedApiProvidersAdapter, type BaseProviders, type WalletIdentity } from './connectedApiProviders.js';
-export { buildSyntheticWalletState, extractChainSnapshot, type ChainSnapshot } from './walletSnapshot.js';
+export {
+  buildSyntheticWalletState,
+  extractChainSnapshot,
+  extractChainSnapshotFromFacade,
+  type ChainSnapshot,
+} from './walletSnapshot.js';

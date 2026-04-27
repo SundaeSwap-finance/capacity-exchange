@@ -1,5 +1,5 @@
-import { TxResult } from '@sundaeswap/capacity-exchange-core';
-import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
+import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { renewRegistration } from '../circuits/renew-registration.js';
 import { readSecretKeyFile } from '../types.js';
@@ -15,23 +15,20 @@ function main(): Promise<TxResult> {
     .argument('<period>', 'new registration period in days (e.g. 30)')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [contractAddress, secretKeyFile, periodArg] = program.args;
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 
-  const days = Number(periodArg);
-  if (!Number.isFinite(days) || days <= 0) {
-    throw new Error(`Invalid period: "${periodArg}". Expected a positive number of days.`);
-  }
+  const days = parsePositiveNumber('period', periodArg);
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
   console.log(`New expiry: ${expiry.toISOString()}`);
 
   const expiryInt = BigInt(Math.floor(expiry.getTime() / 1000));
 
-  return withAppContext(networkId, (ctx) =>
+  return withAppContextFromEnv(networkId, (ctx) =>
     renewRegistration(ctx, secretKey, {
       contractAddress,
       expiryInt,

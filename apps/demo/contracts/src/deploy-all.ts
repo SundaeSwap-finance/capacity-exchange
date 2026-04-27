@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy as deployCounter } from './counter/lib/operations.js';
 import { deploy as deployTokenMint } from './token-mint/lib/operations.js';
 import { saveContractsConfig, ContractsConfig } from './lib/contracts-config.js';
@@ -23,13 +23,13 @@ async function main(): Promise<ContractsConfig> {
   }
 
   logger.info('=== Deploying Token Mint Contract ===');
-  const tokenMintResult = await withAppContext(networkId, async (ctx) => {
+  const tokenMintResult = await withAppContextFromEnv(networkId, async (ctx) => {
     return deployTokenMint(ctx, undefined, dryRun);
   });
   logger.info(`Token mint deployed at ${tokenMintResult.contractAddress}`);
 
   logger.info('=== Deploying Counter Contract ===');
-  const counterResult = await withAppContext(networkId, async (ctx) => {
+  const counterResult = await withAppContextFromEnv(networkId, async (ctx) => {
     return deployCounter(ctx, dryRun);
   });
   logger.info(`Counter deployed at ${counterResult.contractAddress}`);

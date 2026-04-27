@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { deriveTokenColor, sendShieldedTokens } from '@sundaeswap/capacity-exchange-core';
-import { runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { MidnightBech32m, ShieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 
 function main() {
@@ -18,7 +18,7 @@ function main() {
   const amount = BigInt(amountStr);
   const derivedTokenColor = deriveTokenColor(tokenColor, contractAddress);
 
-  return withAppContext(networkId, (ctx) =>
+  return withAppContextFromEnv(networkId, (ctx) =>
     sendShieldedTokens(ctx.walletContext.walletFacade, ctx.walletContext.keys, [
       {
         type: derivedTokenColor,

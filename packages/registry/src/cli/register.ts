@@ -1,8 +1,8 @@
 import { program } from 'commander';
 import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
-import { requireNetworkId, runCli, withAppContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { TxResult } from '@sundaeswap/capacity-exchange-core';
+import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { readSecretKeyFile } from '../types.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;
@@ -18,16 +18,13 @@ function main(): Promise<TxResult> {
     .argument('[period]', 'registration period in days (default: 30)', '30')
     .parse();
 
-  const networkId = requireNetworkId();
+  const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [contractAddress, secretKeyFile, ipStr, portStr, periodArg] = program.args;
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 
-  const days = Number(periodArg);
-  if (!Number.isFinite(days) || days <= 0) {
-    throw new Error(`Invalid period: "${periodArg}". Expected a positive number of days.`);
-  }
+  const days = parsePositiveNumber('period', periodArg);
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
   console.log(`expiry date: ${expiry}`);
@@ -43,7 +40,7 @@ function main(): Promise<TxResult> {
     expiry,
   };
 
-  return withAppContext(networkId, (ctx) =>
+  return withAppContextFromEnv(networkId, (ctx) =>
     register(ctx, secretKey, {
       contractAddress,
       entry,

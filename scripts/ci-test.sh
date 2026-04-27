@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # CI test setup and runner.
-# Starts a local CES server against a live Midnight network,
-# generates a fresh runner wallet, runs tests, cleans up.
+# Starts a local CES server against a live Midnight network, runs tests, cleans up.
 #
 # Usage:
 #   scripts/ci-test.sh <network_id>
@@ -32,8 +31,6 @@ CES_SERVER_SEED_FILE="$ROOT_DIR/apps/server/wallet-seed.ci.hex"
 CES_SERVER_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.ci.json"
 CES_SERVER_WALLET_STATE="$ROOT_DIR/apps/server/.wallet-state-ci"
 CES_SERVER_QUOTE_SECRET="$ROOT_DIR/apps/server/.quote-secret.ci.key"
-TEST_RUNNER_MNEMONIC_FILE="$ROOT_DIR/wallet-mnemonic.${NETWORK_ID}.ci.txt"
-TEST_RUNNER_WALLET_STATE="$ROOT_DIR/.wallet-state-${NETWORK_ID}.ci"
 CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
 
 log() { echo "=== [ci-test] $*"; }
@@ -45,7 +42,6 @@ cleanup() {
   fi
   rm -f "$CES_SERVER_MNEMONIC_FILE"
   rm -f "$CES_SERVER_SEED_FILE"
-  rm -f "$TEST_RUNNER_MNEMONIC_FILE"
   rm -f "$CES_SERVER_QUOTE_SECRET"
   rm -f "$CES_SERVER_PRICE_CONFIG"
 }
@@ -61,11 +57,6 @@ validate_env() {
       exit 1
     fi
   done
-}
-
-generate_runner_wallet() {
-  log "Generating ephemeral test runner wallet"
-  RUNNER_MNEMONIC=$(bun -e "import { generateMnemonic } from '$ROOT_DIR/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());")
 }
 
 generate_price_config() {
@@ -101,24 +92,27 @@ start_ces_server() {
   umask 077
   openssl rand -hex 32 > "$CES_SERVER_QUOTE_SECRET"
 
+  local wallet_env_var
   if [ -n "${CES_WALLET_SEED:-}" ]; then
     echo "$CES_WALLET_SEED" > "$CES_SERVER_SEED_FILE"
-    export WALLET_SEED_FILE="$CES_SERVER_SEED_FILE"
+    wallet_env_var="WALLET_SEED_FILE=$CES_SERVER_SEED_FILE"
   else
     echo "$CES_WALLET_MNEMONIC" > "$CES_SERVER_MNEMONIC_FILE"
-    export WALLET_MNEMONIC_FILE="$CES_SERVER_MNEMONIC_FILE"
+    wallet_env_var="WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
   fi
   umask "$old_umask"
 
-  MIDNIGHT_NETWORK="$NETWORK_ID" \
-  QUOTE_SECRET_FILE="$CES_SERVER_QUOTE_SECRET" \
-  PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
-  QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
-  OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
-  WALLET_STATE_DIR="$CES_SERVER_WALLET_STATE" \
-  LOG_LEVEL=info \
-  PORT="$CES_PORT" \
-  NODE_ENV=dev \
+  env \
+    "$wallet_env_var" \
+    MIDNIGHT_NETWORK="$NETWORK_ID" \
+    QUOTE_SECRET_FILE="$CES_SERVER_QUOTE_SECRET" \
+    PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
+    QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
+    OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
+    WALLET_STATE_DIR="$CES_SERVER_WALLET_STATE" \
+    LOG_LEVEL=info \
+    PORT="$CES_PORT" \
+    NODE_ENV=dev \
     bun apps/server/src/server.ts &
 
   CES_SERVER_PID=$!
@@ -142,32 +136,17 @@ wait_for_ces_server() {
   exit 1
 }
 
-seed_runner_wallet_state() {
-  log "Seeding runner wallet state from cached chain snapshot"
-  local old_umask
-  old_umask="$(umask)"
-  umask 077
-  echo "$RUNNER_MNEMONIC" > "$TEST_RUNNER_MNEMONIC_FILE"
-  umask "$old_umask"
-  bun packages/midnight-node/src/cli/seed-wallet-state.ts "$NETWORK_ID" "$TEST_RUNNER_WALLET_STATE" "$CHAIN_SNAPSHOT_DIR"
-}
-
-export_chain_snapshot() {
-  log "Exporting updated chain snapshot for next run"
-  bun packages/midnight-node/src/cli/export-chain-snapshot.ts "$NETWORK_ID" "$TEST_RUNNER_WALLET_STATE" "$CHAIN_SNAPSHOT_DIR"
-}
-
 run_tests() {
   log "Running tests against $NETWORK_ID"
 
-  NETWORK_ID="$NETWORK_ID" \
-  WALLET_MNEMONIC_FILE="$TEST_RUNNER_MNEMONIC_FILE" \
-  WALLET_STATE_DIR="$TEST_RUNNER_WALLET_STATE" \
-  CES_URL=http://localhost:${CES_PORT} \
-  COUNTER_ADDRESS="$COUNTER_ADDRESS" \
-  TOKEN_MINT_ADDRESS="$TOKEN_MINT_ADDRESS" \
-  DERIVED_TOKEN_COLOR="$DERIVED_TOKEN_COLOR" \
-  WALLET_SYNC_TIMEOUT_MS="$WALLET_SYNC_TIMEOUT_MS" \
+  env \
+    NETWORK_ID="$NETWORK_ID" \
+    CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
+    CES_URL=http://localhost:${CES_PORT} \
+    COUNTER_ADDRESS="$COUNTER_ADDRESS" \
+    TOKEN_MINT_ADDRESS="$TOKEN_MINT_ADDRESS" \
+    DERIVED_TOKEN_COLOR="$DERIVED_TOKEN_COLOR" \
+    WALLET_SYNC_TIMEOUT_MS="$WALLET_SYNC_TIMEOUT_MS" \
     bun apps/tests/src/runner.ts
 
   log "Tests passed"
@@ -177,10 +156,7 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_env
-generate_runner_wallet
 generate_price_config
 start_ces_server
 wait_for_ces_server
-seed_runner_wallet_state
 run_tests
-export_chain_snapshot
