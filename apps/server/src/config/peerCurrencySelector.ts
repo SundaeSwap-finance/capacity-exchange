@@ -24,7 +24,7 @@ export function createAutoSelectCurrency(
   walletService: WalletService,
   peerPriceService: PeerPriceService,
 ): PromptForCurrency {
-  return async (prices: ExchangePrice[], dustRequired: bigint, requestId?: string) => {
+  return async (prices: ExchangePrice[], dustRequired: bigint, requestId: string) => {
     if (prices.length === 0) {
       log.info({ requestId }, 'No peer prices offered');
       return { status: 'no-eligible' };
@@ -52,7 +52,7 @@ export function createAutoSelectCurrency(
 }
 
 /**
- * {@link PromptForCurrency} pre-filters to a specific {@link Currency}.
+ * {@link PromptForCurrency} pre-filters to a specific {@link Currency}
  * by `currency.id` before applying the same allowlist, max-price,
  * and balance checks as {@link createAutoSelectCurrency}.
  * Returns `{status:'no-eligible'}` when the currency is:
@@ -69,11 +69,11 @@ export function fixedCurrencySelector(
   peerPriceService: PeerPriceService,
   currency: Currency,
 ): PromptForCurrency {
-  return async (prices: ExchangePrice[], dustRequired: bigint, requestId?: string) => {
+  return async (prices: ExchangePrice[], dustRequired: bigint, requestId: string) => {
     const matching = prices.filter((p) => p.price.currency.id === currency.id);
 
     if (matching.length === 0) {
-      log.info({ requestId, currency }, 'Fixed currency not found in offered prices');
+      log.warn({ requestId, currency }, 'Fixed currency not found in offered prices');
       return { status: 'no-eligible' };
     }
 
@@ -89,7 +89,7 @@ export function fixedCurrencySelector(
   };
 }
 
-/** Filter, pick best candidate, and return a {@link PromptForCurrency} result. */
+/** Filter, pick best candidate, and return a `CurrencySelectionResult`. */
 async function selectFromCandidates(
   prices: ExchangePrice[],
   dustRequired: bigint,
@@ -136,6 +136,13 @@ function filterCandidates(
       log.debug(
         { currency: price.price.currency },
         'Skipping price: currency not allowlisted for sponsor fallback',
+      );
+      continue;
+    }
+    if (max === 0n) {
+      log.debug(
+        { currency: price.price.currency },
+        'Skipping price: configured max is zero',
       );
       continue;
     }

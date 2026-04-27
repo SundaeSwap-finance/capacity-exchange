@@ -39,7 +39,7 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
             onCancelled: () => dispatch({ action: 'finish' }),
           },
         });
-      } else {
+      } else if (result.status === 'cancelled' || result.status === 'no-eligible') {
         dispatch({ action: 'finish' });
       }
       return result;

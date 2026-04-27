@@ -1,24 +1,14 @@
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import {
-  Proof,
-  SignatureEnabled,
-  Transaction,
-  type Binding,
-  type FinalizedTransaction,
-} from '@midnight-ntwrk/ledger-v8';
+import { type FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
 import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
 import type { ChainStateProvider } from './chainStateProvider';
-import { isOfferExpired } from './utils';
+import { isOfferExpired, serializeTx, deserializeTx } from './utils';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi';
 import { fetchRegistryCesUrls } from './registryLookup';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
-import {
-  CapacityExchangeNoPricesAvailableError,
-  CapacityExchangeOfferExpiredError,
-  CapacityExchangeServerError,
-} from './errors';
+import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
 
 function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {
   return {
@@ -102,22 +92,12 @@ async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: C
  */
 export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
-  let offerResponse;
-  try {
-    offerResponse = await exchangePrice.exchangeApi.api.apiOffersPost({
-      apiOffersPostRequest: {
-        quoteId: exchangePrice.quoteId,
-        offerCurrency: exchangePrice.price.currency.id,
-      },
-    });
-  } catch (err) {
-    const statusCode = (err as { response?: { status?: number } })?.response?.status ?? 0;
-    const message = err instanceof Error ? err.message : String(err);
-    throw new CapacityExchangeServerError(
-      statusCode,
-      `requestCesOffer failed for ${exchangePrice.exchangeApi.url}: ${message}`
-    );
-  }
+  const offerResponse: ApiOffersPost201Response = await exchangePrice.exchangeApi.api.apiOffersPost({
+    apiOffersPostRequest: {
+      quoteId: exchangePrice.quoteId,
+      offerCurrency: exchangePrice.price.currency.id,
+    },
+  });
   console.debug('[CESSteps] Offer received:', offerResponse);
 
   const offer = convertToOffer(offerResponse);
@@ -140,35 +120,23 @@ export async function processTransactionWithOffer(
   balanceSealedTransaction: BalanceSealedTransaction
 ): Promise<FinalizedTransaction> {
   console.debug('[CESSteps] Processing transaction for offer:', offer.offerId);
-  const dustTxBytes = hexToBytes(offer.serializedTx);
-  const dustTx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-    'signature',
-    'proof',
-    'binding',
-    dustTxBytes
-  );
+  const dustTx = deserializeTx(hexToBytes(offer.serializedTx));
   console.debug('[CESSteps] DUST transaction deserialized');
 
   console.debug('[CESSteps] Balancing user transaction');
-  const txHex = Buffer.from(tx.serialize()).toString('hex');
+  const txHex = serializeTx(tx);
   const { tx: balancedTxHex } = await balanceUnsealedTransaction(txHex);
-  const balancedTxBytes = hexToBytes(balancedTxHex);
-  const balancedTx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-    'signature',
-    'proof',
-    'binding',
-    balancedTxBytes
-  );
+  const balancedTx = deserializeTx(hexToBytes(balancedTxHex));
   console.debug('[CESSteps] User transaction balanced');
 
   console.debug('[CESSteps] Binding and merging transactions');
   const mergedTx = balancedTx.merge(dustTx);
   console.debug('[CESSteps] Transactions merged, calling wallet to balance');
 
-  const mergedTxHex = Buffer.from(mergedTx.serialize()).toString('hex');
+  const mergedTxHex = serializeTx(mergedTx);
   const { tx: result } = await balanceSealedTransaction(mergedTxHex);
   console.debug('[CESSteps] Wallet balanced and sealed transaction');
 
   console.debug('[CESSteps] Transaction processing complete');
-  return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hexToBytes(result));
+  return deserializeTx(hexToBytes(result));
 }
