@@ -1,0 +1,11 @@
+name: Setup
+description: Checkout, install Bun, install Task, and install dependencies
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: oven-sh/setup-bun@v2
+    - name: Install Task
+      shell: bash
+      run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin v3.50.0
