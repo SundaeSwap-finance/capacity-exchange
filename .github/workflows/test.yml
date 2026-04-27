@@ -12,6 +12,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: go-task/setup-task@v2
+      # suppresses:
+      # [DEP0169] DeprecationWarning: `url.parse()` behavior is not 
+      # standardized and prone to errors that have security implications.
+      #Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+        env:
+          NODE_NO_WARNINGS: '1'
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -32,6 +38,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: go-task/setup-task@v2
+        env:
+          NODE_NO_WARNINGS: '1'
 
       - name: Start local devnet
         uses: hoverkraft-tech/compose-action@v2
@@ -62,6 +70,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: go-task/setup-task@v2
+        env:
+          NODE_NO_WARNINGS: '1'
 
       - name: Install dependencies
         run: task install
