@@ -3,8 +3,9 @@
 ---
 
 re-enable sponsor fallback
-* peerCurrencySelector.ts (new): createAutoSelectCurrency (picks cheapest by offered/max ratio) + fixedCurrencySelector (pins one currency with allowlist/max/balance checks); shared selectFromCandidates helper
-* peerPrice.ts + formulaIndex.ts (new): PeerPriceService reads operator-configured maxPrices ceilings
-* peerOfferConfirmer.ts (new): auto-confirms offers below threshold
-* cesWalletProvider.ts: CurrencySelection discriminated union (auto | fixed); auto-infers fixed when peer.maxPrices has exactly one entry
-* peerCurrencySelector.test.ts (new): 14 unit tests across both selectors
+
+* `peerCurrencySelector.ts`: `createAutoSelectCurrency` picks the cheapest eligible offer by `offered/max` ratio across all configured currencies; 
+* `peerPrice.ts`: `PeerPriceService` reads operator-configured `maxPrices` ceilings; gracefully disabled (null) when `peer.maxPrices` is absent
+* `peerOfferConfirmer.ts`: auto-confirms every offer below threshold
+* `cesWalletProvider.ts`: accepts a pre-built `PromptForCurrency`; selection strategy is wired by the plugin, not the builder
+* `ces-wallet-provider.ts`: peer fallback gracefully disabled when `PeerPriceService` is null; uses `indexerChainStateProvider` from providers package
