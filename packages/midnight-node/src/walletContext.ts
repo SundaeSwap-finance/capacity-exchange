@@ -81,6 +81,10 @@ async function syncWallet(
       return syncInMemoryWallet(seedHex, walletConfig, source.chainSnapshot, timeoutMs);
     case 'onDisk':
       return syncOnDiskWallet(seedHex, walletConfig, source.walletStateDir, timeoutMs);
+    default: {
+      const _exhaustive: never = source;
+      throw new Error(`Unrecognized wallet state source kind: ${String((_exhaustive as { kind: unknown }).kind)}`);
+    }
   }
 }
 

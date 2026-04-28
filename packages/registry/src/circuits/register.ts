@@ -1,10 +1,9 @@
 import { AppContext, createLogger, WalletContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { DEFAULT_TTL_MS, toTxResult } from '@sundaeswap/capacity-exchange-core';
+import { buildUnprovenCallTx, DEFAULT_TTL_MS, toTxResult } from '@sundaeswap/capacity-exchange-core';
 import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types.js';
 import { CompiledRegistryContract, getProviders } from '../contract.js';
 
 import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
-import { createUnprovenCallTx } from '@midnight-ntwrk/midnight-js-contracts';
 
 const logger = createLogger(import.meta);
 
@@ -66,7 +65,7 @@ async function _register(
 async function provenCallTx(providers: RegisterServerProvider, params: RegisterInternalParams) {
   const { contractAddress, privateStateId, entry } = params;
 
-  const callTxData = await createUnprovenCallTx(providers, {
+  const callTxData = await buildUnprovenCallTx(providers, {
     contractAddress,
     compiledContract: CompiledRegistryContract,
     circuitId,

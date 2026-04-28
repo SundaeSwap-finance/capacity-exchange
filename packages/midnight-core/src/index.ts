@@ -49,6 +49,7 @@ export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';
 export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
+export { buildUnprovenCallTx, verifyCircuitVerifierKey } from './preflight.js';
 export { connectedApiProvidersAdapter, type BaseProviders, type WalletIdentity } from './connectedApiProviders.js';
 export {
   buildSyntheticWalletState,

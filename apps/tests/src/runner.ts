@@ -101,8 +101,19 @@ async function runAndExport(ctx: AppContext, config: TestConfig): Promise<Runner
   if (output.failed > 0) {
     throw new Error(`${output.failed} flow(s) failed`);
   }
-  const snapshot = await exportChainSnapshot(ctx.walletContext.walletFacade, config.networkId, config.chainSnapshotDir);
-  logger.info(`Exported chain snapshot to ${config.chainSnapshotDir} at offset ${snapshot.shielded.offset}`);
+  try {
+    const snapshot = await exportChainSnapshot(
+      ctx.walletContext.walletFacade,
+      config.networkId,
+      config.chainSnapshotDir
+    );
+    logger.info(`Exported chain snapshot to ${config.chainSnapshotDir} at offset ${snapshot.shielded.offset}`);
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err : String(err), chainSnapshotDir: config.chainSnapshotDir },
+      'Failed to export chain snapshot; continuing'
+    );
+  }
   return output;
 }
 
