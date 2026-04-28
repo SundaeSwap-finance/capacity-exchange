@@ -10,11 +10,11 @@
 #   - Packages built
 #
 # Required environment:
-#   CES_WALLET_MNEMONIC or CES_WALLET_SEED — CES server wallet credentials (mnemonic or hex seed)
-#   REGISTRY_WALLET_MNEMONIC               — funded wallet for the registry flow (NIGHT + DUST)
-#   COUNTER_ADDRESS                        — deployed counter contract address
-#   TOKEN_MINT_ADDRESS                     — deployed token-mint contract address
-#   DERIVED_TOKEN_COLOR                    — derived token color from token-mint deployment
+#   CES_WALLET_MNEMONIC or CES_WALLET_SEED            — CES server wallet credentials (mnemonic or hex seed)
+#   REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED  — funded wallet for the registry flow (NIGHT + DUST)
+#   COUNTER_ADDRESS                                   — deployed counter contract address
+#   TOKEN_MINT_ADDRESS                                — deployed token-mint contract address
+#   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
 
 set -euo pipefail
 
@@ -53,7 +53,11 @@ validate_env() {
     log "ERROR: Set either CES_WALLET_MNEMONIC or CES_WALLET_SEED"
     exit 1
   fi
-  for var in REGISTRY_WALLET_MNEMONIC COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR; do
+  if [ -z "${REGISTRY_WALLET_MNEMONIC:-}" ] && [ -z "${REGISTRY_WALLET_SEED:-}" ]; then
+    log "ERROR: Set either REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED"
+    exit 1
+  fi
+  for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR; do
     if [ -z "${!var:-}" ]; then
       log "ERROR: $var is not set"
       exit 1
@@ -153,6 +157,7 @@ run_tests() {
     SPONSOR_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     EXCHANGE_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     REGISTRY_WALLET_MNEMONIC="$REGISTRY_WALLET_MNEMONIC" \
+    REGISTRY_WALLET_SEED="$REGISTRY_WALLET_SEED" \
     CACHED_WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
     CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
     CES_URL=http://localhost:${CES_PORT} \

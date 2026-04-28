@@ -1,6 +1,6 @@
 import { loadChainSnapshot, requireEnvVar, type Env } from '@sundaeswap/capacity-exchange-nodejs';
 import type { ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
-import type { FlowCtxConfig } from './util/testUtils.js';
+import type { FlowCtxConfig, WalletSeed } from './util/testUtils.js';
 
 export interface TestConfig {
   networkId: string;
@@ -13,6 +13,22 @@ export interface TestConfig {
   sponsorFlowConfig: FlowCtxConfig;
   exchangeFlowConfig: FlowCtxConfig;
   registryFlowConfig: FlowCtxConfig;
+}
+
+function requireEnvSeed(env: Env, prefix: string): WalletSeed {
+  const seedVar = `${prefix}_SEED`;
+  const mnemonicVar = `${prefix}_MNEMONIC`;
+  const seed = env[seedVar];
+  const mnemonic = env[mnemonicVar];
+  if (seed && mnemonic) {
+    throw new Error(`Set incompatible environment variables: ${seedVar} and ${mnemonicVar}`)
+  } else if (seed) {
+    return { type: 'seed', seed };
+  } else if (mnemonic) {
+    return { type: 'mnemonic', mnemonic };
+  } else {
+    throw new Error(`Missing environment variables: ${seedVar} or ${mnemonicVar}`);
+  }
 }
 
 export function getTestConfig(env: Env): TestConfig {
@@ -29,15 +45,15 @@ export function getTestConfig(env: Env): TestConfig {
     chainSnapshotDir,
     chainSnapshot,
     sponsorFlowConfig: {
-      mnemonic: requireEnvVar(env, 'SPONSOR_WALLET_MNEMONIC'),
+      seed: requireEnvSeed(env, 'SPONSOR_WALLET'),
       stateSource: { kind: 'inMemory', chainSnapshot },
     },
     exchangeFlowConfig: {
-      mnemonic: requireEnvVar(env, 'EXCHANGE_WALLET_MNEMONIC'),
+      seed: requireEnvSeed(env, 'EXCHANGE_WALLET'),
       stateSource: { kind: 'inMemory', chainSnapshot },
     },
     registryFlowConfig: {
-      mnemonic: requireEnvVar(env, 'REGISTRY_WALLET_MNEMONIC'),
+      seed: requireEnvSeed(env, 'REGISTRY_WALLET'),
       stateSource: { kind: 'onDisk', walletStateDir: cachedWalletStateDir },
     },
   };

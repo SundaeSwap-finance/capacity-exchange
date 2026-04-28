@@ -5,10 +5,14 @@ import {
   readWalletSyncTimeoutMs,
   resolveEnv,
 } from '@sundaeswap/capacity-exchange-nodejs';
-import { parseMnemonic } from '@sundaeswap/capacity-exchange-core';
+import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core';
+
+export type WalletSeed =
+  | { type: "seed"; seed: string }
+  | { type: "mnemonic"; mnemonic: string }
 
 export interface FlowCtxConfig {
-  mnemonic: string;
+  seed: WalletSeed;
   stateSource: WalletStateSource;
 }
 
@@ -17,7 +21,7 @@ export async function buildFlowCtx(networkId: string, config: FlowCtxConfig): Pr
   return createAppContext({
     network: buildNetworkConfig(networkId, env),
     wallet: {
-      seed: parseMnemonic(config.mnemonic),
+      seed: config.seed.type === 'mnemonic' ? parseMnemonic(config.seed.mnemonic) : parseSeedHex(config.seed.seed),
       stateSource: config.stateSource,
       walletSyncTimeoutMs: readWalletSyncTimeoutMs(env),
     },
