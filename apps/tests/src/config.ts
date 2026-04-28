@@ -21,7 +21,7 @@ function requireEnvSeed(env: Env, prefix: string): WalletSeed {
   const seed = env[seedVar];
   const mnemonic = env[mnemonicVar];
   if (seed && mnemonic) {
-    throw new Error(`Set incompatible environment variables: ${seedVar} and ${mnemonicVar}`)
+    throw new Error(`Set incompatible environment variables: ${seedVar} and ${mnemonicVar}`);
   } else if (seed) {
     return { type: 'seed', seed };
   } else if (mnemonic) {

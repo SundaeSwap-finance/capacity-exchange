@@ -7,9 +7,7 @@ import {
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core';
 
-export type WalletSeed =
-  | { type: "seed"; seed: string }
-  | { type: "mnemonic"; mnemonic: string }
+export type WalletSeed = { type: 'seed'; seed: string } | { type: 'mnemonic'; mnemonic: string };
 
 export interface FlowCtxConfig {
   seed: WalletSeed;
