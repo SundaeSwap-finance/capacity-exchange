@@ -8,6 +8,7 @@ import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledTokenMintContract, type TokenMintContract } from '@capacity-exchange/demo-contracts/token-mint';
 import { createPrivateState } from '@capacity-exchange/demo-contracts/token-mint/witnesses';
+import { buildFlowCtx, type FlowCtxConfig } from '../util/testUtils.js';
 
 const logger = createLogger(import.meta);
 
@@ -17,11 +18,14 @@ export interface SponsorFlowResult {
 }
 
 export async function runSponsorFlow(
-  ctx: AppContext,
+  networkId: string,
+  flowConfig: FlowCtxConfig,
   tokenMintAddress: string,
   cesUrl: string,
   mintAmount = 1_000_000n
 ): Promise<SponsorFlowResult> {
+  logger.info('Building sponsor-flow AppContext');
+  const ctx = await buildFlowCtx(networkId, flowConfig);
   logger.info('Starting sponsor flow: mint tokens via CES sponsorship');
 
   const sponsoredProvider = createSponsoredProvider(ctx, cesUrl);

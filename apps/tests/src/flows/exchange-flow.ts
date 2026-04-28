@@ -6,6 +6,7 @@ import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-
 import { Transaction, SignatureEnabled, type Proof, type Binding, type PreBinding } from '@midnight-ntwrk/ledger-v8';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledCounterContract, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
+import { buildFlowCtx, type FlowCtxConfig } from '../util/testUtils.js';
 
 const logger = createLogger(import.meta);
 const BALANCE_TTL_MS = 5 * 60 * 1000;
@@ -15,12 +16,14 @@ export interface ExchangeFlowResult {
 }
 
 export async function runExchangeFlow(
-  ctx: AppContext,
   networkId: string,
+  flowConfig: FlowCtxConfig,
   counterAddress: string,
   cesUrl: string,
   derivedTokenColor: string
 ): Promise<ExchangeFlowResult> {
+  logger.info('Building exchange-flow AppContext');
+  const ctx = await buildFlowCtx(networkId, flowConfig);
   logger.info('Starting exchange flow: increment counter via CES');
 
   const cesProvider = createExchangeProvider(ctx, networkId, cesUrl, derivedTokenColor);
