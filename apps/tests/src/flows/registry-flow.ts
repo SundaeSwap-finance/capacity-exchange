@@ -4,6 +4,7 @@ import { getNightBalance } from '@sundaeswap/capacity-exchange-core';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import {
   computeRegistryKey,
+  deploy,
   generateRandomSecretKey,
   ledger,
   register,
@@ -12,7 +13,6 @@ import {
   type RegistryEntry,
   type RegistrySecretKey,
 } from '@sundaeswap/capacity-exchange-registry';
-import { getDefaultRegistryAddress } from '@sundaeswap/capacity-exchange-providers';
 import { buildFlowCtx, pollUntil, type FlowCtxConfig } from '../util/testUtils.js';
 
 const logger = createLogger(import.meta);
@@ -30,10 +30,10 @@ export interface RegistryFlowResult {
 }
 
 export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConfig): Promise<RegistryFlowResult> {
-  const registryAddress = resolveRegistryAddress(networkId);
-
   logger.info('Building registry-flow AppContext');
   const ctx = await buildFlowCtx(networkId, flowConfig);
+
+  const { contractAddress: registryAddress } = await deployRegistry(ctx);
 
   logger.info({ registryAddress }, 'Starting registry flow');
 
@@ -47,12 +47,14 @@ export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConf
   return { registryAddress, registeredUrl: EXPECTED_URL };
 }
 
-function resolveRegistryAddress(networkId: string): string {
-  const registryAddress = getDefaultRegistryAddress(networkId);
-  if (!registryAddress) {
-    throw new Error(`No default registry address configured for network ${networkId}`);
-  }
-  return registryAddress;
+const REGISTRY_COLLATERAL = 1000n;
+const REGISTRY_MAX_PERIOD = 2_592_000n; // 30 days in seconds
+
+async function deployRegistry(ctx: AppContext): Promise<{ contractAddress: string }> {
+  logger.info('Deploying registry contract');
+  const result = await deploy(ctx, { requiredCollateral: REGISTRY_COLLATERAL, maxPeriod: REGISTRY_MAX_PERIOD });
+  logger.info({ contractAddress: result.contractAddress }, 'Registry deployed');
+  return result;
 }
 
 async function assertSufficientCollateral(ctx: AppContext, registryAddress: string): Promise<bigint> {
