@@ -229,7 +229,7 @@ These block deploy. Implementation-tier opens (sampling formulas, hash-function 
 - **End-to-end exercise of the witness path on preprod.** The PoC contract and tests are in place locally (`mint_disclose.compact` plus `src/cli/e2e.ts`); the witness-function path needs to be run against a live network to confirm the merged-transaction flow finalizes and that the absorb arguments land at predictable byte positions (the offset measurement noted above).
 - **Substrate Patricia trie verifier in Aiken.** No known existing implementation. Mechanical port from the Solidity reference is the leading approach.
 
-## 13. Success criteria for v1
+## 12. Success criteria for v1
 
 The protocol is v1-ready when:
 
@@ -238,7 +238,7 @@ The protocol is v1-ready when:
 3. The SDK exposes a public surface that takes a target Midnight transaction plus an LP quote and produces the escrow tx, the merged Midnight transaction, and a refund tx, with secret generation, hashing, and uniqueness handled internally.
 4. Documentation enables a third-party LP to onboard without *requiring* source-level access to the SDK internals.
 
-## 14. References
+## 13. References
 
 - **PoC contract** — `mint_disclose.compact` in this directory (PR #128 on `prototype/midnight-mint-disclose`).
 - **Offline extrinsic decoder** — `src/cli/decode-extrinsic.ts` in this directory.
