@@ -4,7 +4,7 @@ import {
   deploy,
   mintReveal,
   absorbAlone,
-  mintAndAbsorbAtomic,
+  mintAndAbsorbAttempt,
   queryDisclosedPreimage,
   randomBytes32,
   persistentHashBytes32,
@@ -25,29 +25,41 @@ interface E2EOutput {
   };
   testC: {
     label: string;
-    tx: Awaited<ReturnType<typeof mintAndAbsorbAtomic>>;
+    attempt: Awaited<ReturnType<typeof mintAndAbsorbAttempt>>;
     stateLookup: Awaited<ReturnType<typeof queryDisclosedPreimage>>;
+    succeededAsExpected: boolean;
     disclosedSMatchesInput: boolean;
+  };
+  testCPrime: {
+    label: string;
+    attempt: Awaited<ReturnType<typeof mintAndAbsorbAttempt>>;
+    failedAsExpected: boolean;
   };
 }
 
 function main(): Promise<E2EOutput> {
   program
     .name('midnight-mint-disclose:e2e')
-    .description('Prove mint-with-disclosure + balance-check enforcement end-to-end')
+    .description('Prove mint-with-disclosure + balance-check enforcement (two-secret form) end-to-end')
     .argument('<networkId>', 'Network ID (e.g. preview, preprod)')
     .parse();
 
   const [networkId] = program.args;
 
   return withAppContext(networkId, async (ctx) => {
-    const deployed = await deploy(ctx);
+    // The user's private witness secret. Stays in private state for the
+    // lifetime of this contract instance; never disclosed on chain.
+    const sPrime = randomBytes32();
+    const hPrimeMatching = persistentHashBytes32(sPrime);
 
-    // Test A: mint alone (recipient is hardcoded to contract self in mintReveal)
+    const deployed = await deploy(ctx, sPrime);
+
+    // Test A: mint alone. Mint color depends on the witness s', but we only
+    // verify s lands on chain (via disclosedPreimages, keyed by hash(s)).
     const sA = randomBytes32();
-    const hA = persistentHashBytes32(sA);
+    const hsA = persistentHashBytes32(sA);
     const mintA = await mintReveal(ctx, deployed.contractAddress, deployed.privateStateId, sA);
-    const lookupA = await queryDisclosedPreimage(ctx, deployed.contractAddress, hA);
+    const lookupA = await queryDisclosedPreimage(ctx, deployed.contractAddress, hsA);
     const testA = {
       label: 'A: mintReveal alone; s should be observable on-chain',
       mint: mintA,
@@ -55,29 +67,56 @@ function main(): Promise<E2EOutput> {
       disclosedSMatchesInput: lookupA.present && lookupA.s === Buffer.from(sA).toString('hex'),
     };
 
-    // Test B: absorb without prior matching mint
-    const sB = randomBytes32();
-    const hB = persistentHashBytes32(sB);
-    const attemptB = await absorbAlone(ctx, deployed.contractAddress, deployed.privateStateId, hB);
+    // Test B: absorb alone with random (h, h'). Should fail — no matching mint.
+    const hsB = persistentHashBytes32(randomBytes32());
+    const hPrimeRandomB = randomBytes32();
+    const attemptB = await absorbAlone(ctx, deployed.contractAddress, deployed.privateStateId, hsB, hPrimeRandomB);
     const testB = {
-      label: 'B: absorb alone with fresh h never minted; should fail (no supply)',
+      label: "B: absorb alone with random (h, h'); should fail (no supply)",
       attempt: attemptB,
       failedAsExpected: !attemptB.succeeded,
     };
 
-    // Test C: mint + absorb atomic in a single intent
+    // Test C: mint + absorb with the *correct* h' (= hash(s')). Should succeed.
     const sC = randomBytes32();
-    const hC = persistentHashBytes32(sC);
-    const txC = await mintAndAbsorbAtomic(ctx, deployed.contractAddress, deployed.privateStateId, sC);
-    const lookupC = await queryDisclosedPreimage(ctx, deployed.contractAddress, hC);
+    const hsC = persistentHashBytes32(sC);
+    const attemptC = await mintAndAbsorbAttempt(
+      ctx,
+      deployed.contractAddress,
+      deployed.privateStateId,
+      sC,
+      hPrimeMatching
+    );
+    const lookupC = await queryDisclosedPreimage(ctx, deployed.contractAddress, hsC);
     const testC = {
-      label: 'C: mintReveal + absorb in the same intent; should succeed with s observable',
-      tx: txC,
+      label: "C: mintReveal + absorb(h, h') with h' matching the witness; should succeed",
+      attempt: attemptC,
       stateLookup: lookupC,
+      succeededAsExpected: attemptC.succeeded,
       disclosedSMatchesInput: lookupC.present && lookupC.s === Buffer.from(sC).toString('hex'),
     };
 
-    return { deployed, testA, testB, testC };
+    // Test C': mint + absorb with a *wrong* h'. Should fail on the ledger
+    // balance check — the mint color is hash(hash(s) || hash(s')), the absorb
+    // color is hash(hash(s) || h'_wrong); colors do not match, transaction
+    // does not balance. This is the front-run defense: an LP that has only s
+    // (from mempool) cannot pick a working h'_wrong without the user's s'.
+    const sCp = randomBytes32();
+    const hPrimeWrong = randomBytes32();
+    const attemptCp = await mintAndAbsorbAttempt(
+      ctx,
+      deployed.contractAddress,
+      deployed.privateStateId,
+      sCp,
+      hPrimeWrong
+    );
+    const testCPrime = {
+      label: "C': mintReveal + absorb(h, h') with a wrong h'; should fail (balance mismatch)",
+      attempt: attemptCp,
+      failedAsExpected: !attemptCp.succeeded,
+    };
+
+    return { deployed, testA, testB, testC, testCPrime };
   });
 }
 

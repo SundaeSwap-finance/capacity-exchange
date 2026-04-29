@@ -29,11 +29,11 @@ export interface DeployOutput {
   privateStateId: string;
 }
 
-export async function deploy(ctx: AppContext): Promise<DeployOutput> {
+export async function deploy(ctx: AppContext, sPrime: Uint8Array): Promise<DeployOutput> {
   logger.info('Deploying mint-disclose prototype contract...');
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
   const privateStateId = crypto.randomBytes(32).toString('hex');
-  const initialPrivateState = createPrivateState();
+  const initialPrivateState = createPrivateState(sPrime);
 
   const deployed = await deployContractWithDryRun(
     providers,
@@ -59,9 +59,9 @@ export async function deploy(ctx: AppContext): Promise<DeployOutput> {
 
 export interface MintOutput {
   tx: TxResult;
-  h: string; // hex
-  s: string; // hex — the preimage we disclosed
-  derivedColor: string; // hex — hex-encoded tokenType(h, contract)
+  s: string; // hex — the disclosed public secret
+  hs: string; // hex — hash(s), the disclosedPreimages key
+  derivedColor: string; // hex — the mint's combined color hash(hash(s) ++ hash(s'))
 }
 
 export async function mintReveal(
@@ -70,8 +70,8 @@ export async function mintReveal(
   privateStateId: string,
   s: Uint8Array
 ): Promise<MintOutput> {
-  const h = persistentHashBytes32(s);
-  logger.info(`mintReveal: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
+  const hs = persistentHashBytes32(s);
+  logger.info(`mintReveal: hash(s)=${Buffer.from(hs).toString('hex').slice(0, 16)}...`);
 
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
 
@@ -80,7 +80,7 @@ export async function mintReveal(
     contractAddress,
     circuitId: 'mintReveal',
     privateStateId,
-    args: [s, h],
+    args: [s],
   });
 
   if (!result.private.result) {
@@ -90,8 +90,8 @@ export async function mintReveal(
 
   return {
     tx: toTxResult(contractAddress, result.public),
-    h: Buffer.from(h).toString('hex'),
     s: Buffer.from(s).toString('hex'),
+    hs: Buffer.from(hs).toString('hex'),
     derivedColor,
   };
 }
@@ -108,9 +108,10 @@ export async function absorbAlone(
   ctx: AppContext,
   contractAddress: string,
   privateStateId: string,
-  h: Uint8Array
+  h: Uint8Array,
+  hPrime: Uint8Array
 ): Promise<AbsorbAttemptOutput> {
-  logger.info(`absorb alone: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
+  logger.info(`absorb alone: h=${Buffer.from(h).toString('hex').slice(0, 16)}... h'=${Buffer.from(hPrime).toString('hex').slice(0, 16)}...`);
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
 
   try {
@@ -119,7 +120,7 @@ export async function absorbAlone(
       contractAddress,
       circuitId: 'absorb',
       privateStateId,
-      args: [h],
+      args: [h, hPrime],
     });
     return { succeeded: true, tx: toTxResult(contractAddress, result.public) };
   } catch (err: unknown) {
@@ -129,55 +130,88 @@ export async function absorbAlone(
   }
 }
 
-// ---------- Test C: mint + absorb in a single multi-action intent ----------
+// ---------- Tests C / C': mint + absorb in a single merged transaction ----------
 
-export interface MintAndAbsorbOutput {
-  tx: TxResult;
-  h: string;
-  s: string;
+export interface MintAndAbsorbAttemptOutput {
+  succeeded: boolean;
+  error?: string;
+  tx?: TxResult;
+  s: string; // hex
+  hs: string; // hex
+  hPrimeUsed: string; // hex — the h' passed to absorb (which test C' sets to a wrong value)
 }
 
-export async function mintAndAbsorbAtomic(
+/**
+ * Executes mintReveal(s) and absorb(hash(s), hPrime) in one merged transaction.
+ *
+ * Returns succeeded: true when hPrime matches hash of the witness s' that
+ * the contract was deployed with — the mint color hash(hash(s) ++ hash(s'))
+ * matches the absorb color hash(hash(s) ++ hPrime), the merge balances, the
+ * transaction finalizes.
+ *
+ * Returns succeeded: false when hPrime does not match hash(s'). The colors
+ * differ, the merge fails the ledger balance check. This is the load-bearing
+ * demonstration of the LP-front-run defense: an LP cannot produce a balancing
+ * transaction without the user's private witness s'.
+ */
+export async function mintAndAbsorbAttempt(
   ctx: AppContext,
   contractAddress: string,
   privateStateId: string,
-  s: Uint8Array
-): Promise<MintAndAbsorbOutput> {
-  const h = persistentHashBytes32(s);
-  logger.info(`mint+absorb atomic: h=${Buffer.from(h).toString('hex').slice(0, 16)}...`);
+  s: Uint8Array,
+  hPrime: Uint8Array
+): Promise<MintAndAbsorbAttemptOutput> {
+  const hs = persistentHashBytes32(s);
+  logger.info(
+    `mint+absorb: hash(s)=${Buffer.from(hs).toString('hex').slice(0, 16)}... ` +
+      `h'=${Buffer.from(hPrime).toString('hex').slice(0, 16)}...`
+  );
 
   const providers = buildProviders<MintDiscloseContract>(ctx, './out');
 
-  const finalized = await withContractScopedTransaction<MintDiscloseContract>(providers, async (txCtx) => {
-    await submitCallTx<MintDiscloseContract, 'mintReveal'>(
-      providers,
-      {
-        compiledContract: CompiledMintDiscloseContract,
-        contractAddress,
-        circuitId: 'mintReveal',
-        privateStateId,
-        args: [s, h],
-      },
-      txCtx
-    );
-    await submitCallTx<MintDiscloseContract, 'absorb'>(
-      providers,
-      {
-        compiledContract: CompiledMintDiscloseContract,
-        contractAddress,
-        circuitId: 'absorb',
-        privateStateId,
-        args: [h],
-      },
-      txCtx
-    );
-  });
-
-  return {
-    tx: toTxResult(contractAddress, finalized.public),
-    h: Buffer.from(h).toString('hex'),
-    s: Buffer.from(s).toString('hex'),
-  };
+  try {
+    const finalized = await withContractScopedTransaction<MintDiscloseContract>(providers, async (txCtx) => {
+      await submitCallTx<MintDiscloseContract, 'mintReveal'>(
+        providers,
+        {
+          compiledContract: CompiledMintDiscloseContract,
+          contractAddress,
+          circuitId: 'mintReveal',
+          privateStateId,
+          args: [s],
+        },
+        txCtx
+      );
+      await submitCallTx<MintDiscloseContract, 'absorb'>(
+        providers,
+        {
+          compiledContract: CompiledMintDiscloseContract,
+          contractAddress,
+          circuitId: 'absorb',
+          privateStateId,
+          args: [hs, hPrime],
+        },
+        txCtx
+      );
+    });
+    return {
+      succeeded: true,
+      tx: toTxResult(contractAddress, finalized.public),
+      s: Buffer.from(s).toString('hex'),
+      hs: Buffer.from(hs).toString('hex'),
+      hPrimeUsed: Buffer.from(hPrime).toString('hex'),
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.info(`mint+absorb failed: ${msg}`);
+    return {
+      succeeded: false,
+      error: msg,
+      s: Buffer.from(s).toString('hex'),
+      hs: Buffer.from(hs).toString('hex'),
+      hPrimeUsed: Buffer.from(hPrime).toString('hex'),
+    };
+  }
 }
 
 // ---------- state query: verify s is on-chain ----------
@@ -190,7 +224,7 @@ export interface DisclosedPreimageLookup {
 export async function queryDisclosedPreimage(
   ctx: AppContext,
   contractAddress: string,
-  h: Uint8Array
+  hs: Uint8Array
 ): Promise<DisclosedPreimageLookup> {
   const publicStates = await getPublicStates(ctx.publicDataProvider, contractAddress);
   const ledger = decodeLedger(publicStates.contractState.data) as {
@@ -199,9 +233,9 @@ export async function queryDisclosedPreimage(
       lookup(key: Uint8Array): Uint8Array;
     };
   };
-  if (!ledger.disclosedPreimages.member(h)) {
+  if (!ledger.disclosedPreimages.member(hs)) {
     return { present: false };
   }
-  const s = ledger.disclosedPreimages.lookup(h);
+  const s = ledger.disclosedPreimages.lookup(hs);
   return { present: true, s: Buffer.from(s).toString('hex') };
 }

@@ -1,162 +1,249 @@
-# Bridgeless ADA↔DUST Capacity Exchange: Architecture Overview
+# Bridgeless ADA/DUST Capacity Exchange Architecture
 
-**Status:** Living draft. Iteratively refined as decisions land
+This document covers the *why*, the *what*, and the *high-level architecture* of the bridgeless ADA→DUST capacity exchange. Implementation choices (concrete byte layouts, library selection, daemon process structure, hash-function ports, sampling formulas) are left to the engineers building it.
 
 ---
 
-## 1. Goal
+## 1. Problem
 
-Let a user holding ADA on Cardano execute a Midnight transaction that requires DUST for gas, by paying ADA to a liquidity provider (LP) who supplies the DUST. **Bridgeless**: no wrapped assets, no full Midnight light client on Cardano. Atomicity comes from pairing a hash-time-locked Cardano escrow with a Midnight intent that atomically requires the same secret to balance. The user's preimage `s` enables both the Midnight-side mint and the Cardano-side claim.
+A user holding ADA on Cardano needs to execute a transaction on Midnight that requires DUST for gas. They do not hold DUST and don't want to bridge into a wrapped asset. The existing capacity-exchange SDK already supports paying for Midnight gas with non-DUST tokens *already on Midnight*; this design adds a new swap mode where the source asset lives on a different chain.
 
-## 2. Parties
+**"Bridgless"** means there are no wrapped assets on Midnight, a cardano transaction facilitates a Midnight transaction, and vice versa. These swaps cannot be *atomic*, due to rollbacks and Cardano reorgs, but it is designed to nearly guarantee that the user who pays for a service receives that service. DUST is a regenerative asset, so failure modes where the LP delivers DUST without getting paid are tolerable (and can be handled by the LP adjusting prices). Failure modes where the user pays without receiving service are not. The design pairs a hash-time-locked contract (HTLC) on Cardano with a contract on Midnight that harnesses the ability to merge transactions. The cross-chain leg from "transaction finalized on Midnight" to "ADA claimed on Cardano" remains a sequenced settlement with bounded risk.
 
-- **User** has ADA, wants to land a Midnight tx, doesn't hold DUST.
-- **Liquidity Provider (LP)** has DUST, accepts ADA in payment for sponsoring.
-- **Relayer** submits the Cardano claim once `s` is on-chain on Midnight. LP can self-relay; a relayer market is also viable.
+## 2. Goals and non-goals
 
-## 3. Trust model
+**In scope**
 
-- **HARD guarantee** (cryptographic): LP cannot claim ADA without delivering DUST.
-- **SOFT guarantee** (economic/probabilistic): user can rarely/improbably get DUST without paying ADA.
-- **Why asymmetric**: Cardano can verify Midnight finality (BEEFY); the reverse direction is much harder. Here the asymmtery favors the user, as they are paying for the "experience", and an LP can adjust prices to cover the cost of rollbacks. And, perhaps more importantly, DUST is a regenerative asset. So as long as it is hard to manipulate, and the LP isn't hitting DUST capacity limits, there is no value lost.
+- Probabilistic ADA-on-Cardano → DUST-on-Midnight settlement for a single user-initiated swap, with failure modes that favor the user receiving service.
+- Cryptographic property that an LP cannot claim ADA without the user's secret being revealed on Midnight (which guarantees that the user receives their service before completing payment).
+- Permissionless participation: any party meeting the protocol's terms may act as an LP, and any party may submit the Cardano claim.
+- Recovery path that returns the user's ADA on the dominant failure paths.
+- Integration with the existing capacity-exchange SDK and `/prices` discovery surface.
 
-## 4. Protocol flow (happy path)
+**Out of scope for v1.**
 
-1. User picks secret `s`, computes `H = hash(s)`.
-2. User locks ADA in a Cardano **escrow UTxO** with a datum including `H`, user's signing key, the LP's address (the only address allowed to receive the claim), amounts, and a timeout `eTTL` (see Timing below). The escrow UTxO is locked at the escrow contract, a single script address per Midnight ledger version. Two spending paths: LP claim (reveal `s` + prove Midnight finality, output pinned to the LP address from the datum) and user refund (after `eTTL`).
-3. LP reads state updates from Cardano, filtering for escrow UTxOs at the escrow contract whose datum names this LP (by address). Reads `H` from the datum and validates the agreed terms; ignores escrows with a mismatched LP address or malformed datum.
-4. LP builds an **unbalanced transaction** containing `dust_input(LP) + absorb(H)` and shares it with the user. On its own this fragment is invalid; `absorb` requires a token of color `H` that doesn't yet exist. **LP never sees `s`.**
-5. User completes the intent by adding `mintReveal(s, H) + user_operation`. The `mintReveal` mints the token of color `H` that LP's `absorb` consumes; the intent now balances. Only the user knows `s`.
-6. User signs and submits the completed intent to Midnight.
-7. Intent finalizes on Midnight. `s` is permanently in the serialized extrinsic call data.
-8. LP (or relayer) submits the Cardano claim with `s` + a finality proof. The validator extracts `s` at a hardcoded byte offset, checks `hash(s) == H`, and pins the output to the LP address read from the escrow's datum. ADA lands.
+- Symmetric trust (Midnight verifying Cardano state). Asymmetry is by design; see section 4.
+- Protocol-layer relayer payment market. Anyone may submit a claim; nobody is paid for it.
+- Multi-LP serving or LP failover within a single escrow. Each escrow UTxO names exactly one LP.
 
-**Refund path**: user reclaims ADA after `eTTL` if any of steps 5–8 fails. LP's DUST input expires earlier (at `mTTL`, see below), so LP's DUST isn't locked indefinitely.
+## 3. Roles
 
-### Timing
+- **User.** Holds ADA, wants to land a Midnight transaction. Most likely interacting through a **dApp** that integrates the SDK, though not necessarily.
+- **LP.** Holds DUST. Operates off-chain infrastructure that watches Cardano for new escrows, validates terms and builds unbalanced Midnight transactions.
+- **Relayer.** Whoever broadcasts the Cardano claim transaction. The LP is the *de facto* relayer, but the validator places no constraint on relayer identity; anyone can relay, paying their own Cardano fees, but receives nothing from the protocol.
+- **SDK.** This repository. Owns secret generation, escrow construction, transaction assembly and merging on the user side, and refund logic. The SDK is the integration layer; dApps consume it.
 
-Two separate timeouts govern the protocol:
+## 4. Trust model
 
-- **`mTTL`** (Midnight TTL): expiry of the LP's DUST input in the Midnight intent. After `mTTL`, the intent is no longer valid and the LP's DUST is freed.
-- **`eTTL`** (escrow TTL): expiry of the user's Cardano escrow UTxO. Between Midnight finalization and `eTTL`, the LP can claim. After `eTTL`, only the original depositor can reclaim.
+**Priority: the user who pays receives the service.** Cross-chain settlement is probabilistic, not atomic, so no construction can make this absolute. The design optimizes for this outcome by making the user's ADA recoverable on the dominant failure paths and aligning the LP's economic incentives with serving rather than declining.
 
-**Constraint: `eTTL` > `mTTL`** by a reasonable margin (TBD). Otherwise a malicious user could submit the Midnight intent at the very last second of `mTTL`, leaving so little time before `eTTL` that the LP's Cardano claim can't settle in time and the user can refund, taking the DUST without paying. The margin must accommodate Cardano settlement latency plus the BEEFY commitment lag needed to assemble the finality proof.
+**Cryptographic property.** The LP cannot claim ADA without the user's secret `s` becoming observable on Midnight. This guarantees that the user has at least *submitted* a transaction on Midnight that completes their intended operation. Combinining this with a BEEFY justification guarantees that the transaction has *finalized* on Midnight before the LP is able to claim the payment.
 
-## 5. Components
+**Why this asymmetry is acceptable.** Cardano can verify Midnight finality relatively cheaply (via BEEFY); the reverse direction is much harder. Aligning the strong cryptographic guarantee with the side where verification is cheap is sensible. More importantly, **the loss profiles are asymmetric**. DUST is a regenerative asset and free to provide while the LP is below saturation: an LP that delivers DUST and doesn't get paid has an opportunity cost, not a principal loss. A user that pays ADA and doesn't get service loses real money. Putting the strongest protections on the user side matches where the irrecoverable loss can actually occur.
 
-### 5.1 Midnight contract
-PR #128, branch `prototype/midnight-mint-disclose`. Two circuits:
-- `mintReveal(s, h)` — public arg `s`, asserts `hash(s) == h`, mints 1 unshielded token of color `tokenType(h, contract's own address)`.
-- `absorb(h)` — receives 1 token of color `tokenType(h, contract's own address)` into the contract.
+## 5. The construction
 
-Ledger balance check is the enforcement: `absorb` alone fails (no supply). Paired with `mintReveal` they net to zero contract holding. This particular contract is just a proof of concept.
+A Midnight transaction is an atomic ledger update. It can contain many intents (individual operations such as token movements, DUST inputs, or contract circuit calls), and finalizes only if the whole set balances: every receive of a token must be matched by a send of the same color somewhere in the same transaction. The merge primitive lets the LP and the user each construct a transaction independently, neither of which has to balance on its own, and then combine them into one transaction that does.
 
-### 5.2 Cardano validator
-Hash-time-locked escrow (Cardano side only, there is no counterpart HTLC on Midnight; see 5.1 for how the Midnight side enforces co-execution). Two spending paths:
-- **Claim** (after Midnight finalization, before `eTTL`): redeemer carries `s` + finality proof; validator extracts `s`, checks `hash(s) == H`, pins output to the LP address read from the escrow's datum.
-- **Refund** (after `eTTL`): no proof required, output to user.
+The user commits **two** secrets, `s` and `s'`, when they create the Cardano escrow. Both hashes, `h = hash(s)` and `h' = hash(s')`, go into the datum. `s` is the *public* secret: it ends up disclosed verbatim in the on-chain Midnight extrinsic call data so the Cardano validator can verify it directly. `s'` is the *private* secret: it stays in the user's possession and is fed to the Midnight contract through a **witness function**. Midnight's witness mechanism lets a circuit consume `s'` inside the ZK proof, attesting that the user knows it and that derived values are computed correctly, without `s'` itself ever appearing on chain.
 
-The byte offsets where `s` and `H` live in the Midnight extrinsic are **hardcoded into the validator** for the specific Midnight ledger serialization version it targets. See 5.3 for version-handling strategy.
+This design uses two contract circuits:
 
-### 5.3 Per-version validator deployment
-We deploy **a new Aiken validator per Midnight ledger serialization version**. Each validator hardcodes the byte offsets for its corresponding extrinsic format. When Midnight bumps to a new version, we deploy a new validator; new escrow UTxOs lock at the new address; existing escrow UTxOs continue to claim against their original validator, which still knows its own version's offsets.
+- **`mintReveal(s)`** — `s` is a public (disclosed) circuit argument; `s'` is read inside the circuit via a witness function. The circuit mints one unshielded token of color `hash(hash(s) || hash(s'))`.
+- **`absorb(h, h')`** — both arguments are public. The circuit receives one token of color `hash(h || h')` into the contract.
 
-The version triple appears in plaintext at the start of every Midnight tx, e.g. `midnight:transaction[v9](signature[v1],proof-preimage,embedded-fr[v1])`. The validator sanity-checks that the prefix matches the version it was built for.
+The two-party Midnight flow:
 
-Trade-off: every Midnight ledger version bump requires a new Aiken validator and redeploy. Accepted in exchange for removing the centralization risk of an admin-controlled config UTxO that could mis-set offsets (bricking claims) or be compromised (drain vector). Worst case if we miss a version: new escrow UTxOs locked at an outdated validator can't be claimed by LPs, but users always recover at `eTTL`.
+1. The **LP** builds an unbalanced transaction containing `dust_input(LP) + absorb(datum.h, datum.h')`. The two `absorb` arguments come straight from the on-chain Cardano datum and are public. The transaction is unbalanced — `absorb` claims a token of color `hash(h || h')` and there is no matching supply.
+2. The **user** builds their own unbalanced transaction containing `mintReveal(s) + user_operation`. The mintReveal call carries `s` publicly and uses the user's witness function to feed `s'` into the proof. The mint's color is `hash(hash(s) || hash(s'))`.
+3. The user **merges** the LP's transaction with their own. The merged transaction balances *if and only if* `hash(hash(s) || hash(s')) == hash(h || h')` — i.e., `hash(s) == h` and `hash(s') == h'` (assuming hash collision resistance). The Midnight ledger's balance check enforces this match. When it holds, `mintReveal`'s supply is consumed by `absorb`, the LP's DUST input pays gas, and `user_operation` runs.
+4. The user signs the merged transaction and submits it. Once finalized, `s` is public in the extrinsic call data; `s'` is not.
 
-### 5.4 Off-chain coordination
-- LP daemon: watches Cardano for new escrow UTxOs at the (versioned) escrow address, filters by datum-specified LP address, validates terms, builds unbalanced transactions, shares with user.
-- Relayer: watches Midnight finalized blocks for `mintReveal`, assembles finality proofs, submits Cardano claim.
-- Can be the same process; keep them logically separate.
+**Why two secrets, and what that buys.** A single-secret form is vulnerable to LP front-running: an LP can read `s` from the user's mempool transaction, build a competing transaction `dust_input(LP) + mintReveal(s) + absorb(h)` that omits `user_op`, finalize the same `s` on Midnight, and claim ADA without delivering the user's intended operation. Net economic for the LP is zero (DUST out, ADA in, same as the honest flow), but censorship of `user_op` is real value when the user's operation is competitive (an arbitrage, a liquidation, etc.).
 
-## 6. Cardano-side verification stack
+The two-secret form closes that. Constructing `mintReveal` requires the witness `s'` — without it, the ZK prover cannot produce a valid proof for the circuit. An LP that has only `s` from the mempool cannot generate a competing `mintReveal`. Substituting an `s'_LP` of the LP's own choosing fails too: the resulting mint color is `hash(hash(s) || hash(s'_LP))`, which does not match the absorb color `hash(h || h')` that the validator's `h'` check forces. The LP would need a preimage of `datum.h'` — i.e., the user's secret `s'` — and preimage resistance prevents that.
 
-To verify "this Midnight tx revealing `s` actually finalized," the validator processes a layered proof. Each layer maps to known infrastructure:
+This is the property the Cardano side leans on. Given a proof that a Midnight extrinsic finalized, contains `s` such that `hash(s) == datum.h`, *and* was paired with an `absorb` whose second argument equals `datum.h'`, the Cardano validator releases ADA. There is no path for the LP to produce such an extrinsic without the user's witness `s'`, and no path for the extrinsic to land without a matching `absorb` consuming the LP's DUST. The LP's DUST delivery, the disclosure of `s`, and the binding to *this* user's `(h, h')` commitments are inseparable.
 
-| Layer | Hash primitive | Reference | Status |
+A bridge-based design would need to prove state inclusion via several layers: signed commitment → MMR root → block header → storage trie → contract membership. This design needs a single Substrate Patricia trie inclusion proof for the extrinsic in `extrinsics_root`. The Midnight ledger's transaction-level atomicity, the merge primitive, and the witness-based binding to `s'` carry the rest.
+
+## 6. Protocol
+
+### 6.1 Happy path
+
+The flow involves four actors and three chains' worth of state (Cardano UTxO set, Midnight extrinsics, the off-chain LP channel). Numbered steps below correspond to numbered events in the sequence diagram.
+
+```mermaid
+sequenceDiagram
+    participant User as User (via SDK)
+    participant Cardano
+    participant Midnight
+    participant LP
+
+    Note over User: (1) generate s, s'<br/>h = hash(s), h' = hash(s')
+    User->>Cardano: (2) escrow(h, h', lp_address, eTTL, amount)
+    Cardano-->>LP: new escrow observed
+    Note over LP: (3) validate terms<br/>build unbalanced tx:<br/>dust_input(LP) + absorb(h, h')
+    LP-->>User: LP unbalanced tx (off-chain)
+    Note over User: (4) build mintReveal(s) [witness s'] + user_op<br/>merge with LP tx; sign; submit
+    User->>Midnight: merged tx
+    Note over Midnight: (5) finalize; s now in call data
+    LP->>Cardano: claim(s, finality_proof)
+    Note over Cardano: (6) verify proof<br/>pin output → lp_address
+```
+
+1. **Secrets.** The SDK generates two 32-byte secrets from a CSPRNG: `s` (public secret, will be disclosed on Midnight) and `s'` (private secret, will be supplied as a witness to the Midnight contract). Computes `h = hash(s)` and `h' = hash(s')`.
+2. **Escrow.** The SDK constructs a Cardano escrow UTxO. The datum names `h`, `h'`, the user's refund credential, the LP's full Cardano address, the agreed amounts, and `eTTL` (Cardano slot deadline).
+3. **LP transaction.** The LP observes the escrow on Cardano (after waiting enough confirmations to be reorg-safe), validates that the datum's terms match what was quoted, and constructs an unbalanced Midnight transaction containing a DUST input from the LP plus an `absorb(datum.h, datum.h')` call. Sent to the user via off-chain channel.
+4. **Merge and submit.** The SDK builds the user's own unbalanced transaction containing `mintReveal(s) + user_operation` (the witness function inside the circuit returns `s'`), merges it with the LP's transaction, signs, and submits the merged transaction to a Midnight node. The merge balances: `mintReveal`'s color `hash(hash(s) || hash(s'))` matches `absorb`'s color `hash(h || h')`, the LP's DUST pays gas, and `user_operation` runs. `s` is readable from any node's local mempool from this point onward; `s'` is not — the witness stays in the user's possession and is never written to chain.
+5. **Finalize.** Midnight processes the merged transaction through GRANDPA finality and BEEFY commitment. `s` is now public in the extrinsic's call data on a finalized block.
+6. **Claim.** The LP (or any relayer) constructs a Cardano transaction that consumes the escrow, supplying `s` and a finality proof in the redeemer. The validator confirms two facts against the finalized Midnight extrinsic: `hash(s) == datum.h` (extracted from `mintReveal`'s public arg), and the second `absorb` argument equals `datum.h'` (extracted from `absorb`'s public args). It then pins the entire `amount_ada` output to `datum.lp_address`.
+
+The off-chain channel in step 3 is implementation-defined — likely an extension of the existing `/prices` infrastructure. The protocol does not prescribe its shape; it only requires that the LP can deliver its unbalanced transaction to the SDK before `mTTL` (see section 7) elapses.
+
+### 6.2 Refund path
+
+If the swap fails to complete by `eTTL` for any reason, LP unresponsive, Midnight transaction fails to finalize, BEEFY infrastructure unavailable, network partition, the user reclaims ADA. The Cardano validator accepts a transaction that has a validity range starting after `datum.eTTL` and is signed by `datum.user_signing_key`. No proof, no destination constraint.
+
+The LP's DUST input has its own, earlier expiry (`mTTL`), so the LP's capital isn't locked until the user's deadline.
+
+## 7. Timing
+
+Two timeouts and one operational parameter govern the protocol. Specific values are LP- and integrator-tunable; the architecture specifies the constraint structure, not the numbers.
+
+| Parameter | Lower bound from | Upper bound from | Notes |
 |---|---|---|---|
-| BEEFY signature quorum | ECDSA secp256k1 (Plutus builtin) | midnight-node `runtime/src/lib.rs:455` | Trivial during Midnight's federated launch phase (9 trusted operators). Needs sampling once Mōhalu opens validation to Cardano SPOs. |
-| MMR inclusion proof | Keccak256 (Plutus builtin) | midnight-node `runtime/src/lib.rs:455` | Plutus builtins make this relatively inexpensive. |
-| Block header decode | BlakeTwo256 (Plutus builtin) | Substrate default | Trivial byte parse. |
-| `extrinsics_root` trie walk | BlakeTwo256, TrieLayout v1 | `runtime/src/lib.rs:285` (`system_version: 1`) | Needs investigation. No known existing Aiken impl. |
-| Byte-extract `s` from extrinsic | none | Hardcoded offset in validator (5.3) | Trivial byte slice. |
+| `cardano_wait_depth` | Cardano reorg resistance for the escrow deposit | LP eagerness to serve | How many Cardano confirmations the LP requires before serving an escrow. Operational; outside protocol scope. |
+| `mTTL` | Midnight finalization latency + buffer | LP's tolerance for capital lockup on the unsubmitted leg | Window in which the user must submit the merged transaction and Midnight must finalize. After `mTTL`, the LP's DUST input is no longer valid in the transaction and the LP's capital is freed. |
+| `eTTL` | `mTTL` + worst-case BEEFY commitment lag + Cardano settlement + safety | User's tolerance for ADA lockup on the unhappy path | Cardano-side deadline. Before `eTTL`, only the LP's claim path is valid; after, only the user's refund path. |
 
-**Phase context.** Midnight launched mainnet in a "guarded launch" with 9 federated operators (Worldpay, Bullish, MoneyGram, Pairpoint by Vodafone, eToro, AlphaTON Capital, Google Cloud, Blockdaemon, Shielded Technologies). The planned **Mōhalu** phase onboards Cardano SPOs to validation; validator-set rotation per epoch, capped by `MaxAuthorities = 10000` (midnight-node `runtime/src/lib.rs:1107`). Steady-state committee size is not yet publicly documented.
+**Hard constraint:** `eTTL > mTTL` by enough margin to cover the worst-case BEEFY commitment lag (mandatory commitments at session boundaries on Midnight are on the order of tens of minutes) plus Cardano settlement and safety. Without this margin, a user who delays Midnight submission until the last second of `mTTL` could leave the LP without enough time to land a Cardano claim before `eTTL`, allowing the user to refund and effectively get DUST for free.
 
-**Verified offline** by `src/cli/decode-extrinsic.ts`: with `s` as a public circuit arg, `s` lands at a deterministic byte offset (598 in v9 PoC, content-independent). `H` and `recipient` similarly stable across runs.
+## 8. High-level architecture
 
-## 7. Decisions made
+The system has four buildable pieces. The boundary between them is what this section describes; what's *inside* each piece is implementation territory.
 
-| # | Decision | Rationale |
+### 8.1 Midnight contract
+
+A small Compact contract exposing two circuits, `mintReveal(s)` and `absorb(h, h')`. The contract uses a witness function to read the user's private `s'` inside `mintReveal` without disclosing it on chain; the ZK proof attests that the prover knows `s'` and that the resulting mint color is computed correctly. Token color is `hash(hash(s) || hash(s'))` for the mint and `hash(h || h')` for the absorb, so the merged transaction's balance check forces `(hash(s), hash(s')) == (h, h')`. Semantics are described in section 5. A working PoC is `mint_disclose.compact` in this directory, with end-to-end scenarios in `src/cli/e2e.ts` covering the four cases below. (In Compact code, `h'` is a valid identifier such as `hPrime`; this document uses `h'` for readability.)
+
+The PoC's e2e harness exercises four scenarios:
+
+- **A.** `mintReveal(s)` alone succeeds; `s` lands in the disclosed-preimages ledger keyed by `hash(s)`.
+- **B.** `absorb(h, h')` alone with random arguments fails on the balance check (no matching supply).
+- **C.** `mintReveal(s) + absorb(hash(s), h')` in a single merged transaction with `h' == hash(s')` succeeds; the mint and absorb colors match.
+- **C′.** `mintReveal(s) + absorb(hash(s), h'_wrong)` with a wrong `h'` fails on the balance check; the mint color (using witness `s'`) and the absorb color (using `h'_wrong`) differ. This is the load-bearing demonstration of the LP-front-run defense.
+
+### 8.2 Cardano validator
+
+A Plutus validator backs the escrow address. One validator per Midnight ledger serialization version (see section 9 on per-version deployment). Two spending paths: claim and refund.
+
+The escrow datum is the contract between the SDK and the validator:
+
+| Field | Type | Notes |
 |---|---|---|
-| 7.1 | `s` is a public circuit arg, not a witness | Verifier walks `extrinsics_root` (standard Substrate trie, blake2-256) instead of `state_root` → custom Midnight ledger tree (no tooling, custom hash primitive). 10×+ cheaper. |
-| 7.2 | Per-version validator deployment, no config UTxO | Removes centralization risk (no admin-controlled offsets table that could brick or be compromised). Worst case is a new ledger version requires a new validator deploy before LPs can claim against it; users always recover at `eTTL`. **Eliminates the drain vector entirely.** |
-| 7.3 | Random sampling for BEEFY quorum, with graceful degradation | If validator count ≤ N, verify all (federated phase = 9 → no sampling needed). When count > N, sample N (N is the per-claim sample size, see 8.2). Same contract; switches automatically. |
-| 7.4 | Mint+absorb atomicity is the protocol's security property | Proven in PR #128 Test B: `absorb` alone fails on ledger balance check. LP cannot claim ADA without an intent that includes the user's mint. |
-| 7.5 | LP builds the absorb-fragment, user adds the mint and submits | LP never sees `s` until it's in the mempool, or on-chain, on Midnight.. Without `s` and a finality proof, LP cannot construct a valid Cardano claim. |
-| 7.6 | `eTTL` > `mTTL` with margin for Cardano settlement and BEEFY commitment lag | Defined in 4 Timing. Prevents the late-submit attack where a user delays the Midnight tx until the last second of `mTTL`, leaving the LP without enough time to land their Cardano claim before `eTTL`. Exact margin TBD. |
-| 7.7 | LP address lives in the escrow datum, not as a script parameter | One escrow contract address per Midnight ledger version, regardless of how many LPs participate. LPs filter incoming escrow UTxOs by the datum's LP-address field and ignore mismatches. Simpler off-chain (one address per version to watch), simpler deploy (no per-LP parameterization), no security cost — the validator still pins claim outputs to the datum-specified LP. |
-
-## 8. Open decisions / things to investigate
-
-| # | Item | Notes |
-|---|---|---|
-| 8.1 | **Bias-resistant randomness on Cardano** for sampling | Plutus has no `prevRandao` equivalent. Options: Snowbridge-style commit-reveal across 3 txs, trusted oracle, VRF block nonce as seed. |
-| 8.2 | **Sample size N** | Snowbridge formula: `⌈log2(R*V*172.8 / S)⌉` + safety margin. ~30 sigs typical at Polkadot scale. |
-| 8.3 | **`mTTL` value** | Short enough that LP's DUST isn't locked indefinitely if the user never submits the intent. Drives 7.6's `eTTL`. |
-| 8.4 | **`eTTL` value (and `eTTL − mTTL` margin)** | Must satisfy 7.6 (> `mTTL`, with enough headroom for max BEEFY commitment lag + Cardano settlement). |
-| 8.6 | **Hash function compatibility** | Confirm  Midnight's `persistentHash<Bytes<32>>` can be computed (within economic bounds) in Plutus. |
-| 8.7 | **Anchor-relative vs absolute offsets in validator** | Absolute byte offsets work today (verified at offset 598). Anchor-relative (e.g., scan for ASCII `mintReveal` then offset from there) more robust to small intra-prefix changes within the same major version. |
-| 8.8 | **All-zero `s` fails in `persistentHash`** | Decoder script crashed on `s = 0x00 × 32` ("invalid alignment supplied" from ledger-v8 WASM). Mitigate in user-wallet `randomBytes32` by rejecting zero. |
+| `h` | `Bytes32` | `hash(s)` commitment to the public secret disclosed in `mintReveal` |
+| `h_prime` | `Bytes32` | `hash(s')` commitment to the private witness secret. Used by the LP as the second `absorb` argument and verified on-chain by the Cardano validator. Closes the LP-front-run vector (see section 5). |
+| `user_signing_key` | `KeyHash` (28B) | refund-path authentication |
+| `lp_address` | `Address` | full Cardano address (payment + stake credentials); claim output target |
+| `amount_ada` | `u64` | claim output value, lovelace |
+| `amount_dust` | `u64` | redundant on-chain (Midnight enforces the LP's DUST cost via the transaction) but kept for visibility |
+| `eTTL` | `u64` | Cardano slot deadline |
 
 
-## 9. Engineering punch list
+**Claim path** (before `eTTL`). The redeemer carries `s` and a BEEFY-anchored finality proof. The validator:
 
-Approximate ordering. Items marked `‖` can run in parallel. Effort estimates TBD by the implementing engineers.
+1. Reads the trusted authority set and signer threshold from the `committee_bridge` and `beefy_signer_threshold` NFTs (reference inputs).
+2. Verifies the signed BEEFY commitment against the authority set: multi-member Merkle proof of signers, ECDSA signatures over the SCALE-encoded commitment, stake sum at or above threshold.
+3. Extracts the MMR root from the commitment payload (or, equivalently, from the target block's `BEEF` consensus digest; the header carries it directly via `ConsensusLog::MmrRoot`, so if we have the target block's header we can skip the commitment-payload path).
+4. Verifies MMR inclusion of the target block's leaf in that root.
+5. Verifies the supplied block header bytes hash (BlakeTwo256) to the MMR leaf's `parent_hash`.
+6. SCALE-decodes the header, extracts `extrinsics_root`.
+7. Verifies the supplied extrinsic's inclusion in `extrinsics_root` via a Substrate Patricia trie proof (TrieLayout v1).
+8. Sanity-checks the extrinsic's ledger-version prefix against what this validator was built for.
+9. Byte-extracts `s` from `mintReveal`'s public arg and the two `absorb` arguments (`h`, `h'`) at hardcoded offsets. Asserts `hash(s) == datum.h`, the extracted first absorb arg equals `datum.h`, and the extracted second absorb arg equals `datum.h_prime`. The third check is the front-run defense: it forces any finalized claim-eligible transaction to bind to the user's specific `(h, h')` commitments, which only the user could construct (via the witness function for `s'`).
+10. Constrains the transaction's outputs and validity range: the entire `datum.amount_ada` is pinned to `datum.lp_address`, and the validity range ends before `datum.eTTL`.
 
-| # | Task | Depends on |
-|---|---|---|
-| 1 ‖ | Aiken `extrinsics_root` trie verifier (TrieLayout v1) | — |
-| 2 ‖ | Aiken MMR verifier (Keccak256 peaks) | — |
-| 3 ‖ | Aiken BEEFY commitment verifier (ECDSA, full quorum at federated) | — |
-| 4 | Aiken validator (HTLC paths + verifier glue + hardcoded offsets for current Midnight version) | 1, 2, 3 |
-| 5 ‖ | Off-chain LP daemon | |
-| 6 | Off-chain relayer | 1–4 done |
-| 7 | E2e testnet test (preprod Midnight + preprod Cardano) | All above |
-| 8 | Random-sampling design + impl | 8.1, after federated launch |
+The validator does not constrain relayer identity. Anyone may relay; the output goes to the LP regardless.
+
+**Refund path** (after `eTTL`). Validity range starts after `datum.eTTL`; transaction is signed by `datum.user_signing_key`. No proof, no destination constraint.
+
+### 8.3 SDK
+
+Responsibilities:
+
+- Generate `s` and `s'` (CSPRNG, 32 bytes each), enforce uniqueness across the user's active escrows, and surface the resulting `h = hash(s)` and `h' = hash(s')` to the rest of the flow.
+- Construct the Cardano escrow transaction with the canonical datum.
+- Hold `s'` privately in user-side state for the duration of the swap; expose it to the Midnight contract only via the witness function during `mintReveal` proof generation.
+- Receive the LP's unbalanced transaction, build the user's own transaction containing `mintReveal(s) + user_operation` (with `s'` supplied as witness), merge them, sign, and submit to Midnight.
+- Construct the Cardano refund transaction when invoked after `eTTL`.
+
+Integrators are dApps (any application requiring Midnight transactions), not specifically wallets. The SDK does not prescribe a wallet integration; it exposes signing hooks and lets the dApp wire them up.
+
+### 8.4 LP infrastructure
+
+An off-chain process (logically a single service, separable into "watcher" and "claim relayer" roles):
+
+- Watches the per-version escrow address on Cardano. Filters incoming UTxOs by the datum's `lp_address` field.
+- Validates each escrow's terms against expected pricing.
+- After enough Cardano confirmations, builds an unbalanced transaction and delivers it to the SDK over the off-chain channel.
+- Watches Midnight for the resulting transaction's finalization, assembles the BEEFY-anchored finality proof, and submits the Cardano claim.
+
+How the LP keeps Cardano and Midnight state in sync, sources BEEFY commitments, and manages multi-chain syncing is implementation-defined.
+
+### 8.5 Cardano-side BEEFY infrastructure
+
+The validator's claim path verifies a layered Midnight finality proof: a BEEFY signature quorum over a commitment, MMR inclusion of the target block, header decoding, and Substrate Patricia trie inclusion of the extrinsic in `extrinsics_root`. Each layer is verifiable in Plutus; the design leans on Cardano-side BEEFY infrastructure (`midnight-reserve-contracts`) for authority tracking and signature primitives, and ports the trie verifier from existing reference implementations.
+
+## 9. Per-version validator deployment
+
+The validator hardcodes byte offsets for one specific Midnight ledger serialization version. When Midnight bumps the version, a new validator deploys; new escrow UTxOs lock at the new address; existing escrow UTxOs continue to claim against their original validator.
+
+This trades a per-version redeploy cycle against the centralization risk of an admin-controlled config UTxO that could mis-set offsets (bricking claims) or be compromised (drain vector). The trade is favorable: the worst case if a version is missed is that LPs can't claim against new escrows at the outdated validator, but users always recover at `eTTL`. There is no scenario where ADA gets stolen.
+
+Anchor-relative offset extraction (scanning extrinsic bytes for a stable anchor and reading offsets relative to it) is a long-tail robustness improvement that would let one validator survive intra-version drift. Deferred for now.
+
 
 ## 10. Threat model
 
+Defenses below assume protocol invariants hold (Midnight transaction atomicity, BEEFY signs only post-GRANDPA-finalized blocks, Cardano consensus security).
+
 | Attack | Defense |
 |---|---|
-| LP claims ADA without providing DUST | Cryptographic: `s` only revealed when intent atomically lands; Midnight balance check forces `mintReveal` + `absorb` co-execution. |
-| Observer races LP's claim | Validator pins output to the datum-specified LP address; observer gains nothing. Could optionally tip relayer. |
-| **LP front-runs user-broadcast intent's DUST UTxO → mempool-leaks `s` → claims ADA without delivering** | **BEEFY-finality verification on Cardano claim. Without proof of Midnight finalization, mempool `s` is unusable. This is what motivates the entire verification stack in 6.** |
-| User delays Midnight submission to the last second of `mTTL` so Cardano can't settle the claim before `eTTL` | `eTTL` > `mTTL` with sufficient settlement margin (4 Timing, 7.6). |
-| Midnight reorg removes `s` disclosure | BEEFY signs only finalized blocks (post-GRANDPA); not an issue. |
+| LP claims ADA without delivering DUST. | Cryptographic. The Cardano claim requires a finalized Midnight extrinsic containing `mintReveal(s)` whose mint color matches a balancing `absorb(h, h')`. The Midnight ledger's balance check rejects any transaction containing the absorb without a matching mint, and the validator's check that `absorb`'s second argument equals `datum.h_prime` forces the matching mint to be over the user's specific `(h, h')` commitments. The LP cannot produce a finalized extrinsic satisfying both checks except by participating in a transaction that delivers DUST. |
+| Observer races the LP's claim submission. | Output is pinned to `datum.lp_address`; observer pays Cardano fees and gets nothing. |
+| LP front-runs the user's broadcast transaction: extracts `s` from mempool, broadcasts a competing transaction omitting `user_op`, claims ADA without delivering the user's intended operation. | **Cryptographic.** Constructing `mintReveal` requires the witness `s'`, which the user holds privately and never writes to chain. The LP can read `s` from the mempool but has no way to obtain `s'` (preimage of `datum.h_prime`), so they cannot generate a valid `mintReveal` proof. Substituting an `s'_LP` of their own choosing fails the validator's check that `absorb`'s second argument equals `datum.h_prime`. See section 5 for the full argument. |
+| User delays Midnight submission to the last second of `mTTL`, leaving insufficient time for the LP's Cardano claim to settle before `eTTL`. | `eTTL > mTTL` by a margin covering worst-case BEEFY commitment lag plus Cardano settlement (section 7). Implementation owns specific values; constraint structure is fixed. |
+| User reuses `(s, s')` across multiple escrows (so `h` and `h'` are both duplicated). After one swap finalizes and reveals `s`, the named LP of any duplicate escrow can submit the same finalized extrinsic as their claim — `hash(s) == datum.h` and `absorb`'s second argument equals `datum.h_prime` for the duplicate too. They get paid without having delivered DUST for that escrow. | Self-grief only. The user pays multiple LPs for one delivered service; no third-party theft (each escrow's output goes only to its own datum's `lp_address`). SDK-level safeguard against secret-pair reuse — fresh `(s, s')` per escrow. Reusing only one of the two (different `s'` per escrow) doesn't enable this attack; the validator's `h_prime` check prevents cross-escrow claim reuse when `s'` differs. |
+| Midnight reorg removes `s` disclosure. | BEEFY signs only post-GRANDPA-finalized blocks. Reorg of a finalized block is not in the threat model. |
+| BEEFY infrastructure unavailable (no justifications produced, or `committee_bridge` not maintained). | Liveness, not security. Claim path can't be assembled; in-flight escrows refund at `eTTL`. LP eats the DUST loss. See section 11. |
+| Extrinsic-format drift within a Midnight ledger version. | Detectable in CI / pre-deploy by re-running offset verification. Failure mode is bounded: new escrows at an outdated validator can't be claimed by LPs, but users always recover at `eTTL`. |
 
-## 11. References
+## 11. Open items requiring resolution before v1
 
-### Internal
-- **PoC contract** (PR #128): https://github.com/SundaeSwap-finance/capacity-exchange/pull/128, branch `prototype/midnight-mint-disclose`, file `prototypes/midnight-mint-disclose/mint_disclose.compact`
-- **Offline decoder**(PR #128): https://github.com/SundaeSwap-finance/capacity-exchange/pull/128, branch `prototype/midnight-mint-disclose`, file `prototypes/midnight-mint-disclose/src/cli/decode-extrinsic.ts`
+These block deploy. Implementation-tier opens (sampling formulas, hash-function ports, anchor-relative offsets, payload-ID verification against a live commitment) are tracked separately by the implementing team.
 
-### Midnight node (https://github.com/midnightntwrk/midnight-node)
-- Header hashing — `runtime/src/lib.rs:379` (`BlakeTwo256`)
-- MMR hashing — `runtime/src/lib.rs:455` (`Keccak256`)
-- TrieLayout — `runtime/src/lib.rs:285` (`system_version: 1` → v1)
-- BEEFY MaxAuthorities — `runtime/src/lib.rs:1107` (= 10000)
-- Pallet entry — `pallets/midnight/src/lib.rs:343` (`send_mn_transaction(_origin, midnight_tx: Vec<u8>)`)
+- **BEEFY justification sourcing.** Public Midnight RPCs do not currently serve BEEFY justifications; the LP/relayer needs a working source.
+- **`committee_bridge` NFT operational status on the target network.** Even with justifications produced, the on-chain authority tracker must be bootstrapped with the genesis authority set and updated each rotation. Either verify Midnight is doing this, or commit to running the relayer ourselves.
+- **Offset measurement under realistic transaction shapes.** The current measurement was verified against a minimal test transaction. The production shape is the merged transaction containing an LP dust input, `absorb(h, h')`, `mintReveal(s)` (with `s'` supplied via witness), and the user's `user_op`. The validator extracts `s` plus both `absorb` arguments at hardcoded offsets, so all three offsets need to be re-measured against compound transactions (multi-op, shielded+unshielded mixes, mixed contract calls) before a v1 validator is committed.
+- **End-to-end exercise of the witness path on preprod.** The PoC contract and tests are in place locally (`mint_disclose.compact` plus `src/cli/e2e.ts`); the witness-function path needs to be run against a live network to confirm the merged-transaction flow finalizes and that the absorb arguments land at predictable byte positions (the offset measurement noted above).
+- **Substrate Patricia trie verifier in Aiken.** No known existing implementation. Mechanical port from the Solidity reference is the leading approach.
 
-### External
-- **Substrate trie reference impl** (Solidity, mechanical port to Aiken): https://github.com/polytope-labs/solidity-merkle-trees
-- **Snowbridge sampling docs**: https://docs.snowbridge.network/architecture/verification/polkadot
-- **Aiken MPF lib** — NOT compatible with Substrate trie (different encoding); reference only: https://github.com/aiken-lang/merkle-patricia-forestry
-- **Substrate trie spec**: https://spec.polkadot.network/chap-state
-- **paritytech/trie crate** (canonical Substrate trie): https://github.com/paritytech/trie
-- **Cardano Plutus V3 cost model** (`verifyEcdsaSecp256k1Signature` = 43,053,543 CPU steps / 10 mem)
+## 13. Success criteria for v1
 
-## 12. Iteration log
+The protocol is v1-ready when:
 
-- **2026-04-20**: Initial version of this architecture document.
+1. End-to-end swap completes on Midnight preprod and Cardano preprod, including the BEEFY-anchored claim path against a real BEEFY commitment from Midnight preprod.
+2. The Plutus validator is deployed for the current Midnight ledger version with verified offsets, full BEEFY/MMR/extrinsics-root verification, and refund-path behaviour exercised end-to-end.
+3. The SDK exposes a public surface that takes a target Midnight transaction plus an LP quote and produces the escrow tx, the merged Midnight transaction, and a refund tx, with secret generation, hashing, and uniqueness handled internally.
+4. Documentation enables a third-party LP to onboard without *requiring* source-level access to the SDK internals.
+
+## 14. References
+
+- **PoC contract** — `mint_disclose.compact` in this directory (PR #128 on `prototype/midnight-mint-disclose`).
+- **Offline extrinsic decoder** — `src/cli/decode-extrinsic.ts` in this directory.
+- **midnight-node** — https://github.com/midnightntwrk/midnight-node (BEEFY, MMR, trie layout, payload IDs).
+- **midnight-reserve-contracts** — https://github.com/midnightntwrk/midnight-reserve-contracts (Cardano-side BEEFY authority tracker; design reuses the on-chain NFTs and the relevant Aiken modules).
+- **Substrate trie reference impl (Solidity)** — https://github.com/polytope-labs/solidity-merkle-trees (port target for the Aiken `extrinsics_root` verifier).
+- **Snowbridge sampling docs** — https://docs.snowbridge.network/architecture/verification/polkadot (BEEFY signature sampling once Mōhalu opens validation).
+- **Substrate trie spec** — https://spec.polkadot.network/chap-state.

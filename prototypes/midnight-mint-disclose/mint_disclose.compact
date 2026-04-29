@@ -2,65 +2,66 @@ pragma language_version >= 0.22;
 
 import CompactStandardLibrary;
 
-// Proof-of-concept for the bridgeless ADA↔DUST transaction on the Midnight side.
+// Proof-of-concept for the bridgeless ADA/DUST transaction on the Midnight side.
 //
-// Claim being tested:
-//   A Compact circuit can mint an unshielded token of color derived from
-//   h = hash(s), where s is supplied as a public circuit argument (so it
-//   lands in the on-chain extrinsic call data verbatim). The Cardano-side
-//   verifier proves block-finality via BEEFY → MMR → extrinsics_root →
-//   extrinsic, then byte-extracts s from the call args.
+// Two-secret construction:
+//   - s  is a public circuit argument (lands verbatim in the extrinsic call
+//        data so the Cardano-side validator can byte-extract and verify it).
+//   - s' is a private witness; never written to chain. The prover proves
+//        knowledge of s' via the ZK proof.
 //
-// Three scenarios we exercise in our tests:
-//   A. mintReveal alone   → tx succeeds, s appears in
-//                                      disclosedPreimages[h], user wallet
-//                                      gets 1 token of color tokenType(h, self)
-//   B. absorb alone                 → tx fails (balance overspend — there is
-//                                      no h-token to pull from the intent pool)
-//   C. mintReveal + absorb → tx succeeds, mint's +1 nets against
-//                                      absorb's -1, contract holds 1 token,
-//                                      s still visible in disclosedPreimages[h]
+// mintReveal(s) mints a token of color hash(hash(s) || hash(s')). absorb(h, h')
+// receives a token of color hash(h || h'). The Midnight ledger's balance
+// check forces these colors to match in any merged transaction, which forces
+// (hash(s), hash(s')) == (h, h').
 //
-// Scenarios A and C prove the public-input + mint primitive composes.
-// Scenario B proves the ledger balance check enforces "receive requires
-// matching supply", which is the real security property: LP's receive
-// cannot succeed without the user's disclosing mint.
+// Why two secrets: a single-secret form is vulnerable to LP front-running.
+// An LP that reads s from the user's mempool transaction can rebuild a
+// competing transaction omitting user_op and claim ADA without delivering
+// the user's intended operation. With the two-secret form, building a valid
+// mintReveal requires the witness s', which the LP cannot obtain from h'
+// (preimage resistance), so the LP cannot construct a competing transaction.
+//
+// Test scenarios:
+//   A. mintReveal alone           → succeeds; mint color depends on user's s'.
+//   B. absorb alone (random args) → fails on balance (no matching mint).
+//   C. mintReveal + absorb(h, h') → succeeds when h' == hash(s'); colors match.
+//   C'. mintReveal + absorb(h, h'_wrong) → fails on balance; colors don't match.
+//   This is the load-bearing demonstration of the front-run defense.
 
-// Public ledger: H → revealed preimage s.
-// Now redundant for the protocol (s rides as a public argument in the
-// extrinsic call data), but kept as a convenient post-tx state-query target
-// for sim/preprod tests that want to verify on-chain visibility without
-// decoding the raw extrinsic. Candidate for removal once the e2e proof
-// pipeline is wired up.
+// Witness:` returns the user's private secret s'. Provided via private state
+// by the test harness; never disclosed to the chain.
+witness sPrime(): Bytes<32>;
+
+// Test-side query target: maps hash(s) → s. Redundant for the protocol
+// (s already lands in extrinsic call data) but useful for sim/preprod tests
+// that want to verify on-chain visibility without decoding raw extrinsics.
 export ledger disclosedPreimages: Map<Bytes<32>, Bytes<32>>;
 
-// Empty constructor — no initial state needed.
 constructor() {}
 
 // Circuit A: mint with disclosure.
-// Caller passes s and h as public args. Circuit checks hash(s) == h,
-// records s in the ledger (for test-side state queries), and mints 1
-// unshielded token with domain separator h to the contract itself.
-// Recipient is hardcoded to kernel.self() — the minted token only exists
-// to be consumed by absorb() in the same intent, so the recipient is not
-// a meaningful protocol parameter.
-export circuit mintReveal(
-  s: Bytes<32>,
-  h: Bytes<32>
-): Bytes<32> {
+// Public arg s is disclosed; witness s' is read via sPrime().
+export circuit mintReveal(s: Bytes<32>): Bytes<32> {
   const ds = disclose(s);
-  const dh = disclose(h);
-  assert(persistentHash<Bytes<32>>(ds) == dh, "preimage mismatch");
-  disclosedPreimages.insert(dh, ds);
-  return mintUnshieldedToken(dh, 1, left<ContractAddress, UserAddress>(kernel.self()));
+  const sp = sPrime();
+  const hs = persistentHash<Bytes<32>>(ds);
+  const color = disclose(persistentHash<Vector<2, Bytes<32>>>([
+    hs,
+    persistentHash<Bytes<32>>(sp)
+  ]));
+  disclosedPreimages.insert(hs, ds);
+  return mintUnshieldedToken(color, 1, left<ContractAddress, UserAddress>(kernel.self()));
 }
 
 // Circuit B: absorb.
-// Pulls 1 token of color = tokenType(h, self) from the intent pool into the
-// contract. For this to balance, the intent must also contain a matching
-// supply, either a preceding mintReveal(h, …) in the same intent
-// or a pre-existing h-token held by a signer of the intent.
-export circuit absorb(h: Bytes<32>): [] {
-  const color = tokenType(disclose(h), kernel.self());
-  receiveUnshielded(color, 1);
+// Both args public. Pulls 1 token of color hash(h || h') from the
+// transaction's intent pool into the contract. The Cardano-side validator
+// will byte-extract these args from the finalized extrinsic and verify
+// (h, h') == (datum.h, datum.h_prime), which closes the cross-chain binding.
+export circuit absorb(h: Bytes<32>, hPrime: Bytes<32>): [] {
+  const dh = disclose(h);
+  const dhp = disclose(hPrime);
+  const color = persistentHash<Vector<2, Bytes<32>>>([dh, dhp]);
+  receiveUnshielded(tokenType(color, kernel.self()), 1);
 }
