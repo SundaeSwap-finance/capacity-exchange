@@ -17,7 +17,7 @@ import { buildFlowCtx, pollUntil, type FlowCtxConfig } from '../util/testUtils.j
 
 const logger = createLogger(import.meta);
 
-const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds  
+const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds
 const POLL_INTERVAL_MS = 5_000;
 const POLL_TIMEOUT_MS = 2 * 60 * 1000;
 const TEST_IP = '127.0.0.1';
