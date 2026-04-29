@@ -17,7 +17,7 @@ import { buildFlowCtx, pollUntil, type FlowCtxConfig } from '../util/testUtils.j
 
 const logger = createLogger(import.meta);
 
-const ENTRY_EXPIRY_MS = 60 * 60 * 1000;
+const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds  
 const POLL_INTERVAL_MS = 5_000;
 const POLL_TIMEOUT_MS = 2 * 60 * 1000;
 const TEST_IP = '127.0.0.1';
@@ -48,7 +48,7 @@ export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConf
 }
 
 const REGISTRY_COLLATERAL = 1000n;
-const REGISTRY_MAX_PERIOD = 2_592_000n; // 30 days in seconds
+const REGISTRY_MAX_PERIOD = 18_000n; // 5 hours in seconds
 
 async function deployRegistry(ctx: AppContext): Promise<{ contractAddress: string }> {
   logger.info('Deploying registry contract');
