@@ -3,6 +3,7 @@ import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sunda
 import { program } from 'commander';
 import { renewRegistration } from '../circuits/renew-registration.js';
 import { readSecretKeyFile } from '../types.js';
+import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 
@@ -10,14 +11,15 @@ function main(): Promise<TxResult> {
   program
     .name('renew-registration')
     .description('Renews the registration of an entry in the registry')
-    .argument('<contractAddress>', 'address of the registry contract')
+    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .argument('<secretKeyFile>', 'registry secret key file')
     .argument('<period>', 'new registration period in days (e.g. 30)')
     .parse();
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
-  const [contractAddress, secretKeyFile, periodArg] = program.args;
+  const [contractAddressArg, secretKeyFile, periodArg] = program.args;
+  const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 

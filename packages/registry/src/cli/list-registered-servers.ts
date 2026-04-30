@@ -11,6 +11,7 @@ import { program } from 'commander';
 
 import { Registry } from '../contract.js';
 import { RegistryMapping, registryEntries } from '../types.js';
+import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 const logger = createLogger(import.meta);
 
@@ -40,12 +41,12 @@ async function main(): Promise<void> {
   program
     .name('list-servers')
     .description('Lists registered servers in the registry contract')
-    .argument('<contractAddress>', 'address of the registry contract')
+    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .parse();
 
   const env = resolveEnv();
   const networkId = requireEnvVar(env, 'NETWORK_ID');
-  const [contractAddress] = program.args;
+  const contractAddress = resolveRegistryAddress(networkId, program.args[0]);
 
   const network = buildNetworkConfig(networkId, env);
   const publicDataProvider = createPublicDataProvider(network);

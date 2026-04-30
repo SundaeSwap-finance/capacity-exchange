@@ -4,6 +4,7 @@ import { register } from '../circuits/register.js';
 import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { readSecretKeyFile } from '../types.js';
+import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 
@@ -11,7 +12,7 @@ function main(): Promise<TxResult> {
   program
     .name('register')
     .description('Registers a server to the registry contract')
-    .argument('<contractAddress>', 'address of the registry contract')
+    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .argument('<secretKeyFile>', 'registry secret key file')
     .argument('<ip>', 'server IP address (IPv4 or IPv6)')
     .argument('<port>', 'server port number')
@@ -20,7 +21,8 @@ function main(): Promise<TxResult> {
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
-  const [contractAddress, secretKeyFile, ipStr, portStr, periodArg] = program.args;
+  const [contractAddressArg, secretKeyFile, ipStr, portStr, periodArg] = program.args;
+  const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 
