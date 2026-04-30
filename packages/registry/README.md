@@ -23,7 +23,8 @@ Pass a contract address explicitly to target a different deployment (e.g. a loca
 
 **Prerequisites:**
 - A wallet (`wallet-mnemonic.<NETWORK_ID>.txt` or `wallet-seed.<NETWORK_ID>.hex`) with unshielded NIGHT funds
-- `NETWORK_ID` env var set to `preview`, `preprod`, or `mainnet`
+- `NETWORK_ID` env var set to `preview`, `preprod`, or `mainnet`. 
+
 
 1. [Generate a secret key](#generate-secret) — do this once and keep the file safe
 2. [Register your server](#register)
