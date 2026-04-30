@@ -33,7 +33,7 @@ tasks:
 
   compile-contracts:
     desc: Compile Compact contracts
-    deps: [install, _build:compile_contracts]
+    deps: [install, _build:compile-contracts]
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
