@@ -1,4 +1,6 @@
 import { runCli, resolveEnv, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { getTestConfig, type TestConfig } from './config.js';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { runRegistryFlow } from './flows/registry-flow.js';
@@ -81,6 +83,7 @@ async function runFlows(config: TestConfig): Promise<RunnerOutput> {
 function main(): Promise<RunnerOutput> {
   const env = resolveEnv();
   const config = getTestConfig(env);
+  setNetworkId(toNetworkIdEnum(config.networkId));
   if (!config.chainSnapshot) {
     logger.info(`No cached chain snapshot in ${config.chainSnapshotDir} — wallet will sync from genesis`);
   }
