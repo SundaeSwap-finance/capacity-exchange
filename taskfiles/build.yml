@@ -11,6 +11,11 @@ tasks:
     cmds:
       - bun install
 
+  compile-contracts:
+    run: once
+    cmds:
+      - bun run compile
+
   # --- Package build graph ---
 
   midnight-core:
@@ -32,7 +37,7 @@ tasks:
     deps: [react-sdk]
 
   providers:
-    deps: [midnight-node, client, ':_registry:compile']
+    deps: [midnight-node, client, compile-contracts]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-providers build
 

@@ -32,10 +32,8 @@ tasks:
       - task: _build:install
 
   compile-contracts:
-    desc: Compile Compact contracts (auto-extracts compiler)
-    deps: [install]
-    cmds:
-      - bun run compile
+    desc: Compile Compact contracts
+    deps: [install, _build:compile_contracts]
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
