@@ -157,6 +157,7 @@ jobs:
         run: scripts/ci-test.sh ${{ matrix.env }}
 
       - name: Save wallet state cache
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: .wallet-states
