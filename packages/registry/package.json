@@ -17,7 +17,10 @@
     "test": "vitest run"
   },
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "browser": "./src/index.browser.ts",
+      "default": "./src/index.ts"
+    },
     "./contract/*": "./contract/out/contract/*"
   },
   "author": "",
