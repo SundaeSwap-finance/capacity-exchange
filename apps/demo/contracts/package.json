@@ -13,8 +13,8 @@
   },
   "scripts": {
     "clean": "rm -rf counter/out token-mint/out .midnight-private-state .wallet-state .contracts.*.json",
-    "compile:counter": "\"$COMPACTC\" counter/counter.compact counter/out",
-    "compile:token-mint": "\"$COMPACTC\" token-mint/vault.compact token-mint/out",
+    "compile:counter": "bunx run-compactc counter/counter.compact counter/out",
+    "compile:token-mint": "bunx run-compactc token-mint/vault.compact token-mint/out",
     "compile": "bun run compile:counter && bun run compile:token-mint",
     "build": "tsc --noEmit",
     "counter:e2e": "bun src/counter/cli/e2e.ts",
@@ -60,6 +60,7 @@
   "devDependencies": {
     "@sundaeswap/capacity-exchange-client": "workspace:^",
     "@eslint/js": "^9.39.2",
+    "@midnight-ntwrk/midnight-js-compact": "4.0.1",
     "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
     "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2",
     "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0",
