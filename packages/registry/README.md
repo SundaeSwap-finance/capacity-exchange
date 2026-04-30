@@ -44,7 +44,7 @@ Generates a random 64-byte secret key and writes it hex-encoded to a file. This 
 NETWORK_ID=preview bun run generate-secret <outputFile>
 ```
 
-In the root folder:
+In the [root folder](../../README.md):
 ```sh
 NETWORK_ID=preview task registry:generate-secret -- <outputFile>
 ```
@@ -108,7 +108,7 @@ NETWORK_ID=preview bun run register [contractAddress] <secretKeyFile> <ip> <port
 NETWORK_ID=preview bun run register ./my-registry-key.hex 192.168.1.1 8080 30
 ```
 
- **Example — preview (uses default address) at [project root](../..)** 
+ **Example — preview (uses default address) at [the root folder level](../../README.md)** 
 
 ```sh
 NETWORK_ID=preview task registry:register -- ./my-registry-key.hex 192.168.1.1 8080 30
@@ -123,7 +123,7 @@ NETWORK_ID=preview bun run register \
   192.168.1.1 8080 30
 ```
 
- **Example — preview (uses default address) at [project root](../..)**
+ **Example — preview (uses default address) at [the root folder level](../../README.md)**
 ```sh
 NETWORK_ID=preview task registry:register -- \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
@@ -155,7 +155,7 @@ NETWORK_ID=preview bun run deregister \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
 
- **Example — preview (uses default address) at [project root](../..)**
+ **Example — preview (uses default address) at [the root folder level](../../README.md)**
 
 ```sh
 NETWORK_ID=preview task registry:deregister -- \
@@ -209,7 +209,7 @@ NETWORK_ID=preview bun run renew-registration [contractAddress] <secretKeyFile> 
 NETWORK_ID=preview bun run renew-registration ./my-registry-key.hex 30
 ```
 
- **Example — preview (uses default address) at [project root](../..)**
+ **Example — preview (uses default address) at [the root folder level](../../README.md)**
 
 ```sh
 NETWORK_ID=preview task registry:renew -- ./my-registry-key.hex 30
@@ -235,7 +235,7 @@ NETWORK_ID=preview bun run list-servers [contractAddress]
 NETWORK_ID=preview bun run list-servers
 ```
 
- **Example — preview (uses default address) at [project root](../..)**
+ **Example — preview (uses default address) at [the root folder level](../../README.md)**
 
 ```sh
 NETWORK_ID=preview task registry:list
@@ -248,7 +248,7 @@ NETWORK_ID=preview bun run list-servers \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
 ```
 
- **Example — preview (uses default address) at [project root](../..)**
+ **Example — preview (uses default address) at [the root folder level](../../README.md)**
 
 ```sh
 NETWORK_ID=preview task registry:list -- \
