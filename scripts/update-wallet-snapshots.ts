@@ -97,13 +97,19 @@ if (networks.length === 0) {
   process.exit(1);
 }
 
+const failures: string[] = [];
 for (const network of networks) {
   try {
     await updateSnapshot(network, outDir, forceFresh);
   } catch (err) {
     console.error(`[${network}] Failed:`, err);
+    failures.push(network);
   }
 }
 
+if (failures.length > 0) {
+  console.error(`Failed: ${failures.join(', ')}`);
+  process.exit(1);
+}
 console.log('Done');
 process.exit(0);

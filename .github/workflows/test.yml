@@ -60,7 +60,7 @@ jobs:
     name: 'Chain snapshot (${{ matrix.env }})'
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       matrix:
         env: [preview]
@@ -80,8 +80,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .chain-snapshots
-          key: chain-snapshot-${{ matrix.env }}-${{ github.run_id }}
-          restore-keys: chain-snapshot-${{ matrix.env }}-
+          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
+            chain-snapshot-${{ matrix.env }}-
 
       - name: Update chain snapshot
         run: |
@@ -94,7 +96,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .chain-snapshots
-          key: chain-snapshot-${{ matrix.env }}-${{ github.run_id }}
+          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
 
       - name: Upload chain snapshot artifact
         uses: actions/upload-artifact@v4
@@ -107,7 +109,7 @@ jobs:
     name: 'Smoke tests (${{ matrix.env }})'
     needs: chain-snapshot
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.force_fresh && 60 || 20 }}
+    timeout-minutes: 60
     strategy:
       matrix:
         env: [preview]
@@ -129,16 +131,20 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .chain-snapshots
-          key: chain-snapshot-${{ matrix.env }}-${{ github.run_id }}
-          restore-keys: chain-snapshot-${{ matrix.env }}-
+          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
+            chain-snapshot-${{ matrix.env }}-
 
       - name: Restore wallet state
         if: ${{ !inputs.force_fresh }}
         uses: actions/cache/restore@v4
         with:
           path: .wallet-states
-          key: wallet-state-${{ matrix.env }}-${{ github.run_id }}
-          restore-keys: wallet-state-${{ matrix.env }}-
+          key: wallet-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            wallet-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
+            wallet-state-${{ matrix.env }}-
 
       - name: Run smoke tests
         env:
@@ -153,4 +159,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .wallet-states
-          key: wallet-state-${{ matrix.env }}-${{ github.run_id }}
+          key: wallet-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
