@@ -103,6 +103,7 @@ jobs:
         with:
           name: chain-snapshot-${{ matrix.env }}
           path: .chain-snapshots/
+          include-hidden-files: true
           retention-days: 5
 
   smoke:
