@@ -54,12 +54,6 @@ NETWORK_ID=preview bun run generate-secret <outputFile>
 NETWORK_ID=preview bun run generate-secret ./my-registry-key.hex
 ```
 
-**Example — at [the root folder level](../../README.md)**
-
-```sh
-NETWORK_ID=preview task registry:generate-secret -- ./my-registry-key.hex
-```
-
 ---
 
 ### `deploy`
@@ -109,24 +103,10 @@ NETWORK_ID=preview bun run register [contractAddress] <secretKeyFile> <ip> <port
 NETWORK_ID=preview bun run register ./my-registry-key.hex 192.168.1.1 8080 30
 ```
 
- **Example — preview (uses default address) at [the root folder level](../../README.md)** 
-
-```sh
-NETWORK_ID=preview task registry:register -- ./my-registry-key.hex 192.168.1.1 8080 30
-```
-
 **Example — explicit address**
 
 ```sh
 NETWORK_ID=preview bun run register \
-  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
-  ./my-registry-key.hex \
-  192.168.1.1 8080 30
-```
-
- **Example — explicit address at [the root folder level](../../README.md)**
-```sh
-NETWORK_ID=preview task registry:register -- \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
   ./my-registry-key.hex \
   192.168.1.1 8080 30
@@ -152,14 +132,6 @@ NETWORK_ID=preview bun run deregister [contractAddress] <secretKeyFile> <recipie
 
 ```sh
 NETWORK_ID=preview bun run deregister \
-  ./my-registry-key.hex \
-  mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
-```
-
- **Example — preview (uses default address) at [the root folder level](../../README.md)**
-
-```sh
-NETWORK_ID=preview task registry:deregister -- \
   ./my-registry-key.hex \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
@@ -210,12 +182,6 @@ NETWORK_ID=preview bun run renew-registration [contractAddress] <secretKeyFile> 
 NETWORK_ID=preview bun run renew-registration ./my-registry-key.hex 30
 ```
 
- **Example — preview (uses default address) at [the root folder level](../../README.md)**
-
-```sh
-NETWORK_ID=preview task registry:renew -- ./my-registry-key.hex 30
-```
-
 ---
 
 ### `list-servers`
@@ -236,23 +202,10 @@ NETWORK_ID=preview bun run list-servers [contractAddress]
 NETWORK_ID=preview bun run list-servers
 ```
 
- **Example — preview (uses default address) at [the root folder level](../../README.md)**
-
-```sh
-NETWORK_ID=preview task registry:list
-```
-
 **Example — explicit address**
 
 ```sh
 NETWORK_ID=preview bun run list-servers \
-  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
-```
-
- **Example — explicit address at [the root folder level](../../README.md)**
-
-```sh
-NETWORK_ID=preview task registry:list -- \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
 ```
 
