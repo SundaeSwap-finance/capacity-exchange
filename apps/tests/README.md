@@ -66,10 +66,11 @@ Deploy contracts (from `apps/demo/contracts/`), then run using a genesis hex see
 
 ```sh
 CES_WALLET_SEED=0000000000000000000000000000000000000000000000000000000000000001 \
+REGISTRY_WALLET_SEED=0000000000000000000000000000000000000000000000000000000000000002 \
 COUNTER_ADDRESS=<counter-contract-address> \
 TOKEN_MINT_ADDRESS=<token-mint-contract-address> \
 DERIVED_TOKEN_COLOR=<derived-token-color> \
-scripts/ci-e2e-setup.sh undeployed
+scripts/ci-test.sh undeployed
 ```
 
 Tear down when done:
@@ -99,6 +100,8 @@ Set the following secrets and vars:
 
 ```sh
 gh secret set CES_WALLET_MNEMONIC_PREVIEW
+# paste the mnemonic when prompted
+gh secret set REGISTRY_WALLET_MNEMONIC_PREVIEW
 # paste the mnemonic when prompted
 ```
 

@@ -10,10 +10,11 @@
 #   - Packages built
 #
 # Required environment:
-#   CES_WALLET_MNEMONIC or CES_WALLET_SEED — wallet credentials (mnemonic or hex seed)
-#   COUNTER_ADDRESS     — deployed counter contract address
-#   TOKEN_MINT_ADDRESS  — deployed token-mint contract address
-#   DERIVED_TOKEN_COLOR — derived token color from token-mint deployment
+#   CES_WALLET_MNEMONIC or CES_WALLET_SEED            — CES server wallet credentials (mnemonic or hex seed)
+#   REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED  — funded wallet for the registry flow (NIGHT + DUST)
+#   COUNTER_ADDRESS                                   — deployed counter contract address
+#   TOKEN_MINT_ADDRESS                                — deployed token-mint contract address
+#   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
 
 set -euo pipefail
 
@@ -29,8 +30,9 @@ WALLET_SYNC_TIMEOUT_MS=900000  # 15 minutes — first run syncs from genesis
 CES_SERVER_MNEMONIC_FILE="$ROOT_DIR/apps/server/wallet-mnemonic.ci.txt"
 CES_SERVER_SEED_FILE="$ROOT_DIR/apps/server/wallet-seed.ci.hex"
 CES_SERVER_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.ci.json"
-CES_SERVER_WALLET_STATE="$ROOT_DIR/apps/server/.wallet-state-ci"
 CES_SERVER_QUOTE_SECRET="$ROOT_DIR/apps/server/.quote-secret.ci.key"
+
+CACHED_WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
 CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
 
 log() { echo "=== [ci-test] $*"; }
@@ -51,12 +53,21 @@ validate_env() {
     log "ERROR: Set either CES_WALLET_MNEMONIC or CES_WALLET_SEED"
     exit 1
   fi
+  if [ -z "${REGISTRY_WALLET_MNEMONIC:-}" ] && [ -z "${REGISTRY_WALLET_SEED:-}" ]; then
+    log "ERROR: Set either REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED"
+    exit 1
+  fi
   for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR; do
     if [ -z "${!var:-}" ]; then
       log "ERROR: $var is not set"
       exit 1
     fi
   done
+}
+
+generate_runner_wallet() {
+  log "Generating ephemeral runner wallet for sponsor+exchange flows"
+  RUNNER_MNEMONIC=$(bun -e "import { generateMnemonic } from '$ROOT_DIR/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());")
 }
 
 generate_price_config() {
@@ -109,7 +120,7 @@ start_ces_server() {
     PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
     QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
     OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
-    WALLET_STATE_DIR="$CES_SERVER_WALLET_STATE" \
+    WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
     LOG_LEVEL=info \
     PORT="$CES_PORT" \
     NODE_ENV=dev \
@@ -139,8 +150,15 @@ wait_for_ces_server() {
 run_tests() {
   log "Running tests against $NETWORK_ID"
 
+  # Sponsor + exchange use a fresh-per-run ephemeral wallet (needs 0 DUST to exercise buying DUST).
+  # Registry uses a funded, long-lived persistent wallet (needs NIGHT for collateral + DUST for tx fees).
   env \
     NETWORK_ID="$NETWORK_ID" \
+    SPONSOR_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
+    EXCHANGE_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
+    REGISTRY_WALLET_MNEMONIC="${REGISTRY_WALLET_MNEMONIC:-}" \
+    REGISTRY_WALLET_SEED="${REGISTRY_WALLET_SEED:-}" \
+    CACHED_WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
     CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
     CES_URL=http://localhost:${CES_PORT} \
     COUNTER_ADDRESS="$COUNTER_ADDRESS" \
@@ -156,6 +174,7 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_env
+generate_runner_wallet
 generate_price_config
 start_ces_server
 wait_for_ces_server
