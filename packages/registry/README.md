@@ -12,7 +12,7 @@ For `preview` and `preprod`, the `contractAddress` argument is optional — the 
 
 | Network | Address |
 |---------|---------|
-| `preview` | `031f39efac81c9b656f4d91ef291a4d1c981f460a100601ae1f6a1e7b20f1b1b` |
+| `preview` | `2f825f8a4a1b92f5ffcab802f5a514d89844f776d55244fedf0ba383aafce0b7` |
 | `preprod` | `926e111d46992869775101830e4e75129606baee3b58056465f788922c48f42f` |
 
 Pass a contract address explicitly to target a different deployment (e.g. a locally deployed registry or a future `mainnet` deployment).
