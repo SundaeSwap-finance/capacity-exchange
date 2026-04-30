@@ -8,6 +8,7 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
+      # Setup
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: go-task/setup-task@v2
