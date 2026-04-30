@@ -4,20 +4,9 @@ version: '3'
 # Included by root Taskfile.yml under the _demo namespace.
 
 tasks:
-  # --- Compilation ---
-
-  compile:
-    status:
-      - test -d {{.CONTRACTS_DIR}}/counter/out && test -d {{.CONTRACTS_DIR}}/token-mint/out
-    env:
-      COMPACTC: '{{.COMPACTC_BIN}}'
-    cmds:
-      - bun run --cwd {{.CONTRACTS_DIR}} compile
-
   # --- Asset copying ---
 
   copy-zk-assets:
-    deps: [compile]
     cmds:
       - bun run --filter @capacity-exchange/demo copy-zk-assets
 
