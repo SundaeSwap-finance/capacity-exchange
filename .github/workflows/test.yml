@@ -2,6 +2,12 @@ name: CI
 
 on:
   push:
+  workflow_dispatch:
+    inputs:
+      force_fresh:
+        description: 'Ignore cached chain snapshot + wallet state. Sync from genesis and overwrite caches'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -50,11 +56,58 @@ jobs:
         if: always()
         run: cat apps/server/*_server.log 2>/dev/null || true
 
-  smoke:
-    name: 'Smoke tests (${{ matrix.env }})'
+  chain-snapshot:
+    name: 'Chain snapshot (${{ matrix.env }})'
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        env: [preview]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: go-task/setup-task@v2
+
+      - name: Install dependencies
+        run: task install
+
+      - name: Build packages
+        run: task build:libs
+
+      - name: Restore cached chain snapshot
+        if: ${{ !inputs.force_fresh }}
+        uses: actions/cache/restore@v4
+        with:
+          path: .chain-snapshots
+          key: chain-snapshot-${{ matrix.env }}-${{ github.run_id }}
+          restore-keys: chain-snapshot-${{ matrix.env }}-
+
+      - name: Update chain snapshot
+        run: |
+          bun scripts/update-wallet-snapshots.ts \
+            --out-dir .chain-snapshots \
+            ${{ inputs.force_fresh && '--force-fresh' || '' }} \
+            ${{ matrix.env }}
+
+      - name: Save chain snapshot cache
+        uses: actions/cache/save@v4
+        with:
+          path: .chain-snapshots
+          key: chain-snapshot-${{ matrix.env }}-${{ github.run_id }}
+
+      - name: Upload chain snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-snapshot-${{ matrix.env }}
+          path: .chain-snapshots/
+          retention-days: 5
+
+  smoke:
+    name: 'Smoke tests (${{ matrix.env }})'
+    needs: chain-snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.force_fresh && 60 || 20 }}
     strategy:
       matrix:
         env: [preview]
@@ -72,14 +125,20 @@ jobs:
       - name: Build packages
         run: task build:libs
 
-      - name: Restore cached state
-        uses: actions/cache@v4
+      - name: Restore chain snapshot
+        uses: actions/cache/restore@v4
         with:
-          path: |
-            .wallet-states
-            .chain-snapshots
-          key: smoke-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}
-          restore-keys: smoke-state-${{ matrix.env }}-
+          path: .chain-snapshots
+          key: chain-snapshot-${{ matrix.env }}-${{ github.run_id }}
+          restore-keys: chain-snapshot-${{ matrix.env }}-
+
+      - name: Restore wallet state
+        if: ${{ !inputs.force_fresh }}
+        uses: actions/cache/restore@v4
+        with:
+          path: .wallet-states
+          key: wallet-state-${{ matrix.env }}-${{ github.run_id }}
+          restore-keys: wallet-state-${{ matrix.env }}-
 
       - name: Run smoke tests
         env:
@@ -89,3 +148,9 @@ jobs:
           TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
           DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
         run: scripts/ci-test.sh ${{ matrix.env }}
+
+      - name: Save wallet state cache
+        uses: actions/cache/save@v4
+        with:
+          path: .wallet-states
+          key: wallet-state-${{ matrix.env }}-${{ github.run_id }}

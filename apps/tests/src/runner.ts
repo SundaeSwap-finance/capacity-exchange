@@ -5,9 +5,7 @@ import {
   readWalletSyncTimeoutMs,
   resolveEnv,
   createLogger,
-  exportChainSnapshot,
   type AppConfig,
-  type AppContext,
   type WalletConfig,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { generateMnemonic, parseMnemonic } from '@sundaeswap/capacity-exchange-core';
@@ -92,7 +90,7 @@ function buildRunnerAppConfig(config: TestConfig): AppConfig {
   };
 }
 
-async function runAndExport(ctx: AppContext, config: TestConfig): Promise<RunnerOutput> {
+async function runFlows(config: TestConfig): Promise<RunnerOutput> {
   const flows = await runAllFlows(config);
   const output = summarize(flows);
 
@@ -100,19 +98,6 @@ async function runAndExport(ctx: AppContext, config: TestConfig): Promise<Runner
 
   if (output.failed > 0) {
     throw new Error(`${output.failed} flow(s) failed`);
-  }
-  try {
-    const snapshot = await exportChainSnapshot(
-      ctx.walletContext.walletFacade,
-      config.networkId,
-      config.chainSnapshotDir
-    );
-    logger.info(`Exported chain snapshot to ${config.chainSnapshotDir} at offset ${snapshot.shielded.offset}`);
-  } catch (err) {
-    logger.warn(
-      { err: err instanceof Error ? err : String(err), chainSnapshotDir: config.chainSnapshotDir },
-      'Failed to export chain snapshot; continuing'
-    );
   }
   return output;
 }
@@ -124,7 +109,7 @@ function main(): Promise<RunnerOutput> {
     logger.info(`No cached chain snapshot in ${config.chainSnapshotDir} — wallet will sync from genesis`);
   }
   const appConfig = buildRunnerAppConfig(config);
-  return withAppContext(appConfig, (ctx) => runAndExport(ctx, config));
+  return withAppContext(appConfig, () => runFlows(config));
 }
 
 runCli(main, { pretty: true });
