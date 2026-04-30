@@ -37,7 +37,7 @@ tasks:
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
-    deps: [_build:midnight-node, _demo:require-compiled]
+    deps: [_build:midnight-node, compile-contracts]
     preconditions:
       - sh: 'test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
         msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:demo to create it'

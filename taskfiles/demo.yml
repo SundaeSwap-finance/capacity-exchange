@@ -17,10 +17,6 @@ tasks:
 
   # --- Preconditions ---
 
-  require-compiled:
-    run: once
-    deps: [compile]
-
   require-deployed:
     run: once
     preconditions:

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf contract/out/",
-    "compile": "npx run-compactc contract/src/registry.compact contract/out",
+    "compile": "bunx run-compactc contract/src/registry.compact contract/out",
     "build": "tsc --noEmit",
     "generate-secret": "bun src/cli/generate-secret-key.ts",
     "deploy": "bun src/cli/deploy.ts",
@@ -30,7 +30,6 @@
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "commander": "^14.0.2",
     "@midnight-ntwrk/compact-js": "2.5.0",
-    "@midnight-ntwrk/midnight-js-compact": "4.0.1",
     "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
@@ -39,6 +38,7 @@
     "@midnight-ntwrk/onchain-runtime-v3": "3.0.0"
   },
   "devDependencies": {
+    "@midnight-ntwrk/midnight-js-compact": "4.0.1",
     "@midnight-ntwrk/midnight-js-network-id": "4.0.1",
     "@types/node": "22.10.7",
     "typescript": "^5.9.3",
