@@ -38,8 +38,6 @@ Pass a contract address explicitly to target a different deployment (e.g. a loca
 
 ## Commands
 
----
-
 ### `generate-secret`
 
 Generates a random 64-byte secret key and writes it hex-encoded to a file. This secret key is hashed and used as a registry key to identify an entry. Keep it safe — it is required to `deregister` or `renew-registration`, and losing it means the collateral can only be recovered after the entry expires.
