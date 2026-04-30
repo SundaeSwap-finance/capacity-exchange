@@ -44,11 +44,6 @@ Generates a random 64-byte secret key and writes it hex-encoded to a file. This 
 NETWORK_ID=preview bun run generate-secret <outputFile>
 ```
 
-In the [root folder](../../README.md):
-```sh
-NETWORK_ID=preview task registry:generate-secret -- <outputFile>
-```
-
 | Argument | Description |
 |---|---|
 | `outputFile` | Path to write the generated secret key (hex) to |
@@ -57,6 +52,12 @@ NETWORK_ID=preview task registry:generate-secret -- <outputFile>
 
 ```sh
 NETWORK_ID=preview bun run generate-secret ./my-registry-key.hex
+```
+
+**Example — at [the root folder level](../../README.md)**
+
+```sh
+NETWORK_ID=preview task registry:generate-secret -- ./my-registry-key.hex
 ```
 
 ---
@@ -123,7 +124,7 @@ NETWORK_ID=preview bun run register \
   192.168.1.1 8080 30
 ```
 
- **Example — preview (uses default address) at [the root folder level](../../README.md)**
+ **Example — explicit address at [the root folder level](../../README.md)**
 ```sh
 NETWORK_ID=preview task registry:register -- \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
@@ -248,7 +249,7 @@ NETWORK_ID=preview bun run list-servers \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
 ```
 
- **Example — preview (uses default address) at [the root folder level](../../README.md)**
+ **Example — explicit address at [the root folder level](../../README.md)**
 
 ```sh
 NETWORK_ID=preview task registry:list -- \
