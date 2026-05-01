@@ -42,7 +42,11 @@ Pass a contract address explicitly to target a different deployment (e.g. a loca
 Generates a random 64-byte secret key and writes it hex-encoded to a file. This secret key is hashed and used as a registry key to identify an entry. Keep it safe — it is required to `deregister` or `renew-registration`, and losing it means the collateral can only be recovered after the entry expires.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run generate-secret <outputFile>
+
+# From the repo root
+NETWORK_ID=preview task registry:generate-secret -- <outputFile>
 ```
 
 | Argument | Description |
@@ -52,7 +56,11 @@ NETWORK_ID=preview bun run generate-secret <outputFile>
 **Example**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run generate-secret ./my-registry-key.hex
+
+# From the repo root
+NETWORK_ID=preview task registry:generate-secret -- ./my-registry-key.hex
 ```
 
 ---
@@ -62,6 +70,7 @@ NETWORK_ID=preview bun run generate-secret ./my-registry-key.hex
 Deploys a new instance of the registry contract. Sets the required collateral amount and the maximum registration period for all future entries.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run deploy <collateral> [registrationPeriod]
 ```
 
@@ -87,7 +96,11 @@ NETWORK_ID=preview bun run deploy <collateral> [registrationPeriod]
 Adds a server to the registry. The entry — IP, port, and expiry — is stored under a key derived from the secret key. The required collateral is locked and returned on deregistration.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run register [contractAddress] <secretKeyFile> <ip> <port> [period]
+
+# From the repo root
+NETWORK_ID=preview task registry:register -- [contractAddress] <secretKeyFile> <ip> <port> [period]
 ```
 
 | Argument | Description |
@@ -101,13 +114,24 @@ NETWORK_ID=preview bun run register [contractAddress] <secretKeyFile> <ip> <port
 **Example — preview (uses default address)**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run register ./my-registry-key.hex 192.168.1.1 8080 30
+
+# From the repo root
+NETWORK_ID=preview task registry:register -- ./my-registry-key.hex 192.168.1.1 8080 30
 ```
 
 **Example — explicit address**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run register \
+  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
+  ./my-registry-key.hex \
+  192.168.1.1 8080 30
+
+# From the repo root
+NETWORK_ID=preview task registry:register -- \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
   ./my-registry-key.hex \
   192.168.1.1 8080 30
@@ -120,7 +144,11 @@ NETWORK_ID=preview bun run register \
 Removes a server entry from the registry and refunds the collateral to the recipient address. Requires the secret key used when registering.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run deregister [contractAddress] <secretKeyFile> <recipientAddress>
+
+# From the repo root
+NETWORK_ID=preview task registry:deregister -- [contractAddress] <secretKeyFile> <recipientAddress>
 ```
 
 | Argument | Description |
@@ -132,7 +160,13 @@ NETWORK_ID=preview bun run deregister [contractAddress] <secretKeyFile> <recipie
 **Example — preview (uses default address)**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run deregister \
+  ./my-registry-key.hex \
+  mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
+
+# from the repo root  
+NETWORK_ID=preview task registry:deregister -- \
   ./my-registry-key.hex \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
@@ -144,7 +178,11 @@ NETWORK_ID=preview bun run deregister \
 Claims the collateral from an expired registry entry. No secret key is required — anyone can call this once an entry's expiry has passed.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run claim-expired [contractAddress] <registryKey> <recipientAddress>
+
+# From the repo root
+NETWORK_ID=preview task registry:claim-expired -- [contractAddress] <registryKey> <recipientAddress>
 ```
 
 | Argument | Description |
@@ -156,7 +194,13 @@ NETWORK_ID=preview bun run claim-expired [contractAddress] <registryKey> <recipi
 **Example — preview (uses default address)**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run claim-expired \
+  080f88efc90226cb61600e5f1708794dbfe453360855e501201a1dead35e99ab \
+  mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
+
+# From the repo root
+NETWORK_ID=preview task registry:claim-expired -- \
   080f88efc90226cb61600e5f1708794dbfe453360855e501201a1dead35e99ab \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 ```
@@ -168,7 +212,11 @@ NETWORK_ID=preview bun run claim-expired \
 Extends the expiry of an existing registry entry. The new expiry must be within the contract's `maximumRegistrationPeriod`.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run renew-registration [contractAddress] <secretKeyFile> <period>
+
+# From the repo root
+NETWORK_ID=preview task registry:renew -- [contractAddress] <secretKeyFile> <period>
 ```
 
 | Argument | Description |
@@ -180,7 +228,11 @@ NETWORK_ID=preview bun run renew-registration [contractAddress] <secretKeyFile> 
 **Example — preview (uses default address)**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run renew-registration ./my-registry-key.hex 30
+
+# From the repo root
+NETWORK_ID=preview task registry:renew -- ./my-registry-key.hex 30
 ```
 
 ---
@@ -190,7 +242,11 @@ NETWORK_ID=preview bun run renew-registration ./my-registry-key.hex 30
 Returns all registered servers from the registry contract.
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run list-servers [contractAddress]
+
+# From the repo root
+NETWORK_ID=preview task registry:list -- [contractAddress]
 ```
 
 | Argument | Description |
@@ -200,13 +256,22 @@ NETWORK_ID=preview bun run list-servers [contractAddress]
 **Example — preview (uses default address)**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run list-servers
+
+# From the repo root
+NETWORK_ID=preview task registry:list
 ```
 
 **Example — explicit address**
 
 ```sh
+# From this package
 NETWORK_ID=preview bun run list-servers \
+  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
+
+# From the repo root
+NETWORK_ID=preview task registry:list -- \
   3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
 ```
 
