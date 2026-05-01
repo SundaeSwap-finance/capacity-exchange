@@ -53,14 +53,24 @@ jobs:
           curl -s --max-time 5 https://api.ipify.org; echo
           echo
           echo "=== host: $host ==="
-          echo "--- getent hosts ---"
-          getent hosts "$host"
-          echo "--- dig +short ---"
-          dig +short "$host" 2>&1 | head -10 || echo "(dig not available)"
-          echo "--- HTTPS handshake (curl -vk, first 30 lines) ---"
-          curl -vk --max-time 10 "https://$host" 2>&1 | head -30
-          echo "--- raw TCP/443 (nc -vz) ---"
-          nc -vz -w 5 "$host" 443 2>&1
+          echo "--- A records ---"
+          dig +short "$host"
+          echo
+          echo "=== per-IP WS upgrade probe ==="
+          for ip in $(dig +short "$host"); do
+            echo "--- $ip ---"
+            # Send actual WS upgrade handshake against this specific backend; dump full response headers
+            curl -sk --http1.1 --max-time 10 \
+              --resolve "$host:443:$ip" \
+              -H "Connection: Upgrade" \
+              -H "Upgrade: websocket" \
+              -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
+              -H "Sec-WebSocket-Version: 13" \
+              -D - \
+              -o /dev/null \
+              "https://$host/ws"
+            echo
+          done
           echo "=== end diagnostics ==="
 
       - name: Update chain snapshot
