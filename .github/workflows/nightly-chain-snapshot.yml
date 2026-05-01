@@ -40,6 +40,29 @@ jobs:
             chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
             chain-snapshot-${{ matrix.env }}-
 
+      - name: Diagnose connectivity (debug)
+        run: |
+          set +e
+          declare -A HOSTS=(
+            [preview]=rpc.preview.midnight.network
+            [preprod]=rpc.preprod.midnight.network
+            [mainnet]=rpc.mainnet.midnight.network
+          )
+          host="${HOSTS[${{ matrix.env }}]}"
+          echo "=== runner public IP ==="
+          curl -s --max-time 5 https://api.ipify.org; echo
+          echo
+          echo "=== host: $host ==="
+          echo "--- getent hosts ---"
+          getent hosts "$host"
+          echo "--- dig +short ---"
+          dig +short "$host" 2>&1 | head -10 || echo "(dig not available)"
+          echo "--- HTTPS handshake (curl -vk, first 30 lines) ---"
+          curl -vk --max-time 10 "https://$host" 2>&1 | head -30
+          echo "--- raw TCP/443 (nc -vz) ---"
+          nc -vz -w 5 "$host" 443 2>&1
+          echo "=== end diagnostics ==="
+
       - name: Update chain snapshot
         run: |
           bun scripts/update-wallet-snapshots.ts \

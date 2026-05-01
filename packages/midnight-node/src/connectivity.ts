@@ -44,10 +44,10 @@ export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
       logger.info(`${url} is healthy`);
       resolve();
     });
-    ws.once('error', () => {
+    ws.once('error', (err: Error & { code?: string }) => {
       clearTimeout(timer);
       ws.terminate();
-      reject(new Error(`Failed to connect to ${url}`));
+      reject(new Error(`Failed to connect to ${url}: ${err.code ?? ''} ${err.message ?? String(err)}`));
     });
   });
 }
