@@ -61,7 +61,7 @@ function createExchangeProvider(ctx: AppContext, networkId: string, cesUrl: stri
       getLedgerParameters: () => getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl),
     },
     additionalCapacityExchangeUrls: [cesUrl],
-    promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor),
+    promptForCurrency: (prices) => selectCurrency(prices, derivedTokenColor, cesUrl),
     confirmOffer: autoConfirmOffer,
   });
 }
@@ -103,11 +103,16 @@ function createUnsealedBalanceCallback(ctx: AppContext) {
   };
 }
 
-async function selectCurrency(prices: ExchangePrice[], derivedTokenColor: string) {
-  const match = prices.find((p) => p.price.currency.rawId === derivedTokenColor);
-  if (!match) {
+async function selectCurrency(prices: ExchangePrice[], derivedTokenColor: string, cesUrl: string) {
+  const matches = prices.filter((p) => p.price.currency.rawId === derivedTokenColor);
+  if (matches.length === 0) {
     const available = prices.map((p) => p.price.currency.rawId).join(', ');
     throw new Error(`CES does not offer currency ${derivedTokenColor}. Available: ${available}`);
+  }
+  const match = matches.find((p) => p.exchangeApi.url === cesUrl);
+  if (!match) {
+    const sources = matches.map((m) => m.exchangeApi.url).join(', ');
+    throw new Error(`No exchange at ${cesUrl} returned currency ${derivedTokenColor}. Matches from: ${sources}`);
   }
   return { status: 'selected' as const, exchangePrice: match };
 }
