@@ -44,6 +44,14 @@ export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
       logger.info(`${url} is healthy`);
       resolve();
     });
+    ws.once('unexpected-response', (_req, res) => {
+      clearTimeout(timer);
+      ws.terminate();
+      const headers = JSON.stringify(res.headers);
+      reject(
+        new Error(`Unexpected response from ${url}: HTTP ${res.statusCode} ${res.statusMessage} headers=${headers}`)
+      );
+    });
     ws.once('error', (err: Error & { code?: string }) => {
       clearTimeout(timer);
       ws.terminate();
