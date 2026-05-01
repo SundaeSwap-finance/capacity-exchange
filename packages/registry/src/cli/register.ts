@@ -3,7 +3,7 @@ import { type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
 import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
-import { readSecretKeyFile } from '../types.js';
+import { readSecretKeyFile } from '../utils.js';
 import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;

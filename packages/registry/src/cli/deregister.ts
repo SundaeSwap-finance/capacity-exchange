@@ -2,7 +2,7 @@ import { TxResult } from '@sundaeswap/capacity-exchange-core';
 import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
 import { deregister } from '../circuits/deregister.js';
-import { readSecretKeyFile } from '../types.js';
+import { readSecretKeyFile } from '../utils.js';
 import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 function main(): Promise<TxResult> {

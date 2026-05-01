@@ -15,12 +15,6 @@ includes:
     vars:
       CONTRACTS_DIR: '{{.CONTRACTS_DIR}}'
       WEBAPP_DIR: '{{.WEBAPP_DIR}}'
-      COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
-  _registry:
-    taskfile: taskfiles/registry.yml
-    internal: true
-    vars:
-      COMPACTC_BIN: '{{.ROOT_DIR}}/tools/compactc/bin/compactc'
 
 vars:
   CONTRACTS_DIR: '{{.ROOT_DIR}}/apps/demo/contracts'
@@ -38,15 +32,14 @@ tasks:
       - task: _build:install
 
   compile-contracts:
-    desc: Compile Compact contracts (auto-extracts compiler)
-    deps: [_build:extract-compactc]
+    desc: Compile Compact contracts
+    deps: [install]
     cmds:
-      - task: _demo:compile
-      - task: _registry:compile
+      - task: _build:compile-contracts
 
   deploy:
     desc: Deploy contracts for a network (set DRY_RUN=1 to prove+balance without submitting)
-    deps: [_build:midnight-node, _demo:require-compiled]
+    deps: [_build:midnight-node, compile-contracts]
     preconditions:
       - sh: 'test -f {{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
         msg: 'Missing wallet-mnemonic.{{.NETWORK_ID}}.txt — run task setup:demo to create it'
@@ -183,7 +176,7 @@ tasks:
   build:demo:
     desc: Build demo webapp, server, and demo contracts
     cmds:
-      - task: _demo:compile
+      - task: compile-contracts
       - task: _demo:copy-zk-assets
       - task: _demo:copy-configs
       - task: _build:webapp
