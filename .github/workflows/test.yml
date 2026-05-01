@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       force_fresh:
-        description: 'Ignore cached chain snapshot + wallet state. Sync from genesis and overwrite caches'
+        description: 'Ignore cached chain snapshot + wallet state and sync from genesis (use after SDK upgrades or chain resets that invalidate cached wallet/chain state).'
         type: boolean
         default: false
 
@@ -70,7 +70,7 @@ jobs:
       - uses: go-task/setup-task@v2
 
       - name: Install dependencies
-        run: task install
+        run: bun install --frozen-lockfile
 
       - name: Build packages
         run: task build:libs
@@ -120,7 +120,7 @@ jobs:
       - uses: go-task/setup-task@v2
 
       - name: Install dependencies
-        run: task install
+        run: bun install --frozen-lockfile
 
       - name: Compile contracts
         run: task compile-contracts
