@@ -2,6 +2,12 @@ name: CI
 
 on:
   push:
+  workflow_dispatch:
+    inputs:
+      force_fresh:
+        description: 'Ignore cached chain snapshot + wallet state and sync from genesis (use after SDK upgrades or chain resets that invalidate cached wallet/chain state).'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -50,11 +56,11 @@ jobs:
         if: always()
         run: cat apps/server/*_server.log 2>/dev/null || true
 
-  smoke:
-    name: 'Smoke tests (${{ matrix.env }})'
+  chain-snapshot:
+    name: 'Chain snapshot (${{ matrix.env }})'
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     strategy:
       matrix:
         env: [preview]
@@ -64,7 +70,57 @@ jobs:
       - uses: go-task/setup-task@v2
 
       - name: Install dependencies
-        run: task install
+        run: bun install --frozen-lockfile
+
+      - name: Build packages
+        run: task build:libs
+
+      - name: Restore cached chain snapshot
+        if: ${{ !inputs.force_fresh }}
+        uses: actions/cache/restore@v4
+        with:
+          path: .chain-snapshots
+          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
+            chain-snapshot-${{ matrix.env }}-
+
+      - name: Update chain snapshot
+        run: |
+          bun scripts/update-wallet-snapshots.ts \
+            --out-dir .chain-snapshots \
+            ${{ inputs.force_fresh && '--force-fresh' || '' }} \
+            ${{ matrix.env }}
+
+      - name: Save chain snapshot cache
+        uses: actions/cache/save@v4
+        with:
+          path: .chain-snapshots
+          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+
+      - name: Upload chain snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-snapshot-${{ matrix.env }}
+          path: .chain-snapshots/
+          include-hidden-files: true
+          retention-days: 5
+
+  smoke:
+    name: 'Smoke tests (${{ matrix.env }})'
+    needs: chain-snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        env: [preview]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: go-task/setup-task@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
       - name: Compile contracts
         run: task compile-contracts
@@ -72,14 +128,24 @@ jobs:
       - name: Build packages
         run: task build:libs
 
-      - name: Restore cached state
-        uses: actions/cache@v4
+      - name: Restore chain snapshot
+        uses: actions/cache/restore@v4
         with:
-          path: |
-            .wallet-states
-            .chain-snapshots
-          key: smoke-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}
-          restore-keys: smoke-state-${{ matrix.env }}-
+          path: .chain-snapshots
+          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
+            chain-snapshot-${{ matrix.env }}-
+
+      - name: Restore wallet state
+        if: ${{ !inputs.force_fresh }}
+        uses: actions/cache/restore@v4
+        with:
+          path: .wallet-states
+          key: wallet-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            wallet-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
+            wallet-state-${{ matrix.env }}-
 
       - name: Run smoke tests
         env:
@@ -89,3 +155,10 @@ jobs:
           TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
           DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
         run: scripts/ci-test.sh ${{ matrix.env }}
+
+      - name: Save wallet state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .wallet-states
+          key: wallet-state-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}

@@ -1,123 +1,115 @@
 #!/usr/bin/env bun
 /**
  * Syncs a throwaway wallet on each network and extracts the chain state
- * into snapshot files used by the demo webapp to skip syncing from genesis.
+ * into snapshot files at `--out-dir`. Used by demo webapp + CI smoke
+ * tests to skip syncing from genesis. By default, if `--out-dir` already
+ * contains a snapshot, resumes from it. Pass `--force-fresh` to ignore
+ * the existing snapshot and sync from genesis (overwrites on success).
  *
  * Usage:
- *   bun scripts/update-wallet-snapshots.ts [network...]
+ *   bun scripts/update-wallet-snapshots.ts --out-dir <path> [--force-fresh] [network...]
  *
  * Examples:
- *   bun scripts/update-wallet-snapshots.ts              # all networks
- *   bun scripts/update-wallet-snapshots.ts preview      # just preview
- *   bun scripts/update-wallet-snapshots.ts preview preprod
+ *   bun scripts/update-wallet-snapshots.ts --out-dir apps/demo/public/wallet-snapshots
+ *   bun scripts/update-wallet-snapshots.ts --out-dir .chain-snapshots preview
+ *   bun scripts/update-wallet-snapshots.ts --out-dir .chain-snapshots --force-fresh preview
  */
 
-import * as fs from 'fs';
 import * as path from 'path';
 import {
-  deriveWalletKeys,
-  resolveEndpoints,
-  toNetworkIdEnum,
-  COST_PARAMS,
-  createWallet,
-} from '@sundaeswap/capacity-exchange-core';
+  withAppContext,
+  buildNetworkConfig,
+  resolveEnv,
+  loadChainSnapshot,
+  exportChainSnapshot,
+  type AppConfig,
+} from '@sundaeswap/capacity-exchange-nodejs';
+import { generateMnemonic, parseMnemonic, type ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
 
+const WALLET_SYNC_TIMEOUT_MS = 1500000; // 25 minutes — first run syncs from genesis
 const NETWORKS = ['preview', 'preprod', 'mainnet'];
-const OUT_DIR = path.resolve(import.meta.dirname, '../apps/demo/public/wallet-snapshots');
 
-async function updateSnapshot(networkId: string) {
-  console.log(`[${networkId}] Syncing throwaway wallet...`);
-  const start = Date.now();
+function resolveStartingSnapshot(
+  networkId: string,
+  outDir: string,
+  forceFresh: boolean
+): { chainSnapshot: ChainSnapshot | undefined; reason: string } {
+  if (forceFresh) {
+    return { chainSnapshot: undefined, reason: '--force-fresh set; syncing from genesis' };
+  }
+  const cached = loadChainSnapshot(networkId, outDir);
+  if (cached) {
+    return { chainSnapshot: cached, reason: 'Resuming from cached snapshot' };
+  }
+  return { chainSnapshot: undefined, reason: 'No cached snapshot — syncing from genesis' };
+}
 
-  const networkIdEnum = toNetworkIdEnum(networkId);
-  const endpoints = resolveEndpoints(networkIdEnum);
+async function updateSnapshot(networkId: string, outDir: string, forceFresh: boolean): Promise<void> {
+  const env = resolveEnv();
+  const network = buildNetworkConfig(networkId, env);
+  const { chainSnapshot, reason } = resolveStartingSnapshot(networkId, outDir, forceFresh);
+  console.log(`[${networkId}] ${reason}`);
 
-  // Generate a random seed — we only care about the chain state, not the keys
-  const seedBytes = new Uint8Array(32);
-  crypto.getRandomValues(seedBytes);
-  const seedHex = Array.from(seedBytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-
-  const walletConfig = {
-    networkId: networkIdEnum,
-    costParameters: COST_PARAMS,
-    relayURL: new URL(endpoints.nodeUrl),
-    provingServerUrl: new URL(endpoints.proofServerUrl),
-    indexerClientConnection: {
-      indexerHttpUrl: endpoints.indexerHttpUrl,
-      indexerWsUrl: endpoints.indexerWsUrl,
+  const config: AppConfig = {
+    network,
+    wallet: {
+      seed: parseMnemonic(generateMnemonic()),
+      stateSource: { kind: 'inMemory', chainSnapshot },
+      walletSyncTimeoutMs: WALLET_SYNC_TIMEOUT_MS,
     },
   };
 
-  const keys = deriveWalletKeys(seedHex, networkIdEnum);
-  const connection = await createWallet({ seedHex, walletConfig });
-  const { walletFacade } = connection;
-
-  await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
-
-  // Wait for shielded + dust only
-  await Promise.all([walletFacade.shielded.waitForSyncedState(), walletFacade.dust.waitForSyncedState()]);
-
-  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-  console.log(`[${networkId}] Synced in ${elapsed}s, serializing...`);
-
-  const [shieldedSerialized, dustSerialized] = await Promise.all([
-    walletFacade.shielded.serializeState(),
-    walletFacade.dust.serializeState(),
-  ]);
-
-  const shielded = JSON.parse(shieldedSerialized);
-  const dust = JSON.parse(dustSerialized);
-
-  // Extract chain-only state (no wallet-specific keys or coins)
-  const shieldedSnapshot = {
-    state: shielded.state,
-    offset: shielded.offset,
-    protocolVersion: shielded.protocolVersion,
-  };
-
-  const dustSnapshot = {
-    state: dust.state,
-    offset: dust.offset,
-    protocolVersion: dust.protocolVersion,
-  };
-
-  // Unshielded just needs the appliedId for the offset
-  const unshieldedSnapshot = {
-    appliedId: shielded.offset, // approximate — close enough
-    protocolVersion: shielded.protocolVersion,
-  };
-
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(OUT_DIR, `${networkId}-shielded.json`), JSON.stringify(shieldedSnapshot));
-  fs.writeFileSync(path.join(OUT_DIR, `${networkId}-dust.json`), JSON.stringify(dustSnapshot));
-  fs.writeFileSync(path.join(OUT_DIR, `${networkId}-unshielded.json`), JSON.stringify(unshieldedSnapshot));
-
-  const totalKB =
-    (JSON.stringify(shieldedSnapshot).length +
-      JSON.stringify(dustSnapshot).length +
-      JSON.stringify(unshieldedSnapshot).length) /
-    1024;
-
-  console.log(`[${networkId}] Saved snapshots (${totalKB.toFixed(0)}KB total) at offset ${shielded.offset}`);
+  const start = Date.now();
+  await withAppContext(config, async (ctx) => {
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    console.log(`[${networkId}] Synced in ${elapsed}s, exporting...`);
+    const snapshot = await exportChainSnapshot(ctx.walletContext.walletFacade, networkId, outDir);
+    console.log(`[${networkId}] Saved snapshot at offset ${snapshot.shielded.offset} → ${outDir}`);
+  });
 }
 
-const requested = process.argv.slice(2);
-const networks = requested.length > 0 ? requested.filter((n) => NETWORKS.includes(n)) : [...NETWORKS];
-
-if (networks.length === 0) {
-  console.error(`Usage: bun scripts/update-wallet-snapshots.ts [${NETWORKS.join('|')}]`);
-  process.exit(1);
-}
-
-for (const network of networks) {
-  try {
-    await updateSnapshot(network);
-  } catch (err) {
-    console.error(`[${network}] Failed:`, err);
+const argv = process.argv.slice(2);
+let outDirArg: string | undefined;
+let forceFresh = false;
+const positional: string[] = [];
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i] === '--out-dir') {
+    outDirArg = argv[++i];
+  } else if (argv[i] === '--force-fresh') {
+    forceFresh = true;
+  } else {
+    positional.push(argv[i]);
   }
 }
 
+const usage = `Usage: bun scripts/update-wallet-snapshots.ts --out-dir <path> [--force-fresh] [${NETWORKS.join('|')}]`;
+
+if (!outDirArg) {
+  console.error(usage);
+  process.exit(1);
+}
+const outDir = path.resolve(outDirArg);
+
+const networks = positional.length > 0 ? positional.filter((n) => NETWORKS.includes(n)) : [...NETWORKS];
+
+if (networks.length === 0) {
+  console.error(usage);
+  process.exit(1);
+}
+
+const failures: string[] = [];
+for (const network of networks) {
+  try {
+    await updateSnapshot(network, outDir, forceFresh);
+  } catch (err) {
+    console.error(`[${network}] Failed:`, err);
+    failures.push(network);
+  }
+}
+
+if (failures.length > 0) {
+  console.error(`Failed: ${failures.join(', ')}`);
+  process.exit(1);
+}
 console.log('Done');
 process.exit(0);

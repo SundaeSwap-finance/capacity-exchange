@@ -30,6 +30,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - run: bun run compile
+
       - run: bun run --filter '@sundaeswap/capacity-exchange-*' build
 
       - run: bun run --filter '@sundaeswap/capacity-exchange-*' --if-present test

@@ -1,7 +1,8 @@
 import { AppContext, createLogger, submitStatefulCallTxDirect } from '@sundaeswap/capacity-exchange-nodejs';
 import { toTxResult, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { RegistrySecretKey } from '../types.js';
-import { CompiledRegistryContract, getProviders } from '../contract.js';
+import { CompiledRegistryContract } from '../contract.js';
+import { getProviders } from '../utils.js';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { computeRegistryKey } from '../compact-types.js';
 

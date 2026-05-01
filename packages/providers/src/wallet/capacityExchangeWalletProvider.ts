@@ -25,7 +25,10 @@ async function selectCurrency(
     throw new CapacityExchangeNoEligibleOfferError();
   }
 
-  console.debug('[CapacityExchange] User selected currency:', result.exchangePrice.price.currency);
+  console.debug(
+    `[CapacityExchange] User selected exchange ${result.exchangePrice.exchangeApi.url}, currency:`,
+    result.exchangePrice.price.currency
+  );
   return result.exchangePrice;
 }
 
