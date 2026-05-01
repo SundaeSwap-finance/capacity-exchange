@@ -22,10 +22,10 @@ NETWORK_ID="${1:?Usage: ci-test.sh <network_id>}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CES_SERVER_PID=""
 CES_PORT=3000
-CES_READINESS_RETRIES=300
+CES_READINESS_RETRIES=900
 QUOTE_TTL_SECONDS=300
 OFFER_TTL_SECONDS=60
-WALLET_SYNC_TIMEOUT_MS=600000  # 10 minutes — first run syncs from genesis
+WALLET_SYNC_TIMEOUT_MS=1500000  # 25 minutes — first run syncs from genesis
 
 CES_SERVER_MNEMONIC_FILE="$ROOT_DIR/apps/server/wallet-mnemonic.ci.txt"
 CES_SERVER_SEED_FILE="$ROOT_DIR/apps/server/wallet-seed.ci.hex"
