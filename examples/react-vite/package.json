@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/example-react-vite",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Example: integrating @sundaeswap/capacity-exchange-react-sdk into a React app",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
