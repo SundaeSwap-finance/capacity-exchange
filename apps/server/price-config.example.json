@@ -19,5 +19,18 @@
         "circuitNames": ["increment"]
       }
     }
-  ]
+  ],
+  "peer": {
+    "maxPrices": [
+      {
+        "currency": {
+          "type": "midnight:shielded",
+          "rawId": "<derived-token-color>"
+        },
+        "basePrice": "101",
+        "rateNumerator": "11",
+        "rateDenominator": "1000"
+      }
+    ]
+  }
 }

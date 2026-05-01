@@ -81,6 +81,10 @@ export type CurrencySelectionResult =
   | {
       /** The user will not pay, and will not submit the transaction. */
       status: 'cancelled';
+    }
+  | {
+      /** The caller's policy rejected every offered price (e.g., all over-max, not allowlisted, or unaffordable). */
+      status: 'no-eligible';
     };
 
 export type OfferConfirmationResult =

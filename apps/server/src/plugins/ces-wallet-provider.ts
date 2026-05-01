@@ -1,7 +1,9 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-// import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
+import { indexerChainStateProvider } from '@sundaeswap/capacity-exchange-providers';
+import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
+import { createAutoSelectCurrency } from '../config/peerCurrencySelector.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -14,20 +16,28 @@ export default fp(async (fastify: FastifyInstance) => {
     throw new Error("CesWalletProviderPlugin requires WalletService to be init'd first");
   }
 
-  // TODO: renable fallback feature in the future.
-  // const cesWalletProvider = buildCesWalletProvider(
-  //   fastify.walletService,
-  //   fastify.config.networkId,
-  //   fastify.config.endpoints,
-  //   fastify.config.capacityExchangeUrls,
-  //   fastify.log,
-  // );
-  const cesWalletProvider = null;
+  if (!fastify.peerPriceService) {
+    fastify.decorate('cesWalletProvider', null);
+    fastify.log.trace('Peer fallback disabled: PeerPriceService not available');
+    return;
+  }
+
+  const { indexerHttpUrl, indexerWsUrl } = fastify.config.endpoints;
+  const chainStateProvider = indexerChainStateProvider(indexerHttpUrl, indexerWsUrl);
+
+  const { walletService, peerPriceService, log } = fastify;
+
+  const promptForCurrency = createAutoSelectCurrency(log, walletService, peerPriceService);
+
+  const cesWalletProvider = buildCesWalletProvider(
+    walletService,
+    fastify.config.networkId,
+    chainStateProvider,
+    fastify.config.capacityExchangeUrls,
+    log,
+    promptForCurrency,
+  );
 
   fastify.decorate('cesWalletProvider', cesWalletProvider);
-  fastify.log.trace(
-    cesWalletProvider
-      ? "CES wallet provider init'd"
-      : 'No CAPACITY_EXCHANGE_PEER_URLS configured to initialize CES wallet provider',
-  );
+  fastify.log.trace("CES wallet provider init'd");
 });

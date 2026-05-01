@@ -199,7 +199,9 @@ const env1 = Object.fromEntries(
 ) as Record<string, string>;
 env1.PORT = String(server1Port);
 env1.DASHBOARD_PORT = String(BASE_DASHBOARD_PORT);
+env1.MIDNIGHT_NETWORK = MIDNIGHT_NETWORK;
 env1.WALLET_MNEMONIC_FILE = SERVER1_WALLET_MNEMONIC_FILE;
+env1.PRICE_CONFIG_FILE = DEFAULT_PRICE_CONFIG;
 env1.CAPACITY_EXCHANGE_PEER_URLS = peerUrls;
 delete env1.WALLET_SEED_FILE;
 
@@ -231,6 +233,7 @@ for (let i = 2; i <= N; i++) {
   ) as Record<string, string>;
   envI.PORT = String(portI);
   envI.DASHBOARD_PORT = String(BASE_DASHBOARD_PORT + i - 1);
+  envI.MIDNIGHT_NETWORK = MIDNIGHT_NETWORK;
   envI.WALLET_MNEMONIC_FILE = mnemonicFileI;
   envI.PRICE_CONFIG_FILE = join(PROJECT_ROOT, `price-config-${i}.${MIDNIGHT_NETWORK}.json`);
   envI.QUOTE_SECRET_FILE = join(PROJECT_ROOT, `.quote-secret-${i}.hex`);

@@ -30,9 +30,7 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
           },
         });
       });
-      if (result.status === 'cancelled') {
-        dispatch({ action: 'finish' });
-      } else {
+      if (result.status === 'selected') {
         dispatch({
           action: 'wait-for-offer',
           payload: {
@@ -41,6 +39,8 @@ export function useCapacityExchangeWalletProvider(config: CapacityExchangeConfig
             onCancelled: () => dispatch({ action: 'finish' }),
           },
         });
+      } else if (result.status === 'cancelled' || result.status === 'no-eligible') {
+        dispatch({ action: 'finish' });
       }
       return result;
     },
