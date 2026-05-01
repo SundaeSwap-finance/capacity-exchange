@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-registry",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Registry contract types and utilities for the capacity exchange SDK",
   "type": "module",
   "scripts": {
