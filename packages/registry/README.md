@@ -6,6 +6,19 @@ Servers must lock collateral to register, and get refunded after deregistering.
 
 Entries expire after a configurable maximum period — expired entries can be removed by anyone to reclaim the collateral.
 
+## Available tasks
+
+You can run these tasks from the repo root to manipulate the registry.
+
+| Task | Description |
+|------|-------------|
+| `registry:generate-secret` | Generate a registry secret key |
+| `registry:register` | Register a server to the registry |
+| `registry:renew` | Renew a server registration |
+| `registry:deregister` | Deregister a server from the registry |
+| `registry:list` | List all registered servers |
+
+
 ## Well-known registry addresses
 
 For `preview` and `preprod`, the `contractAddress` argument is optional — the CLI defaults to the known deployed address for the network.

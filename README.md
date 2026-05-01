@@ -19,11 +19,6 @@ Run `task --list` to see all tasks. Key ones:
 | `check` | Lint and format check |
 | `fix` | Lint and format fix |
 | `clean` | Clean build artifacts |
-| `registry:generate-secret` | Generate a registry secret key |
-| `registry:register` | Register a server to the registry |
-| `registry:renew` | Renew a server registration |
-| `registry:deregister` | Deregister a server from the registry |
-| `registry:list` | List all registered servers |
 
 ## Registering a Server to the Registry
 
