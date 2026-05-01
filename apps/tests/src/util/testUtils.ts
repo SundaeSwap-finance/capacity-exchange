@@ -6,6 +6,7 @@ import {
   resolveEnv,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core';
+import { wrapMidnightProviderForDustDiagnostics } from './dustDiagnostics.js';
 
 export type WalletSeed = { type: 'seed'; seed: string } | { type: 'mnemonic'; mnemonic: string };
 
@@ -16,14 +17,22 @@ export interface FlowCtxConfig {
 
 export async function buildFlowCtx(networkId: string, config: FlowCtxConfig): Promise<AppContext> {
   const env = resolveEnv();
-  return createAppContext({
-    network: buildNetworkConfig(networkId, env),
+  const networkConfig = buildNetworkConfig(networkId, env);
+  const ctx = await createAppContext({
+    network: networkConfig,
     wallet: {
       seed: config.seed.type === 'mnemonic' ? parseMnemonic(config.seed.mnemonic) : parseSeedHex(config.seed.seed),
       stateSource: config.stateSource,
       walletSyncTimeoutMs: readWalletSyncTimeoutMs(env),
     },
   });
+  return {
+    ...ctx,
+    midnightProvider: wrapMidnightProviderForDustDiagnostics(
+      ctx.midnightProvider,
+      networkConfig.endpoints.indexerHttpUrl
+    ),
+  };
 }
 
 export interface PollUntilOptions {
