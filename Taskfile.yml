@@ -244,7 +244,7 @@ tasks:
       - bun run {{.ROOT_DIR}}/packages/registry/src/cli/generate-secret-key.ts {{.CLI_ARGS}}
 
   registry:register:
-    desc: 'Register a server: NETWORK_ID=<id> task registry:register -- [contractAddress] <secretKeyFile> <ip> <port> [period]'
+    desc: 'Register a server: NETWORK_ID=<id> task registry:register -- <secretKeyFile> <ip> <port> [period] [contractAddress]'
     deps: [_build:midnight-node]
     env:
       WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
@@ -253,7 +253,7 @@ tasks:
       - bun run {{.ROOT_DIR}}/packages/registry/src/cli/register.ts {{.CLI_ARGS}}
 
   registry:renew:
-    desc: 'Renew a server registration: NETWORK_ID=<id> task registry:renew -- [contractAddress] <secretKeyFile> <period>'
+    desc: 'Renew a server registration: NETWORK_ID=<id> task registry:renew -- <secretKeyFile> [period] [contractAddress]'
     deps: [_build:midnight-node]
     env:
       WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
@@ -262,7 +262,7 @@ tasks:
       - bun run {{.ROOT_DIR}}/packages/registry/src/cli/renew-registration.ts {{.CLI_ARGS}}
 
   registry:deregister:
-    desc: 'Deregister a server: NETWORK_ID=<id> task registry:deregister -- [contractAddress] <secretKeyFile> <recipientAddress>'
+    desc: 'Deregister a server: NETWORK_ID=<id> task registry:deregister -- <secretKeyFile> <recipientAddress> [contractAddress]'
     deps: [_build:midnight-node]
     env:
       WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
@@ -271,7 +271,7 @@ tasks:
       - bun run {{.ROOT_DIR}}/packages/registry/src/cli/deregister.ts {{.CLI_ARGS}}
 
   registry:claim-expired:
-    desc: 'Claim collateral from an expired entry: NETWORK_ID=<id> task registry:claim-expired -- [contractAddress] <registryKey> <recipientAddress>'
+    desc: 'Claim collateral from an expired entry: NETWORK_ID=<id> task registry:claim-expired -- <registryKey> <recipientAddress> [contractAddress]'
     deps: [_build:midnight-node]
     env:
       WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'

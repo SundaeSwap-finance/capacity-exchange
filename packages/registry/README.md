@@ -97,28 +97,28 @@ Adds a server to the registry. The entry — IP, port, and expiry — is stored 
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run register [contractAddress] <secretKeyFile> <ip> <port> [period]
+NETWORK_ID=preview bun run register <secretKeyFile> <ip> <port> [period] [contractAddress]
 
 # From the repo root
-NETWORK_ID=preview task registry:register -- [contractAddress] <secretKeyFile> <ip> <port> [period]
+NETWORK_ID=preview task registry:register -- <secretKeyFile> <ip> <port> [period] [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 | `secretKeyFile` | Path to the secret key file (output of `generate-secret`) |
 | `ip` | Server IP address (IPv4 or IPv6) |
 | `port` | Server port number |
-| `period` | Registration period in days (default: 30) |
+| `period` | Registration period in days (default: 30 for mainnet, 0.5 for preview/preprod) |
+| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 
 **Example — preview (uses default address)**
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run register ./my-registry-key.hex 192.168.1.1 8080 30
+NETWORK_ID=preview bun run register ./my-registry-key.hex 192.168.1.1 8080
 
 # From the repo root
-NETWORK_ID=preview task registry:register -- ./my-registry-key.hex 192.168.1.1 8080 30
+NETWORK_ID=preview task registry:register -- ./my-registry-key.hex 192.168.1.1 8080
 ```
 
 **Example — explicit address**
@@ -126,15 +126,15 @@ NETWORK_ID=preview task registry:register -- ./my-registry-key.hex 192.168.1.1 8
 ```sh
 # From this package
 NETWORK_ID=preview bun run register \
-  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
   ./my-registry-key.hex \
-  192.168.1.1 8080 30
+  192.168.1.1 8080 30 \
+  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
 
 # From the repo root
 NETWORK_ID=preview task registry:register -- \
-  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d \
   ./my-registry-key.hex \
-  192.168.1.1 8080 30
+  192.168.1.1 8080 30 \
+  3470c638fca45245a3fd790ba68b24a42fce3c8145584eef8447cc23443bba4d
 ```
 
 ---
@@ -145,17 +145,17 @@ Removes a server entry from the registry and refunds the collateral to the recip
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run deregister [contractAddress] <secretKeyFile> <recipientAddress>
+NETWORK_ID=preview bun run deregister <secretKeyFile> <recipientAddress> [contractAddress]
 
 # From the repo root
-NETWORK_ID=preview task registry:deregister -- [contractAddress] <secretKeyFile> <recipientAddress>
+NETWORK_ID=preview task registry:deregister -- <secretKeyFile> <recipientAddress> [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 | `secretKeyFile` | Path to the secret key file used when registering |
 | `recipientAddress` | Bech32m unshielded address to receive the collateral refund |
+| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 
 **Example — preview (uses default address)**
 
@@ -165,7 +165,7 @@ NETWORK_ID=preview bun run deregister \
   ./my-registry-key.hex \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
 
-# from the repo root  
+# From the repo root
 NETWORK_ID=preview task registry:deregister -- \
   ./my-registry-key.hex \
   mn_addr_preview1h8g8wxpyyj3pad65qysndyx5u2wmz5j7ma6dmstd5rmrnqwhkekqh2rs58
@@ -179,17 +179,17 @@ Claims the collateral from an expired registry entry. No secret key is required 
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run claim-expired [contractAddress] <registryKey> <recipientAddress>
+NETWORK_ID=preview bun run claim-expired <registryKey> <recipientAddress> [contractAddress]
 
 # From the repo root
-NETWORK_ID=preview task registry:claim-expired -- [contractAddress] <registryKey> <recipientAddress>
+NETWORK_ID=preview task registry:claim-expired -- <registryKey> <recipientAddress> [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 | `registryKey` | Hex-encoded 32-byte registry key of the expired entry (from `list-servers`) |
 | `recipientAddress` | Bech32m unshielded address to receive the collateral refund |
+| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 
 **Example — preview (uses default address)**
 
@@ -213,26 +213,26 @@ Extends the expiry of an existing registry entry. The new expiry must be within 
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run renew-registration [contractAddress] <secretKeyFile> <period>
+NETWORK_ID=preview bun run renew-registration <secretKeyFile> [period] [contractAddress]
 
 # From the repo root
-NETWORK_ID=preview task registry:renew -- [contractAddress] <secretKeyFile> <period>
+NETWORK_ID=preview task registry:renew -- <secretKeyFile> [period] [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
-| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 | `secretKeyFile` | Path to the secret key file used when registering |
-| `period` | New registration period in days (e.g. `30`) |
+| `period` | New registration period in days (default: 30 for mainnet, 0.5 for preview/preprod) |
+| `contractAddress` | Registry contract address (defaults to well-known address for network) |
 
 **Example — preview (uses default address)**
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run renew-registration ./my-registry-key.hex 30
+NETWORK_ID=preview bun run renew-registration ./my-registry-key.hex
 
 # From the repo root
-NETWORK_ID=preview task registry:renew -- ./my-registry-key.hex 30
+NETWORK_ID=preview task registry:renew -- ./my-registry-key.hex
 ```
 
 ---

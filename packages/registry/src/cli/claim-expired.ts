@@ -9,14 +9,14 @@ function main(): Promise<TxResult> {
   program
     .name('claim-expired')
     .description('Claims the collateral from an expired registry entry')
-    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .argument('<registryKey>', 'hex-encoded 32-byte registry key of the expired entry')
     .argument('<recipientAddress>', 'the address that will receive the collateral refund')
+    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .parse();
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
-  const [contractAddressArg, registryKeyHex, recipientAddress] = program.args;
+  const [registryKeyHex, recipientAddress, contractAddressArg] = program.args;
   const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
   const registryKey = parseRegistryKeyHex(registryKeyHex);

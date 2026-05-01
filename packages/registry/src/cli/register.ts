@@ -8,25 +8,32 @@ import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 
+const DEFAULT_PERIOD_DAYS: Record<string, number> = {
+  mainnet: 30,
+  preprod: 0.5,
+  preview: 0.5,
+};
+
 function main(): Promise<TxResult> {
   program
     .name('register')
     .description('Registers a server to the registry contract')
-    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .argument('<secretKeyFile>', 'registry secret key file')
     .argument('<ip>', 'server IP address (IPv4 or IPv6)')
     .argument('<port>', 'server port number')
-    .argument('[period]', 'registration period in days (default: 30)', '30')
+    .argument('[period]', 'registration period in days (default: 30 for mainnet, 0.5 for preview/preprod)')
+    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .parse();
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
-  const [contractAddressArg, secretKeyFile, ipStr, portStr, periodArg] = program.args;
+  const [secretKeyFile, ipStr, portStr, periodArg, contractAddressArg] = program.args;
   const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 
-  const days = parsePositiveNumber('period', periodArg);
+  const defaultDays = DEFAULT_PERIOD_DAYS[networkId] ?? 0.5;
+  const days = periodArg ? parsePositiveNumber('period', periodArg) : defaultDays;
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
   console.log(`expiry date: ${expiry}`);
