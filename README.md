@@ -20,6 +20,11 @@ Run `task --list` to see all tasks. Key ones:
 | `fix` | Lint and format fix |
 | `clean` | Clean build artifacts |
 
+## Registering a Server to the Registry
+
+Refer to the [registry package](packages/registry/README.md) for `registry:*` related commands.
+
 ## Generating the Client
 
 The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate, run `task regenerate-client`.
+

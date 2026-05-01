@@ -3,19 +3,21 @@ import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sunda
 import { program } from 'commander';
 import { deregister } from '../circuits/deregister.js';
 import { readSecretKeyFile } from '../utils.js';
+import { resolveRegistryAddress } from '../defaultAddresses.js';
 
 function main(): Promise<TxResult> {
   program
     .name('deregister')
     .description('Deregisters a server from the registry contract')
-    .argument('<contractAddress>', 'address of the registry contract')
     .argument('<secretKeyFile>', 'registry secret key file')
     .argument('<recipientAddress>', 'the address that will receive the collateral refund')
+    .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .parse();
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
-  const [contractAddress, secretKeyFile, recipientAddress] = program.args;
+  const [secretKeyFile, recipientAddress, contractAddressArg] = program.args;
+  const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
   const secretKey = readSecretKeyFile(secretKeyFile);
 
