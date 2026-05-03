@@ -5,7 +5,7 @@ import '@fontsource/space-mono/700.css';
 import App from './App';
 import './styles/index.css';
 
-// Suppress noisy Effect version mismatch warnings from Midnight SDK
+// Suppress noisy Effect version mismatch messages from the Midnight SDK across console output methods.
 for (const method of ['log', 'warn', 'info', 'debug', 'error'] as const) {
   const orig = console[method];
   console[method] = (...args: unknown[]) => {
