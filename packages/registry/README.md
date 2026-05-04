@@ -106,20 +106,20 @@ NETWORK_ID=preview bun run deploy <collateral> [registrationPeriod]
 
 ### `register`
 
-Adds a server to the registry. The entry — IP, port, and expiry — is stored under a key derived from the secret key. The required collateral is locked and returned on deregistration.
+Adds a server to the registry. The entry — IP, port, and expiry — is stored under a key derived from the secret key. The required collateral is locked and returned on deregistration. If a hostname is given, it is resolved via DNS and the resulting IP is stored on-chain.
 
 ```sh
 # From this package
-NETWORK_ID=preview bun run register <secretKeyFile> <ip> <port> [period] [contractAddress]
+NETWORK_ID=preview bun run register <secretKeyFile> <host> <port> [period] [contractAddress]
 
 # From the repo root
-NETWORK_ID=preview task registry:register -- <secretKeyFile> <ip> <port> [period] [contractAddress]
+NETWORK_ID=preview task registry:register -- <secretKeyFile> <host> <port> [period] [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
 | `secretKeyFile` | Path to the secret key file (output of `generate-secret`) |
-| `ip` | Server IP address (IPv4 or IPv6) |
+| `host` | Server IP address or hostname (IPv4, IPv6, or hostname — resolved via DNS) |
 | `port` | Server port number |
 | `period` | Registration period in days (default: 30 for mainnet, 0.5 for preview/preprod) |
 | `contractAddress` | Registry contract address (defaults to well-known address for network) |
