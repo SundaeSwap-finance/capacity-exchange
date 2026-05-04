@@ -22,6 +22,8 @@ export {
 
 export { computeRegistryKey } from './compact-types.js';
 
+export { getDefaultRegistryAddress, resolveRegistryAddress } from './defaultAddresses.js';
+
 export {
   type IPv4,
   type IPv6,
