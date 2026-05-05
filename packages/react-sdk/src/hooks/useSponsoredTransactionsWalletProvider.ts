@@ -1,6 +1,6 @@
 import {
   sponsoredTransactionsWalletProvider,
-  SponsoredTransactionsConfig,
+  type SponsoredTransactionsConfig,
 } from '@sundaeswap/capacity-exchange-providers';
 import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useMemo } from 'react';

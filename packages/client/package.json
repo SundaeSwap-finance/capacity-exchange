@@ -15,8 +15,8 @@
   },
   "exports": {
     ".": {
-      "import": "./generated/dist/index.js",
-      "require": "./generated/dist/index.js"
+      "bun": "./generated/index.ts",
+      "default": "./generated/dist/index.js"
     }
   },
   "scripts": {

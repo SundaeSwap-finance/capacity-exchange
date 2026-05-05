@@ -10,7 +10,8 @@
     "moduleResolution": "bundler",
     "declaration": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "customConditions": ["browser", "bun"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

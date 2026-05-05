@@ -7,8 +7,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-react-sdk' build",
-    "build": "tsc && vite build"
+    "prebuild": "bun run --cwd ../.. compile",
+    "build": "vite build"
   },
   "dependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",
