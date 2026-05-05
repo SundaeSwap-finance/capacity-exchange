@@ -20,12 +20,6 @@ A user holding ADA on Cardano needs to execute a transaction on Midnight that re
 - Recovery path that returns the user's ADA on the dominant failure paths.
 - Integration with the existing capacity-exchange SDK and `/prices` discovery surface.
 
-**Out of scope for v1.**
-
-- Symmetric trust (Midnight verifying Cardano state). Asymmetry is by design; see section 4.
-- Protocol-layer relayer payment market. Anyone may submit a claim; nobody is paid for it.
-- Multi-LP serving or LP failover within a single escrow. Each escrow UTxO names exactly one LP.
-
 ## 3. Roles
 
 - **User.** Holds ADA, wants to land a Midnight transaction. Most likely interacting through a **dApp** that integrates the SDK, though not necessarily.
@@ -61,7 +55,7 @@ The two-party Midnight flow:
 
 **Why two secrets, and what that buys.** A single-secret form is vulnerable to LP front-running: an LP can read `s` from the user's mempool transaction, build a competing transaction `dust_input(LP) + mintReveal(s) + absorb(h)` that omits `user_op`, finalize the same `s` on Midnight, and claim ADA without delivering the user's intended operation. Net economic for the LP is zero (DUST out, ADA in, same as the honest flow), but censorship of `user_op` is real value when the user's operation is competitive (an arbitrage, a liquidation, etc.).
 
-The two-secret form closes that. Constructing `mintReveal` requires the witness `s'` — without it, the ZK prover cannot produce a valid proof for the circuit. An LP that has only `s` from the mempool cannot generate a competing `mintReveal`. Substituting an `s'_LP` of the LP's own choosing fails too: the resulting mint color is `hash(hash(s) || hash(s'_LP))`, which does not match the absorb color `hash(h || h')` that the validator's `h'` check forces. The LP would need a preimage of `datum.h'` — i.e., the user's secret `s'` — and preimage resistance prevents that.
+The two-secret form closes that. Constructing `mintReveal` requires the witness `s'` — without it, the ZK prover cannot produce a valid proof for the circuit. An LP that has only `s` from the mempool cannot generate a competing `mintReveal`. Substituting an `s'_LP` of the LP's own choosing fails too: the resulting mint color is `hash(hash(s) || hash(s'_LP))`, which does not match the absorb color `hash(h || h')` that the validator's `h'` check forces. The LP would need a preimage of `datum.h'`, i.e., the user's secret `s'`, and preimage resistance prevents that.
 
 This is the property the Cardano side leans on. Given a proof that a Midnight extrinsic finalized, contains `s` such that `hash(s) == datum.h`, *and* was paired with an `absorb` whose second argument equals `datum.h'`, the Cardano validator releases ADA. There is no path for the LP to produce such an extrinsic without the user's witness `s'`, and no path for the extrinsic to land without a matching `absorb` consuming the LP's DUST. The LP's DUST delivery, the disclosure of `s`, and the binding to *this* user's `(h, h')` commitments are inseparable.
 
