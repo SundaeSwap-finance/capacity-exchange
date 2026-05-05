@@ -7,7 +7,7 @@
   "module": "generated/dist/index.js",
   "types": "generated/dist/index.d.ts",
   "files": [
-    "generated/dist",
+    "generated",
     "LICENSE.md"
   ],
   "publishConfig": {

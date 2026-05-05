@@ -5,7 +5,7 @@ import {
 import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { useMemo } from 'react';
 
-export { SponsoredTransactionsConfig };
+export { type SponsoredTransactionsConfig };
 
 export function useSponsoredTransactionsWalletProvider(config: SponsoredTransactionsConfig): WalletProvider {
   return useMemo(() => {

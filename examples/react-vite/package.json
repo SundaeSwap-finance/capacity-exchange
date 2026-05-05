@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "bun run --cwd ../.. compile",
-    "build": "vite build"
+    "build": "tsc && vite build"
   },
   "dependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",
