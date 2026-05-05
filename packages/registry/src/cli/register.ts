@@ -1,6 +1,5 @@
-import { promises as dns } from 'dns';
 import { program } from 'commander';
-import { type IpAddress, type RegistryEntry } from '../types.js';
+import { type Host, type RegistryEntry } from '../types.js';
 import { register } from '../circuits/register.js';
 import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
@@ -17,20 +16,17 @@ const DEFAULT_PERIOD_DAYS: Record<string, number> = {
 
 const IPV4_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
 
-async function resolveHost(host: string): Promise<IpAddress> {
-  if (host.includes(':')) {
-    return { kind: 'ipv6', address: host };
+function parseHost(input: string): Host {
+  if (input.includes(':')) {
+    return { kind: 'ipv6', address: input };
   }
-  if (IPV4_RE.test(host)) {
-    return { kind: 'ipv4', address: host };
+  if (IPV4_RE.test(input)) {
+    return { kind: 'ipv4', address: input };
   }
-  // Hostname — resolve via DNS
-  const { address, family } = await dns.lookup(host);
-  console.log(`Resolved ${host} → ${address} (IPv${family})`);
-  return family === 6 ? { kind: 'ipv6', address } : { kind: 'ipv4', address };
+  return { kind: 'hostname', address: input };
 }
 
-async function main(): Promise<TxResult> {
+function main(): Promise<TxResult> {
   program
     .name('register')
     .description('Registers a server to the registry contract')
@@ -59,9 +55,9 @@ async function main(): Promise<TxResult> {
     throw new Error(`Invalid port: "${portStr}". Expected integer between 1 - 65535.`);
   }
 
-  const ip = await resolveHost(hostStr);
+  const host = parseHost(hostStr);
 
-  const entry: RegistryEntry = { ip, port, expiry };
+  const entry: RegistryEntry = { host, port, expiry };
 
   return withAppContextFromEnv(networkId, (ctx) =>
     register(ctx, secretKey, {

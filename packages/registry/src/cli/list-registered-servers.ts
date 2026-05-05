@@ -55,7 +55,7 @@ async function main(): Promise<void> {
 
   for (const [key, entry] of entries) {
     const details = {
-      ip: entry.ip,
+      host: entry.host,
       port: entry.port,
       expiry: entry.expiry.toISOString(),
     };

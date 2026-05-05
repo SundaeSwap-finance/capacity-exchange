@@ -253,14 +253,14 @@ describe('renewRegistration circuit', () => {
     }
   });
 
-  it('refresh preserves the ip and port of the entry', () => {
+  it('refresh preserves the host and port of the entry', () => {
     const secretKey = randomSecretKey();
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, secretKey);
     sim.setBlockTime(BASE_TIME);
 
     const entry = {
       expiry: futureDate(100n),
-      ip: { kind: 'ipv6' as const, address: '2001:db8::1' },
+      host: { kind: 'ipv6' as const, address: '2001:db8::1' },
       port: 9090,
     };
     sim.register(entry);
@@ -269,6 +269,6 @@ describe('renewRegistration circuit', () => {
     const [, raw] = [...sim.getLedger().registry][0];
     const updated = entryFromContract(raw);
     expect(updated.port).toBe(9090);
-    expect(updated.ip.kind).toBe('ipv6');
+    expect(updated.host.kind).toBe('ipv6');
   });
 });

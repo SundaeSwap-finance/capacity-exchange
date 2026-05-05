@@ -8,6 +8,10 @@ new type Ipv6 = Bytes<16>;
 
 new type IpAddress = Either<Ipv4, Ipv6>;
 
+new type Hostname = Bytes<128>;
+
+new type Host = Either<IpAddress, Hostname>;
+
 new type Port = Uint<16>;
 
 new type RegistryKey = Bytes<32>;
@@ -18,7 +22,7 @@ new type UnixTimestampSeconds = Uint<64>;
 
 struct Entry {
   expiry: UnixTimestampSeconds,
-  ip: IpAddress,
+  host: Host,
   port: Port,
 }
 
@@ -43,7 +47,7 @@ export circuit registerServer(entry: Entry): [] {
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
-  const socketAddressHash = hashSocketAddress(disclosedEntry.ip, disclosedEntry.port);
+  const socketAddressHash = hashSocketAddress(disclosedEntry.host, disclosedEntry.port);
   assert(!takenSocketAddresses.member(socketAddressHash), "socket address already registered");
   receiveUnshielded(nativeToken(), collateralAmount);
 
@@ -67,7 +71,7 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
     right<ContractAddress, UserAddress>(disclose(recipient))
     );
 
-  takenSocketAddresses.remove(disclose(hashSocketAddress(existing.ip, existing.port)));
+  takenSocketAddresses.remove(disclose(hashSocketAddress(existing.host, existing.port)));
   registry.remove(disclosedKey);
 }
 
@@ -78,7 +82,7 @@ export circuit renewRegistration(expiry: UnixTimestampSeconds): [] {
   assert(blockTimeGte((disclose(expiry) - maximumRegistrationPeriod) as Uint<64>),
          "period cannot be larger than maximumRegistrationPeriod"
          );
-  const newEntry = Entry { expiry: expiry, ip: currentEntry.ip, port: currentEntry.port, };
+  const newEntry = Entry { expiry: expiry, host: currentEntry.host, port: currentEntry.port, };
 
   registry.insert(key, disclose(newEntry));
 }
@@ -87,8 +91,8 @@ circuit hashKey(key: Bytes<64>): RegistryKey {
   return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
 }
 
-circuit hashSocketAddress(ip: IpAddress, port: Port): SocketAddressHash {
-  return persistentHash<[Bytes<32>, IpAddress, Port]>(
-    [pad(32, "registry:socket-address"), ip, port]
+circuit hashSocketAddress(host: Host, port: Port): SocketAddressHash {
+  return persistentHash<[Bytes<32>, Host, Port]>(
+    [pad(32, "registry:socket-address"), host, port]
     ) as SocketAddressHash;
 }

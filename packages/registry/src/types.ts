@@ -3,21 +3,35 @@ export type IPv4 = { kind: 'ipv4'; address: string };
 export type IPv6 = { kind: 'ipv6'; address: string };
 export type IpAddress = IPv4 | IPv6;
 
+/** (e.g. `my-server.example.com`). */
+export type Hostname = { kind: 'hostname'; address: string };
+
+/** A server host — either an IP address (IPv4/IPv6) or a hostname. */
+export type Host = IpAddress | Hostname;
+
 export interface RegistryEntry {
   expiry: Date;
-  ip: IpAddress;
+  host: Host;
   port: number;
 }
 
+/** TypeScript representation of Compact's `IpAddress = Either<Ipv4, Ipv6>`. */
 export type ContractIpAddress = {
   is_left: boolean;
-  left: Uint8Array;
-  right: Uint8Array;
+  left: Uint8Array; // Ipv4 bytes (4)
+  right: Uint8Array; // Ipv6 bytes (16)
+};
+
+/** TypeScript representation of Compact's `Host = Either<IpAddress, Hostname>`. */
+export type ContractHost = {
+  is_left: boolean;
+  left: ContractIpAddress; // IpAddress when is_left = true
+  right: Uint8Array; // Hostname bytes (128) when is_left = false
 };
 
 export type ContractEntry = {
   expiry: bigint;
-  ip: ContractIpAddress;
+  host: ContractHost;
   port: bigint;
 };
 
@@ -104,10 +118,37 @@ export function ipFromContract(raw: ContractIpAddress): IpAddress {
   return { kind: 'ipv6', address: groups.join(':') };
 }
 
+const HOSTNAME_MAX_BYTES = 128;
+
+export function hostToContract(host: Host): ContractHost {
+  if (host.kind !== 'hostname') {
+    return { is_left: true, left: ipToContract(host), right: new Uint8Array(HOSTNAME_MAX_BYTES) };
+  }
+  const encoded = new TextEncoder().encode(host.address);
+  if (encoded.length > HOSTNAME_MAX_BYTES) {
+    throw new Error(`Hostname too long: ${encoded.length} bytes (max ${HOSTNAME_MAX_BYTES})`);
+  }
+  const bytes = new Uint8Array(HOSTNAME_MAX_BYTES);
+  bytes.set(encoded);
+  return { is_left: false, left: { is_left: true, left: new Uint8Array(4), right: new Uint8Array(16) }, right: bytes };
+}
+
+export function hostFromContract(raw: ContractHost): Host {
+  if (raw.is_left) {
+    return ipFromContract(raw.left);
+  }
+  // Strip trailing zero bytes and decode the hostname string.
+  let end = raw.right.length;
+  while (end > 0 && raw.right[end - 1] === 0) {
+    end--;
+  }
+  return { kind: 'hostname', address: new TextDecoder().decode(raw.right.subarray(0, end)) };
+}
+
 export function entryToContract(entry: RegistryEntry): ContractEntry {
   return {
     expiry: BigInt(Math.floor(entry.expiry.getTime() / 1000)),
-    ip: ipToContract(entry.ip),
+    host: hostToContract(entry.host),
     port: BigInt(entry.port),
   };
 }
@@ -115,7 +156,7 @@ export function entryToContract(entry: RegistryEntry): ContractEntry {
 export function entryFromContract(raw: ContractEntry): RegistryEntry {
   return {
     expiry: new Date(Number(raw.expiry) * 1000),
-    ip: ipFromContract(raw.ip),
+    host: hostFromContract(raw.host),
     port: Number(raw.port),
   };
 }

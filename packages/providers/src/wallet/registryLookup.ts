@@ -1,15 +1,15 @@
-import { ledger, registryEntries, type IpAddress } from '@sundaeswap/capacity-exchange-registry';
+import { ledger, registryEntries, type Host } from '@sundaeswap/capacity-exchange-registry';
 import type { ChainStateProvider } from './chainStateProvider';
 
-function formatIpHost(ip: IpAddress): string {
-  if (ip.kind === 'ipv4') {
-    return ip.address;
+function formatHost(host: Host): string {
+  if (host.kind === 'ipv6') {
+    return `[${host.address}]`;
   }
-  return `[${ip.address}]`;
+  return host.address;
 }
 
-function entryToUrl(ip: IpAddress, port: number): string {
-  return `https://${formatIpHost(ip)}:${port}`;
+function entryToUrl(host: Host, port: number): string {
+  return `https://${formatHost(host)}:${port}`;
 }
 
 /**
@@ -30,5 +30,5 @@ export async function fetchRegistryCesUrls(
   const ledgerState = ledger(contractState.data);
   const entries = registryEntries(ledgerState);
   const now = new Date();
-  return entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => entryToUrl(entry.ip, entry.port));
+  return entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => entryToUrl(entry.host, entry.port));
 }
