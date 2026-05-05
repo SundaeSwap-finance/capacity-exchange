@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "@capacity-exchange/server",
-    "version": "1.0.3"
+    "version": "1.1.0"
   },
   "components": {
     "schemas": {}
