@@ -1,5 +1,15 @@
 # @capacity-exchange/example-react-vite
 
+## 1.0.4
+
+### Patch Changes
+
+- 9c5d7f2: Use `workspace:*` for internal deps so bun always links the local package instead of fetching a stale published version.
+- Updated dependencies [76aa1ef]
+- Updated dependencies [f0acfbc]
+- Updated dependencies [9c5d7f2]
+  - @sundaeswap/capacity-exchange-react-sdk@2.0.0
+
 ## 1.0.3
 
 ### Patch Changes
