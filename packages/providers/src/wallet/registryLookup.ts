@@ -1,15 +1,40 @@
-import { ledger, registryEntries, type Host } from '@sundaeswap/capacity-exchange-registry';
+import * as dns from 'dns';
+import { ledger, registryEntries, type ServerAddress, type IpAddress } from '@sundaeswap/capacity-exchange-registry';
 import type { ChainStateProvider } from './chainStateProvider';
 
-function formatHost(host: Host): string {
-  if (host.kind === 'ipv6') {
-    return `[${host.address}]`;
-  }
-  return host.address;
+function socketAddressToUrl(host: IpAddress, port: number): string {
+  const hostStr = host.kind === 'ipv6' ? `[${host.address}]` : host.address;
+  return `https://${hostStr}:${port}`;
 }
 
-function entryToUrl(host: Host, port: number): string {
-  return `https://${formatHost(host)}:${port}`;
+/**
+ * Resolves an SRV record name to a URL by looking up the DNS SRV record.
+ * Returns null if no records are found.
+ */
+export async function resolveSrvToUrl(srvName: string): Promise<string | null> {
+  let records;
+  try {
+    records = await dns.promises.resolveSrv(srvName);
+  } catch {
+    return null;
+  }
+  if (records.length === 0) {
+    return null;
+  }
+
+  // select record with lowest priority, using highest weight ONLY if
+  // priority returns 0.
+  records.sort((a, b) => a.priority - b.priority || b.weight - a.weight);
+  const { name, port } = records[0];
+  const hostname = name.endsWith('.') ? name.slice(0, -1) : name;
+  return `https://${hostname}:${port}`;
+}
+
+async function serverAddressToUrl(address: ServerAddress): Promise<string | null> {
+  if (address.kind === 'ip') {
+    return socketAddressToUrl(address.host, address.port);
+  }
+  return resolveSrvToUrl(address.address);
 }
 
 /**
@@ -30,5 +55,8 @@ export async function fetchRegistryCesUrls(
   const ledgerState = ledger(contractState.data);
   const entries = registryEntries(ledgerState);
   const now = new Date();
-  return entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => entryToUrl(entry.host, entry.port));
+  const urls = await Promise.all(
+    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => serverAddressToUrl(entry.address))
+  );
+  return urls.filter((url): url is string => url !== null);
 }

@@ -3,36 +3,39 @@ export type IPv4 = { kind: 'ipv4'; address: string };
 export type IPv6 = { kind: 'ipv6'; address: string };
 export type IpAddress = IPv4 | IPv6;
 
-/** (e.g. `my-server.example.com`). */
-export type Hostname = { kind: 'hostname'; address: string };
+export type SocketAddress = { kind: 'ip'; host: IpAddress; port: number };
 
-/** A server host — either an IP address (IPv4/IPv6) or a hostname. */
-export type Host = IpAddress | Hostname;
+/** SRV record name (e.g. `_ces._tcp.example.com`). Clients resolve this via DNS to obtain host and port. */
+export type SrvAddress = { kind: 'srv'; address: string };
+
+/** A server address — either an explicit IP + port, or an SRV record name. */
+export type ServerAddress = SocketAddress | SrvAddress;
 
 export interface RegistryEntry {
   expiry: Date;
-  host: Host;
-  port: number;
+  address: ServerAddress;
 }
 
-/** TypeScript representation of Compact's `IpAddress = Either<Ipv4, Ipv6>`. */
 export type ContractIpAddress = {
   is_left: boolean;
   left: Uint8Array; // Ipv4 bytes (4)
   right: Uint8Array; // Ipv6 bytes (16)
 };
 
-/** TypeScript representation of Compact's `Host = Either<IpAddress, Hostname>`. */
-export type ContractHost = {
+export type ContractSocketAddress = {
+  host: ContractIpAddress;
+  port: bigint;
+};
+
+export type ContractServerAddress = {
   is_left: boolean;
-  left: ContractIpAddress; // IpAddress when is_left = true
-  right: Uint8Array; // Hostname bytes (128) when is_left = false
+  left: ContractSocketAddress; // SocketAddress when is_left = true
+  right: Uint8Array; // SrvName bytes (256) when is_left = false
 };
 
 export type ContractEntry = {
   expiry: bigint;
-  host: ContractHost;
-  port: bigint;
+  address: ContractServerAddress;
 };
 
 export type RegistryKey = Uint8Array; // 32-byte
@@ -118,46 +121,52 @@ export function ipFromContract(raw: ContractIpAddress): IpAddress {
   return { kind: 'ipv6', address: groups.join(':') };
 }
 
-const HOSTNAME_MAX_BYTES = 128;
+const SRV_MAX_BYTES = 256;
 
-export function hostToContract(host: Host): ContractHost {
-  if (host.kind !== 'hostname') {
-    return { is_left: true, left: ipToContract(host), right: new Uint8Array(HOSTNAME_MAX_BYTES) };
+export function serverAddressToContract(address: ServerAddress): ContractServerAddress {
+  if (address.kind === 'ip') {
+    return {
+      is_left: true,
+      left: { host: ipToContract(address.host), port: BigInt(address.port) },
+      right: new Uint8Array(SRV_MAX_BYTES),
+    };
   }
-  const encoded = new TextEncoder().encode(host.address);
-  if (encoded.length > HOSTNAME_MAX_BYTES) {
-    throw new Error(`Hostname too long: ${encoded.length} bytes (max ${HOSTNAME_MAX_BYTES})`);
+  const encoded = new TextEncoder().encode(address.address);
+  if (encoded.length > SRV_MAX_BYTES) {
+    throw new Error(`SRV name too long: ${encoded.length} bytes (max ${SRV_MAX_BYTES})`);
   }
-  const bytes = new Uint8Array(HOSTNAME_MAX_BYTES);
+  const bytes = new Uint8Array(SRV_MAX_BYTES);
   bytes.set(encoded);
-  return { is_left: false, left: { is_left: true, left: new Uint8Array(4), right: new Uint8Array(16) }, right: bytes };
+  return {
+    is_left: false,
+    left: { host: { is_left: true, left: new Uint8Array(4), right: new Uint8Array(16) }, port: 0n },
+    right: bytes,
+  };
 }
 
-export function hostFromContract(raw: ContractHost): Host {
+export function serverAddressFromContract(raw: ContractServerAddress): ServerAddress {
   if (raw.is_left) {
-    return ipFromContract(raw.left);
+    return { kind: 'ip', host: ipFromContract(raw.left.host), port: Number(raw.left.port) };
   }
-  // Strip trailing zero bytes and decode the hostname string.
+  // Strip trailing zero bytes and decode the SRV name string.
   let end = raw.right.length;
   while (end > 0 && raw.right[end - 1] === 0) {
     end--;
   }
-  return { kind: 'hostname', address: new TextDecoder().decode(raw.right.subarray(0, end)) };
+  return { kind: 'srv', address: new TextDecoder().decode(raw.right.subarray(0, end)) };
 }
 
 export function entryToContract(entry: RegistryEntry): ContractEntry {
   return {
     expiry: BigInt(Math.floor(entry.expiry.getTime() / 1000)),
-    host: hostToContract(entry.host),
-    port: BigInt(entry.port),
+    address: serverAddressToContract(entry.address),
   };
 }
 
 export function entryFromContract(raw: ContractEntry): RegistryEntry {
   return {
     expiry: new Date(Number(raw.expiry) * 1000),
-    host: hostFromContract(raw.host),
-    port: Number(raw.port),
+    address: serverAddressFromContract(raw.address),
   };
 }
 

@@ -57,11 +57,11 @@ describe('collateral conservation', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ port: 8080 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8080 } }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ port: 8081 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
     sim.useKey(keyC);
-    sim.register(defaultEntry({ port: 8082 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8082 } }));
 
     expect(sim.getLedger().registry.size()).toBe(3n);
 
@@ -99,9 +99,9 @@ describe('registry key uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ port: 8080 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8080 } }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ port: 8081 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
@@ -168,9 +168,9 @@ describe('socket address uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ port: 8080 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8080 } }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ port: 8081 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });

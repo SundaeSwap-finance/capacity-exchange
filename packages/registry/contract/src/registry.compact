@@ -8,27 +8,31 @@ new type Ipv6 = Bytes<16>;
 
 new type IpAddress = Either<Ipv4, Ipv6>;
 
-new type Hostname = Bytes<128>;
-
-new type Host = Either<IpAddress, Hostname>;
-
 new type Port = Uint<16>;
+
+struct SocketAddress {
+  host: IpAddress,
+  port: Port,
+}
+
+new type SrvName = Bytes<256>;
+
+new type ServerAddress = Either<SocketAddress, SrvName>;
 
 new type RegistryKey = Bytes<32>;
 
-new type SocketAddressHash = Bytes<32>;
+new type AddressHash = Bytes<32>;
 
 new type UnixTimestampSeconds = Uint<64>;
 
 struct Entry {
   expiry: UnixTimestampSeconds,
-  host: Host,
-  port: Port,
+  address: ServerAddress,
 }
 
 export ledger registry: Map<RegistryKey, Entry>;
 
-export ledger takenSocketAddresses: Set<SocketAddressHash>;
+export ledger takenAddresses: Set<AddressHash>;
 
 export ledger collateralAmount: Uint<128>;
 
@@ -47,12 +51,12 @@ export circuit registerServer(entry: Entry): [] {
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
-  const socketAddressHash = hashSocketAddress(disclosedEntry.host, disclosedEntry.port);
-  assert(!takenSocketAddresses.member(socketAddressHash), "socket address already registered");
+  const addressHash = hashServerAddress(disclosedEntry.address);
+  assert(!takenAddresses.member(addressHash), "socket address already registered");
   receiveUnshielded(nativeToken(), collateralAmount);
 
   registry.insert(key, disclosedEntry);
-  takenSocketAddresses.insert(socketAddressHash);
+  takenAddresses.insert(addressHash);
 }
 
 export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
@@ -71,7 +75,7 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
     right<ContractAddress, UserAddress>(disclose(recipient))
     );
 
-  takenSocketAddresses.remove(disclose(hashSocketAddress(existing.host, existing.port)));
+  takenAddresses.remove(disclose(hashServerAddress(existing.address)));
   registry.remove(disclosedKey);
 }
 
@@ -82,7 +86,7 @@ export circuit renewRegistration(expiry: UnixTimestampSeconds): [] {
   assert(blockTimeGte((disclose(expiry) - maximumRegistrationPeriod) as Uint<64>),
          "period cannot be larger than maximumRegistrationPeriod"
          );
-  const newEntry = Entry { expiry: expiry, host: currentEntry.host, port: currentEntry.port, };
+  const newEntry = Entry { expiry: expiry, address: currentEntry.address, };
 
   registry.insert(key, disclose(newEntry));
 }
@@ -91,8 +95,8 @@ circuit hashKey(key: Bytes<64>): RegistryKey {
   return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
 }
 
-circuit hashSocketAddress(host: Host, port: Port): SocketAddressHash {
-  return persistentHash<[Bytes<32>, Host, Port]>(
-    [pad(32, "registry:socket-address"), host, port]
-    ) as SocketAddressHash;
+circuit hashServerAddress(address: ServerAddress): AddressHash {
+  return persistentHash<[Bytes<32>, ServerAddress]>(
+    [pad(32, "registry:socket-address"), address]
+    ) as AddressHash;
 }

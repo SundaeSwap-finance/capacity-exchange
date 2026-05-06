@@ -93,7 +93,7 @@ describe('deregister with computed key', () => {
 
     sim.register(defaultEntry());
     sim.useKey(keyB);
-    sim.register(defaultEntry({ port: 8081 }));
+    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     sim.deregister(computeRegistryKey(keyB));
@@ -174,7 +174,12 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
 
     sim.register(defaultEntry({ expiry: futureDate(100n) }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ expiry: futureDate(200n), port: 8081 }));
+    sim.register(
+      defaultEntry({
+        expiry: futureDate(200n),
+        address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 },
+      })
+    );
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     // Advance past both entries' expiry
@@ -231,7 +236,12 @@ describe('renewRegistration circuit', () => {
 
     sim.register(defaultEntry({ expiry: futureDate(100n) }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ expiry: futureDate(200n), port: 8081 }));
+    sim.register(
+      defaultEntry({
+        expiry: futureDate(200n),
+        address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 },
+      })
+    );
 
     // Only refresh keyB's entry
     const newValidTo = futureDate(MAX_VALIDITY);
@@ -253,22 +263,22 @@ describe('renewRegistration circuit', () => {
     }
   });
 
-  it('refresh preserves the host and port of the entry', () => {
+  it('refresh preserves the address of the entry', () => {
     const secretKey = randomSecretKey();
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, secretKey);
     sim.setBlockTime(BASE_TIME);
 
     const entry = {
       expiry: futureDate(100n),
-      host: { kind: 'ipv6' as const, address: '2001:db8::1' },
-      port: 9090,
+      address: { kind: 'ip' as const, host: { kind: 'ipv6' as const, address: '2001:db8::1' }, port: 9090 },
     };
     sim.register(entry);
     sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const updated = entryFromContract(raw);
-    expect(updated.port).toBe(9090);
-    expect(updated.host.kind).toBe('ipv6');
+    expect(updated.address.kind).toBe('ip');
+    expect((updated.address as { kind: 'ip'; host: { kind: string }; port: number }).port).toBe(9090);
+    expect((updated.address as { kind: 'ip'; host: { kind: string }; port: number }).host.kind).toBe('ipv6');
   });
 });

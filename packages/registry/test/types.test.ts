@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   ipToContract,
   ipFromContract,
-  hostToContract,
-  hostFromContract,
+  serverAddressToContract,
+  serverAddressFromContract,
   entryToContract,
   entryFromContract,
   type IpAddress,
-  type Host,
+  type ServerAddress,
 } from '../src/types.js';
 
 describe('IPv4 round trip', () => {
@@ -70,89 +70,85 @@ describe('IPv6 round trip', () => {
   });
 });
 
-describe('hostToContract / hostFromContract', () => {
-  it('IPv4 host round trip', () => {
-    const host: Host = { kind: 'ipv4', address: '192.168.1.1' };
-    expect(hostFromContract(hostToContract(host))).toEqual(host);
+describe('serverAddressToContract / serverAddressFromContract', () => {
+  it('IPv4 socket address round trip', () => {
+    const addr: ServerAddress = { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 443 };
+    expect(serverAddressFromContract(serverAddressToContract(addr))).toEqual(addr);
   });
 
-  it('IPv6 host round trip', () => {
-    const host: Host = { kind: 'ipv6', address: '2001:db8::1' };
-    const result = hostFromContract(hostToContract(host));
-    expect(result.kind).toBe('ipv6');
-    expect((result as { kind: 'ipv6'; address: string }).address).toBe('2001:db8:0:0:0:0:0:1');
+  it('IPv6 socket address round trip', () => {
+    const addr: ServerAddress = { kind: 'ip', host: { kind: 'ipv6', address: '2001:db8::1' }, port: 8080 };
+    const result = serverAddressFromContract(serverAddressToContract(addr));
+    expect(result.kind).toBe('ip');
+    expect((result as { kind: 'ip'; host: { kind: string; address: string }; port: number }).host.address).toBe(
+      '2001:db8:0:0:0:0:0:1'
+    );
   });
 
-  it('hostname round trip', () => {
-    const host: Host = { kind: 'hostname', address: 'my-server.example.com' };
-    expect(hostFromContract(hostToContract(host))).toEqual(host);
+  it('SRV address round trip', () => {
+    const addr: ServerAddress = { kind: 'srv', address: '_ces._tcp.example.com' };
+    expect(serverAddressFromContract(serverAddressToContract(addr))).toEqual(addr);
   });
 
-  it('hostname with max-length name round trips correctly', () => {
-    // 128 bytes is the Compact Hostname max (Bytes<128>)
-    const address = 'a'.repeat(64) + '.' + 'b'.repeat(63);
-    expect(address.length).toBe(128);
-    const host: Host = { kind: 'hostname', address };
-    expect(hostFromContract(hostToContract(host))).toEqual(host);
+  it('SRV name with max-length round trips correctly', () => {
+    // 256 bytes is the Compact SrvName max (Bytes<256>)
+    const name = 'a'.repeat(128) + '.' + 'b'.repeat(127);
+    expect(name.length).toBe(256);
+    const addr: ServerAddress = { kind: 'srv', address: name };
+    expect(serverAddressFromContract(serverAddressToContract(addr))).toEqual(addr);
   });
 
-  it('hostname too long throws', () => {
-    const host: Host = { kind: 'hostname', address: 'a'.repeat(129) };
-    expect(() => hostToContract(host)).toThrow(/too long/);
+  it('SRV name too long throws', () => {
+    const addr: ServerAddress = { kind: 'srv', address: 'a'.repeat(257) };
+    expect(() => serverAddressToContract(addr)).toThrow(/too long/);
   });
 
-  it('IPv4 is_left=true, hostname is_left=false', () => {
-    const ipRaw = hostToContract({ kind: 'ipv4', address: '1.2.3.4' });
+  it('IP address is_left=true, SRV is_left=false', () => {
+    const ipRaw = serverAddressToContract({ kind: 'ip', host: { kind: 'ipv4', address: '1.2.3.4' }, port: 80 });
     expect(ipRaw.is_left).toBe(true);
 
-    const hostnameRaw = hostToContract({ kind: 'hostname', address: 'example.com' });
-    expect(hostnameRaw.is_left).toBe(false);
+    const srvRaw = serverAddressToContract({ kind: 'srv', address: '_ces._tcp.example.com' });
+    expect(srvRaw.is_left).toBe(false);
   });
 
-  it('hostname bytes are zero-padded to 128 bytes', () => {
-    const host: Host = { kind: 'hostname', address: 'hi' };
-    const raw = hostToContract(host);
-    expect(raw.right.length).toBe(128);
-    expect(raw.right[0]).toBe('h'.charCodeAt(0));
-    expect(raw.right[1]).toBe('i'.charCodeAt(0));
-    expect(raw.right[2]).toBe(0);
+  it('SRV name bytes are zero-padded to 256 bytes', () => {
+    const addr: ServerAddress = { kind: 'srv', address: '_a._b' };
+    const raw = serverAddressToContract(addr);
+    expect(raw.right.length).toBe(256);
+    expect(raw.right[0]).toBe('_'.charCodeAt(0));
+    expect(raw.right[1]).toBe('a'.charCodeAt(0));
+    expect(raw.right[5]).toBe(0);
   });
 });
 
 describe('entry round trip', () => {
-  it('preserves all fields with IPv4 host', () => {
+  it('preserves all fields with IPv4 socket address', () => {
     const entry = {
       expiry: new Date('2026-05-01T00:00:00Z'),
-      host: { kind: 'ipv4' as const, address: '10.0.0.1' },
-      port: 443,
+      address: { kind: 'ip' as const, host: { kind: 'ipv4' as const, address: '10.0.0.1' }, port: 443 },
     };
     const result = entryFromContract(entryToContract(entry));
-    expect(result.host).toEqual(entry.host);
-    expect(result.port).toBe(entry.port);
+    expect(result.address).toEqual(entry.address);
     // Date round trip truncates to seconds
     expect(result.expiry.getTime()).toBe(Math.floor(entry.expiry.getTime() / 1000) * 1000);
   });
 
-  it('preserves all fields with IPv6 host', () => {
+  it('preserves all fields with IPv6 socket address', () => {
     const entry = {
       expiry: new Date('2026-06-01T00:00:00Z'),
-      host: { kind: 'ipv6' as const, address: '2001:db8:0:0:0:0:0:1' },
-      port: 8080,
+      address: { kind: 'ip' as const, host: { kind: 'ipv6' as const, address: '2001:db8:0:0:0:0:0:1' }, port: 8080 },
     };
     const result = entryFromContract(entryToContract(entry));
-    expect(result.host).toEqual(entry.host);
-    expect(result.port).toBe(entry.port);
+    expect(result.address).toEqual(entry.address);
   });
 
-  it('preserves all fields with hostname host', () => {
+  it('preserves all fields with SRV address', () => {
     const entry = {
       expiry: new Date('2026-07-01T00:00:00Z'),
-      host: { kind: 'hostname' as const, address: 'ces.sundae.fi' },
-      port: 443,
+      address: { kind: 'srv' as const, address: '_ces._tcp.sundae.fi' },
     };
     const result = entryFromContract(entryToContract(entry));
-    expect(result.host).toEqual(entry.host);
-    expect(result.port).toBe(entry.port);
+    expect(result.address).toEqual(entry.address);
     expect(result.expiry.getTime()).toBe(Math.floor(entry.expiry.getTime() / 1000) * 1000);
   });
 });
