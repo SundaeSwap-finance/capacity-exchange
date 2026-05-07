@@ -21,9 +21,7 @@ export async function register(ctx: AppContext, secretKey: RegistrySecretKey, pa
   const { contractAddress, entry } = params;
 
   const addressStr =
-    entry.address.kind === 'srv'
-      ? entry.address.address
-      : `${entry.address.host.address}:${entry.address.port}`;
+    entry.address.kind === 'srv' ? entry.address.address : `${entry.address.host.address}:${entry.address.port}`;
   logger.info(`Registering ${addressStr} to registry ${contractAddress}...`);
 
   const { providers, privateStateId } = await getProviders(ctx, contractAddress, secretKey, logger);
