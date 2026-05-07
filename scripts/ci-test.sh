@@ -25,7 +25,7 @@ CES_PORT=3000
 CES_READINESS_RETRIES=900
 QUOTE_TTL_SECONDS=300
 OFFER_TTL_SECONDS=60
-WALLET_SYNC_TIMEOUT_MS=1500000  # 25 minutes — first run syncs from genesis
+WALLET_SYNC_TIMEOUT_MS=2400000  # 40 minutes — first run syncs from genesis
 
 CES_SERVER_MNEMONIC_FILE="$ROOT_DIR/apps/server/wallet-mnemonic.ci.txt"
 CES_SERVER_SEED_FILE="$ROOT_DIR/apps/server/wallet-seed.ci.hex"
