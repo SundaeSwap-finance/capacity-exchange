@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-react-sdk' build",
+    "prebuild": "bun run --cwd ../.. compile",
     "build": "tsc && vite build"
   },
   "dependencies": {

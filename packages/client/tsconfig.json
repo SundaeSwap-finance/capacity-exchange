@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "esnext",
+    "module": "nodenext",
     "lib": ["es2020", "dom", "DOM.Iterable", "esnext.disposable"],
     "declaration": true,
     "rootDir": "./generated",
@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node"
+    "moduleResolution": "nodenext"
   },
   "include": ["generated/**/*.ts"],
   "exclude": ["node_modules", "generated/dist"]
