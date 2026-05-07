@@ -1,5 +1,5 @@
 const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {
-  preview: '2f825f8a4a1b92f5ffcab802f5a514d89844f776d55244fedf0ba383aafce0b7',
+  preview: '43a4da0d4354555c6aad6accaa7eaa11d29d4ab3a0da22e524b0b0a20034c35b',
   preprod: '926e111d46992869775101830e4e75129606baee3b58056465f788922c48f42f',
 };
 
