@@ -77,8 +77,7 @@ async function registerEntry(
   const secretKey = generateRandomSecretKey();
   const registryKey = Buffer.from(computeRegistryKey(secretKey)).toString('hex');
   const entry: RegistryEntry = {
-    ip: { kind: 'ipv4', address: TEST_IP },
-    port: TEST_PORT,
+    address: { kind: 'ip', host: { kind: 'ipv4', address: TEST_IP }, port: TEST_PORT },
     expiry: new Date(Date.now() + ENTRY_EXPIRY_MS),
   };
 
