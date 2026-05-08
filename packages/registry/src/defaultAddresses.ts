@@ -1,6 +1,6 @@
 const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {
   preview: '43a4da0d4354555c6aad6accaa7eaa11d29d4ab3a0da22e524b0b0a20034c35b',
-  preprod: '926e111d46992869775101830e4e75129606baee3b58056465f788922c48f42f',
+  preprod: '93c3402590d28979a9278cb25bd1fb413fae9bb921ce8b6642d166b366e30188',
 };
 
 export function getDefaultRegistryAddress(networkId: string): string | undefined {

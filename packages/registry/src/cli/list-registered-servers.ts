@@ -55,8 +55,7 @@ async function main(): Promise<void> {
 
   for (const [key, entry] of entries) {
     const details = {
-      host: entry.host,
-      port: entry.port,
+      address: entry.address,
       expiry: entry.expiry.toISOString(),
     };
     console.log(`${key}: ${JSON.stringify(details, null, 2)},`);
