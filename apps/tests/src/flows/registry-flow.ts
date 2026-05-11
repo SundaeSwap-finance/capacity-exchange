@@ -20,9 +20,8 @@ const logger = createLogger(import.meta);
 const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds
 const POLL_INTERVAL_MS = 5_000;
 const POLL_TIMEOUT_MS = 2 * 60 * 1000;
-const TEST_IP = '127.0.0.1';
-const TEST_PORT = 3000;
-const EXPECTED_URL = `https://${TEST_IP}:${TEST_PORT}`;
+const TEST_SRV_NAME = '_ces._tcp.test.example.com';
+const EXPECTED_URL = TEST_SRV_NAME;
 
 export interface RegistryFlowResult {
   registryAddress: string;
@@ -77,11 +76,11 @@ async function registerEntry(
   const secretKey = generateRandomSecretKey();
   const registryKey = Buffer.from(computeRegistryKey(secretKey)).toString('hex');
   const entry: RegistryEntry = {
-    address: { kind: 'ip', host: { kind: 'ipv4', address: TEST_IP }, port: TEST_PORT },
+    address: { kind: 'srv', address: TEST_SRV_NAME },
     expiry: new Date(Date.now() + ENTRY_EXPIRY_MS),
   };
 
-  logger.info({ registryKey, ip: TEST_IP, port: TEST_PORT, expiry: entry.expiry.toISOString() }, 'Registering entry');
+  logger.info({ registryKey, srvName: TEST_SRV_NAME, expiry: entry.expiry.toISOString() }, 'Registering entry');
   await register(ctx, secretKey, { contractAddress: registryAddress, entry });
   return { secretKey, registryKey };
 }

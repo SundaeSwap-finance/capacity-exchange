@@ -14,10 +14,6 @@ export function futureDate(offsetSeconds: bigint): Date {
 export function defaultEntry(opts: { expiry?: Date; address?: ServerAddress } = {}) {
   return {
     expiry: opts.expiry ?? futureDate(MAX_VALIDITY),
-    address: opts.address ?? {
-      kind: 'ip' as const,
-      host: { kind: 'ipv4' as const, address: '192.168.1.1' },
-      port: 8080,
-    },
+    address: opts.address ?? { kind: 'srv' as const, address: '_ces._tcp.example.com' },
   };
 }

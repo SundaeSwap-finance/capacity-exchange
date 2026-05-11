@@ -20,9 +20,7 @@ export interface RegisterParams {
 export async function register(ctx: AppContext, secretKey: RegistrySecretKey, params: RegisterParams) {
   const { contractAddress, entry } = params;
 
-  const addressStr =
-    entry.address.kind === 'srv' ? entry.address.address : `${entry.address.host.address}:${entry.address.port}`;
-  logger.info(`Registering ${addressStr} to registry ${contractAddress}...`);
+  logger.info(`Registering ${entry.address.address} to registry ${contractAddress}...`);
 
   const { providers, privateStateId } = await getProviders(ctx, contractAddress, secretKey, logger);
 
@@ -97,7 +95,7 @@ async function submitUnboundTransaction(walletContext: WalletContext, tx: Unboun
   const recipe = await walletFacade.balanceUnboundTransaction(
     tx,
     { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    { ttl }
+    { ttl, tokenKindsToBalance: ['shielded', 'unshielded'] }
   );
 
   logger.info('Signing unshielded offer...');

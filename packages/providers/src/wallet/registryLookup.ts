@@ -1,11 +1,6 @@
 import * as dns from 'dns';
-import { ledger, registryEntries, type ServerAddress, type IpAddress } from '@sundaeswap/capacity-exchange-registry';
+import { ledger, registryEntries } from '@sundaeswap/capacity-exchange-registry';
 import type { ChainStateProvider } from './chainStateProvider';
-
-function socketAddressToUrl(host: IpAddress, port: number): string {
-  const hostStr = host.kind === 'ipv6' ? `[${host.address}]` : host.address;
-  return `https://${hostStr}:${port}`;
-}
 
 /**
  * Resolves an SRV record name to a URL by looking up the DNS SRV record.
@@ -30,13 +25,6 @@ export async function resolveSrvToUrl(srvName: string): Promise<string | null> {
   return `https://${hostname}:${port}`;
 }
 
-async function serverAddressToUrl(address: ServerAddress): Promise<string | null> {
-  if (address.kind === 'ip') {
-    return socketAddressToUrl(address.host, address.port);
-  }
-  return resolveSrvToUrl(address.address);
-}
-
 /**
  * Queries the on-chain registry contract and returns CES server URLs
  * for entries that haven't expired. Used internally by the SDK when a
@@ -56,7 +44,7 @@ export async function fetchRegistryCesUrls(
   const entries = registryEntries(ledgerState);
   const now = new Date();
   const urls = await Promise.all(
-    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => serverAddressToUrl(entry.address))
+    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => resolveSrvToUrl(entry.address.address))
   );
   return urls.filter((url): url is string => url !== null);
 }

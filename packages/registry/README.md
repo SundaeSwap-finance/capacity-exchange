@@ -1,6 +1,6 @@
 # @sundaeswap/capacity-exchange-registry
 
-The registry is a contract acting as a directory of capacity exchange servers. Each entry maps a server's secret key (hashed on-chain) to a server address (either an SRV record name or an explicit IP + port) and an expiry.
+The registry is a contract acting as a directory of capacity exchange servers. Each entry maps a server's secret key (hashed on-chain) to an SRV record name and an expiry.
 
 Servers must lock collateral to register, and get refunded after deregistering.
 
@@ -83,34 +83,23 @@ NETWORK_ID=preview bun run deploy <collateral> [registrationPeriod]
 
 ### `register`
 
-Adds a server to the registry. The server address is stored under a key derived from the secret key. The required collateral is locked and returned on deregistration.
-
-Two address formats are supported:
-- **SRV record** — clients resolve the DNS SRV record to find the current host and port. No `port` argument needed.
-- **IP address** — an explicit IPv4 or IPv6 address and port stored directly on-chain.
+Adds a server to the registry. The SRV record name is stored on-chain under a key derived from the secret key. Clients resolve the SRV record via DNS at connection time. The required collateral is locked and returned on deregistration.
 
 ```sh
-NETWORK_ID=preview bun run register <secretKeyFile> <host> [port] [period] [contractAddress]
+NETWORK_ID=preview bun run register <secretKeyFile> <srvName> [period] [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
 | `secretKeyFile` | Path to the secret key file (output of `generate-secret`) |
-| `host` | SRV record name (e.g. `_ces._tcp.example.com`), IPv4, or IPv6 address |
-| `port` | Server port number — required for IP addresses, omit for SRV records |
+| `srvName` | SRV record name (e.g. `_ces._tcp.example.com`) |
 | `period` | Registration period in days (default: 30 for mainnet, 0.5 for preview/preprod) |
 | `contractAddress` | Registry contract address (defaults to well-known address for network) |
 
-**Example — SRV record (recommended)**
+**Example**
 
 ```sh
 NETWORK_ID=preview bun run register ./my-registry-key.hex _ces._tcp.sundae.fi
-```
-
-**Example — IP address**
-
-```sh
-NETWORK_ID=preview bun run register ./my-registry-key.hex 192.168.1.1 8080
 ```
 
 ---
@@ -212,7 +201,6 @@ NETWORK_ID=preview bun run list-servers \
 
 **Output**
 
-SRV record entry:
 ```
 25d91723c63521a399fb5e232de27c2064fd5241d19df478c16cc4b52ff337a9: {
   "address": {
@@ -220,20 +208,5 @@ SRV record entry:
     "address": "_ces._tcp.sundae.fi"
   },
   "expiry": "2026-05-08T22:13:34.000Z"
-},
-```
-
-IP address entry:
-```
-25d91723c63521a399fb5e232de27c2064fd5241d19df478c16cc4b52ff337a9: {
-  "address": {
-    "kind": "ip",
-    "host": {
-      "kind": "ipv4",
-      "address": "192.168.0.1"
-    },
-    "port": 3000
-  },
-  "expiry": "2026-05-08T22:08:10.000Z"
 },
 ```

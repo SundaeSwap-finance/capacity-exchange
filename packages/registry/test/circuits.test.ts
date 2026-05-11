@@ -93,7 +93,7 @@ describe('deregister with computed key', () => {
 
     sim.register(defaultEntry());
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.other.example.com' } }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     sim.deregister(computeRegistryKey(keyB));
@@ -177,7 +177,7 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
     sim.register(
       defaultEntry({
         expiry: futureDate(200n),
-        address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 },
+        address: { kind: 'srv', address: '_ces._tcp.other.example.com' },
       })
     );
     expect(sim.getLedger().registry.size()).toBe(2n);
@@ -239,7 +239,7 @@ describe('renewRegistration circuit', () => {
     sim.register(
       defaultEntry({
         expiry: futureDate(200n),
-        address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 },
+        address: { kind: 'srv', address: '_ces._tcp.other.example.com' },
       })
     );
 
@@ -270,15 +270,14 @@ describe('renewRegistration circuit', () => {
 
     const entry = {
       expiry: futureDate(100n),
-      address: { kind: 'ip' as const, host: { kind: 'ipv6' as const, address: '2001:db8::1' }, port: 9090 },
+      address: { kind: 'srv' as const, address: '_ces._tcp.sundae.fi' },
     };
     sim.register(entry);
     sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const updated = entryFromContract(raw);
-    expect(updated.address.kind).toBe('ip');
-    expect((updated.address as { kind: 'ip'; host: { kind: string }; port: number }).port).toBe(9090);
-    expect((updated.address as { kind: 'ip'; host: { kind: string }; port: number }).host.kind).toBe('ipv6');
+    expect(updated.address.kind).toBe('srv');
+    expect((updated.address as { kind: 'srv'; address: string }).address).toBe('_ces._tcp.sundae.fi');
   });
 });

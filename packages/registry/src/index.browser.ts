@@ -23,23 +23,14 @@ export {
 export { computeRegistryKey } from './compact-types.js';
 
 export {
-  type IPv4,
-  type IPv6,
-  type IpAddress,
-  type SocketAddress,
   type SrvAddress,
   type ServerAddress,
   type RegistryEntry,
-  type ContractIpAddress,
-  type ContractSocketAddress,
-  type ContractServerAddress,
   type ContractEntry,
   type RegistryKey,
   type RegistryMapping,
   type RegistrySecretKey,
   type RegistryConstructorArgs,
-  ipToContract,
-  ipFromContract,
   serverAddressToContract,
   serverAddressFromContract,
   entryToContract,

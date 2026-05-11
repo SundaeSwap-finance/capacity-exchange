@@ -2,22 +2,7 @@ pragma language_version >= 0.22;
 
 import CompactStandardLibrary;
 
-new type Ipv4 = Bytes<4>;
-
-new type Ipv6 = Bytes<16>;
-
-new type IpAddress = Either<Ipv4, Ipv6>;
-
-new type Port = Uint<16>;
-
-struct SocketAddress {
-  host: IpAddress,
-  port: Port,
-}
-
 new type SrvName = Bytes<256>;
-
-new type ServerAddress = Either<SocketAddress, SrvName>;
 
 new type RegistryKey = Bytes<32>;
 
@@ -27,7 +12,7 @@ new type UnixTimestampSeconds = Uint<64>;
 
 struct Entry {
   expiry: UnixTimestampSeconds,
-  address: ServerAddress,
+  address: SrvName,
 }
 
 export ledger registry: Map<RegistryKey, Entry>;
@@ -44,6 +29,7 @@ constructor(requiredCollateral: Uint<128>, maxPeriod: UnixTimestampSeconds) {
   collateralAmount = disclose(requiredCollateral);
   maximumRegistrationPeriod = disclose(maxPeriod);
 }
+
 export circuit registerServer(entry: Entry): [] {
   const disclosedEntry = disclose(entry);
   assert(blockTimeGte((disclosedEntry.expiry - maximumRegistrationPeriod) as Uint<64>),
@@ -51,8 +37,8 @@ export circuit registerServer(entry: Entry): [] {
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
-  const addressHash = hashServerAddress(disclosedEntry.address);
-  assert(!takenAddresses.member(addressHash), "socket address already registered");
+  const addressHash = hashSrvName(disclosedEntry.address);
+  assert(!takenAddresses.member(addressHash), "address already registered");
   receiveUnshielded(nativeToken(), collateralAmount);
 
   registry.insert(key, disclosedEntry);
@@ -75,7 +61,7 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
     right<ContractAddress, UserAddress>(disclose(recipient))
     );
 
-  takenAddresses.remove(disclose(hashServerAddress(existing.address)));
+  takenAddresses.remove(disclose(hashSrvName(existing.address)));
   registry.remove(disclosedKey);
 }
 
@@ -95,8 +81,8 @@ circuit hashKey(key: Bytes<64>): RegistryKey {
   return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
 }
 
-circuit hashServerAddress(address: ServerAddress): AddressHash {
-  return persistentHash<[Bytes<32>, ServerAddress]>(
+circuit hashSrvName(address: SrvName): AddressHash {
+  return persistentHash<[Bytes<32>, SrvName]>(
     [pad(32, "registry:socket-address"), address]
     ) as AddressHash;
 }

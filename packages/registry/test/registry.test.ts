@@ -57,11 +57,11 @@ describe('collateral conservation', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8080 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.a.example.com' } }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.b.example.com' } }));
     sim.useKey(keyC);
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8082 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.c.example.com' } }));
 
     expect(sim.getLedger().registry.size()).toBe(3n);
 
@@ -99,9 +99,9 @@ describe('registry key uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8080 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.a.example.com' } }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.b.example.com' } }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
@@ -130,9 +130,9 @@ describe('registry key uniqueness', () => {
   });
 });
 
-// Invariant: every (ip, port) socket address in the registry is unique
-describe('socket address uniqueness', () => {
-  it('two different keys cannot register the same socket address', () => {
+// Invariant: every SRV address in the registry is unique
+describe('address uniqueness', () => {
+  it('two different keys cannot register the same SRV address', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
@@ -142,10 +142,10 @@ describe('socket address uniqueness', () => {
     sim.register(defaultEntry());
     sim.useKey(keyB);
 
-    expect(() => sim.register(defaultEntry())).toThrow(/socket address already registered/);
+    expect(() => sim.register(defaultEntry())).toThrow(/address already registered/);
   });
 
-  it('a deregistered socket address is available again', () => {
+  it('a deregistered address is available again', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
@@ -161,16 +161,16 @@ describe('socket address uniqueness', () => {
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 
-  it('same ip with different ports both register', () => {
+  it('two different SRV names can both register', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8080 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.a.example.com' } }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: { kind: 'ip', host: { kind: 'ipv4', address: '192.168.1.1' }, port: 8081 } }));
+    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.b.example.com' } }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
