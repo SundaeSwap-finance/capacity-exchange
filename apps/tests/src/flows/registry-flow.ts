@@ -76,7 +76,7 @@ async function registerEntry(
   const secretKey = generateRandomSecretKey();
   const registryKey = Buffer.from(computeRegistryKey(secretKey)).toString('hex');
   const entry: RegistryEntry = {
-    address: { kind: 'srv', address: TEST_SRV_NAME },
+    address: TEST_SRV_NAME,
     expiry: new Date(Date.now() + ENTRY_EXPIRY_MS),
   };
 
