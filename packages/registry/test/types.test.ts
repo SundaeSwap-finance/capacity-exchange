@@ -37,7 +37,7 @@ describe('entry round trip', () => {
   it('preserves all fields with SRV address', () => {
     const entry = {
       expiry: new Date('2026-07-01T00:00:00Z'),
-      address: '_ces._tcp.sundae.fi',
+      address: '_capacityexchange._tcp.sundae.fi',
     };
     const result = entryFromContract(entryToContract(entry));
     expect(result.address).toBe(entry.address);

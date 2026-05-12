@@ -57,11 +57,11 @@ describe('collateral conservation', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: '_ces._tcp.a.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.a.example.com' }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_ces._tcp.b.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.b.example.com' }));
     sim.useKey(keyC);
-    sim.register(defaultEntry({ address: '_ces._tcp.c.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.c.example.com' }));
 
     expect(sim.getLedger().registry.size()).toBe(3n);
 
@@ -99,9 +99,9 @@ describe('registry key uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: '_ces._tcp.a.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.a.example.com' }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_ces._tcp.b.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.b.example.com' }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
@@ -168,9 +168,9 @@ describe('address uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: '_ces._tcp.a.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.a.example.com' }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_ces._tcp.b.example.com' }));
+    sim.register(defaultEntry({ address: '_capacityexchange._tcp.b.example.com' }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });

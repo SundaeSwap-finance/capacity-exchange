@@ -20,7 +20,7 @@ const logger = createLogger(import.meta);
 const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds
 const POLL_INTERVAL_MS = 5_000;
 const POLL_TIMEOUT_MS = 2 * 60 * 1000;
-const TEST_SRV_NAME = '_ces._tcp.test.example.com';
+const TEST_SRV_NAME = '_capacityexchange._tcp.test.example.com';
 const EXPECTED_URL = TEST_SRV_NAME;
 
 export interface RegistryFlowResult {
