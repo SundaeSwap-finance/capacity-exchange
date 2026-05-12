@@ -1,18 +1,26 @@
 import dns from 'dns';
-import { ledger, registryEntries } from '@sundaeswap/capacity-exchange-registry';
+import { ledger, registryEntries, SRV_SERVICE_PREFIX } from '@sundaeswap/capacity-exchange-registry';
 import type { ChainStateProvider } from './chainStateProvider';
 
-export type SrvResolver = (srvName: string) => Promise<string | null>;
+export { SRV_SERVICE_PREFIX };
 
 /**
- * Resolves an SRV record name to a URL using the Node.js `dns` module.
+ * Resolves a domainname to a CES server URL.
+ * The domainname must have a corresponding `_capacityexchange._tcp.<domainname>` SRV record.
+ */
+export type SrvResolver = (domainname: string) => Promise<string | null>;
+
+/**
+ * Resolves a CES server domainname to a URL using the Node.js `dns` module.
  * Not browser-compatible — import from `index.browser.ts` to get a version
  * that defaults to {@link createDoHSrvResolver} instead.
+ *
+ * The domainname must have a `_capacityexchange._tcp.<domainname>` SRV record registered.
  */
-export async function resolveSrvToUrl(srvName: string): Promise<string | null> {
+export async function resolveSrvToUrl(domainname: string): Promise<string | null> {
   let records;
   try {
-    records = await dns.promises.resolveSrv(srvName);
+    records = await dns.promises.resolveSrv(`${SRV_SERVICE_PREFIX}${domainname}`);
   } catch {
     return null;
   }
@@ -24,8 +32,8 @@ export async function resolveSrvToUrl(srvName: string): Promise<string | null> {
   // priority returns 0.
   records.sort((a, b) => a.priority - b.priority || b.weight - a.weight);
   const { name, port } = records[0];
-  const hostname = name.endsWith('.') ? name.slice(0, -1) : name;
-  return `https://${hostname}:${port}`;
+  const target = name.endsWith('.') ? name.slice(0, -1) : name;
+  return `https://${target}:${port}`;
 }
 
 /**
@@ -52,7 +60,14 @@ export async function fetchRegistryCesUrls(
   const entries = registryEntries(ledgerState);
   const now = new Date();
   const urls = await Promise.all(
-    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => srvResolver(entry.address.address))
+    entries
+      .filter(({ entry }) => entry.expiry > now)
+      .map(({ entry }) => {
+        const domainname = entry.address.startsWith(SRV_SERVICE_PREFIX)
+          ? entry.address.slice(SRV_SERVICE_PREFIX.length)
+          : entry.address;
+        return srvResolver(domainname);
+      })
   );
   return urls.filter((url): url is string => url !== null);
 }

@@ -1,14 +1,12 @@
 import type { Ledger } from '../contract/out/contract/index.js';
 
-/** SRV record name (e.g. `_ces._tcp.example.com`). Clients resolve this via DNS to obtain host and port. */
-export type SrvAddress = { kind: 'srv'; address: string };
-
-/** A server address — an SRV record name resolved by clients via DNS. */
-export type ServerAddress = SrvAddress;
+/** SRV service prefix used to identify Capacity Exchange servers. */
+export const SRV_SERVICE_PREFIX = '_capacityexchange._tcp.';
 
 export interface RegistryEntry {
   expiry: Date;
-  address: ServerAddress;
+  /** SRV record name resolved by clients via DNS to obtain host and port. */
+  address: string;
 }
 
 export type ContractEntry = {
@@ -57,8 +55,8 @@ export function timestampToDate(dateInString: string) {
 
 const SRV_MAX_BYTES = 256;
 
-export function serverAddressToContract(address: ServerAddress): Uint8Array {
-  const encoded = new TextEncoder().encode(address.address);
+export function serverAddressToContract(address: string): Uint8Array {
+  const encoded = new TextEncoder().encode(address);
   if (encoded.length > SRV_MAX_BYTES) {
     throw new Error(`SRV name too long: ${encoded.length} bytes (max ${SRV_MAX_BYTES})`);
   }
@@ -67,13 +65,13 @@ export function serverAddressToContract(address: ServerAddress): Uint8Array {
   return bytes;
 }
 
-export function serverAddressFromContract(raw: Uint8Array): ServerAddress {
+export function serverAddressFromContract(raw: Uint8Array): string {
   // Strip trailing zero bytes and decode the SRV name string.
   let end = raw.length;
   while (end > 0 && raw[end - 1] === 0) {
     end--;
   }
-  return { kind: 'srv', address: new TextDecoder().decode(raw.subarray(0, end)) };
+  return new TextDecoder().decode(raw.subarray(0, end));
 }
 
 export function entryToContract(entry: RegistryEntry): ContractEntry {

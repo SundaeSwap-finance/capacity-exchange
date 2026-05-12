@@ -16,7 +16,7 @@ describe('resolveSrvToUrl', () => {
     expect(result).toBe('https://ces.preview.sundae.fi:8080');
   });
 
-  it('strips trailing dot from hostname', async () => {
+  it('strips trailing dot from domainname', async () => {
     vi.spyOn(dns.promises, 'resolveSrv').mockResolvedValue([makeSrvRecord(10, 100, 443, 'ces.preview.sundae.fi.')]);
 
     const result = await resolveSrvToUrl(SRV_NAME);

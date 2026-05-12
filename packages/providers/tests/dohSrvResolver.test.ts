@@ -115,7 +115,9 @@ describe('createDoHSrvResolver', () => {
 
       await createDoHSrvResolver()(SRV_NAME);
 
-      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(encodeURIComponent(SRV_NAME)));
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining(encodeURIComponent(`_capacityexchange._tcp.${SRV_NAME}`))
+      );
     });
   });
 });

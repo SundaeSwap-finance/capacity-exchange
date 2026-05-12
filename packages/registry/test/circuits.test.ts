@@ -93,7 +93,7 @@ describe('deregister with computed key', () => {
 
     sim.register(defaultEntry());
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: { kind: 'srv', address: '_ces._tcp.other.example.com' } }));
+    sim.register(defaultEntry({ address: '_ces._tcp.other.example.com' }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     sim.deregister(computeRegistryKey(keyB));
@@ -177,7 +177,7 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
     sim.register(
       defaultEntry({
         expiry: futureDate(200n),
-        address: { kind: 'srv', address: '_ces._tcp.other.example.com' },
+        address: '_ces._tcp.other.example.com',
       })
     );
     expect(sim.getLedger().registry.size()).toBe(2n);
@@ -239,7 +239,7 @@ describe('renewRegistration circuit', () => {
     sim.register(
       defaultEntry({
         expiry: futureDate(200n),
-        address: { kind: 'srv', address: '_ces._tcp.other.example.com' },
+        address: '_ces._tcp.other.example.com',
       })
     );
 
@@ -270,14 +270,13 @@ describe('renewRegistration circuit', () => {
 
     const entry = {
       expiry: futureDate(100n),
-      address: { kind: 'srv' as const, address: '_ces._tcp.sundae.fi' },
+      address: '_ces._tcp.sundae.fi',
     };
     sim.register(entry);
     sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const updated = entryFromContract(raw);
-    expect(updated.address.kind).toBe('srv');
-    expect((updated.address as { kind: 'srv'; address: string }).address).toBe('_ces._tcp.sundae.fi');
+    expect(updated.address).toBe('_ces._tcp.sundae.fi');
   });
 });

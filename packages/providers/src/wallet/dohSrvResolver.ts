@@ -1,5 +1,5 @@
 import type { ChainStateProvider } from './chainStateProvider';
-import { fetchRegistryCesUrls as _fetchRegistryCesUrls, type SrvResolver } from './registryLookup';
+import { fetchRegistryCesUrls as _fetchRegistryCesUrls, type SrvResolver, SRV_SERVICE_PREFIX } from './registryLookup';
 
 interface DohSrvRecord {
   data: string; // "priority weight port target"
@@ -27,7 +27,8 @@ export type { SrvResolver };
 export function createDoHSrvResolver(
   dohUrl = (typeof process !== 'undefined' && process.env.DOH_URL) || DEFAULT_DOH_URL
 ): SrvResolver {
-  return async (srvName: string): Promise<string | null> => {
+  return async (domainname: string): Promise<string | null> => {
+    const srvName = `${SRV_SERVICE_PREFIX}${domainname}`;
     let response: DohResponse;
     try {
       const res = await fetch(`${dohUrl}?name=${encodeURIComponent(srvName)}&type=SRV`);
@@ -51,8 +52,8 @@ export function createDoHSrvResolver(
 
     records.sort((a, b) => a.priority - b.priority || b.weight - a.weight);
     const { target, port } = records[0];
-    const hostname = target.endsWith('.') ? target.slice(0, -1) : target;
-    return `https://${hostname}:${port}`;
+    const resolvedHost = target.endsWith('.') ? target.slice(0, -1) : target;
+    return `https://${resolvedHost}:${port}`;
   };
 }
 

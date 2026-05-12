@@ -1,4 +1,4 @@
-export const SRV_NAME = '_capacityexchange._tcp.capacity-exchange.preview.sundae.fi';
+export const SRV_NAME = 'capacity-exchange.preview.sundae.fi';
 
 /** Creates a Node.js `dns.promises.resolveSrv` record shape. */
 export const makeSrvRecord = (priority: number, weight: number, port: number, name: string) => ({

@@ -23,8 +23,7 @@ export {
 export { computeRegistryKey } from './compact-types.js';
 
 export {
-  type SrvAddress,
-  type ServerAddress,
+  SRV_SERVICE_PREFIX,
   type RegistryEntry,
   type ContractEntry,
   type RegistryKey,

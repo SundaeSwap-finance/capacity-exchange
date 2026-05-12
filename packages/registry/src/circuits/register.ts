@@ -20,7 +20,7 @@ export interface RegisterParams {
 export async function register(ctx: AppContext, secretKey: RegistrySecretKey, params: RegisterParams) {
   const { contractAddress, entry } = params;
 
-  logger.info(`Registering ${entry.address.address} to registry ${contractAddress}...`);
+  logger.info(`Registering ${entry.address} to registry ${contractAddress}...`);
 
   const { providers, privateStateId } = await getProviders(ctx, contractAddress, secretKey, logger);
 

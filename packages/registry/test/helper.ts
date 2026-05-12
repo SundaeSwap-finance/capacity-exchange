@@ -1,4 +1,4 @@
-import type { ServerAddress } from '../src/types.js';
+import { SRV_SERVICE_PREFIX } from '../src/types.js';
 
 export const COLLATERAL = 1000n;
 export const MAX_VALIDITY = 2_592_000n; // 30 days in seconds
@@ -11,9 +11,9 @@ export function futureDate(offsetSeconds: bigint): Date {
   return new Date(Number(BASE_TIME + offsetSeconds) * 1000);
 }
 
-export function defaultEntry(opts: { expiry?: Date; address?: ServerAddress } = {}) {
+export function defaultEntry(opts: { expiry?: Date; address?: string } = {}) {
   return {
     expiry: opts.expiry ?? futureDate(MAX_VALIDITY),
-    address: opts.address ?? { kind: 'srv' as const, address: '_ces._tcp.example.com' },
+    address: opts.address ?? `${SRV_SERVICE_PREFIX}example.com`,
   };
 }
