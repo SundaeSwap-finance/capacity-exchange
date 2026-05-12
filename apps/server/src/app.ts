@@ -3,6 +3,7 @@ import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import chainStatePlugin from './plugins/chain-state.js';
 import walletPlugin from './plugins/wallet-utxo.js';
 import cesWalletProviderPlugin from './plugins/ces-wallet-provider.js';
 import offerPlugin from './plugins/offer.js';
@@ -38,6 +39,7 @@ export async function buildApp(
   app.register(cors, { origin: '*' });
   await app.register(errorHandler);
   await app.register(observability);
+  await app.register(chainStatePlugin);
   await app.register(walletPlugin);
   await app.register(pricesPlugin);
   await app.register(peerPricesPlugin);
