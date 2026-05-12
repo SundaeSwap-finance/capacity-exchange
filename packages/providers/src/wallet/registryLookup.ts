@@ -1,10 +1,13 @@
-import * as dns from 'dns';
+import dns from 'dns';
 import { ledger, registryEntries } from '@sundaeswap/capacity-exchange-registry';
 import type { ChainStateProvider } from './chainStateProvider';
 
+export type SrvResolver = (srvName: string) => Promise<string | null>;
+
 /**
- * Resolves an SRV record name to a URL by looking up the DNS SRV record.
- * Returns null if no records are found.
+ * Resolves an SRV record name to a URL using the Node.js `dns` module.
+ * Not browser-compatible — import from `index.browser.ts` to get a version
+ * that defaults to {@link createDoHSrvResolver} instead.
  */
 export async function resolveSrvToUrl(srvName: string): Promise<string | null> {
   let records;
@@ -30,10 +33,15 @@ export async function resolveSrvToUrl(srvName: string): Promise<string | null> {
  * for entries that haven't expired. Used internally by the SDK when a
  * `chainStateProvider` is supplied and the network has a canonical registry
  * contract address.
+ *
+ * Defaults to {@link resolveSrvToUrl} (Node.js `dns` module). When importing
+ * from `index.browser.ts`, this function is re-exported with
+ * {@link createDoHSrvResolver} as the default instead.
  */
 export async function fetchRegistryCesUrls(
   chainStateProvider: ChainStateProvider,
-  registryAddress: string
+  registryAddress: string,
+  srvResolver: SrvResolver = resolveSrvToUrl
 ): Promise<string[]> {
   const contractState = await chainStateProvider.queryContractState(registryAddress);
   if (!contractState) {
@@ -44,7 +52,7 @@ export async function fetchRegistryCesUrls(
   const entries = registryEntries(ledgerState);
   const now = new Date();
   const urls = await Promise.all(
-    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => resolveSrvToUrl(entry.address.address))
+    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => srvResolver(entry.address.address))
   );
   return urls.filter((url): url is string => url !== null);
 }

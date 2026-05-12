@@ -74,6 +74,12 @@ async function getSponsoredWalletProvider(wallet: ConnectedAPI) {
 }
 ```
 
+## Environment Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DOH_URL` | `https://cloudflare-dns.com/dns-query` | DNS-over-HTTPS endpoint used by `createDoHSrvResolver` to resolve SRV records. Override to use a different provider. Only relevant in browser environments or when using `createDoHSrvResolver` explicitly. |
+
 ## API
 
 ### `capacityExchangeWalletProvider(config)`
