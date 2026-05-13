@@ -4,6 +4,7 @@ import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
 
 const TIP_POLL_INTERVAL_MS = 2_000;
 const LEDGER_PARAMS_POLL_INTERVAL_MS = 60_000;
+const INDEXER_FETCH_TIMEOUT_MS = 10_000;
 
 const BLOCK_TIMESTAMP_QUERY = `query { block { timestamp } }`;
 
@@ -53,7 +54,8 @@ export class ChainStateService {
     if (!this.tip) {
       throw new Error('ChainStateService not started: prime tip before use');
     }
-    return this.tip;
+    // Defensive copy so callers can't mutate the cached tip.
+    return new Date(this.tip.getTime());
   }
 
   ledgerParameters(): LedgerParameters {
@@ -68,7 +70,11 @@ export class ChainStateService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: BLOCK_TIMESTAMP_QUERY }),
+      signal: AbortSignal.timeout(INDEXER_FETCH_TIMEOUT_MS),
     });
+    if (!response.ok) {
+      throw new Error(`Indexer returned HTTP ${response.status} for block.timestamp query`);
+    }
     const result = (await response.json()) as { data?: { block?: { timestamp?: number } } };
     const timestamp = result?.data?.block?.timestamp;
     if (typeof timestamp !== 'number') {
@@ -78,6 +84,8 @@ export class ChainStateService {
   }
 
   private async refreshParams(): Promise<void> {
-    this.params = await getLedgerParameters(this.indexerUrl);
+    this.params = await getLedgerParameters(this.indexerUrl, {
+      signal: AbortSignal.timeout(INDEXER_FETCH_TIMEOUT_MS),
+    });
   }
 }

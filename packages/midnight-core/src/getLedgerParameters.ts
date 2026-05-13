@@ -8,7 +8,14 @@ const query = `
     }
   `;
 
-export const getLedgerParameters = async (graphQLEndpoint: string): Promise<LedgerParameters> => {
+export interface GetLedgerParametersOptions {
+  signal?: AbortSignal;
+}
+
+export const getLedgerParameters = async (
+  graphQLEndpoint: string,
+  options: GetLedgerParametersOptions = {}
+): Promise<LedgerParameters> => {
   const response = await fetch(graphQLEndpoint, {
     method: 'POST',
     headers: {
@@ -17,6 +24,7 @@ export const getLedgerParameters = async (graphQLEndpoint: string): Promise<Ledg
     body: JSON.stringify({
       query,
     }),
+    signal: options.signal,
   });
 
   const result = await response.json();
