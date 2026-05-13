@@ -1,3 +1,2 @@
 export * from './wallet';
-export { fetchRegistryCesUrls, type SrvResolver, resolveSrvToUrl } from './wallet/registryLookup';
-export { createDoHSrvResolver } from './wallet/dohSrvResolver';
+export { fetchRegistryCesUrls, createDoHSrvResolver, SRV_SERVICE_PREFIX } from './wallet/registryLookup';
