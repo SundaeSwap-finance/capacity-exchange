@@ -33,11 +33,12 @@ The **User** creates the datum attached to the utxo at the **Escrow Bearer's** a
 | Field | Type | Notes |
 |---|---|---|
 | `h` | `Bytes32` | `hash(s)`, public commitment of secret that will be made public |
-| `h'` | `Bytes32` | `hash(s')`, public commitment of secret that stays private |
+| `h_prime` | `Bytes32` | `hash(s')` (`h'` in prose), public commitment of secret that stays private |
 | `user_signing_key` | `KeyHash` | used to auth'n the refund |
 | `lp_address` | `Address` | where the escrowed ADA will be sent on claim |
-| `amount_ada` | `u64` | how much ADA (in lovelace) is escrowed and will be claimed (or refunded) |
 | `eTTL` | `u64` | Cardano deadline before which the ADA must be claimed, after which it can be refunded |
+
+Lovelace amount is the locked value at the utxo, not a datum field. Over-funding flows to the **LP** on claim.
 
 
 ## Redeemer
@@ -61,9 +62,9 @@ When the **LP** spends the escrow utxo via the claim path, the Cardano tx has th
 |---|---|
 | **Inputs** | The escrow utxo being claimed |
 | **Reference inputs** | The current `committee_bridge` and `beefy_signer_threshold` NFT utxos, these are used in validation |
-| **Outputs** | At least one output sending `datum.amount_ada` lovelace to `datum.lp_address` |
+| **Outputs** | Locked lovelace (minus fees) to `datum.lp_address` |
 | **Redeemer** | The `Claim(ClaimProof)` variant |
-| **Validity range** | `upper_bound < datum.eTTL` |
+| **Validity range** | `upper_bound <= datum.eTTL` |
 | **Required signers** | None. Anyone can run the claim; the escrowed ADA can only be sent to the **LP's** address. |
 
 ### `ClaimProof` redeemer fields
@@ -91,8 +92,8 @@ The **Escrow Bearer** runs each check; failure at any step rejects the claim tx.
 | 6 | SCALE-decode header, extract `extrinsics_root` | substrate-trie Aiken module (to be built) |
 | 7 | Verify extrinsic inclusion in `extrinsics_root` via Patricia trie proof | substrate-trie Aiken module (to be built) |
 | 8 | Sanity-check ledger-version prefix | trivial byte compare |
-| 9 | Byte-extract `s`, `h`, `h'` at hardcoded offsets, check `hash(s)==datum.h`, abs[0]==datum.h, abs[1]==datum.h' | claim Aiken modules (to be built) |
-| 10 | Pin `datum.amount_ada` to `datum.lp_address`, require `validity_range.upper < datum.eTTL` | inline |
+| 9 | Byte-extract `s`, `absorb_args[0]`, `absorb_args[1]` at hardcoded offsets in `extrinsic_bytes`. Check `hash(s)==datum.h`, `absorb_args[0]==datum.h`, `absorb_args[1]==datum.h_prime` | claim Aiken modules (to be built) |
+| 10 | Locked lovelace (minus fees) goes to `datum.lp_address`, require `validity_range.upper <= datum.eTTL` | inline |
 
 ## Refund path
 

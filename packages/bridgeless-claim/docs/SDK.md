@@ -9,7 +9,7 @@ The SDK:
 1. **Generates** two secrets per swap, `s` (eventually public) and `s'` (always private), and computes `h = hash(s)` and `h' = hash(s')`
 2. **Holds `s'` privately** in user-side state for the whole swap. Uses `s'` only in the witness function when calling the **Coupler's** `mintReveal`
 3. **Discovers** an **LP** via the existing CES registry and requests a price quote from the **LP's** `/prices` endpoint, receiving a signed quote token and Cardano `lp_address`
-4. **Constructs** the Cardano escrow transaction with the datum `(h, h', user_signing_key, lp_address, eTTL, amount_ada)`
+4. **Constructs** the Cardano escrow transaction with the datum `{ h, h_prime, user_signing_key, lp_address, eTTL }` and locks the quoted lovelace at the utxo
 5. **Calls** the **LP's** `POST /ada/offers` endpoint with the escrow's utxo reference, the `quoteId`, and the **Coupler** address, receiving the **LP's** capacity leg as response
 6. **Builds** the **User's** reveal leg containing `mintReveal(disclose(s), witness(s'))` plus the **User's** `user_op`, merges with the **LP's** capacity leg, signs the merged tx, and submits to Midnight
 7. **Constructs** the Cardano refund transaction when invoked after `eTTL`, signed by the **User's** signing key, with no proof requirement
