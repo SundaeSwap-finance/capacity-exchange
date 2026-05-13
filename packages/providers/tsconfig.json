@@ -4,7 +4,7 @@
     "rootDir": "./src",
     "noImplicitAny": true,
     "module": "ES2022",
-    "target": "es2021",
+    "target": "es2020",
     "allowJs": true,
     "moduleResolution": "bundler",
     "declaration": true,

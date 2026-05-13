@@ -19,7 +19,7 @@ const DOH_TIMEOUT_MS = 5_000;
 /**
  * Queries a single DoH endpoint for the SRV name and returns the best server URL.
  * Throws if the request fails, times out, the HTTP status is not ok, or no usable
- * SRV records are returned. Callers should handle errors via `Promise.any`.
+ * SRV records are returned.
  */
 async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
   const controller = new AbortController();
@@ -63,14 +63,22 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
  * const url = await resolver('example.com'); // looks up _capacityexchange._tcp.example.com
  */
 export function createDoHSrvResolver() {
-  return async (domainname: string): Promise<string | null> => {
+  return (domainname: string): Promise<string | null> => {
     const srvName = domainname.startsWith(SRV_SERVICE_PREFIX) ? domainname : `${SRV_SERVICE_PREFIX}${domainname}`;
 
-    try {
-      return await Promise.any(DOH_PROVIDERS.map((url) => queryDoH(url, srvName)));
-    } catch {
-      return null;
-    }
+    // Race all providers: resolve with the first successful URL, or null if all fail.
+    return new Promise<string | null>((resolve) => {
+      let remaining = DOH_PROVIDERS.length;
+      for (const dohUrl of DOH_PROVIDERS) {
+        queryDoH(dohUrl, srvName)
+          .then((url) => resolve(url))
+          .catch(() => {
+            if (--remaining === 0) {
+              resolve(null);
+            }
+          });
+      }
+    });
   };
 }
 
