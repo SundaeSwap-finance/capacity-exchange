@@ -83,6 +83,6 @@ circuit hashKey(key: Bytes<64>): RegistryKey {
 
 circuit hashSrvName(address: SrvName): AddressHash {
   return persistentHash<[Bytes<32>, SrvName]>(
-    [pad(32, "registry:socket-address"), address]
+    [pad(32, "registry:srv-name"), address]
     ) as AddressHash;
 }

@@ -14,7 +14,7 @@ const DEFAULT_PERIOD_DAYS: Record<string, number> = {
   preview: 0.5,
 };
 
-async function main(): Promise<TxResult> {
+function main(): Promise<TxResult> {
   program
     .name('register')
     .description('Registers a server to the registry contract')
@@ -30,7 +30,8 @@ async function main(): Promise<TxResult> {
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [secretKeyFile, domainname, periodArg, contractAddressArg] = program.args;
-  const srvName = `${SRV_SERVICE_PREFIX}${domainname}`;
+  const srvName = domainname.startsWith(SRV_SERVICE_PREFIX) ? domainname : `${SRV_SERVICE_PREFIX}${domainname}`;
+
   const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
   const secretKey = readSecretKeyFile(secretKeyFile);

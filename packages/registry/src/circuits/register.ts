@@ -13,7 +13,7 @@ const circuitId = 'registerServer';
 
 export interface RegisterParams {
   contractAddress: string;
-  /** Server entry to register (IP, port, validity expiry). */
+  /** Server entry to register (SRV record name and validity expiry). */
   entry: RegistryEntry;
 }
 

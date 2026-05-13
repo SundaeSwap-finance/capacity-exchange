@@ -56,10 +56,15 @@ export function timestampToDate(dateInString: string) {
 const SRV_MAX_BYTES = 256;
 
 export function serverAddressToContract(address: string): Uint8Array {
+  if (address.length === 0) {
+    throw new Error('Address cannot be empty');
+  }
+
   const encoded = new TextEncoder().encode(address);
   if (encoded.length > SRV_MAX_BYTES) {
     throw new Error(`SRV name too long: ${encoded.length} bytes (max ${SRV_MAX_BYTES})`);
   }
+
   const bytes = new Uint8Array(SRV_MAX_BYTES);
   bytes.set(encoded);
   return bytes;

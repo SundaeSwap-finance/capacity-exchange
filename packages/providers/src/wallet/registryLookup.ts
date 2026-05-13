@@ -14,18 +14,24 @@ interface DohResponse {
 
 const DOH_PROVIDERS = ['https://cloudflare-dns.com/dns-query', 'https://dns.google/resolve'];
 
+const DOH_TIMEOUT_MS = 5_000;
+
 /**
- * Queries a single DoH endpoint for the SRV name and returns the best server URL. 
- * Throws if:
- * * the request fails;
- * * the HTTP status is not ok; or 
- * * no usable SRV records are returned 
- * 
- * callers should handle
- * errors via {@link Promise.any}.
+ * Queries a single DoH endpoint for the SRV name and returns the best server URL.
+ * Throws if the request fails, times out, the HTTP status is not ok, or no usable
+ * SRV records are returned. Callers should handle errors via `Promise.any`.
  */
 async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
-  const res = await fetch(`${dohUrl}?name=${encodeURIComponent(srvName)}&type=SRV`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DOH_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${dohUrl}?name=${encodeURIComponent(srvName)}&type=SRV`, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+
   if (!res.ok) {
     throw new Error(`DoH request failed: ${res.status}`);
   }
@@ -41,6 +47,7 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
     return { priority: Number(priority), weight: Number(weight), port: Number(port), target };
   });
 
+  // Sort by lowest priority first, then highest weight.
   records.sort((a, b) => a.priority - b.priority || b.weight - a.weight);
   const { target, port } = records[0];
   const resolvedHost = target.endsWith('.') ? target.slice(0, -1) : target;
@@ -48,12 +55,8 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
 }
 
 /**
- * Returns a resolver that races Cloudflare (`https://cloudflare-dns.com/dns-query`)
- * and Google (`https://dns.google/resolve`) DoH endpoints, returning the first
- * successful result. Returns `null` if both fail.
- *
- * The domain name passed to the resolver must have a
- * `_capacityexchange._tcp.<domainname>` SRV record registered.
+ * Returns a resolver that races Cloudflare and Google DoH endpoints, returning
+ * the first successful result. Returns `null` if both fail.
  *
  * @example
  * const resolver = createDoHSrvResolver();
@@ -61,7 +64,8 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
  */
 export function createDoHSrvResolver() {
   return async (domainname: string): Promise<string | null> => {
-    const srvName = `${SRV_SERVICE_PREFIX}${domainname}`;
+    const srvName = domainname.startsWith(SRV_SERVICE_PREFIX) ? domainname : `${SRV_SERVICE_PREFIX}${domainname}`;
+
     try {
       return await Promise.any(DOH_PROVIDERS.map((url) => queryDoH(url, srvName)));
     } catch {
@@ -94,11 +98,8 @@ export async function fetchRegistryCesUrls(
   const urls = await Promise.all(
     entries
       .filter(({ entry }) => entry.expiry > now)
-      .map(({ entry }) => {
-        const domainname = entry.address.startsWith(SRV_SERVICE_PREFIX)
-          ? entry.address.slice(SRV_SERVICE_PREFIX.length)
-          : entry.address;
-        return resolver(domainname);
+      .map(async ({ entry }) => {
+        return await resolver(entry.address);
       })
   );
   return urls.filter((url): url is string => url !== null);

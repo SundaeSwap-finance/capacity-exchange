@@ -12,7 +12,7 @@ For `preview` and `preprod`, the `contractAddress` argument is optional — the 
 
 | Network | Address |
 |---------|---------|
-| `preview` | `82d2f51b1e3a62392cee58583874970cd7314358074f1eeee99ff9d0db173848` |
+| `preview` | `b36bf0f0f3d5569648a2cd2f7fd38ecc69fa34ff9b511834c84c978161555805` |
 | `preprod` | `93c3402590d28979a9278cb25bd1fb413fae9bb921ce8b6642d166b366e30188` |
 
 Pass a contract address explicitly to target a different deployment (e.g. a locally deployed registry or a future `mainnet` deployment).
@@ -86,20 +86,20 @@ NETWORK_ID=preview bun run deploy <collateral> [registrationPeriod]
 Adds a server to the registry. The SRV record name is stored on-chain under a key derived from the secret key. Clients resolve the SRV record via DNS at connection time. The required collateral is locked and returned on deregistration.
 
 ```sh
-NETWORK_ID=preview bun run register <secretKeyFile> <srvName> [period] [contractAddress]
+NETWORK_ID=preview bun run register <secretKeyFile> <domainname> [period] [contractAddress]
 ```
 
 | Argument | Description |
 |---|---|
 | `secretKeyFile` | Path to the secret key file (output of `generate-secret`) |
-| `srvName` | SRV record name (e.g. `_ces._tcp.example.com`) |
+| `domainname` | Bare domain name (e.g. `sundae.fi`) — must have a `_capacityexchange._tcp.<domainname>` SRV record; the prefix is added automatically |
 | `period` | Registration period in days (default: 30 for mainnet, 0.5 for preview/preprod) |
 | `contractAddress` | Registry contract address (defaults to well-known address for network) |
 
 **Example**
 
 ```sh
-NETWORK_ID=preview bun run register ./my-registry-key.hex _ces._tcp.sundae.fi
+NETWORK_ID=preview bun run register ./my-registry-key.hex sundae.fi
 ```
 
 ---
@@ -203,10 +203,7 @@ NETWORK_ID=preview bun run list-servers \
 
 ```
 25d91723c63521a399fb5e232de27c2064fd5241d19df478c16cc4b52ff337a9: {
-  "address": {
-    "kind": "srv",
-    "address": "_ces._tcp.sundae.fi"
-  },
+  "address": "_capacityexchange._tcp.sundae.fi",
   "expiry": "2026-05-08T22:13:34.000Z"
 },
 ```

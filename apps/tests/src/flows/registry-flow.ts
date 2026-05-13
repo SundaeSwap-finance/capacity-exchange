@@ -21,11 +21,10 @@ const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds
 const POLL_INTERVAL_MS = 5_000;
 const POLL_TIMEOUT_MS = 2 * 60 * 1000;
 const TEST_SRV_NAME = '_capacityexchange._tcp.test.example.com';
-const EXPECTED_URL = TEST_SRV_NAME;
 
 export interface RegistryFlowResult {
   registryAddress: string;
-  registeredUrl: string;
+  registeredSrvName: string;
 }
 
 export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConfig): Promise<RegistryFlowResult> {
@@ -43,7 +42,7 @@ export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConf
   await waitForKeyAbsent(ctx, registryAddress, secretKey, registryKey);
   await waitForCollateralRefund(ctx, balanceBefore);
 
-  return { registryAddress, registeredUrl: EXPECTED_URL };
+  return { registryAddress, registeredSrvName: TEST_SRV_NAME };
 }
 
 const REGISTRY_COLLATERAL = 1000n;

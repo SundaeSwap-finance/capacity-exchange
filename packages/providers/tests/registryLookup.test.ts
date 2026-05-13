@@ -2,6 +2,16 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { createDoHSrvResolver } from '../src/wallet/registryLookup';
 import { SRV_NAME, makeDohAnswer } from './helpers/srvFixtures';
 
+/** Fetch mock that respects AbortSignal — rejects with AbortError when the signal fires. */
+const mockHangingFetch = () =>
+  vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new DOMException('The operation was aborted.', 'AbortError'));
+      });
+    });
+  });
+
 const mockFetchDoh = (answers: ReturnType<typeof makeDohAnswer>[], status = 0) =>
   vi
     .spyOn(globalThis, 'fetch')
@@ -19,8 +29,11 @@ describe('createDoHSrvResolver', () => {
       const resolver = createDoHSrvResolver();
       void resolver(SRV_NAME);
 
-      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('https://cloudflare-dns.com/dns-query'));
-      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('https://dns.google/resolve'));
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining('https://cloudflare-dns.com/dns-query'),
+        expect.any(Object)
+      );
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('https://dns.google/resolve'), expect.any(Object));
     });
 
     it('returns the result from whichever provider responds first', async () => {
@@ -65,6 +78,18 @@ describe('createDoHSrvResolver', () => {
       const result = await createDoHSrvResolver()(SRV_NAME);
 
       expect(result).toBeNull();
+    });
+
+    it('returns null when fetch hangs past the 5-second timeout', async () => {
+      vi.useFakeTimers();
+      mockHangingFetch();
+
+      const promise = createDoHSrvResolver()(SRV_NAME);
+      await vi.advanceTimersByTimeAsync(5_001);
+      const result = await promise;
+
+      expect(result).toBeNull();
+      vi.useRealTimers();
     });
   });
 
@@ -137,7 +162,8 @@ describe('createDoHSrvResolver', () => {
       await createDoHSrvResolver()(SRV_NAME);
 
       expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining(encodeURIComponent(`_capacityexchange._tcp.${SRV_NAME}`))
+        expect.stringContaining(encodeURIComponent(`_capacityexchange._tcp.${SRV_NAME}`)),
+        expect.any(Object)
       );
     });
   });
