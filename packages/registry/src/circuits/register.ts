@@ -95,7 +95,7 @@ async function submitUnboundTransaction(walletContext: WalletContext, tx: Unboun
   const recipe = await walletFacade.balanceUnboundTransaction(
     tx,
     { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    { ttl, tokenKindsToBalance: ['shielded', 'unshielded'] }
+    { ttl }
   );
 
   logger.info('Signing unshielded offer...');
