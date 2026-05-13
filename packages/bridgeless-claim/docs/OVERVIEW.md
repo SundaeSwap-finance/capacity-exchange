@@ -80,7 +80,7 @@ sequenceDiagram
     User->>LP: 1. request quote from /prices
     LP-->>User: 2. signed quote token and lp_address
     Note over User: 3. generate s, s'. h = hash(s). h' = hash(s').
-    User->>Escrow Bearer: 4. escrow(h, h_prime, user_signing_key, lp_address, eTTL) plus locked lovelace
+    User->>Escrow Bearer: 4. escrow(h, h_prime, refund_address, lp_address, eTTL) plus locked lovelace
     User->>LP: 5. POST /ada/offers with escrow utxo ref, quote token, and target Coupler address
     Note over LP: 6. verify confirmations, verify quote token sig and expiry, verify on-chain datum and locked ADA, verify Escrow Bearer + Coupler addresses are supported
     Note over LP: 7. build capacity leg: DUST spend and absorb(h, h')
@@ -103,7 +103,7 @@ sequenceDiagram
 1. **User → LP: request quote.** **User** hits the **LP's** `/prices` endpoint
 2. **LP → User: send signed quote token.** **LP** returns quotes, a signed quote token, and `lp_address` on Cardano
 3. **User generates secrets.** **User** generates two secrets, `s` and `s'`, and computes `h = hash(s)` and `h' = hash(s')`.
-4. **User → Bearer: escrow ADA.** **User** submits a Cardano tx that locks the quoted lovelace at the **Bearer's** address with datum `{ h, h_prime, user_signing_key, lp_address, eTTL }`.
+4. **User → Bearer: escrow ADA.** **User** submits a Cardano tx that locks the quoted lovelace at the **Bearer's** address with datum `{ h, h_prime, refund_address, lp_address, eTTL }`.
 5. **User → LP: POST /ada/offers.** **User** calls the **LP's** `/ada/offers` endpoint with the escrow's utxo reference, the quote token, and the target **Coupler** address on Midnight.
 6. **LP verifies preconditions.** **LP** verifies the quote token, the number of confirmations on the escrow utxo, the datum details of the escrow utxo, and the **Bearer** address.
 7. **LP builds capacity leg.** **LP** builds an unbalanced Midnight tx (the capacity leg) containing a DUST spend and an `absorb(h, h')` circuit call
@@ -123,19 +123,19 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant User
+    participant Submitter
     participant Escrow Bearer
 
-    Note over User: 1. wait until after eTTL
-    User->>Escrow Bearer: 2. refund tx, signed by datum.user_signing_key
-    Note over Escrow Bearer: 3. checks validity_range.lower > eTTL and user signature
-    Escrow Bearer->>User: 4. ADA refunded
+    Note over Submitter: 1. wait until after eTTL
+    Submitter->>Escrow Bearer: 2. refund tx (any signer)
+    Note over Escrow Bearer: 3. checks validity_range.lower > eTTL and outputs flow to refund_address
+    Escrow Bearer->>Submitter: 4. ADA refunded to datum.refund_address
 ```
 
-1. **User waits until after `eTTL`.** The refund path is only valid after the deadline in the escrow datum
-2. **User → Bearer: submit refund tx.** **User** submits a Cardano tx that consumes the escrow utxo
-3. **Bearer verifies refund.** The **Bearer** checks that the tx's validity range starts after `datum.eTTL` and that the tx is signed by `datum.user_signing_key`
-4. **Bearer → User: refund ADA.** ADA settles back to the **User's** address
+1. **Wait until after `eTTL`.** The refund path is only valid after the deadline in the escrow datum
+2. **Submitter → Bearer: submit refund tx.** Any party can consume the escrow utxo on the refund path (no signature requirement)
+3. **Bearer verifies refund.** The **Bearer** checks that the tx's validity range starts after `datum.eTTL` and that the locked lovelace (minus fees) flows to `datum.refund_address`
+4. **Bearer → refund_address: refund ADA.** ADA settles to `datum.refund_address`
 
 ## Some timing constraints
 

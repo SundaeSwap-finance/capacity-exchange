@@ -9,10 +9,10 @@ The SDK:
 1. **Generates** two secrets per swap, `s` (eventually public) and `s'` (always private), and computes `h = hash(s)` and `h' = hash(s')`
 2. **Holds `s'` privately** in user-side state for the whole swap. Uses `s'` only in the witness function when calling the **Coupler's** `mintReveal`
 3. **Discovers** an **LP** via the existing CES registry and requests a price quote from the **LP's** `/prices` endpoint, receiving a signed quote token and Cardano `lp_address`
-4. **Constructs** the Cardano escrow transaction with the datum `{ h, h_prime, user_signing_key, lp_address, eTTL }` and locks the quoted lovelace at the utxo
+4. **Constructs** the Cardano escrow transaction with the datum `{ h, h_prime, refund_address, lp_address, eTTL }` and locks the quoted lovelace at the utxo
 5. **Calls** the **LP's** `POST /ada/offers` endpoint with the escrow's utxo reference, the `quoteId`, and the **Coupler** address, receiving the **LP's** capacity leg as response
 6. **Builds** the **User's** reveal leg containing `mintReveal(disclose(s), witness(s'))` plus the **User's** `user_op`, merges with the **LP's** capacity leg, signs the merged tx, and submits to Midnight
-7. **Constructs** the Cardano refund transaction when invoked after `eTTL`, signed by the **User's** signing key, with no proof requirement
+7. **Constructs** the Cardano refund transaction when invoked after `eTTL`. The refund tx requires no signature; ADA flows to `datum.refund_address` regardless of submitter
 
 Details about the payload shape required to integrate with the Cardano Bearer can be found in [VALIDATOR.md](VALIDATOR.md).
 
@@ -21,6 +21,10 @@ Details about the payload shape required to integrate with the Cardano Bearer ca
 `s'` (and `s`, until the merged tx is submitted) must persist until the **User's** Midnight op is finalized. If `s'` is lost before the merged tx is submitted, the swap can't complete and the **User** must refund after `eTTL` and retry. Losing `s` after `mintReveal` is called is fine since `s` is public on Midnight at that point.
 
 The SDK uses Midnight's `PrivateStateProvider` to store the private witness `s'` used in the **Coupler's** `mintReveal`.
+
+## Tracking active escrows
+
+The SDK will store active escrow utxo details in local storage so that if a refund is necessary, the details are easily accessible. We'll also scan **Bearer** utxos for `datum.refund_address == self` either periodically, with a manual refresh-button press from the user, or both.
 
 ## Failure modes (User perspective)
 
@@ -31,3 +35,4 @@ The SDK uses Midnight's `PrivateStateProvider` to store the private witness `s'`
 | **LP** unresponsive after `POST /ada/offers` | **User** waits past `eTTL` and refunds |
 | Merged tx fails to finalize on Midnight before `mTTL` | **User** waits past `eTTL` and refunds |
 | **User** loses `s'` before submitting the merged tx | **User** waits past `eTTL` and refunds |
+| **User** loses local SDK state (cleared storage, fresh device) | SDK rebuilds active-escrow list from on-chain scan of `datum.refund_address`; refund still possible (any party can submit since ADA is pinned to `refund_address`) |

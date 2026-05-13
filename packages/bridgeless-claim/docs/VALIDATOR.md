@@ -24,7 +24,7 @@ stateDiagram-v2
 - `ClaimWindow` → `Claimed`: requires full claim verification (see [claim path](#claim-path) below)
 - `ClaimWindow` → `ClaimWindow`: claim is permissionless, race-lost or malformed claim txs leave the escrow live until `eTTL`
 - `ClaimWindow` → `RefundEligible`: time-based, `eTTL` passes without a successful claim landing
-- `RefundEligible` → `Refunded`: signed by `datum.user_signing_key` (see [refund path](#refund-path) below)
+- `RefundEligible` → `Refunded`: ADA pinned to `datum.refund_address` (see [refund path](#refund-path) below)
 
 ## Datum
 
@@ -34,8 +34,8 @@ The **User** creates the datum attached to the utxo at the **Escrow Bearer's** a
 |---|---|---|
 | `h` | `Bytes32` | `hash(s)`, public commitment of secret that will be made public |
 | `h_prime` | `Bytes32` | `hash(s')` (`h'` in prose), public commitment of secret that stays private |
-| `user_signing_key` | `KeyHash` | used to auth'n the refund |
-| `lp_address` | `Address` | where the escrowed ADA will be sent on claim |
+| `refund_address` | `Address` | where the escrowed ADA returns on refund (any signer can submit) |
+| `lp_address` | `Address` | where the escrowed ADA goes on claim |
 | `eTTL` | `u64` | Cardano deadline before which the ADA must be claimed, after which it can be refunded |
 
 Lovelace amount is the locked value at the utxo, not a datum field. Over-funding flows to the **LP** on claim.
@@ -97,20 +97,20 @@ The **Escrow Bearer** runs each check; failure at any step rejects the claim tx.
 
 ## Refund path
 
-When the **User** spends an escrow utxo via the refund path, the Cardano transaction has this shape:
+When an escrow utxo is spent via the refund path, the Cardano transaction has this shape:
 
 | Field | Required content |
 |---|---|
 | **Inputs** | The escrow utxo being refunded |
 | **Reference inputs** | None |
-| **Outputs** | Unconstrained, ADA goes wherever the **User's** signing key says |
+| **Outputs** | Locked lovelace (minus fees) to `datum.refund_address` |
 | **Redeemer** | `Action::Refund` variant |
 | **Validity range** | `lower_bound > datum.eTTL` |
-| **Required signers** | `datum.user_signing_key` |
+| **Required signers** | None. Anyone can submit; the ADA only flows to `datum.refund_address`. |
 
 ### Refund-path verification
 
 | # | Check |
 |---|---|
-| 1 | The tx is signed by `datum.user_signing_key` |
+| 1 | Locked lovelace (minus fees) goes to `datum.refund_address` |
 | 2 | `validity_range.lower > datum.eTTL` |
