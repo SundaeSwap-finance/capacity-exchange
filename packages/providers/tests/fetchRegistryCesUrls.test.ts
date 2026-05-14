@@ -4,14 +4,19 @@ import { makeDohAnswer } from './helpers/srvFixtures';
 
 vi.mock('@sundaeswap/capacity-exchange-registry', () => ({
   SRV_SERVICE_PREFIX: '_capacityexchange._tcp.',
+  toDomainName: (s: string) => s,
+  toSrvName: (d: string) => `_capacityexchange._tcp.${d}`,
   ledger: vi.fn((data) => data),
   registryEntries: vi.fn(),
 }));
 
 import { registryEntries } from '@sundaeswap/capacity-exchange-registry';
+import type { DomainName } from '@sundaeswap/capacity-exchange-registry';
 
 const future = new Date(Date.now() + 86_400_000); // 1 day from now
 const past = new Date(Date.now() - 1);
+
+const d = (s: string) => s as DomainName;
 
 function makeProvider(state: unknown) {
   return {
@@ -42,7 +47,7 @@ describe('fetchRegistryCesUrls', () => {
   it('returns resolved URLs for non-expired entries', async () => {
     const provider = makeProvider({ data: {} });
     vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.example.com', expiry: future } },
+      { key: new Uint8Array(), entry: { domainName: d('example.com'), expiry: future } },
     ]);
     mockFetch([makeDohAnswer(10, 100, 8080, 'example.com.')]);
 
@@ -54,48 +59,36 @@ describe('fetchRegistryCesUrls', () => {
   it('filters out expired entries', async () => {
     const provider = makeProvider({ data: {} });
     vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.example.com', expiry: past } },
+      { key: new Uint8Array(), entry: { domainName: d('example.com'), expiry: past } },
     ]);
-    mockFetch([makeDohAnswer(10, 100, 8080, 'example.com.')]);
 
     const result = await fetchRegistryCesUrls(provider, 'addr1');
 
     expect(result).toEqual([]);
   });
 
-  it('strips SRV prefix before resolving', async () => {
+  it('resolves domain name to the correct SRV query', async () => {
     const provider = makeProvider({ data: {} });
     vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.ces.sundae.fi', expiry: future } },
+      { key: new Uint8Array(), entry: { domainName: d('ces.sundae.fi'), expiry: future } },
     ]);
     const fetchSpy = mockFetch([makeDohAnswer(10, 100, 443, 'ces.sundae.fi.')]);
 
-    await fetchRegistryCesUrls(provider, 'addr1');
+    const result = await fetchRegistryCesUrls(provider, 'addr1');
 
-    // The resolver should query the full SRV name (prefix re-added by createDoHSrvResolver)
+    // toSrvName converts 'ces.sundae.fi' → '_capacityexchange._tcp.ces.sundae.fi'
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining(encodeURIComponent('_capacityexchange._tcp.ces.sundae.fi')),
       expect.any(Object)
     );
-  });
-
-  it('resolves bare domain names (no SRV prefix in stored address)', async () => {
-    const provider = makeProvider({ data: {} });
-    vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: 'example.com', expiry: future } },
-    ]);
-    mockFetch([makeDohAnswer(10, 100, 9000, 'example.com.')]);
-
-    const result = await fetchRegistryCesUrls(provider, 'addr1');
-
-    expect(result).toEqual(['https://example.com:9000']);
+    expect(result).toEqual(['https://ces.sundae.fi:443']);
   });
 
   it('silently omits entries that fail to resolve', async () => {
     const provider = makeProvider({ data: {} });
     vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.bad.example.com', expiry: future } },
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.good.example.com', expiry: future } },
+      { key: new Uint8Array(), entry: { domainName: d('bad.example.com'), expiry: future } },
+      { key: new Uint8Array(), entry: { domainName: d('good.example.com'), expiry: future } },
     ]);
     vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
       if (String(url).includes('bad.example.com')) {
@@ -113,24 +106,20 @@ describe('fetchRegistryCesUrls', () => {
     expect(result).toEqual(['https://good.example.com:8080']);
   });
 
-  it('silently omits entries with empty addresses (zeroed on-chain buffer)', async () => {
+  it('returns an empty array when all entries are expired', async () => {
     const provider = makeProvider({ data: {} });
     vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: '', expiry: future } },
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.example.com', expiry: future } },
+      { key: new Uint8Array(), entry: { domainName: d('example.com'), expiry: past } },
     ]);
-    mockFetch([makeDohAnswer(10, 100, 8080, 'example.com.')]);
 
     const result = await fetchRegistryCesUrls(provider, 'addr1');
 
-    expect(result).toEqual(['https://example.com:8080']);
+    expect(result).toEqual([]);
   });
 
-  it('returns an empty array when all entries are expired or unresolvable', async () => {
+  it('returns an empty array when registry has no entries', async () => {
     const provider = makeProvider({ data: {} });
-    vi.mocked(registryEntries).mockReturnValue([
-      { key: new Uint8Array(), entry: { address: '_capacityexchange._tcp.example.com', expiry: past } },
-    ]);
+    vi.mocked(registryEntries).mockReturnValue([]);
 
     const result = await fetchRegistryCesUrls(provider, 'addr1');
 

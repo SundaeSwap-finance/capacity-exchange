@@ -1,2 +1,2 @@
 export * from './wallet';
-export { fetchRegistryCesUrls, createDoHSrvResolver } from './wallet/registryLookup';
+export { fetchRegistryCesUrls, resolveCesUrl } from './wallet/registryLookup';

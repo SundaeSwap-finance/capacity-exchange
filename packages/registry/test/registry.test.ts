@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RegistrySimulator, randomSecretKey, makeRecipient, ocrt } from './simulator.js';
-import { entryFromContract } from '../src/types.js';
+import { entryFromContract, toDomainName } from '../src/types.js';
 import { BASE_TIME, COLLATERAL, MAX_VALIDITY, defaultEntry, futureDate } from './helper.js';
 
 function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffects']>): bigint {
@@ -57,11 +57,11 @@ describe('collateral conservation', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.a.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.b.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
     sim.useKey(keyC);
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.c.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('c.example.com') }));
 
     expect(sim.getLedger().registry.size()).toBe(3n);
 
@@ -99,9 +99,9 @@ describe('registry key uniqueness', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.a.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.b.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
@@ -130,9 +130,9 @@ describe('registry key uniqueness', () => {
   });
 });
 
-// Invariant: every SRV address in the registry is unique
-describe('address uniqueness', () => {
-  it('two different keys cannot register the same SRV address', () => {
+// Invariant: every domain name in the registry is unique
+describe('domain name uniqueness', () => {
+  it('two different keys cannot register the same domain name', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
@@ -142,7 +142,7 @@ describe('address uniqueness', () => {
     sim.register(defaultEntry());
     sim.useKey(keyB);
 
-    expect(() => sim.register(defaultEntry())).toThrow(/address already registered/);
+    expect(() => sim.register(defaultEntry())).toThrow(/domain name already registered/);
   });
 
   it('a deregistered address is available again', () => {
@@ -161,16 +161,16 @@ describe('address uniqueness', () => {
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 
-  it('two different SRV names can both register', () => {
+  it('two different domain names can both register', () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.a.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.b.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });

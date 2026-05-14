@@ -2,22 +2,22 @@ pragma language_version >= 0.22;
 
 import CompactStandardLibrary;
 
-new type SrvName = Bytes<256>;
+new type DomainName = Bytes<128>;
 
 new type RegistryKey = Bytes<32>;
 
-new type AddressHash = Bytes<32>;
+new type DomainNameHash = Bytes<32>;
 
 new type UnixTimestampSeconds = Uint<64>;
 
 struct Entry {
   expiry: UnixTimestampSeconds,
-  address: SrvName,
+  domainName: DomainName,
 }
 
 export ledger registry: Map<RegistryKey, Entry>;
 
-export ledger takenAddresses: Set<AddressHash>;
+export ledger takenDomainNames: Set<DomainNameHash>;
 
 export ledger collateralAmount: Uint<128>;
 
@@ -37,12 +37,12 @@ export circuit registerServer(entry: Entry): [] {
          );
   const key = disclose(hashKey(secretKey()));
   assert(!registry.member(key), "you already have an entry registered");
-  const addressHash = hashSrvName(disclosedEntry.address);
-  assert(!takenAddresses.member(addressHash), "address already registered");
+  const domainNameHash = hashDomainName(disclosedEntry.domainName);
+  assert(!takenDomainNames.member(domainNameHash), "domain name already registered");
   receiveUnshielded(nativeToken(), collateralAmount);
 
   registry.insert(key, disclosedEntry);
-  takenAddresses.insert(addressHash);
+  takenDomainNames.insert(domainNameHash);
 }
 
 export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
@@ -61,7 +61,7 @@ export circuit deregisterServer(key: RegistryKey, recipient: UserAddress): [] {
     right<ContractAddress, UserAddress>(disclose(recipient))
     );
 
-  takenAddresses.remove(disclose(hashSrvName(existing.address)));
+  takenDomainNames.remove(disclose(hashDomainName(existing.domainName)));
   registry.remove(disclosedKey);
 }
 
@@ -72,7 +72,7 @@ export circuit renewRegistration(expiry: UnixTimestampSeconds): [] {
   assert(blockTimeGte((disclose(expiry) - maximumRegistrationPeriod) as Uint<64>),
          "period cannot be larger than maximumRegistrationPeriod"
          );
-  const newEntry = Entry { expiry: expiry, address: currentEntry.address, };
+  const newEntry = Entry { expiry: expiry, domainName: currentEntry.domainName, };
 
   registry.insert(key, disclose(newEntry));
 }
@@ -81,8 +81,8 @@ circuit hashKey(key: Bytes<64>): RegistryKey {
   return persistentHash<[Bytes<32>, Bytes<64>]>([pad(32, "registry:pkh"), key]) as RegistryKey;
 }
 
-circuit hashSrvName(address: SrvName): AddressHash {
-  return persistentHash<[Bytes<32>, SrvName]>(
-    [pad(32, "registry:srv-name"), address]
-    ) as AddressHash;
+circuit hashDomainName(domainName: DomainName): DomainNameHash {
+  return persistentHash<[Bytes<32>, DomainName]>(
+    [pad(32, "registry:domain-name"), domainName]
+    ) as DomainNameHash;
 }

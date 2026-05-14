@@ -1,6 +1,8 @@
 # @sundaeswap/capacity-exchange-registry
 
-The registry is a contract acting as a directory of capacity exchange servers. Each entry maps a server's secret key (hashed on-chain) to an SRV record name and an expiry.
+The registry is a contract acting as a directory of capacity exchange servers. Each entry maps a server's secret key (hashed on-chain) to a bare domain name and an expiry.
+
+Clients discover servers by querying the registry for non-expired domain names and resolving each one via DNS SRV records (`_capacityexchange._tcp.<domainName>`) using DNS-over-HTTPS.
 
 Servers must lock collateral to register, and get refunded after deregistering.
 
@@ -12,7 +14,7 @@ For `preview` and `preprod`, the `contractAddress` argument is optional — the 
 
 | Network | Address |
 |---------|---------|
-| `preview` | `b36bf0f0f3d5569648a2cd2f7fd38ecc69fa34ff9b511834c84c978161555805` |
+| `preview` | `e3de04c29d953a6676fd10b364ed7d7b9d9baabe7b5ee651d5f613f8408702c2` |
 | `preprod` | `93c3402590d28979a9278cb25bd1fb413fae9bb921ce8b6642d166b366e30188` |
 
 Pass a contract address explicitly to target a different deployment (e.g. a locally deployed registry or a future `mainnet` deployment).
@@ -203,7 +205,7 @@ NETWORK_ID=preview bun run list-servers \
 
 ```
 25d91723c63521a399fb5e232de27c2064fd5241d19df478c16cc4b52ff337a9: {
-  "address": "_capacityexchange._tcp.sundae.fi",
+  "domainName": "sundae.fi",
   "expiry": "2026-05-08T22:13:34.000Z"
 },
 ```

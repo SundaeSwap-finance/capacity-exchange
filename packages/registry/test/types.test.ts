@@ -1,46 +1,74 @@
 import { describe, it, expect } from 'vitest';
 import {
-  serverAddressToContract,
-  serverAddressFromContract,
+  toDomainName,
+  toSrvName,
+  domainNameToContract,
+  domainNameFromContract,
   entryToContract,
   entryFromContract,
   SRV_SERVICE_PREFIX,
 } from '../src/types.js';
 
-describe('serverAddressToContract / serverAddressFromContract', () => {
-  it('SRV address round trip', () => {
-    const addr = `${SRV_SERVICE_PREFIX}example.com`;
-    expect(serverAddressFromContract(serverAddressToContract(addr))).toBe(addr);
+describe('toDomainName', () => {
+  it('accepts a bare domain name', () => {
+    expect(toDomainName('example.com')).toBe('example.com');
   });
 
-  it('SRV name with max-length round trips correctly', () => {
-    // 256 bytes is the Compact SrvName max (Bytes<256>)
-    const addr = 'a'.repeat(128) + '.' + 'b'.repeat(127);
-    expect(addr.length).toBe(256);
-    expect(serverAddressFromContract(serverAddressToContract(addr))).toBe(addr);
+  it('trims whitespace and lowercases', () => {
+    expect(toDomainName('  Example.COM  ')).toBe('example.com');
   });
 
-  it('SRV name too long throws', () => {
-    expect(() => serverAddressToContract('a'.repeat(257))).toThrow(/too long/);
+  it('throws if given a full SRV name', () => {
+    expect(() => toDomainName(`${SRV_SERVICE_PREFIX}example.com`)).toThrow('expected bare domain, got SRV name');
+  });
+});
+
+describe('toSrvName', () => {
+  it('prepends SRV_SERVICE_PREFIX to a domain name', () => {
+    const d = toDomainName('example.com');
+    expect(toSrvName(d)).toBe(`${SRV_SERVICE_PREFIX}example.com`);
+  });
+});
+
+describe('domainNameToContract / domainNameFromContract', () => {
+  it('round trips a bare domain name', () => {
+    const d = toDomainName('example.com');
+    expect(domainNameFromContract(domainNameToContract(d))).toBe(d);
   });
 
-  it('SRV name bytes are zero-padded to 256 bytes', () => {
-    const raw = serverAddressToContract('_a._b');
-    expect(raw.length).toBe(256);
-    expect(raw[0]).toBe('_'.charCodeAt(0));
-    expect(raw[1]).toBe('a'.charCodeAt(0));
+  it('round trips a max-length domain name (128 bytes)', () => {
+    const d = toDomainName('a'.repeat(64) + '.' + 'b'.repeat(63));
+    expect(d.length).toBe(128);
+    expect(domainNameFromContract(domainNameToContract(d))).toBe(d);
+  });
+
+  it('throws when domain name is too long', () => {
+    // 129-char ASCII string exceeds 128-byte limit
+    expect(() => domainNameToContract(toDomainName('a'.repeat(63) + '.' + 'b'.repeat(65)))).toThrow(/too long/);
+  });
+
+  it('throws when domain name is empty', () => {
+    // toDomainName('') produces an empty DomainName; domainNameToContract rejects it
+    expect(() => domainNameToContract('' as ReturnType<typeof toDomainName>)).toThrow(/empty/);
+  });
+
+  it('zero-pads bytes to 128', () => {
+    const raw = domainNameToContract(toDomainName('ab.cd'));
+    expect(raw.length).toBe(128);
+    expect(raw[0]).toBe('a'.charCodeAt(0));
+    expect(raw[4]).toBe('d'.charCodeAt(0));
     expect(raw[5]).toBe(0);
   });
 });
 
 describe('entry round trip', () => {
-  it('preserves all fields with SRV address', () => {
+  it('preserves domainName and expiry', () => {
     const entry = {
       expiry: new Date('2026-07-01T00:00:00Z'),
-      address: '_capacityexchange._tcp.sundae.fi',
+      domainName: toDomainName('sundae.fi'),
     };
     const result = entryFromContract(entryToContract(entry));
-    expect(result.address).toBe(entry.address);
+    expect(result.domainName).toBe(entry.domainName);
     // Date round trip truncates to seconds
     expect(result.expiry.getTime()).toBe(Math.floor(entry.expiry.getTime() / 1000) * 1000);
   });

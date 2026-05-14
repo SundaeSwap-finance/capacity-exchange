@@ -1,4 +1,5 @@
-import { SRV_SERVICE_PREFIX } from '../src/types.js';
+import { toDomainName, type DomainName } from '../src/types.js';
+import type { RegistryEntry } from '../src/types.js';
 
 export const COLLATERAL = 1000n;
 export const MAX_VALIDITY = 2_592_000n; // 30 days in seconds
@@ -11,9 +12,9 @@ export function futureDate(offsetSeconds: bigint): Date {
   return new Date(Number(BASE_TIME + offsetSeconds) * 1000);
 }
 
-export function defaultEntry(opts: { expiry?: Date; address?: string } = {}) {
+export function defaultEntry(opts: { expiry?: Date; domainName?: DomainName } = {}): RegistryEntry {
   return {
     expiry: opts.expiry ?? futureDate(MAX_VALIDITY),
-    address: opts.address ?? `${SRV_SERVICE_PREFIX}example.com`,
+    domainName: opts.domainName ?? toDomainName('example.com'),
   };
 }

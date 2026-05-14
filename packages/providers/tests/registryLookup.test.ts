@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { createDoHSrvResolver } from '../src/wallet/registryLookup';
+import { resolveCesUrl } from '../src/wallet/registryLookup';
 import { SRV_NAME, makeDohAnswer } from './helpers/srvFixtures';
 
 /** Fetch mock that respects AbortSignal — rejects with AbortError when the signal fires. */
@@ -17,7 +17,7 @@ const mockFetchDoh = (answers: ReturnType<typeof makeDohAnswer>[], status = 0) =
     .spyOn(globalThis, 'fetch')
     .mockResolvedValue(new Response(JSON.stringify({ Status: status, Answer: answers }), { status: 200 }));
 
-describe('createDoHSrvResolver', () => {
+describe('resolveCesUrl', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -26,8 +26,7 @@ describe('createDoHSrvResolver', () => {
     it('races both Cloudflare and Google DoH providers', () => {
       const fetchSpy = mockFetchDoh([]);
 
-      const resolver = createDoHSrvResolver();
-      void resolver(SRV_NAME);
+      void resolveCesUrl(SRV_NAME);
 
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining('https://cloudflare-dns.com/dns-query'),
@@ -49,7 +48,7 @@ describe('createDoHSrvResolver', () => {
         return new Promise(() => {}); // Google hangs
       });
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBe('https://ces.preview.sundae.fi:8080');
     });
@@ -67,7 +66,7 @@ describe('createDoHSrvResolver', () => {
         );
       });
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBe('https://ces.preview.sundae.fi:9000');
     });
@@ -75,7 +74,7 @@ describe('createDoHSrvResolver', () => {
     it('returns null when both providers fail', async () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network error'));
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBeNull();
     });
@@ -84,7 +83,7 @@ describe('createDoHSrvResolver', () => {
       vi.useFakeTimers();
       mockHangingFetch();
 
-      const promise = createDoHSrvResolver()(SRV_NAME);
+      const promise = resolveCesUrl(SRV_NAME);
       await vi.advanceTimersByTimeAsync(5_001);
       const result = await promise;
 
@@ -97,7 +96,7 @@ describe('createDoHSrvResolver', () => {
     it('resolves a single SRV record to a URL', async () => {
       mockFetchDoh([makeDohAnswer(10, 100, 8080, 'ces.preview.sundae.fi.')]);
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBe('https://ces.preview.sundae.fi:8080');
     });
@@ -105,7 +104,7 @@ describe('createDoHSrvResolver', () => {
     it('strips trailing dot from target hostname', async () => {
       mockFetchDoh([makeDohAnswer(10, 100, 443, 'node.example.com.')]);
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBe('https://node.example.com:443');
     });
@@ -116,7 +115,7 @@ describe('createDoHSrvResolver', () => {
         makeDohAnswer(10, 100, 9000, 'high-priority.example.com.'),
       ]);
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBe('https://high-priority.example.com:9000');
     });
@@ -127,7 +126,7 @@ describe('createDoHSrvResolver', () => {
         makeDohAnswer(10, 100, 9000, 'high-weight.example.com.'),
       ]);
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBe('https://high-weight.example.com:9000');
     });
@@ -135,7 +134,7 @@ describe('createDoHSrvResolver', () => {
     it('returns null when Answer is empty', async () => {
       mockFetchDoh([]);
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBeNull();
     });
@@ -143,7 +142,7 @@ describe('createDoHSrvResolver', () => {
     it('returns null when Status is non-zero (NXDOMAIN etc.)', async () => {
       mockFetchDoh([], 3);
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBeNull();
     });
@@ -151,7 +150,7 @@ describe('createDoHSrvResolver', () => {
     it('returns null when fetch responds with a non-ok status', async () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
 
-      const result = await createDoHSrvResolver()(SRV_NAME);
+      const result = await resolveCesUrl(SRV_NAME);
 
       expect(result).toBeNull();
     });
@@ -159,7 +158,7 @@ describe('createDoHSrvResolver', () => {
     it('encodes the SRV name in the query string', async () => {
       const fetchSpy = mockFetchDoh([]);
 
-      await createDoHSrvResolver()(SRV_NAME);
+      await resolveCesUrl(SRV_NAME);
 
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent(`_capacityexchange._tcp.${SRV_NAME}`)),

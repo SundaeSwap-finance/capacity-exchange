@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { computeRegistryKey } from '../src/compact-types.js';
 import { RegistrySimulator, randomSecretKey, makeRecipient } from './simulator.js';
-import { entryFromContract } from '../src/types.js';
+import { entryFromContract, toDomainName } from '../src/types.js';
 import { BASE_TIME, COLLATERAL, MAX_VALIDITY, defaultEntry, futureDate } from './helper.js';
 
 describe('computeRegistryKey', () => {
@@ -93,7 +93,7 @@ describe('deregister with computed key', () => {
 
     sim.register(defaultEntry());
     sim.useKey(keyB);
-    sim.register(defaultEntry({ address: '_capacityexchange._tcp.other.example.com' }));
+    sim.register(defaultEntry({ domainName: toDomainName('other.example.com') }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     sim.deregister(computeRegistryKey(keyB));
@@ -177,7 +177,7 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
     sim.register(
       defaultEntry({
         expiry: futureDate(200n),
-        address: '_capacityexchange._tcp.other.example.com',
+        domainName: toDomainName('other.example.com'),
       })
     );
     expect(sim.getLedger().registry.size()).toBe(2n);
@@ -239,7 +239,7 @@ describe('renewRegistration circuit', () => {
     sim.register(
       defaultEntry({
         expiry: futureDate(200n),
-        address: '_capacityexchange._tcp.other.example.com',
+        domainName: toDomainName('other.example.com'),
       })
     );
 
@@ -268,15 +268,12 @@ describe('renewRegistration circuit', () => {
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, secretKey);
     sim.setBlockTime(BASE_TIME);
 
-    const entry = {
-      expiry: futureDate(100n),
-      address: '_capacityexchange._tcp.sundae.fi',
-    };
+    const entry = defaultEntry({ domainName: toDomainName('sundae.fi') });
     sim.register(entry);
     sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const updated = entryFromContract(raw);
-    expect(updated.address).toBe('_capacityexchange._tcp.sundae.fi');
+    expect(updated.domainName).toBe('sundae.fi');
   });
 });

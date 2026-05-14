@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { type RegistryEntry, SRV_SERVICE_PREFIX } from '../types.js';
+import { type RegistryEntry, toDomainName } from '../types.js';
 import { register } from '../circuits/register.js';
 import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { parsePositiveNumber, TxResult } from '@sundaeswap/capacity-exchange-core';
@@ -30,7 +30,6 @@ function main(): Promise<TxResult> {
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
   const [secretKeyFile, domainname, periodArg, contractAddressArg] = program.args;
-  const srvName = domainname.startsWith(SRV_SERVICE_PREFIX) ? domainname : `${SRV_SERVICE_PREFIX}${domainname}`;
 
   const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
@@ -43,7 +42,7 @@ function main(): Promise<TxResult> {
   console.log(`expiry date: ${expiry}`);
 
   const entry: RegistryEntry = {
-    address: srvName,
+    domainName: toDomainName(domainname),
     expiry,
   };
 

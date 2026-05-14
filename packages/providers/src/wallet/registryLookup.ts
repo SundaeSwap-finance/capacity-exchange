@@ -1,7 +1,5 @@
 import type { ChainStateProvider } from './chainStateProvider';
-import { ledger, registryEntries, SRV_SERVICE_PREFIX } from '@sundaeswap/capacity-exchange-registry';
-
-export { SRV_SERVICE_PREFIX };
+import { ledger, registryEntries, toSrvName, type DomainName } from '@sundaeswap/capacity-exchange-registry';
 
 interface DohSrvRecord {
   data: string; // "priority weight port target"
@@ -17,9 +15,13 @@ const DOH_PROVIDERS = ['https://cloudflare-dns.com/dns-query', 'https://dns.goog
 const DOH_TIMEOUT_MS = 5_000;
 
 /**
- * Queries a single DoH endpoint for the SRV name and returns the best server URL.
- * Throws if the request fails, times out, the HTTP status is not ok, or no usable
- * SRV records are returned.
+ * Queries a single DoH endpoint for an SRV record and returns server URL as `https://<target>:<port>`.
+ *
+ * Throws if:
+ * - the request times out (after {@link DOH_TIMEOUT_MS} ms) or fails at the network level;
+ * - the HTTP response status is not 2xx;
+ * - the DNS response status is non-zero (e.g. NXDOMAIN); or
+ * - the response contains no SRV records.
  */
 async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
   const controller = new AbortController();
@@ -47,7 +49,7 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
     return { priority: Number(priority), weight: Number(weight), port: Number(port), target };
   });
 
-  // Sort by lowest priority first, then highest weight.
+  // the one with the lowest priority is selected; ties are broken by highest weight.
   records.sort((a, b) => a.priority - b.priority || b.weight - a.weight);
   const { target, port } = records[0];
   const resolvedHost = target.endsWith('.') ? target.slice(0, -1) : target;
@@ -55,37 +57,35 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
 }
 
 /**
- * Returns a resolver that races Cloudflare and Google DoH endpoints, returning
- * the first successful result. Returns `null` if both fail.
+ * Resolves a registered {@link DomainName} to a CES server URL by racing
+ * Cloudflare and Google DoH endpoints.
  *
  * @example
- * const resolver = createDoHSrvResolver();
- * const url = await resolver('example.com'); // looks up _capacityexchange._tcp.example.com
+ * const url = await resolveCesUrl(toDomainName('example.com'));
+ * // resolves _capacityexchange._tcp.example.com → e.g. 'https://ces.example.com:8080'
  */
-export function createDoHSrvResolver() {
-  return (domainname: string): Promise<string | null> => {
-    const srvName = domainname.startsWith(SRV_SERVICE_PREFIX) ? domainname : `${SRV_SERVICE_PREFIX}${domainname}`;
+export function resolveCesUrl(domainName: DomainName): Promise<string | null> {
+  // The domain name is looked up as `_capacityexchange._tcp.<domainName>`.
+  const srvName = toSrvName(domainName);
 
-    // Race all providers: resolve with the first successful URL, or null if all fail.
-    return new Promise<string | null>((resolve) => {
-      let remaining = DOH_PROVIDERS.length;
-      for (const dohUrl of DOH_PROVIDERS) {
-        queryDoH(dohUrl, srvName)
-          .then((url) => resolve(url))
-          .catch(() => {
-            if (--remaining === 0) {
-              resolve(null);
-            }
-          });
-      }
-    });
-  };
+  // Race all providers: resolve with the first successful URL, or null if all fail.
+  return new Promise<string | null>((resolve) => {
+    let remaining = DOH_PROVIDERS.length;
+    for (const dohUrl of DOH_PROVIDERS) {
+      queryDoH(dohUrl, srvName)
+        .then((url) => resolve(url))
+        .catch(() => {
+          if (--remaining === 0) {
+            resolve(null);
+          }
+        });
+    }
+  });
 }
 
 /**
  * Queries the on-chain registry contract and returns CES server URLs for
- * non-expired entries. Each registered domain name is resolved via
- * {@link createDoHSrvResolver}.
+ * non-expired entries.
  *
  * Throws if the contract state cannot be found at `registryAddress`.
  * Entries that fail to resolve are silently omitted from the result.
@@ -99,16 +99,11 @@ export async function fetchRegistryCesUrls(
     throw new Error(`No contract state found at registry address ${registryAddress}`);
   }
 
-  const resolver = createDoHSrvResolver();
   const ledgerState = ledger(contractState.data);
   const entries = registryEntries(ledgerState);
   const now = new Date();
   const urls = await Promise.all(
-    entries
-      .filter(({ entry }) => entry.expiry > now)
-      .map(async ({ entry }) => {
-        return await resolver(entry.address);
-      })
+    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => resolveCesUrl(entry.domainName))
   );
   return urls.filter((url): url is string => url !== null);
 }

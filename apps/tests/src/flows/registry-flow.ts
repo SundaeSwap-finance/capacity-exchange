@@ -10,6 +10,8 @@ import {
   register,
   deregister,
   registryEntries,
+  toDomainName,
+  type DomainName,
   type RegistryEntry,
   type RegistrySecretKey,
 } from '@sundaeswap/capacity-exchange-registry';
@@ -20,11 +22,11 @@ const logger = createLogger(import.meta);
 const ENTRY_EXPIRY_MS = 7_200 * 1000; // 2 hours in milliseconds
 const POLL_INTERVAL_MS = 5_000;
 const POLL_TIMEOUT_MS = 2 * 60 * 1000;
-const TEST_SRV_NAME = '_capacityexchange._tcp.test.example.com';
+const TEST_DOMAIN_NAME: DomainName = toDomainName('test.example.com');
 
 export interface RegistryFlowResult {
   registryAddress: string;
-  registeredSrvName: string;
+  registeredDomainName: DomainName;
 }
 
 export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConfig): Promise<RegistryFlowResult> {
@@ -42,7 +44,7 @@ export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConf
   await waitForKeyAbsent(ctx, registryAddress, secretKey, registryKey);
   await waitForCollateralRefund(ctx, balanceBefore);
 
-  return { registryAddress, registeredSrvName: TEST_SRV_NAME };
+  return { registryAddress, registeredDomainName: TEST_DOMAIN_NAME };
 }
 
 const REGISTRY_COLLATERAL = 1000n;
@@ -75,11 +77,11 @@ async function registerEntry(
   const secretKey = generateRandomSecretKey();
   const registryKey = Buffer.from(computeRegistryKey(secretKey)).toString('hex');
   const entry: RegistryEntry = {
-    address: TEST_SRV_NAME,
+    domainName: TEST_DOMAIN_NAME,
     expiry: new Date(Date.now() + ENTRY_EXPIRY_MS),
   };
 
-  logger.info({ registryKey, srvName: TEST_SRV_NAME, expiry: entry.expiry.toISOString() }, 'Registering entry');
+  logger.info({ registryKey, domainName: TEST_DOMAIN_NAME, expiry: entry.expiry.toISOString() }, 'Registering entry');
   await register(ctx, secretKey, { contractAddress: registryAddress, entry });
   return { secretKey, registryKey };
 }
