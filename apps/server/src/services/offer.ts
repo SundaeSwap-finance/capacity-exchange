@@ -159,7 +159,7 @@ export class OfferService {
       const unboundTx = await this.txService.createOfferTx(
         coin,
         lockedInfo.spend,
-        lockedInfo.syncTime,
+        lockedInfo.ctime,
         expiration,
       );
       const tx = unboundTx.bind();

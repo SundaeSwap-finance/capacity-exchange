@@ -19,13 +19,17 @@ export default fp(async (fastify: FastifyInstance) => {
     throw new Error("SponsorService requires MetricsService to be init'd first");
   }
 
+  if (!fastify.chainStateService) {
+    throw new Error("SponsorService requires ChainStateService to be init'd first");
+  }
+
   const service = new SponsorService(
     fastify.utxoService,
     fastify.txService,
     fastify.metricsService,
+    fastify.chainStateService,
     fastify.config.sponsorAll ?? false,
     fastify.config.sponsoredContracts,
-    fastify.config.endpoints.indexerHttpUrl,
     fastify.log,
     fastify.cesWalletProvider,
   );

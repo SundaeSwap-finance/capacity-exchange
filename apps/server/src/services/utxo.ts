@@ -2,13 +2,14 @@ import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk
 import { FastifyBaseLogger } from 'fastify';
 import { meterService } from '../meter.js';
 import { WalletService } from './wallet.js';
+import { ChainStateService } from './chain-state.js';
 import { LRUCache } from 'lru-cache';
 
 export interface UtxoLockInfo {
   id: string;
   utxo: DustFullInfo;
   spend: UnprovenDustSpend;
-  syncTime: Date;
+  ctime: Date;
   expiresAtMillis: number;
 }
 
@@ -30,13 +31,20 @@ interface UtxoLock {
  */
 export class UtxoService {
   private readonly walletService: WalletService;
+  private readonly chainStateService: ChainStateService;
   private readonly logger: FastifyBaseLogger;
   private readonly utxoLockTtlSeconds: number;
   // TODO: Move this to a db for reliability (if the service restarts)
   private readonly lockedUtxos: LRUCache<string, UtxoLock>;
 
-  constructor(walletService: WalletService, logger: FastifyBaseLogger, utxoLockTtlSeconds: number) {
+  constructor(
+    walletService: WalletService,
+    chainStateService: ChainStateService,
+    logger: FastifyBaseLogger,
+    utxoLockTtlSeconds: number,
+  ) {
     this.walletService = walletService;
+    this.chainStateService = chainStateService;
     this.logger = logger;
     this.utxoLockTtlSeconds = utxoLockTtlSeconds;
     this.lockedUtxos = new LRUCache<string, UtxoLock>({
@@ -92,6 +100,7 @@ export class UtxoService {
 
   lockUtxo(specks: bigint): LockUtxoResult {
     const now = Date.now();
+    const ctime = this.chainStateService.latestBlockTimestamp();
     const walletState = this.walletService.state;
     const walletSyncState = this.walletService.syncState;
 
@@ -107,8 +116,6 @@ export class UtxoService {
       // We should be sync'd and have the wallet state at this point, this is unexpected
       return { status: 'illegal-state', error: "Wallet is sync'd but no wallet state" };
     }
-
-    const syncTime = this.walletService.dustSyncTime ?? new Date(now);
 
     const utxos = walletState.availableCoinsWithFullInfo(new Date(now));
     this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
@@ -130,11 +137,11 @@ export class UtxoService {
     const key = this.getLockId(selectedUtxo);
     this.lockedUtxos.set(key, { specks });
     this.logger.info(
-      { id: key, ctime: syncTime, expiresAt: new Date(expiresAt).toISOString() },
+      { id: key, ctime, expiresAt: new Date(expiresAt).toISOString() },
       'Locked UTxO',
     );
 
-    const spend = this.walletService.spend(selectedUtxo, specks, syncTime);
+    const spend = this.walletService.spend(selectedUtxo, specks, ctime);
 
     return {
       status: 'ok',
@@ -142,7 +149,7 @@ export class UtxoService {
         id: key,
         utxo: selectedUtxo,
         spend,
-        syncTime,
+        ctime,
         expiresAtMillis: expiresAt,
       },
     };
