@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
+## 2.0.1
+
+### Patch Changes
+
+- 571226c: Add bun-specific exports of uncompiled TS code
+
 ## 2.0.0
 
 ### Major Changes

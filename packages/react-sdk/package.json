@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-react-sdk",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "React SDK to quickly integrate the capacity exchange into your app",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
