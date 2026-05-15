@@ -237,56 +237,6 @@ tasks:
     cmds:
       - bun run regenerate-client
 
-  registry:generate-secret:
-    desc: 'Generate a registry secret key: NETWORK_ID=<id> task registry:generate-secret -- <outputFile>'
-    deps: [_build:midnight-node]
-    cmds:
-      - bun run {{.ROOT_DIR}}/packages/registry/src/cli/generate-secret-key.ts {{.CLI_ARGS}}
-
-  registry:register:
-    desc: 'Register a server: NETWORK_ID=<id> task registry:register -- <secretKeyFile> <ip> <port> [period] [contractAddress]'
-    deps: [_build:midnight-node]
-    env:
-      WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-      WALLET_STATE_DIR: '{{.ROOT_DIR}}/.wallet-state/registry'
-    cmds:
-      - bun run {{.ROOT_DIR}}/packages/registry/src/cli/register.ts {{.CLI_ARGS}}
-
-  registry:renew:
-    desc: 'Renew a server registration: NETWORK_ID=<id> task registry:renew -- <secretKeyFile> [period] [contractAddress]'
-    deps: [_build:midnight-node]
-    env:
-      WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-      WALLET_STATE_DIR: '{{.ROOT_DIR}}/.wallet-state/registry'
-    cmds:
-      - bun run {{.ROOT_DIR}}/packages/registry/src/cli/renew-registration.ts {{.CLI_ARGS}}
-
-  registry:deregister:
-    desc: 'Deregister a server: NETWORK_ID=<id> task registry:deregister -- <secretKeyFile> <recipientAddress> [contractAddress]'
-    deps: [_build:midnight-node]
-    env:
-      WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-      WALLET_STATE_DIR: '{{.ROOT_DIR}}/.wallet-state/registry'
-    cmds:
-      - bun run {{.ROOT_DIR}}/packages/registry/src/cli/deregister.ts {{.CLI_ARGS}}
-
-  registry:claim-expired:
-    desc: 'Claim collateral from an expired entry: NETWORK_ID=<id> task registry:claim-expired -- <registryKey> <recipientAddress> [contractAddress]'
-    deps: [_build:midnight-node]
-    env:
-      WALLET_MNEMONIC_FILE: '{{.ROOT_DIR}}/wallet-mnemonic.{{.NETWORK_ID}}.txt'
-      WALLET_STATE_DIR: '{{.ROOT_DIR}}/.wallet-state/registry'
-    cmds:
-      - bun run {{.ROOT_DIR}}/packages/registry/src/cli/claim-expired.ts {{.CLI_ARGS}}
-
-  registry:list:
-    desc: 'List registered servers: NETWORK_ID=<id> task registry:list -- [contractAddress]'
-    deps: [_build:midnight-node]
-    env:
-      NETWORK_ID: '{{.NETWORK_ID}}'
-    cmds:
-      - bun run {{.ROOT_DIR}}/packages/registry/src/cli/list-registered-servers.ts {{.CLI_ARGS}}
-
   clean:
     desc: Clean build artifacts and generated files
     cmds:

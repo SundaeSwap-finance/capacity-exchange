@@ -1,24 +1,23 @@
 import type { Ledger } from '../contract/out/contract/index.js';
-export type IPv4 = { kind: 'ipv4'; address: string };
-export type IPv6 = { kind: 'ipv6'; address: string };
-export type IpAddress = IPv4 | IPv6;
+
+/** SRV service prefix used to identify Capacity Exchange servers. */
+export const SRV_SERVICE_PREFIX = '_capacityexchange._tcp.';
+
+declare const __domain: unique symbol;
+declare const __srv: unique symbol;
+
+export type DomainName = string & { readonly [__domain]: never };
+export type SrvName = string & { readonly [__srv]: never };
 
 export interface RegistryEntry {
   expiry: Date;
-  ip: IpAddress;
-  port: number;
+  /** Domain name registered on-chain (e.g. `example.com`). */
+  domainName: DomainName;
 }
-
-export type ContractIpAddress = {
-  is_left: boolean;
-  left: Uint8Array;
-  right: Uint8Array;
-};
 
 export type ContractEntry = {
   expiry: bigint;
-  ip: ContractIpAddress;
-  port: bigint;
+  domainName: Uint8Array; // DomainName bytes (128)
 };
 
 export type RegistryKey = Uint8Array; // 32-byte
@@ -60,63 +59,61 @@ export function timestampToDate(dateInString: string) {
   return new Date(expirySecs * 1000);
 }
 
-export function ipToContract(ip: IpAddress): ContractIpAddress {
-  if (ip.kind === 'ipv4') {
-    const parts = ip.address.split('.');
-    if (parts.length !== 4) {
-      throw new Error(`Invalid IPv4 address: ${ip.address}`);
-    }
-    const bytes = new Uint8Array(4);
-    for (let i = 0; i < 4; i++) {
-      const n = Number(parts[i]);
-      if (n < 0 || n > 255 || !Number.isInteger(n)) {
-        throw new Error(`Invalid IPv4 octet: ${parts[i]}`);
-      }
-      bytes[i] = n;
-    }
-    return { is_left: true, left: bytes, right: new Uint8Array(16) };
+/**
+ * Parses a bare domain name (e.g. `example.com`) into the opaque {@link DomainName} branded type.
+ */
+export function toDomainName(raw: string): DomainName {
+  const s = raw.trim().toLowerCase();
+  if (s.startsWith(SRV_SERVICE_PREFIX)) {
+    throw new Error('expected bare domain, got SRV name');
   }
-
-  // An IPv6 address is 8 groups of 16-bit values (128 bits total).
-  // DataView.setUint16 writes each group as 2 big-endian bytes into the 16-byte buffer the contract expects.
-  const expanded = expandIPv6(ip.address);
-  const bytes = new Uint8Array(16);
-  const view = new DataView(bytes.buffer);
-  const groups = expanded.split(':');
-  for (let i = 0; i < 8; i++) {
-    view.setUint16(i * 2, parseInt(groups[i], 16));
-  }
-  return { is_left: false, left: new Uint8Array(4), right: bytes };
+  // todo: validate domain name format more robustly
+  return s as DomainName;
 }
 
-export function ipFromContract(raw: ContractIpAddress): IpAddress {
-  if (raw.is_left) {
-    const parts = Array.from(raw.left).map(String);
-    return { kind: 'ipv4', address: parts.join('.') };
+export function toSrvName(d: DomainName): SrvName {
+  return `${SRV_SERVICE_PREFIX}${d}` as SrvName;
+}
+
+const DOMAIN_NAME_MAX_BYTES = 128;
+
+export function domainNameToContract(domainName: DomainName): Uint8Array {
+  if (domainName.length === 0) {
+    throw new Error('Domain name cannot be empty');
   }
 
-  // Reverse of the encoding above: read each 16-bit group back from the 16-byte buffer and format as a hex string.
-  const view = new DataView(raw.right.buffer, raw.right.byteOffset, raw.right.byteLength);
-  const groups: string[] = [];
-  for (let i = 0; i < 8; i++) {
-    groups.push(view.getUint16(i * 2).toString(16));
+  const encoded = new TextEncoder().encode(domainName);
+  if (encoded.length > DOMAIN_NAME_MAX_BYTES) {
+    throw new Error(`Domain name too long: ${encoded.length} bytes (max ${DOMAIN_NAME_MAX_BYTES})`);
   }
-  return { kind: 'ipv6', address: groups.join(':') };
+
+  const bytes = new Uint8Array(DOMAIN_NAME_MAX_BYTES);
+  bytes.set(encoded);
+  return bytes;
+}
+
+export function domainNameFromContract(raw: Uint8Array): DomainName {
+  // Strip trailing zero bytes and decode the domain name string.
+  let end = raw.length;
+  while (end > 0 && raw[end - 1] === 0) {
+    end--;
+  }
+
+  const _domainName = new TextDecoder().decode(raw.subarray(0, end));
+  return toDomainName(_domainName);
 }
 
 export function entryToContract(entry: RegistryEntry): ContractEntry {
   return {
     expiry: BigInt(Math.floor(entry.expiry.getTime() / 1000)),
-    ip: ipToContract(entry.ip),
-    port: BigInt(entry.port),
+    domainName: domainNameToContract(entry.domainName),
   };
 }
 
 export function entryFromContract(raw: ContractEntry): RegistryEntry {
   return {
     expiry: new Date(Number(raw.expiry) * 1000),
-    ip: ipFromContract(raw.ip),
-    port: Number(raw.port),
+    domainName: domainNameFromContract(raw.domainName),
   };
 }
 
@@ -125,28 +122,4 @@ export function registryEntries(ledger: Ledger): { key: RegistryKey; entry: Regi
     key,
     entry: entryFromContract(raw),
   }));
-}
-
-function expandIPv6(address: string): string {
-  const sides = address.split('::');
-  if (sides.length > 2) {
-    throw new Error(`Invalid IPv6 address: ${address}`);
-  }
-
-  const left = sides[0] ? sides[0].split(':') : [];
-  const right = sides.length === 2 && sides[1] ? sides[1].split(':') : [];
-
-  if (sides.length === 2) {
-    const missing = 8 - left.length - right.length;
-    if (missing < 0) {
-      throw new Error(`Invalid IPv6 address: ${address}`);
-    }
-    const middle = Array(missing).fill('0');
-    return [...left, ...middle, ...right].map((g) => g.padStart(1, '0')).join(':');
-  }
-
-  if (left.length !== 8) {
-    throw new Error(`Invalid IPv6 address: ${address}`);
-  }
-  return left.join(':');
 }

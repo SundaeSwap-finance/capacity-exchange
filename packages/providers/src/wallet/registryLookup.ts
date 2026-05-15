@@ -1,22 +1,86 @@
-import { ledger, registryEntries, type IpAddress } from '@sundaeswap/capacity-exchange-registry';
 import type { ChainStateProvider } from './chainStateProvider';
+import { ledger, registryEntries, toSrvName, type DomainName } from '@sundaeswap/capacity-exchange-registry';
 
-function formatIpHost(ip: IpAddress): string {
-  if (ip.kind === 'ipv4') {
-    return ip.address;
-  }
-  return `[${ip.address}]`;
+interface DohSrvRecord {
+  data: string; // "priority weight port target"
 }
 
-function entryToUrl(ip: IpAddress, port: number): string {
-  return `https://${formatIpHost(ip)}:${port}`;
+interface DohResponse {
+  Status: number;
+  Answer?: DohSrvRecord[];
+}
+
+const DOH_PROVIDERS = ['https://cloudflare-dns.com/dns-query', 'https://dns.google/resolve'];
+
+const DOH_TIMEOUT_MS = 5_000;
+
+/**
+ * Queries a single DoH endpoint for an SRV record and returns server URL as `https://<target>:<port>`.
+ *
+ * Throws if:
+ * - the request times out (after {@link DOH_TIMEOUT_MS} ms) or fails at the network level;
+ * - the HTTP response status is not 2xx;
+ * - the DNS response status is non-zero (e.g. NXDOMAIN); or
+ * - the response contains no SRV records.
+ */
+async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DOH_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${dohUrl}?name=${encodeURIComponent(srvName)}&type=SRV`, {
+      headers: { Accept: 'application/dns-json' },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!res.ok) {
+    throw new Error(`DoH request failed: ${res.status}`);
+  }
+
+  const response = (await res.json()) as DohResponse;
+  if (response.Status !== 0 || !response.Answer || response.Answer.length === 0) {
+    throw new Error('No SRV records');
+  }
+
+  // Each SRV data field is: "priority weight port target"
+  const records = response.Answer.map((r) => {
+    const [priority, weight, port, target] = r.data.split(' ');
+    return { priority: Number(priority), weight: Number(weight), port: Number(port), target };
+  });
+
+  // the one with the lowest priority is selected; ties are broken by highest weight.
+  records.sort((a, b) => a.priority - b.priority || b.weight - a.weight);
+  const { target, port } = records[0];
+  const resolvedHost = target.endsWith('.') ? target.slice(0, -1) : target;
+  return `https://${resolvedHost}:${port}`;
 }
 
 /**
- * Queries the on-chain registry contract and returns CES server URLs
- * for entries that haven't expired. Used internally by the SDK when a
- * `chainStateProvider` is supplied and the network has a canonical registry
- * contract address.
+ * Resolves a registered {@link DomainName} to a CES server URL by racing
+ * Cloudflare and Google DoH endpoints.
+ *
+ * @example
+ * const url = await resolveCesUrl(toDomainName('example.com'));
+ * // resolves _capacityexchange._tcp.example.com → e.g. 'https://ces.example.com:8080'
+ */
+export function resolveCesUrl(domainName: DomainName): Promise<string | null> {
+  // The domain name is looked up as `_capacityexchange._tcp.<domainName>`.
+  const srvName = toSrvName(domainName);
+
+  // Race all providers: resolve with the first successful URL, or null if all fail.
+  return Promise.any(DOH_PROVIDERS.map((dohUrl): Promise<string> => queryDoH(dohUrl, srvName))).catch((): null => null);
+}
+
+/**
+ * Queries the on-chain registry contract and returns CES server URLs for
+ * non-expired entries.
+ *
+ * Throws if the contract state cannot be found at `registryAddress`.
+ * Entries that fail to resolve are silently omitted from the result.
  */
 export async function fetchRegistryCesUrls(
   chainStateProvider: ChainStateProvider,
@@ -30,5 +94,8 @@ export async function fetchRegistryCesUrls(
   const ledgerState = ledger(contractState.data);
   const entries = registryEntries(ledgerState);
   const now = new Date();
-  return entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => entryToUrl(entry.ip, entry.port));
+  const urls = await Promise.all(
+    entries.filter(({ entry }) => entry.expiry > now).map(({ entry }) => resolveCesUrl(entry.domainName))
+  );
+  return urls.filter((url): url is string => url !== null);
 }
