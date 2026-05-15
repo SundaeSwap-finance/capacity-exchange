@@ -72,18 +72,7 @@ export function resolveCesUrl(domainName: DomainName): Promise<string | null> {
   const srvName = toSrvName(domainName);
 
   // Race all providers: resolve with the first successful URL, or null if all fail.
-  return new Promise<string | null>((resolve) => {
-    let remaining = DOH_PROVIDERS.length;
-    for (const dohUrl of DOH_PROVIDERS) {
-      queryDoH(dohUrl, srvName)
-        .then((url) => resolve(url))
-        .catch(() => {
-          if (--remaining === 0) {
-            resolve(null);
-          }
-        });
-    }
-  });
+  return Promise.any(DOH_PROVIDERS.map((dohUrl): Promise<string> => queryDoH(dohUrl, srvName))).catch((): null => null);
 }
 
 /**
