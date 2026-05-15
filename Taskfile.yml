@@ -233,7 +233,7 @@ tasks:
 
   regenerate-client:
     desc: Regenerate client with latest schema from server
-    deps: [_build:install]
+    deps: [_build:install, _build:server]
     cmds:
       - bun run regenerate-client
 

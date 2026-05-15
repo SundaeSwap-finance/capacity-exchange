@@ -11,10 +11,10 @@ import {
   Intent,
 } from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { MetricsService } from './metrics.js';
+import { ChainStateService } from './chain-state.js';
 import type { SponsoredContract } from '../config/prices.js';
 import { isCapacityExchangeError } from '@sundaeswap/capacity-exchange-providers';
 
@@ -29,9 +29,9 @@ export class SponsorService {
   private readonly utxoService: UtxoService;
   private readonly txService: TxService;
   private readonly metricsService: MetricsService;
+  private readonly chainStateService: ChainStateService;
   private readonly sponsorAll: boolean;
   private readonly sponsoredContracts: SponsoredContract[];
-  private readonly indexerUrl: string;
   private readonly logger: FastifyBaseLogger;
   private readonly cesWalletProvider: WalletProvider | null;
 
@@ -39,18 +39,18 @@ export class SponsorService {
     utxoService: UtxoService,
     txService: TxService,
     metricsService: MetricsService,
+    chainStateService: ChainStateService,
     sponsorAll: boolean,
     sponsoredContracts: SponsoredContract[],
-    indexerUrl: string,
     logger: FastifyBaseLogger,
     cesWalletProvider: WalletProvider | null,
   ) {
     this.utxoService = utxoService;
     this.txService = txService;
     this.metricsService = metricsService;
+    this.chainStateService = chainStateService;
     this.sponsorAll = sponsorAll;
     this.sponsoredContracts = sponsoredContracts;
-    this.indexerUrl = indexerUrl;
     this.logger = logger;
 
     this.cesWalletProvider = cesWalletProvider;
@@ -78,7 +78,7 @@ export class SponsorService {
       return { status: 'ineligible' };
     }
 
-    const ledgerParams = await getLedgerParameters(this.indexerUrl);
+    const ledgerParams = this.chainStateService.ledgerParameters();
     const estimatedSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS);
     this.logger.debug(
       { estimatedSpecks: estimatedSpecks.toString() },
@@ -119,10 +119,10 @@ export class SponsorService {
       return lockResult;
     }
 
-    const { spend, syncTime, expiresAtMillis } = lockResult.value;
+    const { spend, ctime: lockCtime, expiresAtMillis } = lockResult.value;
     const ttl = new Date(expiresAtMillis);
 
-    const dustTx = await this.txService.createDustOnlyTx(spend, syncTime, ttl);
+    const dustTx = await this.txService.createDustOnlyTx(spend, lockCtime, ttl);
     this.logger.debug('Dust-only tx proven');
 
     const mergedTx = dustTx.merge(userTx);
