@@ -29,7 +29,10 @@ async function queryDoH(dohUrl: string, srvName: string): Promise<string> {
 
   let res: Response;
   try {
-    res = await fetch(`${dohUrl}?name=${encodeURIComponent(srvName)}&type=SRV`, { signal: controller.signal });
+    res = await fetch(`${dohUrl}?name=${encodeURIComponent(srvName)}&type=SRV`, {
+      headers: { Accept: 'application/dns-json' },
+      signal: controller.signal,
+    });
   } finally {
     clearTimeout(timer);
   }
