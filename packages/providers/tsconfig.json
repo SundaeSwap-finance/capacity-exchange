@@ -5,6 +5,7 @@
     "noImplicitAny": true,
     "module": "ES2022",
     "target": "es2021",
+    "lib": ["es2021"],
     "allowJs": true,
     "moduleResolution": "bundler",
     "declaration": true,
