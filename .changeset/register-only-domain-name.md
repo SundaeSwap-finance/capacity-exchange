@@ -1,8 +1,6 @@
 ---
 '@sundaeswap/capacity-exchange-providers': major
 '@sundaeswap/capacity-exchange-registry': major
-'@sundaeswap/capacity-exchange-nodejs': patch
-'@capacity-exchange/server': minor
 ---
 
 Registry stores bare domain names instead of IP+port; server URLs are resolved at connection time via DNS SRV records (`_capacityexchange._tcp.<domainName>`) using DNS-over-HTTPS.
@@ -13,6 +11,7 @@ Registry stores bare domain names instead of IP+port; server URLs are resolved a
 - `ipToContract` / `ipFromContract` removed; replaced by `domainNameToContract` / `domainNameFromContract`
 - `register` CLI argument changed from `<ip> <port>` to `<domainname>`
 - Contract redeployed for PREVIEW network: `takenSocketAddresses` → `takenDomainNames`; `Entry.ip`/`Entry.port` → `Entry.domainName`
+- Contract not redeployed for PREPROD network.  
 - New exports: `DomainName`, `SrvName`, `SRV_SERVICE_PREFIX`, `toDomainName`, `toSrvName`
 
 **Breaking changes — `@sundaeswap/capacity-exchange-providers`:**
