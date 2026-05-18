@@ -1,4 +1,6 @@
 import { DustWalletState } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
+import { ShieldedWalletState } from '@midnight-ntwrk/wallet-sdk-shielded';
+import { UnshieldedWalletState } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
 import {
   CoreWallet,
   type UnprovenDustSpend,
@@ -24,11 +26,68 @@ import {
 } from '@sundaeswap/capacity-exchange-core';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
+const PROGRESS_LOG_INTERVAL_MS = 10_000;
+
+export type SubstateProgress = {
+  applied: string;
+  highest: string;
+  gap: string;
+  isConnected: boolean;
+};
 
 export type WalletSyncState =
-  | { status: 'syncing' }
-  | { status: 'ok' }
-  | { status: 'ko'; error: string };
+  | {
+      status: 'syncing';
+      dust?: SubstateProgress;
+      shielded?: SubstateProgress;
+      unshielded?: SubstateProgress;
+    }
+  | {
+      status: 'ok';
+      dust?: SubstateProgress;
+      shielded?: SubstateProgress;
+      unshielded?: SubstateProgress;
+    }
+  | {
+      status: 'ko';
+      error: string;
+      dust?: SubstateProgress;
+      shielded?: SubstateProgress;
+      unshielded?: SubstateProgress;
+    };
+
+// Each substate SDK exposes a slightly different progress shape:
+//   dust + shielded: { appliedIndex, highestIndex, isConnected }    (block indices)
+//   unshielded:      { appliedId, highestTransactionId, isConnected } (tx ids)
+// Normalized to a single wire format: { applied, highest, gap, isConnected }.
+type IndexProgress = {
+  readonly appliedIndex: bigint;
+  readonly highestIndex: bigint;
+  readonly isConnected: boolean;
+};
+type IdProgress = {
+  readonly appliedId: bigint;
+  readonly highestTransactionId: bigint;
+  readonly isConnected: boolean;
+};
+
+function fromIndex(p: IndexProgress): SubstateProgress {
+  return {
+    applied: p.appliedIndex.toString(),
+    highest: p.highestIndex.toString(),
+    gap: (p.highestIndex - p.appliedIndex).toString(),
+    isConnected: p.isConnected,
+  };
+}
+
+function fromId(p: IdProgress): SubstateProgress {
+  return {
+    applied: p.appliedId.toString(),
+    highest: p.highestTransactionId.toString(),
+    gap: (p.highestTransactionId - p.appliedId).toString(),
+    isConnected: p.isConnected,
+  };
+}
 
 /**
  * Manages the lifecycle and sync'ing of a Midnight DUST wallet.
@@ -42,8 +101,14 @@ export class WalletService {
   private _syncState: WalletSyncState = { status: 'syncing' };
   // Once the wallet is sync'd this subscription drives the wallet state
   private dustWalletSub: Subscription | null = null;
+  private shieldedWalletSub: Subscription | null = null;
+  private unshieldedWalletSub: Subscription | null = null;
   // The current view of the wallet's state, populated by the subscription
   private lastDustWalletState: DustWalletState | null = null;
+  private lastShieldedWalletState: ShieldedWalletState | null = null;
+  private lastUnshieldedWalletState: UnshieldedWalletState | null = null;
+  // Periodic progress logger handle
+  private progressLogTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     walletConnection: WalletConnection,
@@ -64,7 +129,14 @@ export class WalletService {
     this.dustWalletSub = walletFacade.dust.state.subscribe({
       next: (dustWalletState) => {
         const prevCoins = this.lastDustWalletState?.totalCoins.length ?? 0;
+        const firstObservation = this.lastDustWalletState === null;
         this.lastDustWalletState = dustWalletState;
+        if (firstObservation) {
+          this.logger.info(
+            { progress: fromIndex(dustWalletState.progress) },
+            'Wallet dust: initial state observed',
+          );
+        }
         if (
           this._syncState.status === 'syncing' &&
           dustWalletState.totalCoins.length !== prevCoins
@@ -75,9 +147,57 @@ export class WalletService {
       },
       error: (err) => {
         this.logger.error(err, 'DUST wallet state subscription error');
-        this._syncState = { status: 'ko', error: String(err) };
+        this._syncState = { ...this._syncState, status: 'ko', error: String(err) };
       },
     });
+
+    // Mirror dust subscription for the other two substates so /health/ready
+    // and the periodic log can surface their progress. These don't drive the
+    // save trigger (dust still does) or syncState transitions; they're
+    // observability-only.
+    this.shieldedWalletSub = walletFacade.shielded.state.subscribe({
+      next: (s) => {
+        if (this.lastShieldedWalletState === null) {
+          this.logger.info(
+            { progress: fromIndex(s.progress) },
+            'Wallet shielded: initial state observed',
+          );
+        }
+        this.lastShieldedWalletState = s;
+      },
+      error: (err) => {
+        this.logger.warn(err, 'Shielded wallet state subscription error (observability only)');
+      },
+    });
+    this.unshieldedWalletSub = walletFacade.unshielded.state.subscribe({
+      next: (s) => {
+        if (this.lastUnshieldedWalletState === null) {
+          this.logger.info(
+            { progress: fromId(s.progress) },
+            'Wallet unshielded: initial state observed',
+          );
+        }
+        this.lastUnshieldedWalletState = s;
+      },
+      error: (err) => {
+        this.logger.warn(err, 'Unshielded wallet state subscription error (observability only)');
+      },
+    });
+
+    // Periodic progress snapshot. Renders even when no coin-count change has
+    // happened, so operators can see a stalled-but-syncing wallet vs idle.
+    this.progressLogTimer = setInterval(() => {
+      const snapshot: Record<string, SubstateProgress | undefined> = {
+        dust: this.lastDustWalletState ? fromIndex(this.lastDustWalletState.progress) : undefined,
+        shielded: this.lastShieldedWalletState
+          ? fromIndex(this.lastShieldedWalletState.progress)
+          : undefined,
+        unshielded: this.lastUnshieldedWalletState
+          ? fromId(this.lastUnshieldedWalletState.progress)
+          : undefined,
+      };
+      this.logger.info(snapshot, 'Wallet progress');
+    }, PROGRESS_LOG_INTERVAL_MS);
 
     // Start the wallet
     await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
@@ -106,10 +226,16 @@ export class WalletService {
   async stop() {
     this.logger.info('Stopping WalletService');
 
-    if (this.dustWalletSub) {
-      this.dustWalletSub.unsubscribe();
-      this.dustWalletSub = null;
+    if (this.progressLogTimer) {
+      clearInterval(this.progressLogTimer);
+      this.progressLogTimer = null;
     }
+    for (const sub of [this.dustWalletSub, this.shieldedWalletSub, this.unshieldedWalletSub]) {
+      sub?.unsubscribe();
+    }
+    this.dustWalletSub = null;
+    this.shieldedWalletSub = null;
+    this.unshieldedWalletSub = null;
   }
 
   spend(utxo: DustFullInfo, amount: bigint, ctime: Date): UnprovenDustSpend {
@@ -174,7 +300,18 @@ export class WalletService {
   }
 
   get syncState(): WalletSyncState {
-    return this._syncState;
+    // Splice in the latest per-substate progress so /health/ready always shows
+    // the operator where the wallet currently sits, regardless of overall status.
+    return {
+      ...this._syncState,
+      dust: this.lastDustWalletState ? fromIndex(this.lastDustWalletState.progress) : undefined,
+      shielded: this.lastShieldedWalletState
+        ? fromIndex(this.lastShieldedWalletState.progress)
+        : undefined,
+      unshielded: this.lastUnshieldedWalletState
+        ? fromId(this.lastUnshieldedWalletState.progress)
+        : undefined,
+    } as WalletSyncState;
   }
 
   get state(): DustWalletState | null {

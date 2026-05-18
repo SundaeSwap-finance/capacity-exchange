@@ -24,9 +24,24 @@ export const IndexerStatus = Type.Object({
   details: Type.Optional(Type.String()),
 });
 
+// Per-substate sync progress. Values are stringified bigints (JSON has no
+// bigint type). `applied` is how far the wallet has processed; `highest` is
+// the latest known by the substate; `gap = highest - applied`. The shape is
+// normalized across the three substates (dust + shielded use block indices,
+// unshielded uses transaction ids).
+export const SubstateProgress = Type.Object({
+  applied: Type.String(),
+  highest: Type.String(),
+  gap: Type.String(),
+  isConnected: Type.Boolean(),
+});
+
 export const WalletStatus = Type.Object({
   status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
   error: Type.Optional(Type.String()),
+  dust: Type.Optional(SubstateProgress),
+  shielded: Type.Optional(SubstateProgress),
+  unshielded: Type.Optional(SubstateProgress),
 });
 
 export const ReadyResponse = Type.Object({
