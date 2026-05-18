@@ -36,8 +36,13 @@ tasks:
   libs:
     deps: [react-sdk]
 
+  registry:
+    deps: [midnight-node, compile-contracts]
+    cmds:
+      - bun run --filter @sundaeswap/capacity-exchange-registry build
+
   providers:
-    deps: [midnight-node, client, compile-contracts]
+    deps: [midnight-node, client, compile-contracts, registry]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-providers build
 
@@ -54,7 +59,7 @@ tasks:
   webapp:
     deps: [libs]
     env:
-      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
+      NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
       - bun run --filter @capacity-exchange/demo build
     requires:
@@ -71,4 +76,6 @@ tasks:
   build-all:
     deps: [libs, server, typecheck-demo-contracts]
     cmds:
-      - bun run --filter @capacity-exchange/demo typecheck
+      - task: webapp
+        vars:
+          NETWORK_ID: preview

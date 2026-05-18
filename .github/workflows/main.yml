@@ -20,21 +20,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+      - uses: oven-sh/setup-bun@v2
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - uses: go-task/setup-task@v2
+
       - run: bun install --frozen-lockfile
 
-      - run: bun run compile
-
-      - run: bun run --filter '@sundaeswap/capacity-exchange-*' build
-
-      - run: bun run --filter '@sundaeswap/capacity-exchange-*' --if-present test
+      - run: task check
+      - run: task check-client
+      - run: task build-all
+      - run: task test
 
       - name: Configure npm authentication
         run: npm config set //registry.npmjs.org/:_authToken ${{ secrets.PUBLISH_NPM_TOKEN }}
