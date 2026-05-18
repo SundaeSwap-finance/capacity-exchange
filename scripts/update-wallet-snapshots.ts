@@ -26,7 +26,7 @@ import {
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { generateMnemonic, parseMnemonic, type ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
 
-const WALLET_SYNC_TIMEOUT_MS = 1500000; // 25 minutes — first run syncs from genesis
+const WALLET_SYNC_TIMEOUT_MS = 14_400_000; // 4 hours — fresh genesis sync can be long, especially mainnet
 const NETWORKS = ['preview', 'preprod', 'mainnet'];
 
 function resolveStartingSnapshot(
