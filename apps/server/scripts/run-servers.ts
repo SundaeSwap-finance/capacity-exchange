@@ -1,33 +1,43 @@
 #!/usr/bin/env bun
 /**
- * Usage: bun scripts/run-servers.ts [N]
+ * Starts N CES servers for local multi-server testing.
  *
- * Starts N servers:
+ * Usage: MIDNIGHT_NETWORK=preview bun scripts/run-servers.ts [N]
+ *
+ * N defaults to 2 (minimum)
  *   - Server 1: no-dust wallet; peers to all funded servers (2..N)
- *   - Servers 2..N: funded wallets (serve dust directly)
+ *   - Servers 2..N: hold DUST and serve it directly.
  *
  * Ports:
- *   - server i runs on BASE_PORT + i - 1  (default base: 3000)
- *   - server i dashboard runs on BASE_DASHBOARD_PORT + i - 1 (default base: 4000)
+ *   - Server i API:       BASE_PORT + i - 1       (default base: 3000)
+ *   - Server i dashboard: BASE_DASHBOARD_PORT + i - 1  (default base: 4000)
  *
- * Wallet config:
- *   - Server 1 wallet: SERVER1_WALLET_MNEMONIC_FILE (default: ../../wallet-mnemonic-no-dust.<MIDNIGHT_NETWORK>.txt)
- *     The wallet MUST have shielded token balance (set SKIP_BALANCE_CHECK=1 to bypass).
- *   - Servers 2..N wallets: each uses wallet-mnemonic-{i}.{MIDNIGHT_NETWORK}.txt (e.g. wallet-mnemonic-2.preview.txt).
- *     These wallets MUST have a DUST balance (set SKIP_BALANCE_CHECK=1 to bypass).
+ * Wallet files (resolved relative to the repo root):
+ *   - Server 1: SERVER1_WALLET_MNEMONIC_FILE env var, or
+ *               wallet-mnemonic-no-dust.<MIDNIGHT_NETWORK>.txt  — must have shielded balance, no DUST.
+ *   - Server i: wallet-mnemonic-{i}.<MIDNIGHT_NETWORK>.txt      — must have DUST balance.
+ *   Set SKIP_BALANCE_CHECK=1 to bypass all balance checks.
  *
  * Files of Servers 2..N:
- *  - uses price-config-{i}.{MIDNIGHT_NETWORK}.json for its price config
- *    (copy from price-config.{MIDNIGHT_NETWORK}.json if not exist).
- *  - uses .quote-secret-{i}.hex for quote secret (auto-created if not exist).
+ *   - price-config-{i}.<MIDNIGHT_NETWORK>.json   (copied from the default config if absent)
+ *   - .quote-secret-{i}.hex                      (auto-created by the server on first run)
+ *
+ * Optional env vars:
+ *   - CHAIN_SNAPSHOT_DIR  Path to a chain snapshot directory. When set, balance
+ *                         checks sync from the snapshot offset instead of genesis.
+ *   - LOG_DIR             Directory for server log files (default: apps/server/).
  */
 
-import { existsSync, readFileSync, copyFileSync, mkdtempSync, rmSync, openSync } from 'fs';
-import { tmpdir } from 'os';
+import { existsSync, readFileSync, copyFileSync, openSync } from 'fs';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { createWalletFromMnemonic } from '@sundaeswap/capacity-exchange-core';
-import { FileStateStore, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { parseMnemonic } from '@sundaeswap/capacity-exchange-core';
+import {
+  createWalletContext,
+  loadChainSnapshot,
+  buildNetworkConfig,
+  resolveEnv,
+} from '@sundaeswap/capacity-exchange-nodejs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
@@ -43,26 +53,50 @@ const BASE_DASHBOARD_PORT = parseInt(process.env.BASE_DASHBOARD_PORT ?? '4000', 
 const LOG_DIR = process.env.LOG_DIR ?? PROJECT_ROOT;
 const MIDNIGHT_NETWORK = process.env.MIDNIGHT_NETWORK ?? 'preview';
 const SKIP_BALANCE_CHECK = process.env.SKIP_BALANCE_CHECK === '1';
+const CHAIN_SNAPSHOT_DIR = process.env.CHAIN_SNAPSHOT_DIR;
+const WALLET_STATE_DIR = process.env.WALLET_STATE_DIR ?? join(PROJECT_ROOT, '.wallet-state');
+
 const SERVER1_WALLET_MNEMONIC_FILE =
   process.env.SERVER1_WALLET_MNEMONIC_FILE ??
   resolve(PROJECT_ROOT, '..', '..', `wallet-mnemonic-no-dust.${MIDNIGHT_NETWORK}.txt`);
 
-// ── Balance helper ────────────────────────────────────────────────────────────
-// copied from packages/midnight-node/src/cli/balances.ts
+/** Returns the mnemonic file path for funded server `i` (where i > 1). */
+function serverMnemonicFile(i: number): string {
+  return resolve(PROJECT_ROOT, '..', '..', `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`);
+}
+
+/** Clones the current process environment, filtering out undefined values for Bun.spawn. */
+function baseEnv(): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(process.env).filter(([, v]) => v !== undefined),
+  ) as Record<string, string>;
+}
+
+/**
+ * Syncs a wallet from the given mnemonic file and returns its synced state.
+ * Uses the on-disk state from WALLET_STATE_DIR so repeated runs resume from
+ * the last known offset rather than re-syncing from scratch. Falls back to
+ * an in-memory sync primed from CHAIN_SNAPSHOT_DIR if WALLET_STATE_DIR is unset.
+ */
 async function getBalances(mnemonicFile: string) {
-  const logger = createLogger(import.meta);
-  const tmpDir = mkdtempSync(join(tmpdir(), 'ces-balance-check-'));
-  try {
-    const mnemonic = readFileSync(mnemonicFile, 'utf-8').trim();
-    const store = new FileStateStore(tmpDir, logger);
-    const connection = await createWalletFromMnemonic(
-      { mnemonic, networkId: MIDNIGHT_NETWORK, syncTimeoutMs: 120_000 },
-      store,
-    );
-    return await connection.walletFacade.waitForSyncedState();
-  } finally {
-    rmSync(tmpDir, { recursive: true, force: true });
-  }
+  const mnemonic = readFileSync(mnemonicFile, 'utf-8').trim();
+  const stateSource = WALLET_STATE_DIR
+    ? { kind: 'onDisk' as const, walletStateDir: WALLET_STATE_DIR }
+    : {
+        kind: 'inMemory' as const,
+        chainSnapshot: CHAIN_SNAPSHOT_DIR
+          ? loadChainSnapshot(MIDNIGHT_NETWORK, CHAIN_SNAPSHOT_DIR)
+          : undefined,
+      };
+  const { walletFacade } = await createWalletContext({
+    network: buildNetworkConfig(MIDNIGHT_NETWORK, resolveEnv()),
+    wallet: {
+      seed: parseMnemonic(mnemonic),
+      stateSource,
+      walletSyncTimeoutMs: 3_600_000,
+    },
+  });
+  return walletFacade.waitForSyncedState();
 }
 
 // ── Require server 1 wallet mnemonic ─────────────────────────────────────────
@@ -75,12 +109,7 @@ if (!existsSync(SERVER1_WALLET_MNEMONIC_FILE)) {
 const DEFAULT_PRICE_CONFIG = join(PROJECT_ROOT, `price-config.${MIDNIGHT_NETWORK}.json`);
 
 for (let i = 2; i <= N; i++) {
-  const mnemonicFileI = resolve(
-    PROJECT_ROOT,
-    '..',
-    '..',
-    `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`,
-  );
+  const mnemonicFileI = serverMnemonicFile(i);
   if (!existsSync(mnemonicFileI)) {
     console.error(`Error: Server ${i} wallet mnemonic not found at ${mnemonicFileI}`);
     process.exit(1);
@@ -111,11 +140,22 @@ if (!SKIP_BALANCE_CHECK) {
   console.log(
     `Checking server 1 shielded balance on '${MIDNIGHT_NETWORK}' (this may take a moment)...`,
   );
+
   const server1State = await getBalances(SERVER1_WALLET_MNEMONIC_FILE);
 
+  for (const [tokenId, amount] of Object.entries(
+    server1State.shielded.balances as Record<string, bigint>,
+  )) {
+    console.log(`  shielded [${tokenId}]: ${amount}`);
+  }
+
+  // True if the wallet holds the accepted payment token with a non-zero shielded balance.
   const hasShielded = Object.values(server1State.shielded.balances as Record<string, bigint>).some(
     (v) => v > 0n,
   );
+
+  console.log('Checking server 1 has shielded balance:' + (hasShielded ? 'OK' : 'MISSING'));
+
   if (!hasShielded) {
     console.error('');
     console.error('Error: Server 1 wallet has no shielded balance.');
@@ -136,12 +176,7 @@ if (!SKIP_BALANCE_CHECK) {
 
   // Servers 2..N: must have dust
   for (let i = 2; i <= N; i++) {
-    const mnemonicFileI = resolve(
-      PROJECT_ROOT,
-      '..',
-      '..',
-      `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`,
-    );
+    const mnemonicFileI = serverMnemonicFile(i);
     console.log(
       `Checking server ${i} DUST balance on '${MIDNIGHT_NETWORK}' (this may take a moment)...`,
     );
@@ -194,9 +229,7 @@ const server1Port = BASE_PORT;
 console.log(`Starting server 1 on port ${server1Port} (no-dust wallet, peers -> ${peerUrls})...`);
 
 // updating environment variables for server 1 (no-dust wallet)
-const env1 = Object.fromEntries(
-  Object.entries(process.env).filter(([, v]) => v !== undefined),
-) as Record<string, string>;
+const env1 = baseEnv();
 env1.PORT = String(server1Port);
 env1.DASHBOARD_PORT = String(BASE_DASHBOARD_PORT);
 env1.MIDNIGHT_NETWORK = MIDNIGHT_NETWORK;
@@ -218,19 +251,12 @@ console.log(`Server 1 started (PID ${server1Proc.pid}) — logs: ${server1LogPat
 // ── Start funded servers 2..N ─────────────────────────────────────────────────
 for (let i = 2; i <= N; i++) {
   const portI = BASE_PORT + i - 1;
-  const mnemonicFileI = resolve(
-    PROJECT_ROOT,
-    '..',
-    '..',
-    `wallet-mnemonic-${i}.${MIDNIGHT_NETWORK}.txt`,
-  );
+  const mnemonicFileI = serverMnemonicFile(i);
   console.log(
     `Starting server ${i} on port ${portI} (funded wallet, mnemonic: ${mnemonicFileI})...`,
   );
 
-  const envI = Object.fromEntries(
-    Object.entries(process.env).filter(([, v]) => v !== undefined),
-  ) as Record<string, string>;
+  const envI = baseEnv();
   envI.PORT = String(portI);
   envI.DASHBOARD_PORT = String(BASE_DASHBOARD_PORT + i - 1);
   envI.MIDNIGHT_NETWORK = MIDNIGHT_NETWORK;
