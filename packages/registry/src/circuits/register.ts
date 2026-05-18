@@ -13,14 +13,14 @@ const circuitId = 'registerServer';
 
 export interface RegisterParams {
   contractAddress: string;
-  /** Server entry to register (IP, port, validity expiry). */
+  /** Server entry to register (domain name and validity expiry). */
   entry: RegistryEntry;
 }
 
 export async function register(ctx: AppContext, secretKey: RegistrySecretKey, params: RegisterParams) {
   const { contractAddress, entry } = params;
 
-  logger.info(`Registering ${entry.ip.address}:${entry.port} to registry ${contractAddress}...`);
+  logger.info(`Registering ${entry.domainName} to registry ${contractAddress}...`);
 
   const { providers, privateStateId } = await getProviders(ctx, contractAddress, secretKey, logger);
 

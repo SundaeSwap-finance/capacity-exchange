@@ -1,76 +1,74 @@
 import { describe, it, expect } from 'vitest';
-import { ipToContract, ipFromContract, entryToContract, entryFromContract, type IpAddress } from '../src/types.js';
+import {
+  toDomainName,
+  toSrvName,
+  domainNameToContract,
+  domainNameFromContract,
+  entryToContract,
+  entryFromContract,
+  SRV_SERVICE_PREFIX,
+} from '../src/types.js';
 
-describe('IPv4 round trip', () => {
-  it('simple address', () => {
-    const ip: IpAddress = { kind: 'ipv4', address: '192.168.1.1' };
-    expect(ipFromContract(ipToContract(ip))).toEqual(ip);
+describe('toDomainName', () => {
+  it('accepts a bare domain name', () => {
+    expect(toDomainName('example.com')).toBe('example.com');
   });
 
-  it('all zeros', () => {
-    const ip: IpAddress = { kind: 'ipv4', address: '0.0.0.0' };
-    expect(ipFromContract(ipToContract(ip))).toEqual(ip);
+  it('trims whitespace and lowercases', () => {
+    expect(toDomainName('  Example.COM  ')).toBe('example.com');
   });
 
-  it('all 255s', () => {
-    const ip: IpAddress = { kind: 'ipv4', address: '255.255.255.255' };
-    expect(ipFromContract(ipToContract(ip))).toEqual(ip);
-  });
-
-  it('byte order is correct', () => {
-    const ip: IpAddress = { kind: 'ipv4', address: '1.2.3.4' };
-    const raw = ipToContract(ip);
-    expect(raw.is_left).toBe(true);
-    expect(Array.from(raw.left)).toEqual([1, 2, 3, 4]);
+  it('throws if given a full SRV name', () => {
+    expect(() => toDomainName(`${SRV_SERVICE_PREFIX}example.com`)).toThrow('expected bare domain, got SRV name');
   });
 });
 
-describe('IPv6 round trip', () => {
-  it('full address', () => {
-    const ip: IpAddress = { kind: 'ipv6', address: '2001:db8:85a3:0:0:8a2e:370:7334' };
-    expect(ipFromContract(ipToContract(ip))).toEqual(ip);
+describe('toSrvName', () => {
+  it('prepends SRV_SERVICE_PREFIX to a domain name', () => {
+    const d = toDomainName('example.com');
+    expect(toSrvName(d)).toBe(`${SRV_SERVICE_PREFIX}example.com`);
+  });
+});
+
+describe('domainNameToContract / domainNameFromContract', () => {
+  it('round trips a bare domain name', () => {
+    const d = toDomainName('example.com');
+    expect(domainNameFromContract(domainNameToContract(d))).toBe(d);
   });
 
-  it('loopback', () => {
-    const ip: IpAddress = { kind: 'ipv6', address: '::1' };
-    const result = ipFromContract(ipToContract(ip));
-    expect(result.kind).toBe('ipv6');
-    // ::1 expands to 0:0:0:0:0:0:0:1
-    expect(result).toEqual({ kind: 'ipv6', address: '0:0:0:0:0:0:0:1' });
+  it('round trips a max-length domain name (128 bytes)', () => {
+    const d = toDomainName('a'.repeat(64) + '.' + 'b'.repeat(63));
+    expect(d.length).toBe(128);
+    expect(domainNameFromContract(domainNameToContract(d))).toBe(d);
   });
 
-  it('all zeros', () => {
-    const ip: IpAddress = { kind: 'ipv6', address: '::' };
-    const result = ipFromContract(ipToContract(ip));
-    expect(result).toEqual({ kind: 'ipv6', address: '0:0:0:0:0:0:0:0' });
+  it('throws when domain name is too long', () => {
+    // 129-char ASCII string exceeds 128-byte limit
+    expect(() => domainNameToContract(toDomainName('a'.repeat(63) + '.' + 'b'.repeat(65)))).toThrow(/too long/);
   });
 
-  it('byte order is correct', () => {
-    // 0x1234 should be stored as [0x12, 0x34] (big-endian)
-    const ip: IpAddress = { kind: 'ipv6', address: '1234::' };
-    const raw = ipToContract(ip);
-    expect(raw.is_left).toBe(false);
-    expect(raw.right[0]).toBe(0x12);
-    expect(raw.right[1]).toBe(0x34);
+  it('throws when domain name is empty', () => {
+    // toDomainName('') produces an empty DomainName; domainNameToContract rejects it
+    expect(() => domainNameToContract('' as ReturnType<typeof toDomainName>)).toThrow(/empty/);
   });
 
-  it('abbreviated with trailing groups', () => {
-    const ip: IpAddress = { kind: 'ipv6', address: 'fe80::1:2' };
-    const result = ipFromContract(ipToContract(ip));
-    expect(result).toEqual({ kind: 'ipv6', address: 'fe80:0:0:0:0:0:1:2' });
+  it('zero-pads bytes to 128', () => {
+    const raw = domainNameToContract(toDomainName('ab.cd'));
+    expect(raw.length).toBe(128);
+    expect(raw[0]).toBe('a'.charCodeAt(0));
+    expect(raw[4]).toBe('d'.charCodeAt(0));
+    expect(raw[5]).toBe(0);
   });
 });
 
 describe('entry round trip', () => {
-  it('preserves all fields', () => {
+  it('preserves domainName and expiry', () => {
     const entry = {
-      expiry: new Date('2026-05-01T00:00:00Z'),
-      ip: { kind: 'ipv4' as const, address: '10.0.0.1' },
-      port: 443,
+      expiry: new Date('2026-07-01T00:00:00Z'),
+      domainName: toDomainName('sundae.fi'),
     };
     const result = entryFromContract(entryToContract(entry));
-    expect(result.ip).toEqual(entry.ip);
-    expect(result.port).toBe(entry.port);
+    expect(result.domainName).toBe(entry.domainName);
     // Date round trip truncates to seconds
     expect(result.expiry.getTime()).toBe(Math.floor(entry.expiry.getTime() / 1000) * 1000);
   });

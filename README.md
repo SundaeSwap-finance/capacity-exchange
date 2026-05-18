@@ -22,7 +22,7 @@ Run `task --list` to see all tasks. Key ones:
 
 ## Registering a Server to the Registry
 
-Refer to the [registry package](packages/registry/README.md) for `registry:*` related commands.
+Refer to the [registry package](packages/registry/README.md) for `registry` related commands.
 
 ## Generating the Client
 

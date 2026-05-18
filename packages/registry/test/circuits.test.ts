@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { computeRegistryKey } from '../src/compact-types.js';
 import { RegistrySimulator, randomSecretKey, makeRecipient } from './simulator.js';
-import { entryFromContract } from '../src/types.js';
+import { entryFromContract, toDomainName } from '../src/types.js';
 import { BASE_TIME, COLLATERAL, MAX_VALIDITY, defaultEntry, futureDate } from './helper.js';
 
 describe('computeRegistryKey', () => {
@@ -93,7 +93,7 @@ describe('deregister with computed key', () => {
 
     sim.register(defaultEntry());
     sim.useKey(keyB);
-    sim.register(defaultEntry({ port: 8081 }));
+    sim.register(defaultEntry({ domainName: toDomainName('other.example.com') }));
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     sim.deregister(computeRegistryKey(keyB));
@@ -174,7 +174,12 @@ describe('claimExpired (deregisterServer on expired entry)', () => {
 
     sim.register(defaultEntry({ expiry: futureDate(100n) }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ expiry: futureDate(200n), port: 8081 }));
+    sim.register(
+      defaultEntry({
+        expiry: futureDate(200n),
+        domainName: toDomainName('other.example.com'),
+      })
+    );
     expect(sim.getLedger().registry.size()).toBe(2n);
 
     // Advance past both entries' expiry
@@ -231,7 +236,12 @@ describe('renewRegistration circuit', () => {
 
     sim.register(defaultEntry({ expiry: futureDate(100n) }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ expiry: futureDate(200n), port: 8081 }));
+    sim.register(
+      defaultEntry({
+        expiry: futureDate(200n),
+        domainName: toDomainName('other.example.com'),
+      })
+    );
 
     // Only refresh keyB's entry
     const newValidTo = futureDate(MAX_VALIDITY);
@@ -253,22 +263,17 @@ describe('renewRegistration circuit', () => {
     }
   });
 
-  it('refresh preserves the ip and port of the entry', () => {
+  it('refresh preserves the address of the entry', () => {
     const secretKey = randomSecretKey();
     const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, secretKey);
     sim.setBlockTime(BASE_TIME);
 
-    const entry = {
-      expiry: futureDate(100n),
-      ip: { kind: 'ipv6' as const, address: '2001:db8::1' },
-      port: 9090,
-    };
+    const entry = defaultEntry({ domainName: toDomainName('sundae.fi') });
     sim.register(entry);
     sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const updated = entryFromContract(raw);
-    expect(updated.port).toBe(9090);
-    expect(updated.ip.kind).toBe('ipv6');
+    expect(updated.domainName).toBe('sundae.fi');
   });
 });
