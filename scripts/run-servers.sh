@@ -99,7 +99,9 @@ validate_n_wallets() {
     local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
     local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
     if [ ! -f "$mnemonic_file_i" ] && [ ! -f "$seed_file_i" ]; then
-      log "ERROR: Server $i wallet not found. Expected $mnemonic_file_i or $seed_file_i"
+      log "ERROR: Server $i wallet not found. Create one of the following files or set CES_SERVER${i}_MNEMONIC_FILE / CES_SERVER${i}_SEED_FILE in the environment:"
+      log "  $mnemonic_file_i"
+      log "  $seed_file_i"
       exit 1
     fi
   done
