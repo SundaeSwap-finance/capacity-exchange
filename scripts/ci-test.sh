@@ -17,6 +17,8 @@
 #   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
 
 set -euo pipefail
+# shellcheck source=lib/ces-server.sh
+source "$(cd "$(dirname "$0")" && pwd)/lib/ces-server.sh"
 
 NETWORK_ID="${1:?Usage: ci-test.sh <network_id>}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -72,36 +74,12 @@ generate_runner_wallet() {
 
 generate_price_config() {
   log "Generating price config for CES server"
-  cat > "$CES_SERVER_PRICE_CONFIG" <<EOF
-{
-  "priceFormulas": [
-    {
-      "currency": {
-        "type": "midnight:shielded",
-        "rawId": "$DERIVED_TOKEN_COLOR"
-      },
-      "basePrice": "101",
-      "rateNumerator": "11",
-      "rateDenominator": "1000"
-    }
-  ],
-  "sponsorAll": false,
-  "sponsoredContracts": [
-    {
-      "contractAddress": "$TOKEN_MINT_ADDRESS",
-      "circuits": { "type": "all" }
-    }
-  ]
-}
-EOF
+  generate_price_config_file "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
 }
 
 start_ces_server() {
   log "Starting CES server against $NETWORK_ID"
-  local old_umask
-  old_umask="$(umask)"
-  umask 077
-  openssl rand -hex 32 > "$CES_SERVER_QUOTE_SECRET"
+  generate_quote_secret "$CES_SERVER_QUOTE_SECRET"
 
   local wallet_env_var
   if [ -n "${CES_WALLET_SEED:-}" ]; then

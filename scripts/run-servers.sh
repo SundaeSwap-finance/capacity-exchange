@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+# Starts N CES servers for local multi-server testing.
+#
+# Usage:
+#   MIDNIGHT_NETWORK=preview scripts/run-servers.sh [N]
+#
+# N defaults to 2 (minimum).
+#   - Server 1: no-dust wallet; peers to all funded servers (2..N)
+#   - Servers 2..N: hold DUST and serve it directly.
+#
+# All servers share a single price config (price-config.<network>.json in apps/server/).
+# If it doesn't exist, it is generated from DERIVED_TOKEN_COLOR + TOKEN_MINT_ADDRESS.
+#
+# Ports:
+#   - Server i API:       BASE_PORT + i - 1           (default base: 3000)
+#   - Server i dashboard: BASE_DASHBOARD_PORT + i - 1  (default base: 4000)
+#
+# Wallet files (resolved relative to the repo root):
+#   - Server 1: CES_SERVER1_MNEMONIC_FILE (default: wallet-mnemonic-no-dust.<network>.txt)
+#               or CES_SERVER1_SEED_FILE as fallback.
+#   - Server i: CES_SERVER{i}_MNEMONIC_FILE or CES_SERVER{i}_SEED_FILE env var,
+#               falling back to wallet-mnemonic-{i}.<network>.txt or wallet-seed-{i}.<network>.hex
+#
+# Required env vars (only if price config needs to be generated):
+#   - DERIVED_TOKEN_COLOR
+#   - TOKEN_MINT_ADDRESS
+#
+# Optional env vars:
+#   - BASE_PORT               API base port (default: 3000)
+#   - BASE_DASHBOARD_PORT     Dashboard base port (default: 4000)
+#   - MIDNIGHT_NETWORK        Network to connect to (default: preview)
+#   - SKIP_BALANCE_CHECK      Set to 1 to bypass wallet balance checks (default: 0)
+#   - CHAIN_SNAPSHOT_DIR      Path to chain snapshots (default: .chain-snapshots/ at repo root).
+#   - LOG_DIR                 Directory for server log files (default: apps/server/).
+#   - WALLET_STATE_DIR        Directory for wallet state (default: .wallet-states/ at repo root).
+
+set -euo pipefail
+# shellcheck source=lib/ces-server.sh
+source "$(cd "$(dirname "$0")" && pwd)/lib/ces-server.sh"
+
+N=${1:-2}
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_ROOT="$ROOT_DIR/apps/server"
+
+BASE_PORT=${BASE_PORT:-3000}
+BASE_DASHBOARD_PORT=${BASE_DASHBOARD_PORT:-4000}
+MIDNIGHT_NETWORK=${MIDNIGHT_NETWORK:-preview}
+SKIP_BALANCE_CHECK=${SKIP_BALANCE_CHECK:-0}
+LOG_DIR=${LOG_DIR:-$ROOT_DIR}
+WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
+CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
+CES_SERVER1_MNEMONIC_FILE=${CES_SERVER1_MNEMONIC_FILE:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}
+CES_SERVER_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.json"
+QUOTE_TTL_SECONDS=${QUOTE_TTL_SECONDS:-300}
+OFFER_TTL_SECONDS=${OFFER_TTL_SECONDS:-60}
+LOG_LEVEL=${LOG_LEVEL:-info}
+
+PIDS=()
+
+log() { echo "=== [run-servers] $*"; }
+
+cleanup() {
+  if [ "${#PIDS[@]}" -gt 0 ]; then
+    log "Stopping servers..."
+    for pid in "${PIDS[@]}"; do
+      kill "$pid" 2>/dev/null && log "Stopped PID $pid" || true
+    done
+  fi
+  for ((i=1; i<=N; i++)); do
+    rm -f "$LOG_DIR/server$i.log"
+    rm -f "$PROJECT_ROOT/.quote-secret-$i.hex"
+  done
+}
+
+validate_args() {
+  if ! [[ "$N" =~ ^[0-9]+$ ]] || [ "$N" -lt 2 ]; then
+    log "ERROR: N must be at least 2 (1 no-dust + at least 1 funded server)"
+    exit 1
+  fi
+}
+
+resolve_server1_wallet() {
+  if [ -f "$CES_SERVER1_MNEMONIC_FILE" ]; then
+    SERVER1_WALLET_KEY="WALLET_MNEMONIC_FILE"
+    SERVER1_WALLET_VAL="$CES_SERVER1_MNEMONIC_FILE"
+  elif [ -n "${CES_SERVER1_SEED_FILE:-}" ] && [ -f "$CES_SERVER1_SEED_FILE" ]; then
+    SERVER1_WALLET_KEY="WALLET_SEED_FILE"
+    SERVER1_WALLET_VAL="$CES_SERVER1_SEED_FILE"
+  else
+    log "ERROR: Server 1 wallet not found. Set CES_SERVER1_MNEMONIC_FILE or CES_SERVER1_SEED_FILE."
+    exit 1
+  fi
+}
+
+validate_n_wallets() {
+  for ((i=2; i<=N; i++)); do
+    local mnemonic_var="CES_SERVER${i}_MNEMONIC_FILE"
+    local seed_var="CES_SERVER${i}_SEED_FILE"
+    local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
+    local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
+    if [ ! -f "$mnemonic_file_i" ] && [ ! -f "$seed_file_i" ]; then
+      log "ERROR: Server $i wallet not found. Expected $mnemonic_file_i or $seed_file_i"
+      exit 1
+    fi
+  done
+}
+
+generate_quote_secrets() {
+  for ((i=1; i<=N; i++)); do
+    local quote_secret_i="$PROJECT_ROOT/.quote-secret-$i.hex"
+    [ -f "$quote_secret_i" ] && continue
+    log "Generating quote secret for server $i"
+    generate_quote_secret "$quote_secret_i"
+  done
+}
+
+generate_price_configs() {
+  [ -f "$CES_SERVER_PRICE_CONFIG" ] && return
+  log "Generating price config"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+    exit 1
+  fi
+  generate_price_config_file "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+}
+
+check_balances() {
+  [ "$SKIP_BALANCE_CHECK" = "1" ] && return
+  log "Checking balances on '$MIDNIGHT_NETWORK' (this may take a moment)..."
+  local mnemonics=()
+  for ((i=2; i<=N; i++)); do
+    local mnemonic_var="CES_SERVER${i}_MNEMONIC_FILE"
+    local seed_var="CES_SERVER${i}_SEED_FILE"
+    local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
+    local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
+    if [ -f "$mnemonic_file_i" ]; then
+      mnemonics+=(--mnemonic "$mnemonic_file_i")
+    else
+      mnemonics+=(--seed "$seed_file_i")
+    fi
+  done
+  local server1_flag="--server1-mnemonic"
+  [ "$SERVER1_WALLET_KEY" = "WALLET_SEED_FILE" ] && server1_flag="--server1-seed"
+  bun "$ROOT_DIR/scripts/check-server-balances.ts" \
+    --network "$MIDNIGHT_NETWORK" \
+    "$server1_flag" "$SERVER1_WALLET_VAL" \
+    --wallet-state-dir "$WALLET_STATE_DIR" \
+    --chain-snapshot-dir "$CHAIN_SNAPSHOT_DIR" \
+    "${mnemonics[@]}"
+}
+
+build_peer_urls() {
+  PEER_URLS=""
+  for ((i=2; i<=N; i++)); do
+    local port=$((BASE_PORT + i - 1))
+    PEER_URLS="${PEER_URLS:+$PEER_URLS,}http://localhost:$port"
+  done
+}
+
+start_server1() {
+  local log_path="$LOG_DIR/server1.log"
+  log "Starting server 1 on port $BASE_PORT (no-dust wallet, peers -> $PEER_URLS)..."
+  env -u WALLET_SEED_FILE -u WALLET_MNEMONIC_FILE \
+    "$SERVER1_WALLET_KEY=$SERVER1_WALLET_VAL" \
+    PORT="$BASE_PORT" \
+    DASHBOARD_PORT="$BASE_DASHBOARD_PORT" \
+    MIDNIGHT_NETWORK="$MIDNIGHT_NETWORK" \
+    PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
+    CAPACITY_EXCHANGE_PEER_URLS="$PEER_URLS" \
+    QUOTE_SECRET_FILE="$PROJECT_ROOT/.quote-secret-1.hex" \
+    WALLET_STATE_DIR="$WALLET_STATE_DIR" \
+    QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
+    OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
+    LOG_LEVEL="$LOG_LEVEL" \
+    bun "$PROJECT_ROOT/src/server.ts" >> "$log_path" 2>&1 &
+  local pid=$!
+  PIDS+=($pid)
+  log "Server 1 started (PID $pid) — logs: $log_path"
+}
+
+start_n_servers() {
+  for ((i=2; i<=N; i++)); do
+    local port_i=$((BASE_PORT + i - 1))
+    local dashboard_port_i=$((BASE_DASHBOARD_PORT + i - 1))
+    local mnemonic_var="CES_SERVER${i}_MNEMONIC_FILE"
+    local seed_var="CES_SERVER${i}_SEED_FILE"
+    local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
+    local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
+    local quote_secret_i="$PROJECT_ROOT/.quote-secret-$i.hex"
+    local log_path_i="$LOG_DIR/server$i.log"
+    local wallet_key wallet_val
+    if [ -f "$mnemonic_file_i" ]; then
+      wallet_key="WALLET_MNEMONIC_FILE"
+      wallet_val="$mnemonic_file_i"
+    else
+      wallet_key="WALLET_SEED_FILE"
+      wallet_val="$seed_file_i"
+    fi
+
+    log "Starting server $i on port $port_i (funded wallet, $wallet_key: $wallet_val)..."
+    env -u WALLET_SEED_FILE -u WALLET_MNEMONIC_FILE -u CAPACITY_EXCHANGE_PEER_URLS \
+      PORT="$port_i" \
+      DASHBOARD_PORT="$dashboard_port_i" \
+      MIDNIGHT_NETWORK="$MIDNIGHT_NETWORK" \
+      "$wallet_key=$wallet_val" \
+      PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
+      QUOTE_SECRET_FILE="$quote_secret_i" \
+      WALLET_STATE_DIR="$WALLET_STATE_DIR" \
+      QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
+      OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
+      LOG_LEVEL="$LOG_LEVEL" \
+      bun "$PROJECT_ROOT/src/server.ts" >> "$log_path_i" 2>&1 &
+    local pid=$!
+    PIDS+=($pid)
+    log "Server $i started (PID $pid) — logs: $log_path_i"
+  done
+}
+
+print_summary() {
+  log "$N servers running. Press Ctrl+C to stop."
+  log "  Server 1: http://localhost:$BASE_PORT  (no dust, peers -> $PEER_URLS)  dashboard: http://localhost:$BASE_DASHBOARD_PORT"
+  for ((i=2; i<=N; i++)); do
+    local port=$((BASE_PORT + i - 1))
+    local dashboard_port=$((BASE_DASHBOARD_PORT + i - 1))
+    log "  Server $i: http://localhost:$port  (funded wallet)  dashboard: http://localhost:$dashboard_port"
+  done
+}
+
+trap cleanup EXIT
+cd "$ROOT_DIR"
+
+validate_args
+resolve_server1_wallet
+validate_n_wallets
+generate_quote_secrets
+generate_price_configs
+check_balances
+build_peer_urls
+start_server1
+start_n_servers
+print_summary
+
+while true; do
+  for pid in "${PIDS[@]}"; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      log "ERROR: Server (PID $pid) exited unexpectedly"
+      exit 1
+    fi
+  done
+  sleep 2
+done
