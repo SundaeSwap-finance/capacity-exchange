@@ -35,8 +35,8 @@
 #   - WALLET_STATE_DIR        Directory for wallet state (default: .wallet-states/ at repo root).
 
 set -euo pipefail
-# shellcheck source=lib/ces-server.sh
-source "$(cd "$(dirname "$0")" && pwd)/lib/ces-server.sh"
+# shellcheck source=lib/utils.sh
+source "$(cd "$(dirname "$0")" && pwd)/lib/utils.sh"
 
 N=${1:-2}
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"

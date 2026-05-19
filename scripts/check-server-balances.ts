@@ -14,16 +14,7 @@
  *     [--mnemonic <file> | --seed <file>]...
  */
 
-import { readFileSync } from 'fs';
-import {
-  createWalletContext,
-  loadChainSnapshot,
-  buildNetworkConfig,
-  resolveEnv,
-} from '@sundaeswap/capacity-exchange-nodejs';
-import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core';
-
-const WALLET_SYNC_TIMEOUT_MS = 1_500_000; // 25 minutes
+import { withAppContext, buildAppConfig, resolveEnv } from '@sundaeswap/capacity-exchange-nodejs';
 
 // ── Arg parsing ───────────────────────────────────────────────────────────────
 
@@ -33,7 +24,6 @@ let network = '';
 let server1File = '';
 let server1IsSeed = false;
 let walletStateDir = '';
-let chainSnapshotDir = '';
 const fundedWallets: { file: string; isSeed: boolean }[] = [];
 
 for (let i = 0; i < argv.length; i++) {
@@ -53,8 +43,8 @@ for (let i = 0; i < argv.length; i++) {
       walletStateDir = argv[++i];
       break;
     case '--chain-snapshot-dir':
-      chainSnapshotDir = argv[++i];
-      break;
+      ++i;
+      break; // accepted but unused — onDisk state handles its own offset
     case '--mnemonic':
       fundedWallets.push({ file: argv[++i], isSeed: false });
       break;
@@ -66,7 +56,7 @@ for (let i = 0; i < argv.length; i++) {
 
 if (!network || !server1File || !walletStateDir) {
   console.error(
-    'Usage: check-server-balances.ts --network <n> --server1-mnemonic|--server1-seed <file> --wallet-state-dir <dir> [--chain-snapshot-dir <dir>] [--mnemonic|--seed <file>]...'
+    'Usage: check-server-balances.ts --network <n> --server1-mnemonic|--server1-seed <file> --wallet-state-dir <dir> [--mnemonic|--seed <file>]...'
   );
   process.exit(1);
 }
@@ -74,21 +64,10 @@ if (!network || !server1File || !walletStateDir) {
 // ── Wallet sync ───────────────────────────────────────────────────────────────
 
 async function syncWallet(file: string, isSeed: boolean) {
-  const contents = readFileSync(file, 'utf-8').trim();
-  const seed = isSeed ? parseSeedHex(contents) : parseMnemonic(contents);
-  const { walletFacade } = await createWalletContext({
-    network: buildNetworkConfig(network, resolveEnv()),
-    wallet: {
-      seed,
-      stateSource: {
-        kind: 'onDisk',
-        walletStateDir,
-        chainSnapshot: chainSnapshotDir ? loadChainSnapshot(network, chainSnapshotDir) : undefined,
-      },
-      walletSyncTimeoutMs: WALLET_SYNC_TIMEOUT_MS,
-    },
-  });
-  return walletFacade.waitForSyncedState();
+  const walletEnvKey = isSeed ? 'WALLET_SEED_FILE' : 'WALLET_MNEMONIC_FILE';
+  const env = { ...resolveEnv(), [walletEnvKey]: file, WALLET_STATE_DIR: walletStateDir };
+  const config = buildAppConfig(network, env);
+  return withAppContext(config, (ctx) => ctx.walletContext.walletFacade.waitForSyncedState());
 }
 
 // ── Checks ────────────────────────────────────────────────────────────────────

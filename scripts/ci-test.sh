@@ -17,8 +17,8 @@
 #   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
 
 set -euo pipefail
-# shellcheck source=lib/ces-server.sh
-source "$(cd "$(dirname "$0")" && pwd)/lib/ces-server.sh"
+# shellcheck source=lib/utils.sh
+source "$(cd "$(dirname "$0")" && pwd)/lib/utils.sh"
 
 NETWORK_ID="${1:?Usage: ci-test.sh <network_id>}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
