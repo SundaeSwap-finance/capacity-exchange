@@ -28,6 +28,7 @@
     "tr46": "5.1.1"
   },
   "devDependencies": {
+    "@capacity-exchange/archive-tools": "workspace:^",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "@changesets/cli": "^2.30.0",

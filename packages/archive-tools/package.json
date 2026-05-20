@@ -1,0 +1,22 @@
+{
+  "name": "@capacity-exchange/archive-tools",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "archive-write": "bun src/cli/write-archive.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1051.0",
+    "@aws-sdk/client-sts": "^3.1051.0",
+    "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "typescript": "^5.9.3"
+  }
+}
