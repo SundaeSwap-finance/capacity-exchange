@@ -67,14 +67,9 @@ validate_env() {
   done
 }
 
-generate_runner_wallet() {
-  log "Generating ephemeral runner wallet for sponsor+exchange flows"
-  RUNNER_MNEMONIC=$(bun -e "import { generateMnemonic } from '$ROOT_DIR/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());")
-}
-
 generate_price_config() {
   log "Generating price config for CES server"
-  generate_price_config_file "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
 }
 
 start_ces_server() {
@@ -107,23 +102,6 @@ start_ces_server() {
   log "CES server started (PID: $CES_SERVER_PID)"
 }
 
-wait_for_ces_server() {
-  log "Waiting for CES server to be ready"
-  for i in $(seq 1 "$CES_READINESS_RETRIES"); do
-    if curl -sf http://localhost:${CES_PORT}/health/ready > /dev/null 2>&1; then
-      log "CES server is ready"
-      return
-    fi
-    if ! kill -0 "$CES_SERVER_PID" 2>/dev/null; then
-      log "ERROR: CES server exited unexpectedly"
-      exit 1
-    fi
-    sleep 2
-  done
-  log "ERROR: CES server did not become ready in time"
-  exit 1
-}
-
 run_tests() {
   log "Running tests against $NETWORK_ID"
 
@@ -151,8 +129,9 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_env
-generate_runner_wallet
+log "Generating ephemeral runner wallet for sponsor+exchange flows"
+  RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
 generate_price_config
 start_ces_server
-wait_for_ces_server
+wait_for_server "$CES_PORT" "CES server" CES_SERVER_PID "$CES_READINESS_RETRIES"
 run_tests

@@ -54,11 +54,6 @@ validate_env() {
   fi
 }
 
-generate_runner_wallet() {
-  log "Generating ephemeral runner wallet for sponsor flow"
-  RUNNER_MNEMONIC=$(bun -e "import { generateMnemonic } from '$ROOT_DIR/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());")
-}
-
 start_servers() {
   log "Starting CES servers (N=2) against $NETWORK_ID"
   MIDNIGHT_NETWORK="$NETWORK_ID" \
@@ -66,25 +61,6 @@ start_servers() {
     bash "$ROOT_DIR/scripts/run-servers.sh" 2 &
   RUN_SERVERS_PID=$!
   log "run-servers.sh started (PID: $RUN_SERVERS_PID)"
-}
-
-wait_for_server() {
-  local port="$1"
-  local label="$2"
-  log "Waiting for $label (port $port) to be ready"
-  for i in $(seq 1 "$SERVER_READINESS_RETRIES"); do
-    if curl -sf "http://localhost:${port}/health/ready" > /dev/null 2>&1; then
-      log "$label is ready"
-      return
-    fi
-    if ! kill -0 "$RUN_SERVERS_PID" 2>/dev/null; then
-      log "ERROR: run-servers.sh exited unexpectedly"
-      exit 1
-    fi
-    sleep 2
-  done
-  log "ERROR: $label did not become ready in time"
-  exit 1
 }
 
 run_fallback_test() {
@@ -105,8 +81,9 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_env
-generate_runner_wallet
+log "Generating ephemeral runner wallet for sponsor flow"
+  RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
 start_servers
-wait_for_server "$SERVER1_PORT" "Server 1"
-wait_for_server "$SERVER2_PORT" "Server 2"
+wait_for_server "$SERVER1_PORT" "Server 1" RUN_SERVERS_PID "$SERVER_READINESS_RETRIES"
+wait_for_server "$SERVER2_PORT" "Server 2" RUN_SERVERS_PID "$SERVER_READINESS_RETRIES"
 run_fallback_test

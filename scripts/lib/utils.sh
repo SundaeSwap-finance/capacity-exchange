@@ -13,12 +13,30 @@ generate_quote_secret() {
   umask "$old_umask"
 }
 
-# generate_price_config_file <output_file> <derived_token_color> <token_mint_address>
-# Runs gen-price-config.ts to produce a price config at <output_file>.
-# ROOT_DIR must be set by the caller.
-generate_price_config_file() {
-  local output_file="$1"
-  local derived_token_color="$2"
-  local token_mint_address="$3"
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$output_file" "$derived_token_color" "$token_mint_address"
+# generate_runner_wallet <root_dir>
+# Prints a fresh ephemeral mnemonic to stdout.
+generate_runner_wallet() {
+  local root_dir="$1"
+  bun -e "import { generateMnemonic } from '$root_dir/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());"
+}
+
+# wait_for_server <port> <label> <pid_var> <retries>
+# Polls http://localhost:<port>/health/ready until ready.
+# Exits 1 if the process named by <pid_var> dies or <retries> is exceeded.
+wait_for_server() {
+  local port="$1" label="$2" pid_var="$3" retries="$4"
+  echo "=== Waiting for $label (port $port) to be ready"
+  for i in $(seq 1 "$retries"); do
+    if curl -sf "http://localhost:${port}/health/ready" > /dev/null 2>&1; then
+      echo "=== $label is ready"
+      return
+    fi
+    if ! kill -0 "${!pid_var}" 2>/dev/null; then
+      echo "=== ERROR: $label exited unexpectedly"
+      exit 1
+    fi
+    sleep 2
+  done
+  echo "=== ERROR: $label did not become ready in time"
+  exit 1
 }

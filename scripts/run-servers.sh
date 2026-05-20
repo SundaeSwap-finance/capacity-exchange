@@ -51,6 +51,7 @@ LOG_DIR=${LOG_DIR:-$ROOT_DIR}
 WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
 CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
 CES_SERVER_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.json"
+CES_SERVER_NO_DUST_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.no-dust.json"
 QUOTE_TTL_SECONDS=${QUOTE_TTL_SECONDS:-300}
 OFFER_TTL_SECONDS=${OFFER_TTL_SECONDS:-60}
 LOG_LEVEL=${LOG_LEVEL:-info}
@@ -94,13 +95,19 @@ cleanup() {
     done
   fi
   for ((i=1; i<=N; i++)); do
-    rm -f "$LOG_DIR/server$i.log"
     rm -f "$PROJECT_ROOT/.quote-secret-$i.hex"
   done
   rm -f "$CES_SERVER_NO_DUST_MNEMONIC_FILE" "$CES_SERVER_NO_DUST_SEED_FILE"
+  rm -f "$CES_SERVER_NO_DUST_PRICE_CONFIG"
   for ((i=2; i<=N; i++)); do
     rm -f "$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
     rm -f "$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
+  done
+}
+
+clear_logs() {
+  for ((i=1; i<=N; i++)); do
+    rm -f "$LOG_DIR/server$i.log"
   done
 }
 
@@ -115,11 +122,11 @@ resolve_server1_wallet() {
   local mnemonic="${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}"
   local seed="${CES_WALLET_SEED_NO_DUST_PREVIEW:-}"
   if [ -f "$mnemonic" ]; then
-    SERVER1_WALLET_KEY="WALLET_MNEMONIC_FILE"
-    SERVER1_WALLET_VAL="$mnemonic"
+    NO_DUST_WALLET_KEY="WALLET_MNEMONIC_FILE"
+    NO_DUST_WALLET_VAL="$mnemonic"
   elif [ -n "$seed" ] && [ -f "$seed" ]; then
-    SERVER1_WALLET_KEY="WALLET_SEED_FILE"
-    SERVER1_WALLET_VAL="$seed"
+    NO_DUST_WALLET_KEY="WALLET_SEED_FILE"
+    NO_DUST_WALLET_VAL="$seed"
   else
     log "ERROR: No-dust Server wallet not found. Set CES_WALLET_MNEMONIC_NO_DUST_PREVIEW or CES_WALLET_SEED_NO_DUST_PREVIEW."
     exit 1
@@ -156,7 +163,17 @@ generate_price_configs() {
     log "ERROR: Cannot generate $CES_SERVER_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  generate_price_config_file "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+}
+
+generate_server1_price_config() {
+  [ -f "$CES_SERVER_NO_DUST_PRICE_CONFIG" ] && return
+  log "Generating server 1 price config (with peer.maxPrices for DUST fallback)"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+    exit 1
+  fi
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
 }
 
 check_balances() {
@@ -174,10 +191,10 @@ check_balances() {
     fi
   done
   local server1_flag="--server1-mnemonic"
-  [ "$SERVER1_WALLET_KEY" = "WALLET_SEED_FILE" ] && server1_flag="--server1-seed"
+  [ "$NO_DUST_WALLET_KEY" = "WALLET_SEED_FILE" ] && server1_flag="--server1-seed"
   bun "$ROOT_DIR/scripts/check-server-balances.ts" \
     --network "$MIDNIGHT_NETWORK" \
-    "$server1_flag" "$SERVER1_WALLET_VAL" \
+    "$server1_flag" "$NO_DUST_WALLET_VAL" \
     --wallet-state-dir "$WALLET_STATE_DIR" \
     --chain-snapshot-dir "$CHAIN_SNAPSHOT_DIR" \
     "${mnemonics[@]}"
@@ -195,11 +212,11 @@ start_server1() {
   local log_path="$LOG_DIR/server1.log"
   log "Starting No-dust Server on port $BASE_PORT (no-dust wallet, peers -> $PEER_URLS)..."
   env -u WALLET_SEED_FILE -u WALLET_MNEMONIC_FILE \
-    "$SERVER1_WALLET_KEY=$SERVER1_WALLET_VAL" \
+    "$NO_DUST_WALLET_KEY=$NO_DUST_WALLET_VAL" \
     PORT="$BASE_PORT" \
     DASHBOARD_PORT="$BASE_DASHBOARD_PORT" \
     MIDNIGHT_NETWORK="$MIDNIGHT_NETWORK" \
-    PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
+    PRICE_CONFIG_FILE="$CES_SERVER_NO_DUST_PRICE_CONFIG" \
     CAPACITY_EXCHANGE_PEER_URLS="$PEER_URLS" \
     QUOTE_SECRET_FILE="$PROJECT_ROOT/.quote-secret-1.hex" \
     WALLET_STATE_DIR="$WALLET_STATE_DIR" \
@@ -263,11 +280,13 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_args
+clear_logs
 write_wallet_files
 resolve_server1_wallet
 validate_n_wallets
 generate_quote_secrets
 generate_price_configs
+generate_server1_price_config
 check_balances
 build_peer_urls
 start_server1
