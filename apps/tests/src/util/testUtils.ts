@@ -9,6 +9,23 @@ import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core'
 
 export type WalletSeed = { type: 'seed'; seed: string } | { type: 'mnemonic'; mnemonic: string };
 
+export function requireEnvSeed(env: Record<string, string | undefined>, prefix: string): WalletSeed {
+  const seedVar = `${prefix}_SEED`;
+  const mnemonicVar = `${prefix}_MNEMONIC`;
+  const seed = env[seedVar];
+  const mnemonic = env[mnemonicVar];
+  if (seed && mnemonic) {
+    throw new Error(`Set exactly one of ${seedVar} or ${mnemonicVar}, not both`);
+  }
+  if (seed) {
+    return { type: 'seed', seed };
+  }
+  if (mnemonic) {
+    return { type: 'mnemonic', mnemonic };
+  }
+  throw new Error(`Missing environment variables: ${seedVar} or ${mnemonicVar}`);
+}
+
 export interface FlowCtxConfig {
   seed: WalletSeed;
   stateSource: WalletStateSource;

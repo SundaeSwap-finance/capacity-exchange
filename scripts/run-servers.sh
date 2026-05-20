@@ -5,7 +5,7 @@
 #   MIDNIGHT_NETWORK=preview scripts/run-servers.sh [N]
 #
 # N defaults to 2 (minimum).
-#   - Server 1: no-dust wallet; peers to all funded servers (2..N)
+#   - No-dust Server: no-dust wallet; peers to all funded servers (2..N)
 #   - Servers 2..N: hold DUST and serve it directly.
 #
 # All servers share a single price config (price-config.<network>.json in apps/server/).
@@ -15,10 +15,11 @@
 #   - Server i API:       BASE_PORT + i - 1           (default base: 3000)
 #   - Server i dashboard: BASE_DASHBOARD_PORT + i - 1  (default base: 4000)
 #
-# Wallet files (resolved relative to the repo root):
-#   - Server 1: CES_SERVER1_MNEMONIC_FILE (default: wallet-mnemonic-no-dust.<network>.txt)
-#               or CES_SERVER1_SEED_FILE as fallback.
-#   - Server i: CES_SERVER{i}_MNEMONIC_FILE or CES_SERVER{i}_SEED_FILE env var,
+# Wallet env vars accept either a file path or a raw mnemonic/seed string.
+# Raw strings are written to a temp file automatically.
+#   - No-dust Server: CES_WALLET_MNEMONIC_NO_DUST_PREVIEW (default: wallet-mnemonic-no-dust.<network>.txt)
+#               or CES_WALLET_SEED_NO_DUST_PREVIEW as fallback.
+#   - Server i: CES_WALLET{i}_MNEMONIC or CES_WALLET{i}_SEED env var,
 #               falling back to wallet-mnemonic-{i}.<network>.txt or wallet-seed-{i}.<network>.hex
 #
 # Required env vars (only if price config needs to be generated):
@@ -49,7 +50,6 @@ SKIP_BALANCE_CHECK=${SKIP_BALANCE_CHECK:-0}
 LOG_DIR=${LOG_DIR:-$ROOT_DIR}
 WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
 CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
-CES_SERVER1_MNEMONIC_FILE=${CES_SERVER1_MNEMONIC_FILE:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}
 CES_SERVER_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.json"
 QUOTE_TTL_SECONDS=${QUOTE_TTL_SECONDS:-300}
 OFFER_TTL_SECONDS=${OFFER_TTL_SECONDS:-60}
@@ -57,7 +57,34 @@ LOG_LEVEL=${LOG_LEVEL:-info}
 
 PIDS=()
 
+CES_SERVER_NO_DUST_MNEMONIC_FILE="$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.ci.txt"
+CES_SERVER_NO_DUST_SEED_FILE="$ROOT_DIR/wallet-seed-no-dust.$MIDNIGHT_NETWORK.ci.hex"
+
 log() { echo "=== [run-servers] $*"; }
+
+# If a wallet env var holds a raw string (not a file path), write it to a named
+# file and update the var to the file path. Called once before any wallet reads.
+write_wallet_files() {
+  if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" ]; then
+    echo "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+    CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+  elif [ -n "${CES_WALLET_SEED_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_SEED_NO_DUST_PREVIEW" ]; then
+    echo "$CES_WALLET_SEED_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_SEED_FILE"
+    CES_WALLET_SEED_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_SEED_FILE"
+  fi
+  for ((i=2; i<=N; i++)); do
+    local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
+    if [ -n "${!mnemonic_var:-}" ] && [ ! -f "${!mnemonic_var}" ]; then
+      local f="$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
+      echo "${!mnemonic_var}" > "$f"
+      export "${mnemonic_var}=$f"
+    elif [ -n "${!seed_var:-}" ] && [ ! -f "${!seed_var}" ]; then
+      local f="$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
+      echo "${!seed_var}" > "$f"
+      export "${seed_var}=$f"
+    fi
+  done
+}
 
 cleanup() {
   if [ "${#PIDS[@]}" -gt 0 ]; then
@@ -70,6 +97,11 @@ cleanup() {
     rm -f "$LOG_DIR/server$i.log"
     rm -f "$PROJECT_ROOT/.quote-secret-$i.hex"
   done
+  rm -f "$CES_SERVER_NO_DUST_MNEMONIC_FILE" "$CES_SERVER_NO_DUST_SEED_FILE"
+  for ((i=2; i<=N; i++)); do
+    rm -f "$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
+    rm -f "$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
+  done
 }
 
 validate_args() {
@@ -80,26 +112,27 @@ validate_args() {
 }
 
 resolve_server1_wallet() {
-  if [ -f "$CES_SERVER1_MNEMONIC_FILE" ]; then
+  local mnemonic="${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}"
+  local seed="${CES_WALLET_SEED_NO_DUST_PREVIEW:-}"
+  if [ -f "$mnemonic" ]; then
     SERVER1_WALLET_KEY="WALLET_MNEMONIC_FILE"
-    SERVER1_WALLET_VAL="$CES_SERVER1_MNEMONIC_FILE"
-  elif [ -n "${CES_SERVER1_SEED_FILE:-}" ] && [ -f "$CES_SERVER1_SEED_FILE" ]; then
+    SERVER1_WALLET_VAL="$mnemonic"
+  elif [ -n "$seed" ] && [ -f "$seed" ]; then
     SERVER1_WALLET_KEY="WALLET_SEED_FILE"
-    SERVER1_WALLET_VAL="$CES_SERVER1_SEED_FILE"
+    SERVER1_WALLET_VAL="$seed"
   else
-    log "ERROR: Server 1 wallet not found. Set CES_SERVER1_MNEMONIC_FILE or CES_SERVER1_SEED_FILE."
+    log "ERROR: No-dust Server wallet not found. Set CES_WALLET_MNEMONIC_NO_DUST_PREVIEW or CES_WALLET_SEED_NO_DUST_PREVIEW."
     exit 1
   fi
 }
 
 validate_n_wallets() {
   for ((i=2; i<=N; i++)); do
-    local mnemonic_var="CES_SERVER${i}_MNEMONIC_FILE"
-    local seed_var="CES_SERVER${i}_SEED_FILE"
+    local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
     local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
     local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
     if [ ! -f "$mnemonic_file_i" ] && [ ! -f "$seed_file_i" ]; then
-      log "ERROR: Server $i wallet not found. Create one of the following files or set CES_SERVER${i}_MNEMONIC_FILE / CES_SERVER${i}_SEED_FILE in the environment:"
+      log "ERROR: Server $i wallet not found. Create one of the following files or set CES_WALLET${i}_MNEMONIC / CES_WALLET${i}_SEED in the environment:"
       log "  $mnemonic_file_i"
       log "  $seed_file_i"
       exit 1
@@ -131,8 +164,7 @@ check_balances() {
   log "Checking balances on '$MIDNIGHT_NETWORK' (this may take a moment)..."
   local mnemonics=()
   for ((i=2; i<=N; i++)); do
-    local mnemonic_var="CES_SERVER${i}_MNEMONIC_FILE"
-    local seed_var="CES_SERVER${i}_SEED_FILE"
+    local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
     local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
     local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
     if [ -f "$mnemonic_file_i" ]; then
@@ -161,7 +193,7 @@ build_peer_urls() {
 
 start_server1() {
   local log_path="$LOG_DIR/server1.log"
-  log "Starting server 1 on port $BASE_PORT (no-dust wallet, peers -> $PEER_URLS)..."
+  log "Starting No-dust Server on port $BASE_PORT (no-dust wallet, peers -> $PEER_URLS)..."
   env -u WALLET_SEED_FILE -u WALLET_MNEMONIC_FILE \
     "$SERVER1_WALLET_KEY=$SERVER1_WALLET_VAL" \
     PORT="$BASE_PORT" \
@@ -177,15 +209,14 @@ start_server1() {
     bun "$PROJECT_ROOT/src/server.ts" >> "$log_path" 2>&1 &
   local pid=$!
   PIDS+=($pid)
-  log "Server 1 started (PID $pid) — logs: $log_path"
+  log "No-dust Server started (PID $pid) — logs: $log_path"
 }
 
 start_n_servers() {
   for ((i=2; i<=N; i++)); do
     local port_i=$((BASE_PORT + i - 1))
     local dashboard_port_i=$((BASE_DASHBOARD_PORT + i - 1))
-    local mnemonic_var="CES_SERVER${i}_MNEMONIC_FILE"
-    local seed_var="CES_SERVER${i}_SEED_FILE"
+    local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
     local mnemonic_file_i="${!mnemonic_var:-$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.txt}"
     local seed_file_i="${!seed_var:-$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.hex}"
     local quote_secret_i="$PROJECT_ROOT/.quote-secret-$i.hex"
@@ -220,7 +251,7 @@ start_n_servers() {
 
 print_summary() {
   log "$N servers running. Press Ctrl+C to stop."
-  log "  Server 1: http://localhost:$BASE_PORT  (no dust, peers -> $PEER_URLS)  dashboard: http://localhost:$BASE_DASHBOARD_PORT"
+  log "  No-dust Server: http://localhost:$BASE_PORT  (no dust, peers -> $PEER_URLS)  dashboard: http://localhost:$BASE_DASHBOARD_PORT"
   for ((i=2; i<=N; i++)); do
     local port=$((BASE_PORT + i - 1))
     local dashboard_port=$((BASE_DASHBOARD_PORT + i - 1))
@@ -232,6 +263,7 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_args
+write_wallet_files
 resolve_server1_wallet
 validate_n_wallets
 generate_quote_secrets
