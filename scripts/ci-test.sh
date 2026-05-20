@@ -89,7 +89,6 @@ start_ces_server() {
     echo "$CES_WALLET_MNEMONIC" > "$CES_SERVER_MNEMONIC_FILE"
     wallet_env_var="WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
   fi
-  umask "$old_umask"
 
   env \
     "$wallet_env_var" \
