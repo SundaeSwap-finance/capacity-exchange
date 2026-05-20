@@ -130,7 +130,7 @@ cd "$ROOT_DIR"
 
 validate_env
 log "Generating ephemeral runner wallet for sponsor+exchange flows"
-  RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
+RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
 generate_price_config
 start_ces_server
 wait_for_server "$CES_PORT" "CES server" CES_SERVER_PID "$CES_READINESS_RETRIES"

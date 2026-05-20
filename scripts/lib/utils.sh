@@ -33,10 +33,10 @@ wait_for_server() {
     fi
     if ! kill -0 "${!pid_var}" 2>/dev/null; then
       echo "=== ERROR: $label exited unexpectedly"
-      exit 1
+      return 1
     fi
     sleep 2
   done
   echo "=== ERROR: $label did not become ready in time"
-  exit 1
+  return 1
 }

@@ -82,7 +82,7 @@ cd "$ROOT_DIR"
 
 validate_env
 log "Generating ephemeral runner wallet for sponsor flow"
-  RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
+RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
 start_servers
 wait_for_server "$SERVER1_PORT" "Server 1" RUN_SERVERS_PID "$SERVER_READINESS_RETRIES"
 wait_for_server "$SERVER2_PORT" "Server 2" RUN_SERVERS_PID "$SERVER_READINESS_RETRIES"

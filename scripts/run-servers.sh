@@ -32,7 +32,7 @@
 #   - MIDNIGHT_NETWORK        Network to connect to (default: preview)
 #   - SKIP_BALANCE_CHECK      Set to 1 to bypass wallet balance checks (default: 0)
 #   - CHAIN_SNAPSHOT_DIR      Path to chain snapshots (default: .chain-snapshots/ at repo root).
-#   - LOG_DIR                 Directory for server log files (default: apps/server/).
+#   - LOG_DIR                 Directory for server log files (default: repo root).
 #   - WALLET_STATE_DIR        Directory for wallet state (default: .wallet-states/ at repo root).
 
 set -euo pipefail
@@ -68,10 +68,10 @@ log() { echo "=== [run-servers] $*"; }
 write_wallet_files() {
   if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" ]; then
     echo "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
-    CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+    export CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
   elif [ -n "${CES_WALLET_SEED_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_SEED_NO_DUST_PREVIEW" ]; then
     echo "$CES_WALLET_SEED_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_SEED_FILE"
-    CES_WALLET_SEED_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_SEED_FILE"
+    export CES_WALLET_SEED_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_SEED_FILE"
   fi
   for ((i=2; i<=N; i++)); do
     local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
@@ -156,7 +156,7 @@ generate_quote_secrets() {
   done
 }
 
-generate_price_configs() {
+generate_funded_price_config() {
   [ -f "$CES_SERVER_PRICE_CONFIG" ] && return
   log "Generating price config"
   if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
@@ -277,6 +277,7 @@ print_summary() {
 }
 
 trap cleanup EXIT
+trap 'exit' TERM INT
 cd "$ROOT_DIR"
 
 validate_args
@@ -285,7 +286,7 @@ write_wallet_files
 resolve_server1_wallet
 validate_n_wallets
 generate_quote_secrets
-generate_price_configs
+generate_funded_price_config
 generate_server1_price_config
 check_balances
 build_peer_urls
