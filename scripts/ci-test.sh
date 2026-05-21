@@ -78,10 +78,10 @@ start_ces_server() {
 
   local wallet_env_var
   if [ -n "${CES_WALLET_SEED:-}" ]; then
-    echo "$CES_WALLET_SEED" > "$CES_SERVER_SEED_FILE"
+    write_secret_file "$CES_WALLET_SEED" "$CES_SERVER_SEED_FILE"
     wallet_env_var="WALLET_SEED_FILE=$CES_SERVER_SEED_FILE"
   else
-    echo "$CES_WALLET_MNEMONIC" > "$CES_SERVER_MNEMONIC_FILE"
+    write_secret_file "$CES_WALLET_MNEMONIC" "$CES_SERVER_MNEMONIC_FILE"
     wallet_env_var="WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
   fi
 

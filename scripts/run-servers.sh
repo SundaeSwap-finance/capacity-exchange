@@ -57,6 +57,7 @@ OFFER_TTL_SECONDS=${OFFER_TTL_SECONDS:-60}
 LOG_LEVEL=${LOG_LEVEL:-info}
 
 PIDS=()
+CREATED_FILES=()  # files created by this run; only these are deleted on exit
 
 CES_SERVER_NO_DUST_MNEMONIC_FILE="$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.ci.txt"
 CES_SERVER_NO_DUST_SEED_FILE="$ROOT_DIR/wallet-seed-no-dust.$MIDNIGHT_NETWORK.ci.hex"
@@ -71,21 +72,31 @@ write_wallet_files() {
   umask 077
   if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" ]; then
     echo "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+   
+    # track CES_SERVER_NO_DUST_MNEMONIC_FILE file for cleanup
+    CREATED_FILES+=("$CES_SERVER_NO_DUST_MNEMONIC_FILE")
     export CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
   elif [ -n "${CES_WALLET_SEED_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_SEED_NO_DUST_PREVIEW" ]; then
     echo "$CES_WALLET_SEED_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_SEED_FILE"
+    
+    # track CES_SERVER_NO_DUST_SEED_FILE file for cleanup
+    CREATED_FILES+=("$CES_SERVER_NO_DUST_SEED_FILE")
     export CES_WALLET_SEED_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_SEED_FILE"
   fi
   for ((i=2; i<=N; i++)); do
     local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
     if [ -n "${!mnemonic_var:-}" ] && [ ! -f "${!mnemonic_var}" ]; then
-      local f="$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
-      echo "${!mnemonic_var}" > "$f"
-      export "${mnemonic_var}=$f"
+      local wallet_file="$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
+      echo "${!mnemonic_var}" > "$wallet_file"
+     
+      CREATED_FILES+=("$wallet_file")
+      export "${mnemonic_var}=$wallet_file"
     elif [ -n "${!seed_var:-}" ] && [ ! -f "${!seed_var}" ]; then
-      local f="$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
-      echo "${!seed_var}" > "$f"
-      export "${seed_var}=$f"
+      local wallet_file="$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
+      echo "${!seed_var}" > "$wallet_file"
+      
+      CREATED_FILES+=("$wallet_file")
+      export "${seed_var}=$wallet_file"
     fi
   done
   umask "$old_umask"
@@ -94,19 +105,14 @@ write_wallet_files() {
 cleanup() {
   if [ "${#PIDS[@]}" -gt 0 ]; then
     log "Stopping servers..."
-    for pid in "${PIDS[@]}"; do
-      kill "$pid" 2>/dev/null && log "Stopped PID $pid" || true
+    for server_pid in "${PIDS[@]}"; do
+      kill "$server_pid" 2>/dev/null && log "Stopped PID $server_pid" || true
     done
   fi
-  for ((i=1; i<=N; i++)); do
-    rm -f "$PROJECT_ROOT/.quote-secret-$i.hex"
+  for created_file in "${CREATED_FILES[@]+"${CREATED_FILES[@]}"}"; do
+    rm -f "$created_file"
   done
-  rm -f "$CES_SERVER_NO_DUST_MNEMONIC_FILE" "$CES_SERVER_NO_DUST_SEED_FILE"
   rm -f "$CES_SERVER_NO_DUST_PRICE_CONFIG"
-  for ((i=2; i<=N; i++)); do
-    rm -f "$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
-    rm -f "$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
-  done
 }
 
 clear_logs() {
@@ -157,6 +163,7 @@ generate_quote_secrets() {
     [ -f "$quote_secret_i" ] && continue
     log "Generating quote secret for server $i"
     generate_quote_secret "$quote_secret_i"
+    CREATED_FILES+=("$quote_secret_i")
   done
 }
 

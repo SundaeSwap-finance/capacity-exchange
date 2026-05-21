@@ -14,6 +14,17 @@ generate_quote_secret() {
   umask "$old_umask"
 }
 
+# write_secret_file <content> <output_file>
+# Writes <content> to <output_file> with mode 600 (owner-readable only).
+write_secret_file() {
+  local content="$1" output_file="$2"
+  local old_umask
+  old_umask="$(umask)"
+  umask 077
+  printf '%s\n' "$content" > "$output_file"
+  umask "$old_umask"
+}
+
 # generate_runner_wallet <root_dir>
 # Prints a fresh ephemeral BIP-39 mnemonic to stdout.
 generate_runner_wallet() {
