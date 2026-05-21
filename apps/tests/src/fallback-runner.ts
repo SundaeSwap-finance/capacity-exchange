@@ -1,3 +1,19 @@
+/**
+ * Sponsor Fallback smoke test runner.
+ * 
+ * This test runs the sponsor flow against a no-dust CES server (NO_DUST_CES_URL)
+ * but obtain DUST from its configured peer and complete the sponsorship successfully.
+ *
+ * Required environment variables:
+ *   NETWORK_ID               — Midnight network (e.g. "preview")
+ *   NO_DUST_CES_URL          — URL of the no-dust CES server under test
+ *   TOKEN_MINT_ADDRESS       — deployed token-mint contract address
+ *   CHAIN_SNAPSHOT_DIR       — used as sync start point; wallet state is in-memory only
+ *   SPONSOR_WALLET_MNEMONIC  — ephemeral wallet mnemonic (needs no DUST)
+ *   WALLET_SYNC_TIMEOUT_MS   — max ms to wait for wallet sync (default: 25 min)
+ *
+ * Invoked by scripts/ci-fallback-test.sh.
+ */
 import {
   runCli,
   resolveEnv,

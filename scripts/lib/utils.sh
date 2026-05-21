@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Shared helpers for CES server shell scripts.
-# Source this file — do not execute it directly.
+# Shared helpers for CES shell scripts. 
+[[ "${BASH_SOURCE[0]}" == "$0" ]] && { echo "Error: Not meant to be executed directly." >&2; exit 1; }
 
 # generate_quote_secret <output_file>
-# Writes a fresh 32-byte hex secret to <output_file> with umask 077.
+# Writes a fresh 32-byte hex secret to <output_file>.
+# umask 077 to make file owner-readable only (mode 600).
 generate_quote_secret() {
   local output_file="$1"
   local old_umask
@@ -14,15 +15,15 @@ generate_quote_secret() {
 }
 
 # generate_runner_wallet <root_dir>
-# Prints a fresh ephemeral mnemonic to stdout.
+# Prints a fresh ephemeral BIP-39 mnemonic to stdout.
 generate_runner_wallet() {
   local root_dir="$1"
   bun -e "import { generateMnemonic } from '$root_dir/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());"
 }
 
 # wait_for_server <port> <label> <pid_var> <retries>
-# Polls http://localhost:<port>/health/ready until ready.
-# Exits 1 if the process named by <pid_var> dies or <retries> is exceeded.
+# Polls http://localhost:<port>/health/ready every 2 s until the server responds.
+# Returns 1 if the process named by <pid_var> exits unexpectedly or <retries> is exceeded.
 wait_for_server() {
   local port="$1" label="$2" pid_var="$3" retries="$4"
   echo "=== Waiting for $label (port $port) to be ready"

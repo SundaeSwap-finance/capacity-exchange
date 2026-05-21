@@ -14,6 +14,7 @@
 #   CES_WALLET_MNEMONIC_NO_DUST_PREVIEW or CES_WALLET_SEED_NO_DUST_PREVIEW  — no-dust wallet for Server 1
 #   CES_WALLET2_MNEMONIC or CES_WALLET2_SEED  — funded wallet (DUST) for Server 2
 #   TOKEN_MINT_ADDRESS                                  — deployed token-mint contract address
+#   DERIVED_TOKEN_COLOR                                 — token color (for price config generation)
 
 set -euo pipefail
 # shellcheck source=lib/utils.sh
@@ -22,12 +23,12 @@ source "$(cd "$(dirname "$0")" && pwd)/lib/utils.sh"
 NETWORK_ID="${1:?Usage: ci-fallback-test.sh <network_id>}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 RUN_SERVERS_PID=""
+# These must match run-servers.sh BASE_PORT (default 3000).
 SERVER1_PORT=3000
 SERVER2_PORT=3001
 SERVER_READINESS_RETRIES=900
 WALLET_SYNC_TIMEOUT_MS=1500000  # 25 minutes — first run syncs from genesis
 
-CACHED_WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
 CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
 
 log() { echo "=== [ci-fallback-test] $*"; }
@@ -70,7 +71,6 @@ run_fallback_test() {
     SPONSOR_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     TOKEN_MINT_ADDRESS="$TOKEN_MINT_ADDRESS" \
     CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
-    CACHED_WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
     NO_DUST_CES_URL="http://localhost:${SERVER1_PORT}" \
     WALLET_SYNC_TIMEOUT_MS="$WALLET_SYNC_TIMEOUT_MS" \
     bun apps/tests/src/fallback-runner.ts

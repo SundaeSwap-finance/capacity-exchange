@@ -48,8 +48,8 @@ BASE_DASHBOARD_PORT=${BASE_DASHBOARD_PORT:-4000}
 MIDNIGHT_NETWORK=${MIDNIGHT_NETWORK:-preview}
 SKIP_BALANCE_CHECK=${SKIP_BALANCE_CHECK:-0}
 LOG_DIR=${LOG_DIR:-$ROOT_DIR}
-WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
-CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
+WALLET_STATE_DIR="${WALLET_STATE_DIR:-$ROOT_DIR/.wallet-states}"
+CHAIN_SNAPSHOT_DIR="${CHAIN_SNAPSHOT_DIR:-$ROOT_DIR/.chain-snapshots}"
 CES_SERVER_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.json"
 CES_SERVER_NO_DUST_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.no-dust.json"
 QUOTE_TTL_SECONDS=${QUOTE_TTL_SECONDS:-300}
@@ -64,8 +64,11 @@ CES_SERVER_NO_DUST_SEED_FILE="$ROOT_DIR/wallet-seed-no-dust.$MIDNIGHT_NETWORK.ci
 log() { echo "=== [run-servers] $*"; }
 
 # If a wallet env var holds a raw string (not a file path), write it to a named
-# file and update the var to the file path. Called once before any wallet reads.
+# file (mode 600) and update the var to the file path. Called once before any wallet reads.
 write_wallet_files() {
+  local old_umask
+  old_umask="$(umask)"
+  umask 077
   if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" ]; then
     echo "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
     export CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
@@ -85,6 +88,7 @@ write_wallet_files() {
       export "${seed_var}=$f"
     fi
   done
+  umask "$old_umask"
 }
 
 cleanup() {
@@ -290,8 +294,8 @@ generate_funded_price_config
 generate_server1_price_config
 check_balances
 build_peer_urls
-start_server1
 start_n_servers
+start_server1
 print_summary
 
 while true; do

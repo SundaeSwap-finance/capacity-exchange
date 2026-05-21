@@ -24,6 +24,7 @@ let network = '';
 let server1File = '';
 let server1IsSeed = false;
 let walletStateDir = '';
+let chainSnapshotDir = '';
 const fundedWallets: { file: string; isSeed: boolean }[] = [];
 
 for (let i = 0; i < argv.length; i++) {
@@ -43,8 +44,8 @@ for (let i = 0; i < argv.length; i++) {
       walletStateDir = argv[++i];
       break;
     case '--chain-snapshot-dir':
-      ++i;
-      break; // accepted but unused — onDisk state handles its own offset
+      chainSnapshotDir = argv[++i];
+      break;
     case '--mnemonic':
       fundedWallets.push({ file: argv[++i], isSeed: false });
       break;
@@ -65,7 +66,12 @@ if (!network || !server1File || !walletStateDir) {
 
 async function syncWallet(file: string, isSeed: boolean) {
   const walletEnvKey = isSeed ? 'WALLET_SEED_FILE' : 'WALLET_MNEMONIC_FILE';
-  const env = { ...resolveEnv(), [walletEnvKey]: file, WALLET_STATE_DIR: walletStateDir };
+  const env = {
+    ...resolveEnv(),
+    [walletEnvKey]: file,
+    WALLET_STATE_DIR: walletStateDir,
+    ...(chainSnapshotDir ? { CHAIN_SNAPSHOT_DIR: chainSnapshotDir } : {}),
+  };
   const config = buildAppConfig(network, env);
   return withAppContext(config, (ctx) => ctx.walletContext.walletFacade.waitForSyncedState());
 }
@@ -103,4 +109,3 @@ for (let i = 0; i < fundedWallets.length; i++) {
 }
 
 console.log('All balance checks passed.');
-process.exit(0);

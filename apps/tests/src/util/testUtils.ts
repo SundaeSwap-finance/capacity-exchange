@@ -9,6 +9,10 @@ import { parseMnemonic, parseSeedHex } from '@sundaeswap/capacity-exchange-core'
 
 export type WalletSeed = { type: 'seed'; seed: string } | { type: 'mnemonic'; mnemonic: string };
 
+/**
+ *Looks for `${prefix}_SEED` and `${prefix}_MNEMONIC` from the environment.
+ * Throws if neither is set or both are set.
+ */
 export function requireEnvSeed(env: Record<string, string | undefined>, prefix: string): WalletSeed {
   const seedVar = `${prefix}_SEED`;
   const mnemonicVar = `${prefix}_MNEMONIC`;
