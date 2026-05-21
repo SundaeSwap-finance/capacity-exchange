@@ -10,7 +10,7 @@
  *     --network <network> \
  *     --server1-mnemonic <file> | --server1-seed <file> \
  *     --wallet-state-dir <dir> \
- *     --chain-snapshot-dir <dir> \
+ *     [--chain-snapshot-dir <dir>] \
  *     [--mnemonic <file> | --seed <file>]...
  */
 
@@ -57,7 +57,7 @@ for (let i = 0; i < argv.length; i++) {
 
 if (!network || !server1File || !walletStateDir) {
   console.error(
-    'Usage: check-server-balances.ts --network <n> --server1-mnemonic|--server1-seed <file> --wallet-state-dir <dir> [--mnemonic|--seed <file>]...'
+    'Usage: check-server-balances.ts --network <n> --server1-mnemonic|--server1-seed <file> --wallet-state-dir <dir> [--chain-snapshot-dir <dir>] [--mnemonic|--seed <file>]...'
   );
   process.exit(1);
 }
