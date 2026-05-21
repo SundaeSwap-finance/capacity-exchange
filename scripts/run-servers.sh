@@ -8,7 +8,7 @@
 #   - No-dust Server: no-dust wallet; peers to all funded servers (2..N)
 #   - Servers 2..N: hold DUST and serve it directly.
 #
-# All servers share a single price config (price-config.<network>.json in apps/server/).
+# Servers 2..N share the same price config (price-config.<network>.json in apps/server/).
 # If it doesn't exist, it is generated from DERIVED_TOKEN_COLOR + TOKEN_MINT_ADDRESS.
 #
 # Ports:
@@ -71,13 +71,13 @@ write_wallet_files() {
   old_umask="$(umask)"
   umask 077
   if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" ]; then
-    echo "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+    printf '%s\n' "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
    
     # track CES_SERVER_NO_DUST_MNEMONIC_FILE file for cleanup
     CREATED_FILES+=("$CES_SERVER_NO_DUST_MNEMONIC_FILE")
     export CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
   elif [ -n "${CES_WALLET_SEED_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_SEED_NO_DUST_PREVIEW" ]; then
-    echo "$CES_WALLET_SEED_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_SEED_FILE"
+    printf '%s\n' "$CES_WALLET_SEED_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_SEED_FILE"
     
     # track CES_SERVER_NO_DUST_SEED_FILE file for cleanup
     CREATED_FILES+=("$CES_SERVER_NO_DUST_SEED_FILE")
@@ -87,13 +87,13 @@ write_wallet_files() {
     local mnemonic_var="CES_WALLET${i}_MNEMONIC" seed_var="CES_WALLET${i}_SEED"
     if [ -n "${!mnemonic_var:-}" ] && [ ! -f "${!mnemonic_var}" ]; then
       local wallet_file="$ROOT_DIR/wallet-mnemonic-$i.$MIDNIGHT_NETWORK.ci.txt"
-      echo "${!mnemonic_var}" > "$wallet_file"
+      printf '%s\n' "${!mnemonic_var}" > "$wallet_file"
      
       CREATED_FILES+=("$wallet_file")
       export "${mnemonic_var}=$wallet_file"
     elif [ -n "${!seed_var:-}" ] && [ ! -f "${!seed_var}" ]; then
       local wallet_file="$ROOT_DIR/wallet-seed-$i.$MIDNIGHT_NETWORK.ci.hex"
-      echo "${!seed_var}" > "$wallet_file"
+      printf '%s\n' "${!seed_var}" > "$wallet_file"
       
       CREATED_FILES+=("$wallet_file")
       export "${seed_var}=$wallet_file"

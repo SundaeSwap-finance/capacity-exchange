@@ -53,6 +53,10 @@ validate_env() {
     log "ERROR: TOKEN_MINT_ADDRESS is not set"
     exit 1
   fi
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ]; then
+    log "ERROR: DERIVED_TOKEN_COLOR is not set"
+    exit 1
+  fi
 }
 
 start_servers() {

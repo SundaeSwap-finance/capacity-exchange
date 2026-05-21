@@ -2,7 +2,7 @@
  * Sponsor Fallback smoke test runner.
  *
  * This test runs the sponsor flow against a no-dust CES server (NO_DUST_CES_URL)
- * but obtain DUST from its configured peer and complete the sponsorship successfully.
+ * but obtains DUST from its configured peer and complete the sponsorship.
  *
  * Required environment variables:
  *   NETWORK_ID               — Midnight network (e.g. "preview")
