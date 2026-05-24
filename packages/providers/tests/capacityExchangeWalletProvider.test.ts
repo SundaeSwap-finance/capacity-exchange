@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { capacityExchangeWalletProvider } from '../src/wallet/capacityExchangeWalletProvider';
+import { CapacityExchangeOfferMismatchError } from '../src/wallet/errors';
 import { createMockUnboundTransaction } from './mocks/mockProviders';
 import {
   createTestContext,
@@ -7,6 +8,10 @@ import {
   setupFetchMock,
   type TestContext,
 } from './setup/capacityExchangeWalletProviderSetup';
+
+vi.mock('@sundaeswap/capacity-exchange-registry', () => ({
+  getDefaultRegistryAddress: vi.fn().mockReturnValue(undefined),
+}));
 
 vi.mock('@midnight-ntwrk/ledger-v8', async () => {
   const actual = await vi.importActual('@midnight-ntwrk/ledger-v8');
@@ -64,5 +69,85 @@ describe('capacityExchangeWalletProvider', () => {
 
     expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
     expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
+  });
+
+  it('should throw CapacityExchangeOfferMismatchError when offer amount differs from quote', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/prices')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            quoteId: 'test-quote-id',
+            prices: [
+              { currency: { id: 'midnight:shielded:ADA', type: 'midnight:shielded', rawId: 'ADA' }, amount: '1000000' },
+            ],
+          }),
+        } as Response);
+      }
+
+      if (url.includes('/api/offers')) {
+        return Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => ({
+            offerId: 'test-offer-123',
+            offerAmount: '9999999',
+            offerCurrency: { id: 'midnight:shielded:ADA', type: 'midnight:shielded', rawId: 'ADA' },
+            serializedTx: '0102030405060708090a0b0c0d0e0f',
+            expiresAt: new Date(Date.now() + 60000),
+          }),
+        } as Response);
+      }
+
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({}) } as Response);
+    });
+
+    const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
+    const mockTx = createMockUnboundTransaction(50000n);
+
+    await expect(provider.balanceTx(mockTx, new Date(Date.now() + 60000))).rejects.toThrow(
+      CapacityExchangeOfferMismatchError
+    );
+  });
+
+  it('should throw CapacityExchangeOfferMismatchError when offer currency differs from quote', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/prices')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            quoteId: 'test-quote-id',
+            prices: [
+              { currency: { id: 'midnight:shielded:ADA', type: 'midnight:shielded', rawId: 'ADA' }, amount: '1000000' },
+            ],
+          }),
+        } as Response);
+      }
+
+      if (url.includes('/api/offers')) {
+        return Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => ({
+            offerId: 'test-offer-123',
+            offerAmount: '1000000',
+            offerCurrency: { id: 'midnight:shielded:BTC', type: 'midnight:shielded', rawId: 'BTC' },
+            serializedTx: '0102030405060708090a0b0c0d0e0f',
+            expiresAt: new Date(Date.now() + 60000),
+          }),
+        } as Response);
+      }
+
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({}) } as Response);
+    });
+
+    const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
+    const mockTx = createMockUnboundTransaction(50000n);
+
+    await expect(provider.balanceTx(mockTx, new Date(Date.now() + 60000))).rejects.toThrow(
+      CapacityExchangeOfferMismatchError
+    );
   });
 });
