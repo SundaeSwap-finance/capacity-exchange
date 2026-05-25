@@ -105,6 +105,7 @@ export class SponsorService {
             return { status: 'insufficient-funds', requested: estimatedSpecks };
           case 'user-cancelled':
           case 'offer-expired':
+          case 'offer-mismatch':
           case 'server-error':
             this.logger.error({ err }, 'Peer fallback failed');
             return { status: 'illegal-state', error: `peer-fallback:${err.type}` };
