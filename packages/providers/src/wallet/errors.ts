@@ -51,12 +51,13 @@ export class CapacityExchangeOfferExpiredError extends CapacityExchangeError {
 /** Thrown when the offer amount or currency differs from the original quote. */
 export class CapacityExchangeOfferMismatchError extends CapacityExchangeError {
   constructor(
-    readonly quote: ExchangePrice,
+    /** The `price` field is enough info for logging the original quote */
+    readonly quotePrice: Pick<ExchangePrice, 'price'>,
     readonly offer: Offer
   ) {
     super(
       'offer-mismatch',
-      `Offer ${offer.offerId} mismatch: quoted ${quote.price.amount} ${quote.price.currency.id}, ` +
+      `Offer ${offer.offerId} mismatch: quoted ${quotePrice.price.amount} ${quotePrice.price.currency.id}, ` +
         `but offer returned ${offer.offerAmount} ${offer.offerCurrency.id}`
     );
     this.name = 'CapacityExchangeOfferMismatchError';

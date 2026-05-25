@@ -123,7 +123,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
   }
 
   if (offer.offerAmount !== exchangePrice.price.amount || offer.offerCurrency.id !== exchangePrice.price.currency.id) {
-    throw new CapacityExchangeOfferMismatchError(exchangePrice, offer);
+    throw new CapacityExchangeOfferMismatchError({ price: exchangePrice.price }, offer);
   }
 
   return offer;
