@@ -9,10 +9,6 @@ import {
   type TestContext,
 } from './setup/capacityExchangeWalletProviderSetup';
 
-vi.mock('@sundaeswap/capacity-exchange-registry', () => ({
-  getDefaultRegistryAddress: vi.fn().mockReturnValue(undefined),
-}));
-
 vi.mock('@midnight-ntwrk/ledger-v8', async () => {
   const actual = await vi.importActual('@midnight-ntwrk/ledger-v8');
   return {
