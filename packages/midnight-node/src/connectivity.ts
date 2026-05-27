@@ -33,7 +33,14 @@ async function fetchLatestBlock(indexerHttpUrl: string): Promise<{ height: numbe
 export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
   logger.info(`Checking ws at ${url}...`);
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(url);
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(url);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      reject(new Error(`Failed to connect to ${url}: ${message}`));
+      return;
+    }
     const timer = setTimeout(() => {
       ws.terminate();
       reject(new Error(`Connection to ${url} timed out after ${timeoutMs / 1000}s`));
