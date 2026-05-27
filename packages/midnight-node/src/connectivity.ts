@@ -32,6 +32,10 @@ async function fetchLatestBlock(indexerHttpUrl: string): Promise<{ height: numbe
 
 export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
   logger.info(`Checking ws at ${url}...`);
+  const httpUrl = url.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
+  fetch(httpUrl, { signal: AbortSignal.timeout(5_000) })
+    .then((res) => logger.info(`HTTP probe ${httpUrl} → ${res.status} ${res.statusText}`))
+    .catch((err: unknown) => logger.info(`HTTP probe ${httpUrl} failed: ${err instanceof Error ? err.message : String(err)}`));
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     const timer = setTimeout(() => {
