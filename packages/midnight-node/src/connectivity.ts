@@ -74,17 +74,22 @@ export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
     });
 
     req.on('response', (res) => {
-      res.resume();
-      logger.info(`${url} HTTP ${res.statusCode} ${res.statusMessage} headers=${JSON.stringify(res.headers)}`);
       if (res.statusCode === 101) {
+        res.resume();
         // Bun doesn't emit 'upgrade' for 101 responses; treat as success
         done(() => {
           logger.info(`${url} is healthy`);
           resolve();
         });
-      } else {
-        done(() => reject(new Error(`Failed to connect to ${url}: server returned HTTP ${res.statusCode} ${res.statusMessage}`)));
+        return;
       }
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => { chunks.push(chunk); });
+      res.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8').slice(0, 500);
+        logger.info(`${url} HTTP ${res.statusCode} ${res.statusMessage} headers=${JSON.stringify(res.headers)} body=${body}`);
+        done(() => reject(new Error(`Failed to connect to ${url}: server returned HTTP ${res.statusCode} ${res.statusMessage}`)));
+      });
     });
 
     req.on('error', (err) => {
