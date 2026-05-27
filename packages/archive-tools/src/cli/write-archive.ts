@@ -6,7 +6,7 @@ import { tmpdir } from 'os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { program } from 'commander';
 import { runCli, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
-import { archiveKeyPrefix, archiveProvenanceKey, archiveTag, type Provenance } from '../archive.js';
+import { archiveKey, asJson, type Provenance } from '../archive.js';
 import { S3Store } from '../aws/s3-store.js';
 import { assertShaOnRemote, gitHeadSha, gitRemoteSlug, gitRepoRoot, isDirty, pushTag } from '../git.js';
 
@@ -87,7 +87,7 @@ async function writeToStore(
 ): Promise<{ uploadedKeys: number }> {
   const tempDir = mkdtempSync(join(tmpdir(), 'archive-write-'));
   runCompactc(sourceFileAbs, tempDir);
-  await store.putJson(provenanceKey, provenance);
+  await store.put(provenanceKey, ...asJson(provenance));
   const uploadedKeys = await store.putDir(keyPrefix, tempDir);
   return { uploadedKeys: uploadedKeys.length };
 }
@@ -97,12 +97,12 @@ async function main(): Promise<CliResult> {
   const opts = parseOpts();
   const { repoDir, sourceFileAbs, provenance } = deriveProvenance(opts);
   const keyArgs = { sha: provenance.sourceSha, contract: opts.contract };
-  const keyPrefix = archiveKeyPrefix(keyArgs);
-  const provenanceKey = archiveProvenanceKey(keyArgs);
+  const keyPrefix = archiveKey.prefix(keyArgs);
+  const provenanceKey = archiveKey.provenance(keyArgs);
   const store = new S3Store({ bucket: opts.bucket });
 
   const { uploadedKeys } = await writeToStore(store, keyPrefix, provenanceKey, sourceFileAbs, provenance);
-  const tag = archiveTag({ sha: provenance.sourceSha });
+  const tag = archiveKey.tag({ sha: provenance.sourceSha });
   try {
     pushTag(repoDir, tag, provenance.sourceSha);
   } catch (err) {
