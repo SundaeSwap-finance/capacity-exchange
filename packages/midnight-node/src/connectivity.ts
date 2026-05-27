@@ -75,7 +75,16 @@ export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
 
     req.on('response', (res) => {
       res.resume();
-      done(() => reject(new Error(`Failed to connect to ${url}: server returned HTTP ${res.statusCode} ${res.statusMessage}`)));
+      logger.info(`${url} HTTP ${res.statusCode} ${res.statusMessage} headers=${JSON.stringify(res.headers)}`);
+      if (res.statusCode === 101) {
+        // Bun doesn't emit 'upgrade' for 101 responses; treat as success
+        done(() => {
+          logger.info(`${url} is healthy`);
+          resolve();
+        });
+      } else {
+        done(() => reject(new Error(`Failed to connect to ${url}: server returned HTTP ${res.statusCode} ${res.statusMessage}`)));
+      }
     });
 
     req.on('error', (err) => {
