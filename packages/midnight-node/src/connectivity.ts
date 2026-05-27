@@ -1,4 +1,5 @@
-import WebSocket from 'ws';
+import http from 'http';
+import https from 'https';
 import { createLogger } from './createLogger.js';
 
 const logger = createLogger(import.meta);
@@ -33,34 +34,55 @@ async function fetchLatestBlock(indexerHttpUrl: string): Promise<{ height: numbe
 export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
   logger.info(`Checking ws at ${url}...`);
   return new Promise((resolve, reject) => {
-    let ws: WebSocket;
-    try {
-      ws = new WebSocket(url);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      reject(new Error(`Failed to connect to ${url}: ${message}`));
-      return;
-    }
+    const httpUrl = url.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
+    const { protocol, hostname, port, pathname } = new URL(httpUrl);
+    const mod = protocol === 'https:' ? https : http;
+    const key = Buffer.from(Math.random().toString()).toString('base64');
+
+    const req = mod.request({
+      hostname,
+      port: port || (protocol === 'https:' ? 443 : 80),
+      path: pathname || '/',
+      headers: {
+        Connection: 'Upgrade',
+        Upgrade: 'websocket',
+        'Sec-WebSocket-Key': key,
+        'Sec-WebSocket-Version': '13',
+        Host: hostname,
+      },
+    });
+
+    let settled = false;
+    const done = (fn: () => void) => {
+      if (settled) { return; }
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+
     const timer = setTimeout(() => {
-      ws.terminate();
-      reject(new Error(`Connection to ${url} timed out after ${timeoutMs / 1000}s`));
+      req.destroy();
+      done(() => reject(new Error(`Connection to ${url} timed out after ${timeoutMs / 1000}s`)));
     }, timeoutMs);
-    ws.once('open', () => {
-      clearTimeout(timer);
-      ws.close();
-      logger.info(`${url} is healthy`);
-      resolve();
+
+    req.on('upgrade', (_res, socket) => {
+      socket.destroy();
+      done(() => {
+        logger.info(`${url} is healthy`);
+        resolve();
+      });
     });
-    ws.once('unexpected-response', (_req, res) => {
-      clearTimeout(timer);
-      ws.terminate();
-      reject(new Error(`Failed to connect to ${url}: server returned HTTP ${res.statusCode} ${res.statusMessage}`));
+
+    req.on('response', (res) => {
+      res.resume();
+      done(() => reject(new Error(`Failed to connect to ${url}: server returned HTTP ${res.statusCode} ${res.statusMessage}`)));
     });
-    ws.once('error', (err) => {
-      clearTimeout(timer);
-      ws.terminate();
-      reject(new Error(`Failed to connect to ${url}: ${err.message}`));
+
+    req.on('error', (err) => {
+      done(() => reject(new Error(`Failed to connect to ${url}: ${err.message}`)));
     });
+
+    req.end();
   });
 }
 
