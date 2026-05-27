@@ -43,7 +43,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   [
     NetworkId.NetworkId.Preview,
     {
-      nodeUrl: 'wss://rpc.preview.midnight.network/ws',
+      nodeUrl: 'wss://rpc.preview.midnight.network',
       proofServerUrl: 'https://proof.capacity-exchange.preview.sundae.fi',
       indexerHttpUrl: 'https://indexer.preview.midnight.network/api/v3/graphql',
       indexerWsUrl: 'wss://indexer.preview.midnight.network/api/v3/graphql/ws',
@@ -52,7 +52,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   [
     NetworkId.NetworkId.PreProd,
     {
-      nodeUrl: 'wss://rpc.preprod.midnight.network/ws',
+      nodeUrl: 'wss://rpc.preprod.midnight.network',
       proofServerUrl: 'https://proof.capacity-exchange.preprod.sundae.fi',
       indexerHttpUrl: 'https://indexer.preprod.midnight.network/api/v3/graphql',
       indexerWsUrl: 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
@@ -61,7 +61,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   [
     NetworkId.NetworkId.MainNet,
     {
-      nodeUrl: 'wss://rpc.mainnet.midnight.network/ws',
+      nodeUrl: 'wss://rpc.mainnet.midnight.network',
       indexerHttpUrl: 'https://indexer.mainnet.midnight.network/api/v3/graphql',
       proofServerUrl: 'https://proof.capacity-exchange.sundae.fi',
       indexerWsUrl: 'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
