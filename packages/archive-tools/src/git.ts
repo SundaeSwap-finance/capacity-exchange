@@ -51,8 +51,30 @@ export function gitRemoteSlug(repoDir: string): string {
   throw new Error(`remote '${REMOTE}' is not a GitHub URL: ${url}`);
 }
 
-/** Force-creates a tag at sha and force-pushes it to origin. */
+/** Returns the sha the remote tag points at, or null if absent. */
+function remoteTagSha(repoDir: string, tag: string): string | null {
+  const out = git(repoDir, 'ls-remote', '--tags', REMOTE, `refs/tags/${tag}`);
+  if (!out) {
+    return null;
+  }
+  const sha = out.split(/\s+/)[0];
+  return sha || null;
+}
+
+/**
+ * Ensures the remote tag points at sha. Idempotent: a no-op if the remote tag already matches.
+ * Throws without overwriting if the remote tag points at a different sha.
+ */
 export function pushTag(repoDir: string, tag: string, sha: string): void {
+  const remoteSha = remoteTagSha(repoDir, tag);
+  if (remoteSha === sha) {
+    return;
+  }
+  if (remoteSha !== null) {
+    throw new Error(
+      `remote tag '${tag}' points at ${remoteSha}, expected ${sha}. Resolve the mismatch manually before retrying.`
+    );
+  }
   git(repoDir, 'tag', '--force', tag, sha);
-  git(repoDir, 'push', '--force', REMOTE, tag);
+  git(repoDir, 'push', REMOTE, tag);
 }
