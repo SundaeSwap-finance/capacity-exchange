@@ -1,0 +1,11 @@
+**dApp name:** CES Registry
+
+**Contract repository:** https://github.com/SundaeSwap-finance/capex-sdk/tree/main/packages/registry
+
+**Brief description:** An on-chain registry for Capacity Exchange Service (CES) servers. Operators register a domain name under a secret key and post collateral; clients discover available CES endpoints by reading the public ledger state.
+
+| Category | Self-assessed score (1–3) | Rationale | Mitigations (if applicable) |
+|---|---|---|---|
+| Privacy-at-risk | 1 | All ledger state (`registry`, `takenDomainNames`) is public — domain names and expiry timestamps are disclosed for clients to see. The operator's `secretKey` witness is never disclosed on-chain; only its domain-separated hash (`RegistryKey`) appears in the ledger. No identity, financial amount, or sensitive private data is ever revealed. | N/A — public disclosure is intentional. |
+| Value-at-risk | 2 | The contract holds NIGHT collateral per active registration. Each deposit is bounded by `maximumRegistrationPeriod`; operators reclaim collateral by calling `deregisterServer`, and expired entries can be cleaned up by anyone. An exploit could drain locked collateral but only the registered operator are affected, not the end-users. | Keep `collateralAmount` low enough to encourage legitimate operators to register, but high and expensive enough for attackers planning to spam registrations. Monitor TVL; if it grows unexpectedly, investigate abnormal registration activity. |
+| State-space-at-risk | 2 | `registry` (map) and `takenDomainNames` (set) grow with each registration. However, entries carry an explicit `expiry` field and can be removed by the owner at any time or permissionlessly by anyone after expiry, providing an on-chain cleanup path. A motivated attacker could pad the state by registering many entries, but the collateral cost per entry makes this expensive. | Set `collateralAmount` and `maximumRegistrationPeriod` at deployment to discourage spam registrations. Off-chain monitoring can flag unusual registration bursts. |
