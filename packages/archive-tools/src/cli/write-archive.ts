@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { spawnSync } from 'child_process';
-import { mkdtempSync } from 'fs';
+import { mkdtempSync, realpathSync } from 'fs';
 import { tmpdir } from 'os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { program } from 'commander';
@@ -59,7 +59,7 @@ function parseOpts(): CliOpts {
 
 /** Resolves source path, finds the repo, builds Provenance. Refuses dirty trees or unpushed shas. */
 function deriveProvenance(opts: CliOpts): DeriveProvenanceResult {
-  const sourceFileAbs = isAbsolute(opts.sourceFile) ? opts.sourceFile : resolve(opts.sourceFile);
+  const sourceFileAbs = realpathSync(isAbsolute(opts.sourceFile) ? opts.sourceFile : resolve(opts.sourceFile));
   const repoDir = gitRepoRoot(dirname(sourceFileAbs));
   if (isDirty(repoDir)) {
     throw new Error(`source repo at ${repoDir} is dirty; commit or stash before archiving`);
