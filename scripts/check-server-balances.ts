@@ -32,14 +32,6 @@ for (let i = 0; i < argv.length; i++) {
     case '--network':
       network = argv[++i];
       break;
-    case '--server1-mnemonic':
-      server1File = argv[++i];
-      server1IsSeed = false;
-      break;
-    case '--server1-seed':
-      server1File = argv[++i];
-      server1IsSeed = true;
-      break;
     case '--wallet-state-dir':
       walletStateDir = argv[++i];
       break;
@@ -54,6 +46,8 @@ for (let i = 0; i < argv.length; i++) {
       break;
   }
 }
+
+const { file: server1File, isSeed: server1IsSeed } = fundedWallets.shift();
 
 if (!network || !server1File || !walletStateDir) {
   console.error(
