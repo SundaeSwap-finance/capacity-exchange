@@ -1,10 +1,11 @@
-import type { Offer } from './types';
+import type { ExchangePrice, Offer } from './types';
 
 /** Discriminator tags on `CapacityExchangeError` subclasses. */
 export type CapacityExchangeErrorType =
   | 'user-cancelled'
   | 'no-eligible-offer'
   | 'offer-expired'
+  | 'offer-mismatch'
   | 'no-prices-available'
   | 'server-error';
 
@@ -44,6 +45,22 @@ export class CapacityExchangeOfferExpiredError extends CapacityExchangeError {
   constructor(readonly offer: Offer) {
     super('offer-expired', `Offer ${offer.offerId} expired at ${offer.expiresAt}`);
     this.name = 'CapacityExchangeOfferExpiredError';
+  }
+}
+
+/** Thrown when the offer amount or currency differs from the original quote. */
+export class CapacityExchangeOfferMismatchError extends CapacityExchangeError {
+  constructor(
+    /** The `price` field is enough info for logging the original quote */
+    readonly quotePrice: Pick<ExchangePrice, 'price'>,
+    readonly offer: Offer
+  ) {
+    super(
+      'offer-mismatch',
+      `Offer ${offer.offerId} mismatch: quoted ${quotePrice.price.amount} ${quotePrice.price.currency.id}, ` +
+        `but offer returned ${offer.offerAmount} ${offer.offerCurrency.id}`
+    );
+    this.name = 'CapacityExchangeOfferMismatchError';
   }
 }
 

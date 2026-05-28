@@ -14,7 +14,11 @@ import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exch
 import { fetchRegistryCesUrls } from './registryLookup';
 import { fetchPricesFromExchanges } from './priceService';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
-import { CapacityExchangeNoPricesAvailableError, CapacityExchangeOfferExpiredError } from './errors';
+import {
+  CapacityExchangeNoPricesAvailableError,
+  CapacityExchangeOfferMismatchError,
+  CapacityExchangeOfferExpiredError,
+} from './errors';
 
 function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Binding> {
   return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hex);
@@ -99,6 +103,7 @@ async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: C
  * Requests an offer from a CES exchange for the selected currency.
  *
  * @throws {CapacityExchangeOfferExpiredError} if the offer is already expired
+ * @throws {CapacityExchangeOfferMismatchError} if the offer doesn't match the exchange price
  */
 export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
@@ -115,6 +120,10 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
 
   if (isOfferExpired(offer.expiresAt)) {
     throw new CapacityExchangeOfferExpiredError(offer);
+  }
+
+  if (offer.offerAmount !== exchangePrice.price.amount || offer.offerCurrency.id !== exchangePrice.price.currency.id) {
+    throw new CapacityExchangeOfferMismatchError({ price: exchangePrice.price }, offer);
   }
 
   return offer;
