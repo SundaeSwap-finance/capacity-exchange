@@ -17,6 +17,8 @@
 #   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
 
 set -euo pipefail
+# shellcheck source=lib/utils.sh
+source "$(cd "$(dirname "$0")" && pwd)/lib/utils.sh"
 
 NETWORK_ID="${1:?Usage: ci-test.sh <network_id>}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -65,53 +67,23 @@ validate_env() {
   done
 }
 
-generate_runner_wallet() {
-  log "Generating ephemeral runner wallet for sponsor+exchange flows"
-  RUNNER_MNEMONIC=$(bun -e "import { generateMnemonic } from '$ROOT_DIR/packages/midnight-core/src/seed.ts'; console.log(generateMnemonic());")
-}
-
 generate_price_config() {
   log "Generating price config for CES server"
-  cat > "$CES_SERVER_PRICE_CONFIG" <<EOF
-{
-  "priceFormulas": [
-    {
-      "currency": {
-        "type": "midnight:shielded",
-        "rawId": "$DERIVED_TOKEN_COLOR"
-      },
-      "basePrice": "101",
-      "rateNumerator": "11",
-      "rateDenominator": "1000"
-    }
-  ],
-  "sponsorAll": false,
-  "sponsoredContracts": [
-    {
-      "contractAddress": "$TOKEN_MINT_ADDRESS",
-      "circuits": { "type": "all" }
-    }
-  ]
-}
-EOF
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
 }
 
 start_ces_server() {
   log "Starting CES server against $NETWORK_ID"
-  local old_umask
-  old_umask="$(umask)"
-  umask 077
-  openssl rand -hex 32 > "$CES_SERVER_QUOTE_SECRET"
+  generate_quote_secret "$CES_SERVER_QUOTE_SECRET"
 
   local wallet_env_var
   if [ -n "${CES_WALLET_SEED:-}" ]; then
-    echo "$CES_WALLET_SEED" > "$CES_SERVER_SEED_FILE"
+    write_secret_file "$CES_WALLET_SEED" "$CES_SERVER_SEED_FILE"
     wallet_env_var="WALLET_SEED_FILE=$CES_SERVER_SEED_FILE"
   else
-    echo "$CES_WALLET_MNEMONIC" > "$CES_SERVER_MNEMONIC_FILE"
+    write_secret_file "$CES_WALLET_MNEMONIC" "$CES_SERVER_MNEMONIC_FILE"
     wallet_env_var="WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
   fi
-  umask "$old_umask"
 
   env \
     "$wallet_env_var" \
@@ -128,23 +100,6 @@ start_ces_server() {
 
   CES_SERVER_PID=$!
   log "CES server started (PID: $CES_SERVER_PID)"
-}
-
-wait_for_ces_server() {
-  log "Waiting for CES server to be ready"
-  for i in $(seq 1 "$CES_READINESS_RETRIES"); do
-    if curl -sf http://localhost:${CES_PORT}/health/ready > /dev/null 2>&1; then
-      log "CES server is ready"
-      return
-    fi
-    if ! kill -0 "$CES_SERVER_PID" 2>/dev/null; then
-      log "ERROR: CES server exited unexpectedly"
-      exit 1
-    fi
-    sleep 2
-  done
-  log "ERROR: CES server did not become ready in time"
-  exit 1
 }
 
 run_tests() {
@@ -174,8 +129,9 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 
 validate_env
-generate_runner_wallet
+log "Generating ephemeral runner wallet for sponsor+exchange flows"
+RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
 generate_price_config
 start_ces_server
-wait_for_ces_server
+wait_for_server "$CES_PORT" "CES server" CES_SERVER_PID "$CES_READINESS_RETRIES"
 run_tests

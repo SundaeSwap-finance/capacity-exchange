@@ -112,7 +112,7 @@ jobs:
     name: 'Smoke tests (${{ matrix.env }})'
     needs: chain-snapshot
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       matrix:
         env: [preview]
@@ -157,6 +157,15 @@ jobs:
           TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
           DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
         run: scripts/ci-test.sh ${{ matrix.env }}
+
+      - name: Run fallback smoke test
+        env:
+          CES_WALLET_MNEMONIC_NO_DUST_PREVIEW: ${{ secrets.CES_WALLET_MNEMONIC_NO_DUST_PREVIEW }}
+          # CES_WALLET2_MNEMONIC reuses the main CES wallet secret.
+          CES_WALLET2_MNEMONIC: ${{ secrets[format('CES_WALLET_MNEMONIC_{0}', matrix.env)] }}
+          TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
+          DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
+        run: scripts/ci-fallback-test.sh ${{ matrix.env }}
 
       - name: Save wallet state cache
         if: always()
