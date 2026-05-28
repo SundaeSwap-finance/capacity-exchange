@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { ContractDeployRecord } from '@capacity-exchange/archive-tools';
 
 export interface TokenMintConfig {
   contractAddress: string;
@@ -16,6 +17,28 @@ export interface ContractsConfig {
   networkId: string;
   tokenMint: TokenMintConfig;
   counter: CounterConfig;
+}
+
+interface DeployedContracts {
+  network: string;
+  tokenMint: ContractDeployRecord;
+  counter: ContractDeployRecord;
+}
+
+function toContractsConfig(deployed: DeployedContracts): ContractsConfig {
+  return {
+    networkId: deployed.network,
+    tokenMint: {
+      contractAddress: deployed.tokenMint.address,
+      txHash: deployed.tokenMint.txHash,
+      tokenColor: deployed.tokenMint.public.tokenColor as string,
+      derivedTokenColor: deployed.tokenMint.public.derivedTokenColor as string,
+    },
+    counter: {
+      contractAddress: deployed.counter.address,
+      txHash: deployed.counter.txHash,
+    },
+  };
 }
 
 export type UseContractsConfigResult =
@@ -36,7 +59,7 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
   const fetchConfig = async () => {
     setState({ status: 'loading' });
     try {
-      const response = await fetch(`/contracts/.contracts.${networkId}.public.json`);
+      const response = await fetch('/contracts.json');
       if (response.status === 404) {
         setState({ status: 'not-deployed' });
         return;
@@ -50,8 +73,8 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
         setState({ status: 'not-deployed' });
         return;
       }
-      const data = await response.json();
-      setState({ status: 'loaded', config: data as ContractsConfig });
+      const data = (await response.json()) as DeployedContracts;
+      setState({ status: 'loaded', config: toContractsConfig(data) });
     } catch (err) {
       setState({ status: 'error', error: err instanceof Error ? err.message : 'Failed to load contracts config' });
     }
