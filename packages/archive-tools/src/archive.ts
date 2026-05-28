@@ -42,8 +42,7 @@ function loadJsonWithFields<T>(path: string, requiredFields: readonly (keyof T)[
 /** S3 keys (and the git tag) under the `archive/` prefix. */
 export const archiveKey = {
   tag: ({ sha }: { sha: string }) => `${ARCHIVE_PREFIX}/${sha}`,
-  prefix: ({ sha, contract }: { sha: string; contract: string }) =>
-    `${archiveKey.tag({ sha })}/${contract}`,
+  prefix: ({ sha, contract }: { sha: string; contract: string }) => `${archiveKey.tag({ sha })}/${contract}`,
   provenance: ({ sha, contract }: { sha: string; contract: string }) =>
     `${archiveKey.prefix({ sha, contract })}/${PROVENANCE_FILE}`,
   deploy: ({ sha, contract, address }: { sha: string; contract: string; address: string }) =>

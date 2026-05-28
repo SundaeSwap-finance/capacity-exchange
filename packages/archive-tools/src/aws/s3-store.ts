@@ -58,7 +58,9 @@ export class S3Store {
       );
       return 'written';
     } catch (err) {
-      if (isAwsError(err, 'PreconditionFailed')) return 'exists';
+      if (isAwsError(err, 'PreconditionFailed')) {
+        return 'exists';
+      }
       throw err;
     }
   }
@@ -69,7 +71,9 @@ export class S3Store {
       const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
       return await res.Body!.transformToString();
     } catch (err) {
-      if (isAwsError(err, 'NoSuchKey')) return null;
+      if (isAwsError(err, 'NoSuchKey')) {
+        return null;
+      }
       throw err;
     }
   }
@@ -80,7 +84,9 @@ export class S3Store {
       await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
       return true;
     } catch (err) {
-      if (isAwsError(err, 'NotFound', 'NoSuchKey')) return false;
+      if (isAwsError(err, 'NotFound', 'NoSuchKey')) {
+        return false;
+      }
       throw err;
     }
   }

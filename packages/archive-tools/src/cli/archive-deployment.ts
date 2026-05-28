@@ -6,12 +6,7 @@ import { createLogger, runCli } from '@sundaeswap/capacity-exchange-nodejs';
 import { S3Store } from '../aws/s3-store.js';
 import { toDeployRecord, type ContractDeployRecord, type DeploymentInput } from '../deployments.js';
 import { verifyArchiveExists } from '../archive-reads.js';
-import {
-  writePointer,
-  writeRecord,
-  type WritePointerResult,
-  type WriteRecordResult,
-} from '../deployment-writes.js';
+import { writePointer, writeRecord, type WritePointerResult, type WriteRecordResult } from '../deployment-writes.js';
 
 const logger = createLogger(import.meta);
 
@@ -43,7 +38,7 @@ export async function archiveDeployment(opts: ArchiveDeploymentOpts): Promise<Ar
   if (recordWrite.status === 'conflict') {
     throw new Error(
       `record already exists at s3://${opts.bucket}/${recordWrite.key} and differs from the proposed record. ` +
-      `Investigate via bucket versioning before deleting and retrying.`
+        `Investigate via bucket versioning before deleting and retrying.`
     );
   }
   logger.info({ key: recordWrite.key, status: recordWrite.status }, 'record write done');
