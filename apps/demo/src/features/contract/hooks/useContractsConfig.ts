@@ -21,18 +21,19 @@ export interface ContractsConfig {
 
 interface DeployedContracts {
   network: string;
-  tokenMint: ContractDeployRecord;
   counter: ContractDeployRecord;
+  'token-mint': ContractDeployRecord;
 }
 
 function toContractsConfig(deployed: DeployedContracts): ContractsConfig {
+  const tokenMint = deployed['token-mint'];
   return {
     networkId: deployed.network,
     tokenMint: {
-      contractAddress: deployed.tokenMint.address,
-      txHash: deployed.tokenMint.txHash,
-      tokenColor: deployed.tokenMint.public.tokenColor as string,
-      derivedTokenColor: deployed.tokenMint.public.derivedTokenColor as string,
+      contractAddress: tokenMint.address,
+      txHash: tokenMint.txHash,
+      tokenColor: tokenMint.public.tokenColor as string,
+      derivedTokenColor: tokenMint.public.derivedTokenColor as string,
     },
     counter: {
       contractAddress: deployed.counter.address,
