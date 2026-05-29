@@ -68,6 +68,16 @@ describe('validateDustTx (via requestCesOffer)', () => {
     vi.mocked(Transaction.deserialize).mockReturnValue(makeMockTx() as any);
   });
 
+  describe('deserialization', () => {
+    it('throws when the serialized tx cannot be deserialized', async () => {
+      vi.mocked(Transaction.deserialize).mockImplementation(() => {
+        throw new Error('invalid bytes');
+      });
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('transaction could not be deserialized');
+    });
+  });
+
   describe('valid transactions', () => {
     it('accepts a tx with a fallible offer', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
