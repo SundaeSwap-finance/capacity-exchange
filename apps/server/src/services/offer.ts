@@ -3,6 +3,7 @@ import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { Currency, PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
+import { WalletService } from './wallet.js';
 import { LRUCache } from 'lru-cache';
 import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
 import { recordDuration, recordCounters } from '../decorators/record-metrics.js';
@@ -41,6 +42,7 @@ export class OfferService {
   private readonly txService: TxService;
   private readonly priceService: PriceService;
   private readonly metricsService: MetricsService;
+  private readonly walletService: WalletService;
   private readonly logger: FastifyBaseLogger;
   private readonly cache: LRUCache<string, OfferResponse>;
   private readonly inflight = new Map<string, Promise<CreateOfferResult>>();
@@ -50,6 +52,7 @@ export class OfferService {
     txService: TxService,
     priceService: PriceService,
     metricsService: MetricsService,
+    walletService: WalletService,
     offerTtlSeconds: number,
     logger: FastifyBaseLogger,
   ) {
@@ -57,6 +60,7 @@ export class OfferService {
     this.txService = txService;
     this.priceService = priceService;
     this.metricsService = metricsService;
+    this.walletService = walletService;
     this.logger = logger;
     this.cache = new LRUCache<string, OfferResponse>({
       ttl: offerTtlSeconds * 1000,
@@ -140,10 +144,11 @@ export class OfferService {
     );
 
     const getPriceResult = this.priceService.getPrice(request.offerCurrency, request.specks);
-    if (
-      getPriceResult.status === 'unsupported-currency' ||
-      getPriceResult.currency.type !== 'midnight:shielded'
-    ) {
+    if (getPriceResult.status === 'unsupported-currency') {
+      return { status: 'unsupported-currency', currency: request.offerCurrency };
+    }
+    const currencyType = getPriceResult.currency.type;
+    if (currencyType !== 'midnight:shielded' && currencyType !== 'midnight:unshielded') {
       return { status: 'unsupported-currency', currency: request.offerCurrency };
     }
 
@@ -154,14 +159,23 @@ export class OfferService {
     const lockedInfo = lockResult.value;
 
     try {
-      const coin = createShieldedCoinInfo(getPriceResult.currency.rawId, getPriceResult.price);
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const unboundTx = await this.txService.createOfferTx(
-        coin,
-        lockedInfo.spend,
-        lockedInfo.ctime,
-        expiration,
-      );
+      const unboundTx =
+        currencyType === 'midnight:shielded'
+          ? await this.txService.createOfferTx(
+              createShieldedCoinInfo(getPriceResult.currency.rawId, getPriceResult.price),
+              lockedInfo.spend,
+              lockedInfo.ctime,
+              expiration,
+            )
+          : await this.txService.createUnshieldedOfferTx(
+              getPriceResult.currency.rawId,
+              getPriceResult.price,
+              this.walletService.getUnshieldedUserAddress(),
+              lockedInfo.spend,
+              lockedInfo.ctime,
+              expiration,
+            );
       const tx = unboundTx.bind();
 
       const offer: OfferResponse = {

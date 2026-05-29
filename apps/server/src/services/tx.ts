@@ -5,8 +5,12 @@ import {
   ShieldedCoinInfo,
   SignatureEnabled,
   Transaction,
+  UnshieldedOffer,
+  type RawTokenType,
   type UnprovenIntent,
   type UnprovenTransaction,
+  type UserAddress,
+  type UtxoOutput,
   ZswapOffer,
   ZswapOutput,
   ZswapSecretKeys,
@@ -89,6 +93,28 @@ export class TxService {
     const tx = segmentId
       ? Transaction.fromParts(this.#networkId, offer, undefined, intent)
       : Transaction.fromPartsRandomized(this.#networkId, offer, undefined, intent);
+    return this.proveTx(tx);
+  }
+
+  /**
+   * Build an unshielded-payment offer tx: server promises DUST (`dust`) and
+   * adds a `UtxoOutput` of `value` `tokenType` addressed to its own
+   * `serverAddress`. User merges and supplies the matching `UtxoSpend` to
+   * balance.
+   */
+  async createUnshieldedOfferTx(
+    tokenType: RawTokenType,
+    value: bigint,
+    serverAddress: UserAddress,
+    dust: UnprovenDustSpend,
+    ctime: Date,
+    ttl: Date,
+  ): Promise<UnboundTransaction> {
+    const output: UtxoOutput = { value, owner: serverAddress, type: tokenType };
+    const unshieldedOffer = UnshieldedOffer.new([], [output], []);
+    const intent = this.buildDustIntent(dust, ctime, ttl);
+    intent.guaranteedUnshieldedOffer = unshieldedOffer;
+    const tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
     return this.proveTx(tx);
   }
 }

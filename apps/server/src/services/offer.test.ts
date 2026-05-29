@@ -4,6 +4,7 @@ import type { UtxoService } from './utxo.js';
 import type { TxService } from './tx.js';
 import type { PriceService } from './price.js';
 import type { MetricsService } from './metrics.js';
+import type { WalletService } from './wallet.js';
 
 import pino from 'pino';
 
@@ -48,7 +49,11 @@ function createMockDeps() {
     recordRevenue: vi.fn(),
   } as unknown as MetricsService;
 
-  return { utxoService, txService, priceService, metricsService };
+  const walletService = {
+    getUnshieldedUserAddress: vi.fn(() => '00'.repeat(32)),
+  } as unknown as WalletService;
+
+  return { utxoService, txService, priceService, metricsService, walletService };
 }
 
 describe('OfferService', () => {
@@ -62,6 +67,7 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
+      deps.walletService,
       60,
       logger,
     );
@@ -100,6 +106,7 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
+      deps.walletService,
       60,
       logger,
     );
@@ -137,6 +144,7 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
+      deps.walletService,
       60,
       logger,
     );
