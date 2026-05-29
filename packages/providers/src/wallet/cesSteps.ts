@@ -30,7 +30,12 @@ function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Bi
  * and 1 Zswap offer (either fallible or guaranteed depending on whether a segment ID was assigned).
  */
 function validateDustTx(serialzedTx: string, offerId: string): void {
-  const tx = deserializeTx(hexToBytes(serialzedTx));
+  let tx: Transaction<SignatureEnabled, Proof, Binding>;
+  try {
+    tx = deserializeTx(hexToBytes(serialzedTx));
+  } catch {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'transaction could not be deserialized');
+  }
 
   if (!tx.intents || tx.intents.size !== 1) {
     throw new CapacityExchangeOfferTransactionInvalidError(
