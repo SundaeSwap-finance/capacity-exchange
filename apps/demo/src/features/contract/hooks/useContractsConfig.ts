@@ -25,6 +25,14 @@ interface DeployedContracts {
   'token-mint': ContractDeployRecord;
 }
 
+function requirePublicString(record: ContractDeployRecord, contractName: string, field: string): string {
+  const v = record.public[field];
+  if (typeof v !== 'string') {
+    throw new Error(`${contractName} deploy record missing string field 'public.${field}' (got ${typeof v})`);
+  }
+  return v;
+}
+
 function toContractsConfig(deployed: DeployedContracts): ContractsConfig {
   const tokenMint = deployed['token-mint'];
   return {
@@ -32,8 +40,8 @@ function toContractsConfig(deployed: DeployedContracts): ContractsConfig {
     tokenMint: {
       contractAddress: tokenMint.address,
       txHash: tokenMint.txHash,
-      tokenColor: tokenMint.public.tokenColor as string,
-      derivedTokenColor: tokenMint.public.derivedTokenColor as string,
+      tokenColor: requirePublicString(tokenMint, 'token-mint', 'tokenColor'),
+      derivedTokenColor: requirePublicString(tokenMint, 'token-mint', 'derivedTokenColor'),
     },
     counter: {
       contractAddress: deployed.counter.address,
@@ -75,6 +83,13 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
         return;
       }
       const data = (await response.json()) as DeployedContracts;
+      if (data.network !== networkId) {
+        setState({
+          status: 'error',
+          error: `contracts.json network '${data.network}' does not match expected '${networkId}'`,
+        });
+        return;
+      }
       setState({ status: 'loaded', config: toContractsConfig(data) });
     } catch (err) {
       setState({ status: 'error', error: err instanceof Error ? err.message : 'Failed to load contracts config' });
