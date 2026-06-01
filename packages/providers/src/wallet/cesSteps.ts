@@ -66,6 +66,13 @@ function validateDustTx(serializedTx: string, offerId: string, expectedRawId: st
   // Get the offer from either fallible or guaranteed (only one can be present) to check the deltas.
   const zswapOffer = tx.guaranteedOffer ?? [...tx.fallibleOffer!.values()][0];
 
+  if (zswapOffer.deltas.size !== 1) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      `expected exactly 1 token in offer deltas, got ${zswapOffer.deltas.size}`
+    );
+  }
+
   // Use delta, use the `RawTokenType` key and get the value.
   // Check if it's the same value as the expected amount.
   const delta = zswapOffer.deltas.get(expectedRawId) ?? 0n;

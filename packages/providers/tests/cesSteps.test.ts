@@ -180,6 +180,22 @@ describe('validateDustTx (via requestCesOffer)', () => {
       );
     });
 
+    it('throws when the offer deltas contain more than 1 token', async () => {
+      const offerWithMultipleDeltas = {
+        deltas: new Map([
+          [OFFER_RAW_ID, -OFFER_AMOUNT],
+          ['OTHER_TOKEN', -1n],
+        ]),
+      };
+      vi.mocked(Transaction.deserialize).mockReturnValue(
+        makeMockTx({ fallibleOffer: new Map([[0, offerWithMultipleDeltas]]) }) as any
+      );
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
+        'expected exactly 1 token in offer deltas, got 2'
+      );
+    });
+
     it('throws when the offer encodes a different token than agreed', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
         makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj('WRONG_TOKEN')]]) }) as any
