@@ -30,9 +30,9 @@ async function runFlow(name: string, fn: () => Promise<unknown>): Promise<FlowRe
     return { flow: name, durationMs, result };
   } catch (err) {
     const durationMs = Date.now() - start;
-    const error = err instanceof Error ? err.message : String(err);
-    logger.error({ flow: name, durationMs }, `FAIL: ${error}`);
-    return { flow: name, durationMs, error };
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error({ flow: name, durationMs, err }, `FAIL: ${message}`);
+    return { flow: name, durationMs, error: message };
   }
 }
 
