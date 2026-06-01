@@ -27,9 +27,9 @@ function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Bi
 
 /**
  * A valid Dust Tx contains only 1 intent (dust spend), no contract interactions,
- * and 1 Zswap offer (either fallible or guaranteed depending on whether a segment ID was assigned).
+ * and 1 Zswap offer (either fallible or guaranteed) whose delta for the expected token equals -expectedAmount
  */
-function validateDustTx(serialzedTx: string, offerId: string): void {
+function validateDustTx(serialzedTx: string, offerId: string, expectedRawId: string, expectedAmount: bigint): void {
   let tx: Transaction<SignatureEnabled, Proof, Binding>;
   try {
     tx = deserializeTx(hexToBytes(serialzedTx));
@@ -55,6 +55,20 @@ function validateDustTx(serialzedTx: string, offerId: string): void {
   }
   if (tx.fallibleOffer && tx.guaranteedOffer) {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'contains both fallible and guaranteed offers');
+  }
+
+  // Get the offer from either fallible or guaranteed (only one can be present) to check the deltas.
+  // Expected to have only 1 offer.
+  const zswapOffer = tx.guaranteedOffer ?? [...tx.fallibleOffer!.values()][0];
+
+  // Use delta, use the `RawTokenType` key and get the value.
+  // Check if it's the same value as the expected amount.
+  const delta = zswapOffer.deltas.get(expectedRawId) ?? 0n;
+
+  // Delta is input - output. And from createOfferTx function, the CES provides an output, but no input.
+  // Therefore delta must be negative, -expectedAmount.
+  if (delta !== -expectedAmount) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'shielded offer amount or token does not match');
   }
 }
 
@@ -162,7 +176,12 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
     throw new CapacityExchangeOfferMismatchError({ price: exchangePrice.price }, offer);
   }
 
-  validateDustTx(offer.serializedTx, offer.offerId);
+  validateDustTx(
+    offer.serializedTx,
+    offer.offerId,
+    exchangePrice.price.currency.rawId,
+    BigInt(exchangePrice.price.amount)
+  );
 
   return offer;
 }

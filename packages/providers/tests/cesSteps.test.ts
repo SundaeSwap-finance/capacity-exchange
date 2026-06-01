@@ -45,8 +45,16 @@ function makeExchangePrice(): ExchangePrice {
   } as unknown as ExchangePrice;
 }
 
+// These match the defaults in makeExchangePrice().
+const OFFER_RAW_ID = 'ADA';
+const OFFER_AMOUNT = 1_000_000n;
+
 function makeValidIntent() {
   return { actions: [] as unknown[], dustActions: {} };
+}
+
+function makeValidOfferObj(rawId = OFFER_RAW_ID, amount = OFFER_AMOUNT) {
+  return { deltas: new Map([[rawId, -amount]]) };
 }
 
 function makeMockTx(
@@ -56,9 +64,11 @@ function makeMockTx(
     guaranteedOffer?: unknown;
   } = {}
 ) {
+  // fallibleOffer is Map<number, ZswapOffer> on the real type.
+  const defaultFallible = new Map([[0, makeValidOfferObj()]]);
   return {
     intents: 'intents' in overrides ? overrides.intents : new Map([[0, makeValidIntent()]]),
-    fallibleOffer: 'fallibleOffer' in overrides ? overrides.fallibleOffer : {},
+    fallibleOffer: 'fallibleOffer' in overrides ? overrides.fallibleOffer : defaultFallible,
     guaranteedOffer: 'guaranteedOffer' in overrides ? overrides.guaranteedOffer : undefined,
   };
 }
@@ -81,14 +91,14 @@ describe('validateDustTx (via requestCesOffer)', () => {
   describe('valid transactions', () => {
     it('accepts a tx with a fallible offer', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: {}, guaranteedOffer: undefined }) as any
+        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj()]]), guaranteedOffer: undefined }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).resolves.toBeDefined();
     });
 
     it('accepts a tx with a guaranteed offer', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: undefined, guaranteedOffer: {} }) as any
+        makeMockTx({ fallibleOffer: undefined, guaranteedOffer: makeValidOfferObj() }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).resolves.toBeDefined();
     });
@@ -144,10 +154,35 @@ describe('validateDustTx (via requestCesOffer)', () => {
     });
 
     it('throws when both fallible and guaranteed offers are present', async () => {
-      vi.mocked(Transaction.deserialize).mockReturnValue(makeMockTx({ fallibleOffer: {}, guaranteedOffer: {} }) as any);
+      vi.mocked(Transaction.deserialize).mockReturnValue(
+        makeMockTx({
+          fallibleOffer: new Map([[0, makeValidOfferObj()]]),
+          guaranteedOffer: makeValidOfferObj(),
+        }) as any
+      );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
         'contains both fallible and guaranteed offers'
+      );
+    });
+
+    it('throws when the offer encodes a different token than agreed', async () => {
+      vi.mocked(Transaction.deserialize).mockReturnValue(
+        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj('WRONG_TOKEN')]]) }) as any
+      );
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
+        'shielded offer amount or token does not match'
+      );
+    });
+
+    it('throws when the offer encodes a different amount than agreed', async () => {
+      vi.mocked(Transaction.deserialize).mockReturnValue(
+        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj(OFFER_RAW_ID, 1n)]]) }) as any
+      );
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
+        'shielded offer amount or token does not match'
       );
     });
   });
