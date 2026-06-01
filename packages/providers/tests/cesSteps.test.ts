@@ -153,6 +153,20 @@ describe('validateDustTx (via requestCesOffer)', () => {
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('missing expected shielded offer');
     });
 
+    it('throws when fallible offer map contains more than 1 entry', async () => {
+      vi.mocked(Transaction.deserialize).mockReturnValue(
+        makeMockTx({
+          fallibleOffer: new Map([
+            [0, makeValidOfferObj()],
+            [1, makeValidOfferObj()],
+          ]),
+          guaranteedOffer: undefined,
+        }) as any
+      );
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('expected exactly 1 fallible offer, got 2');
+    });
+
     it('throws when both fallible and guaranteed offers are present', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
         makeMockTx({

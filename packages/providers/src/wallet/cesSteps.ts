@@ -29,10 +29,10 @@ function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Bi
  * A valid Dust Tx contains only 1 intent (dust spend), no contract interactions,
  * and 1 Zswap offer (either fallible or guaranteed) whose delta for the expected token equals -expectedAmount
  */
-function validateDustTx(serialzedTx: string, offerId: string, expectedRawId: string, expectedAmount: bigint): void {
+function validateDustTx(serializedTx: string, offerId: string, expectedRawId: string, expectedAmount: bigint): void {
   let tx: Transaction<SignatureEnabled, Proof, Binding>;
   try {
-    tx = deserializeTx(hexToBytes(serialzedTx));
+    tx = deserializeTx(hexToBytes(serializedTx));
   } catch {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'transaction could not be deserialized');
   }
@@ -56,9 +56,14 @@ function validateDustTx(serialzedTx: string, offerId: string, expectedRawId: str
   if (tx.fallibleOffer && tx.guaranteedOffer) {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'contains both fallible and guaranteed offers');
   }
+  if (tx.fallibleOffer && tx.fallibleOffer.size !== 1) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      `expected exactly 1 fallible offer, got ${tx.fallibleOffer.size}`
+    );
+  }
 
   // Get the offer from either fallible or guaranteed (only one can be present) to check the deltas.
-  // Expected to have only 1 offer.
   const zswapOffer = tx.guaranteedOffer ?? [...tx.fallibleOffer!.values()][0];
 
   // Use delta, use the `RawTokenType` key and get the value.
