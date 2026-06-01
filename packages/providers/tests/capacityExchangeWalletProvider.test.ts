@@ -9,38 +9,6 @@ import {
   type TestContext,
 } from './setup/capacityExchangeWalletProviderSetup';
 
-vi.mock('@sundaeswap/capacity-exchange-client', () => ({
-  Configuration: class Configuration {
-    basePath: string;
-    constructor(config: { basePath?: string }) {
-      this.basePath = config?.basePath ?? '';
-    }
-  },
-  DefaultApi: class DefaultApi {
-    protected _basePath: string;
-    constructor(config: { basePath: string }) {
-      this._basePath = config.basePath;
-    }
-    async apiPricesGet(_params: unknown) {
-      const res = await fetch(`${this._basePath}/api/prices`);
-      return res.json();
-    }
-    async apiOffersPost(_params: unknown) {
-      const res = await fetch(`${this._basePath}/api/offers`);
-      return res.json();
-    }
-    async apiSponsorPost(_params: unknown) {
-      const res = await fetch(`${this._basePath}/api/sponsor`);
-      return res.json();
-    }
-  },
-  ResponseError: class ResponseError extends Error {
-    constructor(readonly response: Response) {
-      super(`ResponseError: ${response.status}`);
-    }
-  },
-}));
-
 vi.mock('@midnight-ntwrk/ledger-v8', async () => {
   const actual = await vi.importActual('@midnight-ntwrk/ledger-v8');
   return {
