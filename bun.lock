@@ -45,6 +45,7 @@
       "name": "@capacity-exchange/demo",
       "version": "1.0.4",
       "dependencies": {
+        "@capacity-exchange/archive-tools": "workspace:^",
         "@fontsource/geist": "^5.2.8",
         "@fontsource/space-mono": "^5.2.9",
         "@midnight-ntwrk/compact-js": "2.5.0",
@@ -92,7 +93,6 @@
       "name": "@capacity-exchange/demo-contracts",
       "version": "1.0.2",
       "dependencies": {
-        "@capacity-exchange/archive-tools": "workspace:^",
         "@midnight-ntwrk/compact-js": "2.5.0",
         "@midnight-ntwrk/compact-runtime": "0.15.0",
         "@midnight-ntwrk/ledger-v8": "8.0.3",
