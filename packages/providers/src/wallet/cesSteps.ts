@@ -73,14 +73,15 @@ function validateDustTx(serializedTx: string, offerId: string, expectedRawId: st
     );
   }
 
-  // Use delta, use the `RawTokenType` key and get the value.
-  // Check if it's the same value as the expected amount.
-  const delta = zswapOffer.deltas.get(expectedRawId) ?? 0n;
+  const delta = zswapOffer.deltas.get(expectedRawId);
+  if (delta === undefined) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'offer does not contain the expected token');
+  }
 
   // Delta is input - output. And from createOfferTx function, the CES provides an output, but no input.
   // Therefore delta must be negative, -expectedAmount.
   if (delta !== -expectedAmount) {
-    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'shielded offer amount or token does not match');
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'shielded offer amount does not match');
   }
 }
 

@@ -201,9 +201,7 @@ describe('validateDustTx (via requestCesOffer)', () => {
         makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj('WRONG_TOKEN')]]) }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
-      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
-        'shielded offer amount or token does not match'
-      );
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('offer does not contain the expected token');
     });
 
     it('throws when the offer encodes a different amount than agreed', async () => {
@@ -211,9 +209,7 @@ describe('validateDustTx (via requestCesOffer)', () => {
         makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj(OFFER_RAW_ID, 1n)]]) }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
-      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
-        'shielded offer amount or token does not match'
-      );
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('shielded offer amount does not match');
     });
   });
 });
