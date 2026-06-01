@@ -4,13 +4,6 @@ import { requestCesOffer } from '../src/wallet/cesSteps';
 import { CapacityExchangeOfferTransactionInvalidError } from '../src/wallet/errors';
 import type { ExchangePrice } from '../src/wallet/types';
 
-// The generated client dist is CJS; mock it so the ESM test runner doesn't choke on it.
-vi.mock('@sundaeswap/capacity-exchange-client', () => ({
-  Configuration: vi.fn(),
-  DefaultApi: vi.fn(),
-  ResponseError: class ResponseError extends Error {},
-}));
-
 vi.mock('@midnight-ntwrk/ledger-v8', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@midnight-ntwrk/ledger-v8')>();
   return {
