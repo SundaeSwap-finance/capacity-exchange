@@ -18,6 +18,16 @@ export function canonicalizeJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+/** Encoder pair (body, content-type) for JSON writes to a byte-store like S3Store. */
+export function asJson(value: unknown): [string, string] {
+  return [canonicalizeJson(value), 'application/json'];
+}
+
+/** Decoder for raw byte-store reads. Returns null when the source is null (i.e. key absent). */
+export function fromJson<T>(raw: string | null): T | null {
+  return raw === null ? null : (JSON.parse(raw) as T);
+}
+
 /** Reads a JSON file and asserts every required field is defined. */
 function loadJsonWithFields<T>(path: string, requiredFields: readonly (keyof T)[]): T {
   const value = JSON.parse(readFileSync(path, 'utf-8')) as T;
@@ -29,20 +39,15 @@ function loadJsonWithFields<T>(path: string, requiredFields: readonly (keyof T)[
   return value;
 }
 
-/** Git tag preserving the source commit: `archive/<sha>`. */
-export function archiveTag(args: { sha: string }): string {
-  return `${ARCHIVE_PREFIX}/${args.sha}`;
-}
-
-/** Blob-store prefix for one contract's archive: `archive/<sha>/<contract>`. */
-export function archiveKeyPrefix(args: { sha: string; contract: string }): string {
-  return `${archiveTag(args)}/${args.contract}`;
-}
-
-/** Blob-store key for the contract's provenance file. */
-export function archiveProvenanceKey(args: { sha: string; contract: string }): string {
-  return `${archiveKeyPrefix(args)}/${PROVENANCE_FILE}`;
-}
+/** S3 keys (and the git tag) under the `archive/` prefix. */
+export const archiveKey = {
+  tag: ({ sha }: { sha: string }) => `${ARCHIVE_PREFIX}/${sha}`,
+  prefix: ({ sha, contract }: { sha: string; contract: string }) => `${archiveKey.tag({ sha })}/${contract}`,
+  provenance: ({ sha, contract }: { sha: string; contract: string }) =>
+    `${archiveKey.prefix({ sha, contract })}/${PROVENANCE_FILE}`,
+  deploy: ({ sha, contract, address }: { sha: string; contract: string; address: string }) =>
+    `${archiveKey.prefix({ sha, contract })}/deploys/${address}.json`,
+};
 
 /** On-disk path to the provenance file inside a contract's archive directory. */
 function provenancePath(contractDir: string): string {

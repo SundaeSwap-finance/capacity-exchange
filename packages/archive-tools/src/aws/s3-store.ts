@@ -1,21 +1,15 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { canonicalizeJson } from '../archive.js';
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 
 export interface S3StoreOpts {
   bucket: string;
   region?: string;
 }
 
-enum ContentType {
-  Json = 'application/json',
-  OctetStream = 'application/octet-stream',
-}
-
-/** Picks a Content-Type based on file extension. */
-function contentTypeFor(filename: string): ContentType {
-  return filename.endsWith('.json') ? ContentType.Json : ContentType.OctetStream;
+/** Picks a Content-Type based on file extension. Internal helper for putDir. */
+function contentTypeFor(filename: string): string {
+  return filename.endsWith('.json') ? 'application/json' : 'application/octet-stream';
 }
 
 /** Returns absolute paths of every file under rootDir (recursive). */
@@ -23,6 +17,12 @@ function walkFiles(rootDir: string): string[] {
   return readdirSync(rootDir, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
     .map((entry) => join(entry.parentPath, entry.name));
+}
+
+/** True if `err` is an AWS SDK error whose `name` matches one of the given sentinels. */
+function isAwsError(err: unknown, ...names: string[]): boolean {
+  const n = (err as { name?: string }).name;
+  return n !== undefined && names.includes(n);
 }
 
 export class S3Store {
@@ -35,20 +35,60 @@ export class S3Store {
   }
 
   /** Uploads one object. */
-  async put(key: string, body: Buffer | string, contentType: ContentType): Promise<void> {
+  async put(key: string, body: Buffer | string, contentType: string): Promise<void> {
     await this.client.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-        Body: body,
-        ContentType: contentType,
-      })
+      new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType })
     );
   }
 
-  /** Uploads a value serialized in canonical JSON form. */
-  async putJson(key: string, value: unknown): Promise<void> {
-    await this.put(key, canonicalizeJson(value), ContentType.Json);
+  /**
+   * Conditionally uploads only if the key does not exist. Returns 'written' on success and
+   * 'exists' if S3 reports the object already present. Atomic on the S3 side.
+   */
+  async putIfAbsent(key: string, body: Buffer | string, contentType: string): Promise<'written' | 'exists'> {
+    try {
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+          Body: body,
+          ContentType: contentType,
+          IfNoneMatch: '*',
+        })
+      );
+      return 'written';
+    } catch (err) {
+      if (isAwsError(err, 'PreconditionFailed')) {
+        return 'exists';
+      }
+      throw err;
+    }
+  }
+
+  /** Reads the object as a string. Returns null if the key does not exist. */
+  async get(key: string): Promise<string | null> {
+    try {
+      const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+      return await res.Body!.transformToString();
+    } catch (err) {
+      if (isAwsError(err, 'NoSuchKey')) {
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  /** Returns true if the object exists. One round-trip, no body fetch. */
+  async exists(key: string): Promise<boolean> {
+    try {
+      await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
+      return true;
+    } catch (err) {
+      if (isAwsError(err, 'NotFound', 'NoSuchKey')) {
+        return false;
+      }
+      throw err;
+    }
   }
 
   /** Uploads every file under localDir in parallel under keyPrefix. Awaits all uploads before throwing on failure. */
