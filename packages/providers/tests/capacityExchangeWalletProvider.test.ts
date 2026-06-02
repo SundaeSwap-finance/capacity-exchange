@@ -16,10 +16,10 @@ vi.mock('@midnight-ntwrk/ledger-v8', async () => {
     Transaction: {
       deserialize: vi.fn(() => ({
         intents: new Map([[0, { actions: [], dustActions: {} }]]),
-        // fallibleOffer is Map<number, ZswapOffer>; deltas must match the mocked offer response
+        fallibleOffer: undefined,
+        // guaranteedOffer deltas must match the mocked offer response
         // (rawId: 'ADA', amount: 1000000 → delta: -1000000n).
-        fallibleOffer: new Map([[0, { deltas: new Map([['ADA', -1_000_000n]]) }]]),
-        guaranteedOffer: undefined,
+        guaranteedOffer: { deltas: new Map([['ADA', -1_000_000n]]) },
         bind: vi.fn(() => {}),
         merge: () => ({
           serialize: () => new Uint8Array([1, 2, 3, 4, 5]),

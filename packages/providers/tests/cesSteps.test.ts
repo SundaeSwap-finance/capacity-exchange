@@ -57,12 +57,10 @@ function makeMockTx(
     guaranteedOffer?: unknown;
   } = {}
 ) {
-  // fallibleOffer is Map<number, ZswapOffer> on the real type.
-  const defaultFallible = new Map([[0, makeValidOfferObj()]]);
   return {
     intents: 'intents' in overrides ? overrides.intents : new Map([[0, makeValidIntent()]]),
-    fallibleOffer: 'fallibleOffer' in overrides ? overrides.fallibleOffer : defaultFallible,
-    guaranteedOffer: 'guaranteedOffer' in overrides ? overrides.guaranteedOffer : undefined,
+    fallibleOffer: 'fallibleOffer' in overrides ? overrides.fallibleOffer : undefined,
+    guaranteedOffer: 'guaranteedOffer' in overrides ? overrides.guaranteedOffer : makeValidOfferObj(),
   };
 }
 
@@ -82,18 +80,32 @@ describe('validateDustTx (via requestCesOffer)', () => {
   });
 
   describe('valid transactions', () => {
-    it('accepts a tx with a fallible offer', async () => {
-      vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj()]]), guaranteedOffer: undefined }) as any
-      );
+    it('accepts a tx with a guaranteed offer', async () => {
+      vi.mocked(Transaction.deserialize).mockReturnValue(makeMockTx({ guaranteedOffer: makeValidOfferObj() }) as any);
       await expect(requestCesOffer(makeExchangePrice())).resolves.toBeDefined();
     });
 
-    it('accepts a tx with a guaranteed offer', async () => {
-      vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: undefined, guaranteedOffer: makeValidOfferObj() }) as any
-      );
-      await expect(requestCesOffer(makeExchangePrice())).resolves.toBeDefined();
+    it('skips tx validation for non-shielded currency types', async () => {
+      // Return a tx that would fail validateDustTx (no intents), to confirm it is not called.
+      vi.mocked(Transaction.deserialize).mockReturnValue(makeMockTx({ intents: null }) as any);
+      const unshieldedCurrency = { id: 'midnight:unshielded:ADA', type: 'midnight:unshielded', rawId: 'ADA' };
+      const unshieldedPrice: ExchangePrice = {
+        quoteId: 'test-quote-id',
+        price: { currency: unshieldedCurrency, amount: '1000000' },
+        exchangeApi: {
+          url: 'http://test-ces.example.com',
+          api: {
+            apiOffersPost: vi.fn().mockResolvedValue({
+              offerId: 'test-offer-id',
+              offerAmount: '1000000',
+              offerCurrency: unshieldedCurrency,
+              serializedTx: SERIALIZED_TX,
+              expiresAt: new Date(Date.now() + 60_000),
+            }),
+          } as any,
+        },
+      } as unknown as ExchangePrice;
+      await expect(requestCesOffer(unshieldedPrice)).resolves.toBeDefined();
     });
   });
 
@@ -138,39 +150,20 @@ describe('validateDustTx (via requestCesOffer)', () => {
   });
 
   describe('shielded offer', () => {
-    it('throws when neither fallible nor guaranteed offer is present', async () => {
+    it('throws when a fallible offer is present', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: undefined, guaranteedOffer: undefined }) as any
-      );
-      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
-      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('missing expected shielded offer');
-    });
-
-    it('throws when fallible offer map contains more than 1 entry', async () => {
-      vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({
-          fallibleOffer: new Map([
-            [0, makeValidOfferObj()],
-            [1, makeValidOfferObj()],
-          ]),
-          guaranteedOffer: undefined,
-        }) as any
-      );
-      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
-      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('expected exactly 1 fallible offer, got 2');
-    });
-
-    it('throws when both fallible and guaranteed offers are present', async () => {
-      vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({
-          fallibleOffer: new Map([[0, makeValidOfferObj()]]),
-          guaranteedOffer: makeValidOfferObj(),
-        }) as any
+        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj()]]), guaranteedOffer: undefined }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
-        'contains both fallible and guaranteed offers'
+        'contains a fallible offer; a guaranteed offer is required'
       );
+    });
+
+    it('throws when no guaranteed offer is present', async () => {
+      vi.mocked(Transaction.deserialize).mockReturnValue(makeMockTx({ guaranteedOffer: undefined }) as any);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('missing expected guaranteed shielded offer');
     });
 
     it('throws when the offer deltas contain more than 1 token', async () => {
@@ -181,7 +174,7 @@ describe('validateDustTx (via requestCesOffer)', () => {
         ]),
       };
       vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: new Map([[0, offerWithMultipleDeltas]]) }) as any
+        makeMockTx({ guaranteedOffer: offerWithMultipleDeltas }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
@@ -191,7 +184,7 @@ describe('validateDustTx (via requestCesOffer)', () => {
 
     it('throws when the offer encodes a different token than agreed', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj('WRONG_TOKEN')]]) }) as any
+        makeMockTx({ guaranteedOffer: makeValidOfferObj('WRONG_TOKEN') }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('offer does not contain the expected token');
@@ -199,7 +192,7 @@ describe('validateDustTx (via requestCesOffer)', () => {
 
     it('throws when the offer encodes a different amount than agreed', async () => {
       vi.mocked(Transaction.deserialize).mockReturnValue(
-        makeMockTx({ fallibleOffer: new Map([[0, makeValidOfferObj(OFFER_RAW_ID, 1n)]]) }) as any
+        makeMockTx({ guaranteedOffer: makeValidOfferObj(OFFER_RAW_ID, 1n) }) as any
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('shielded offer amount does not match');

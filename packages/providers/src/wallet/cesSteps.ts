@@ -50,21 +50,17 @@ function validateDustTx(serializedTx: string, offerId: string, expectedRawId: st
   if (!intent.dustActions) {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'intent is missing expected dust actions');
   }
-  if (!tx.fallibleOffer && !tx.guaranteedOffer) {
-    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'missing expected shielded offer');
-  }
-  if (tx.fallibleOffer && tx.guaranteedOffer) {
-    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'contains both fallible and guaranteed offers');
-  }
-  if (tx.fallibleOffer && tx.fallibleOffer.size !== 1) {
+  if (tx.fallibleOffer) {
     throw new CapacityExchangeOfferTransactionInvalidError(
       offerId,
-      `expected exactly 1 fallible offer, got ${tx.fallibleOffer.size}`
+      'contains a fallible offer; a guaranteed offer is required'
     );
   }
+  if (!tx.guaranteedOffer) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'missing expected guaranteed shielded offer');
+  }
 
-  // Get the offer from either fallible or guaranteed (only one can be present) to check the deltas.
-  const zswapOffer = tx.guaranteedOffer ?? [...tx.fallibleOffer!.values()][0];
+  const zswapOffer = tx.guaranteedOffer;
 
   if (zswapOffer.deltas.size !== 1) {
     throw new CapacityExchangeOfferTransactionInvalidError(
@@ -189,12 +185,15 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
     throw new CapacityExchangeOfferMismatchError({ price: exchangePrice.price }, offer);
   }
 
-  validateDustTx(
-    offer.serializedTx,
-    offer.offerId,
-    exchangePrice.price.currency.rawId,
-    BigInt(exchangePrice.price.amount)
-  );
+  // validate only the shielded offers
+  if (exchangePrice.price.currency.type === 'midnight:shielded') {
+    validateDustTx(
+      offer.serializedTx,
+      offer.offerId,
+      exchangePrice.price.currency.rawId,
+      BigInt(exchangePrice.price.amount)
+    );
+  }
 
   return offer;
 }
