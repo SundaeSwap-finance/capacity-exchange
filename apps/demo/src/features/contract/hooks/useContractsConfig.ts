@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { ContractDeployRecord } from '@capacity-exchange/archive-tools';
 
 export interface TokenMintConfig {
   contractAddress: string;
@@ -16,6 +17,37 @@ export interface ContractsConfig {
   networkId: string;
   tokenMint: TokenMintConfig;
   counter: CounterConfig;
+}
+
+interface DeployedContracts {
+  network: string;
+  counter: ContractDeployRecord;
+  'token-mint': ContractDeployRecord;
+}
+
+function requirePublicString(record: ContractDeployRecord, contractName: string, field: string): string {
+  const v = record.public[field];
+  if (typeof v !== 'string') {
+    throw new Error(`${contractName} deploy record missing string field 'public.${field}' (got ${typeof v})`);
+  }
+  return v;
+}
+
+function toContractsConfig(deployed: DeployedContracts): ContractsConfig {
+  const tokenMint = deployed['token-mint'];
+  return {
+    networkId: deployed.network,
+    tokenMint: {
+      contractAddress: tokenMint.address,
+      txHash: tokenMint.txHash,
+      tokenColor: requirePublicString(tokenMint, 'token-mint', 'tokenColor'),
+      derivedTokenColor: requirePublicString(tokenMint, 'token-mint', 'derivedTokenColor'),
+    },
+    counter: {
+      contractAddress: deployed.counter.address,
+      txHash: deployed.counter.txHash,
+    },
+  };
 }
 
 export type UseContractsConfigResult =
@@ -36,7 +68,7 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
   const fetchConfig = async () => {
     setState({ status: 'loading' });
     try {
-      const response = await fetch(`/contracts/.contracts.${networkId}.public.json`);
+      const response = await fetch('/contracts.json');
       if (response.status === 404) {
         setState({ status: 'not-deployed' });
         return;
@@ -50,8 +82,15 @@ export function useContractsConfig(networkId: string): UseContractsConfigResult 
         setState({ status: 'not-deployed' });
         return;
       }
-      const data = await response.json();
-      setState({ status: 'loaded', config: data as ContractsConfig });
+      const data = (await response.json()) as DeployedContracts;
+      if (data.network !== networkId) {
+        setState({
+          status: 'error',
+          error: `contracts.json network '${data.network}' does not match expected '${networkId}'`,
+        });
+        return;
+      }
+      setState({ status: 'loaded', config: toContractsConfig(data) });
     } catch (err) {
       setState({ status: 'error', error: err instanceof Error ? err.message : 'Failed to load contracts config' });
     }

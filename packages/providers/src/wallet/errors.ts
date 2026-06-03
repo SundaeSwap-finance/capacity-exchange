@@ -6,6 +6,7 @@ export type CapacityExchangeErrorType =
   | 'no-eligible-offer'
   | 'offer-expired'
   | 'offer-mismatch'
+  | 'offer-transaction-invalid'
   | 'no-prices-available'
   | 'server-error';
 
@@ -61,6 +62,17 @@ export class CapacityExchangeOfferMismatchError extends CapacityExchangeError {
         `but offer returned ${offer.offerAmount} ${offer.offerCurrency.id}`
     );
     this.name = 'CapacityExchangeOfferMismatchError';
+  }
+}
+
+/** Thrown when the serialized transaction in an offer contains unexpected components. */
+export class CapacityExchangeOfferTransactionInvalidError extends CapacityExchangeError {
+  constructor(
+    readonly offerId: string,
+    reason: string
+  ) {
+    super('offer-transaction-invalid', `Offer ${offerId} contains an invalid transaction: ${reason}`);
+    this.name = 'CapacityExchangeOfferTransactionInvalidError';
   }
 }
 

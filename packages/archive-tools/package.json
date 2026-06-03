@@ -7,7 +7,8 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "archive-write": "bun src/cli/write-archive.ts"
+    "archive-write": "bun src/cli/write-archive.ts",
+    "archive-deployment": "bun src/cli/archive-deployment.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1051.0",

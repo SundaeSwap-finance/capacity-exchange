@@ -106,6 +106,7 @@ export class SponsorService {
           case 'user-cancelled':
           case 'offer-expired':
           case 'offer-mismatch':
+          case 'offer-transaction-invalid':
           case 'server-error':
             this.logger.error({ err }, 'Peer fallback failed');
             return { status: 'illegal-state', error: `peer-fallback:${err.type}` };

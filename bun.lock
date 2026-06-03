@@ -45,6 +45,7 @@
       "name": "@capacity-exchange/demo",
       "version": "1.0.4",
       "dependencies": {
+        "@capacity-exchange/archive-tools": "workspace:^",
         "@fontsource/geist": "^5.2.8",
         "@fontsource/space-mono": "^5.2.9",
         "@midnight-ntwrk/compact-js": "2.5.0",
