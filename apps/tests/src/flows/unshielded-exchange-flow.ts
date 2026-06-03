@@ -70,11 +70,15 @@ export async function runUnshieldedExchangeFlow(
   logger.info(stringify(post), 'Post');
 
   const failures: string[] = [];
-  if (post.userToken >= pre.userToken)
-    {failures.push(`user token did not decrease: pre=${pre.userToken} post=${post.userToken}`);}
-  if (post.serverToken <= pre.serverToken)
-    {failures.push(`server token did not increase: pre=${pre.serverToken} post=${post.serverToken}`);}
-  if (post.counter !== pre.counter + 1n) {failures.push(`counter did not +1: pre=${pre.counter} post=${post.counter}`);}
+  if (post.userToken >= pre.userToken) {
+    failures.push(`user token did not decrease: pre=${pre.userToken} post=${post.userToken}`);
+  }
+  if (post.serverToken <= pre.serverToken) {
+    failures.push(`server token did not increase: pre=${pre.serverToken} post=${post.serverToken}`);
+  }
+  if (post.counter !== pre.counter + 1n) {
+    failures.push(`counter did not +1: pre=${pre.counter} post=${post.counter}`);
+  }
   if (failures.length > 0) {
     throw new Error(`post-condition:\n  - ${failures.join('\n  - ')}`);
   }
@@ -106,7 +110,9 @@ async function walletState(ctx: AppContext, tokenRawId: string): Promise<{ dust:
 
 async function counterRound(ctx: AppContext, counterAddress: string): Promise<bigint> {
   const state = await ctx.publicDataProvider.queryContractState(counterAddress);
-  if (!state) {throw new Error(`counter contract not found at ${counterAddress}`);}
+  if (!state) {
+    throw new Error(`counter contract not found at ${counterAddress}`);
+  }
   return BigInt(Counter.ledger(state.data).round);
 }
 
