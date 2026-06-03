@@ -1,5 +1,6 @@
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import {
+  Intent,
   Proof,
   SignatureEnabled,
   Transaction,
@@ -26,17 +27,16 @@ function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Bi
 }
 
 /**
- * A valid Dust Tx contains only 1 intent (dust spend), no contract interactions,
- * and 1 Zswap offer (either fallible or guaranteed) whose delta for the expected token equals -expectedAmount
- */
-function validateDustTx(serializedTx: string, offerId: string, expectedRawId: string, expectedAmount: bigint): void {
+ * Deserializes a CES offer tx and validates the common structure:
+ * exactly 1 intent, no contract calls, dustActions present.
+ * */
+function parseOfferTx(serializedTx: string, offerId: string) {
   let tx: Transaction<SignatureEnabled, Proof, Binding>;
   try {
     tx = deserializeTx(hexToBytes(serializedTx));
   } catch {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'transaction could not be deserialized');
   }
-
   if (!tx.intents || tx.intents.size !== 1) {
     throw new CapacityExchangeOfferTransactionInvalidError(
       offerId,
@@ -50,34 +50,100 @@ function validateDustTx(serializedTx: string, offerId: string, expectedRawId: st
   if (!intent.dustActions) {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'intent is missing expected dust actions');
   }
+  return { tx, intent };
+}
+
+/** Validates the unshielded offer in an intent. */
+function validateUnshieldedOffer(
+  intent: Intent<SignatureEnabled, Proof, Binding>,
+  offerId: string,
+  expectedRawId: string,
+  expectedAmount: bigint
+): void {
+  if (intent.fallibleUnshieldedOffer) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      'contains a fallible unshielded offer; a guaranteed unshielded offer is required'
+    );
+  }
+  if (!intent.guaranteedUnshieldedOffer) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'missing expected guaranteed unshielded offer');
+  }
+  const { outputs } = intent.guaranteedUnshieldedOffer;
+  if (outputs.length !== 1) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      `expected exactly 1 unshielded output, got ${outputs.length}`
+    );
+  }
+  const [output] = outputs;
+  if (output.type !== expectedRawId) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      'unshielded offer does not contain the expected token'
+    );
+  }
+  if (output.value !== expectedAmount) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'unshielded offer amount does not match');
+  }
+}
+
+/** Validates the shielded ZswapOffer on a tx */
+function validateShieldedOffer(
+  tx: Transaction<SignatureEnabled, Proof, Binding>,
+  offerId: string,
+  expectedRawId: string,
+  expectedAmount: bigint
+): void {
   if (tx.fallibleOffer) {
     throw new CapacityExchangeOfferTransactionInvalidError(
       offerId,
-      'contains a fallible offer; a guaranteed offer is required'
+      'contains a fallible offer; a guaranteed shielded offer is required'
     );
   }
   if (!tx.guaranteedOffer) {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'missing expected guaranteed shielded offer');
   }
-
-  const zswapOffer = tx.guaranteedOffer;
-
-  if (zswapOffer.deltas.size !== 1) {
+  if (tx.guaranteedOffer.deltas.size !== 1) {
     throw new CapacityExchangeOfferTransactionInvalidError(
       offerId,
-      `expected exactly 1 token in offer deltas, got ${zswapOffer.deltas.size}`
+      `expected exactly 1 token in shielded offer deltas, got ${tx.guaranteedOffer.deltas.size}`
     );
   }
-
-  const delta = zswapOffer.deltas.get(expectedRawId);
+  const delta = tx.guaranteedOffer.deltas.get(expectedRawId);
   if (delta === undefined) {
-    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'offer does not contain the expected token');
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      'shielded offer does not contain the expected token'
+    );
   }
-
-  // Delta is input - output. And from createOfferTx function, the CES provides an output, but no input.
-  // Therefore delta must be negative, -expectedAmount.
+  // Delta is input - output. The CES provides an output but no input, so delta must be -expectedAmount.
   if (delta !== -expectedAmount) {
     throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'shielded offer amount does not match');
+  }
+}
+
+function validateOfferTx(
+  serializedTx: string,
+  offerId: string,
+  price: { currency: { type: string; rawId: string }; amount: string }
+): void {
+  const { tx, intent } = parseOfferTx(serializedTx, offerId);
+  const expectedAmount = BigInt(price.amount);
+
+  if (price.currency.type === 'midnight:shielded') {
+    // use the tx, since the guaranteed shielded offer
+    // (where the deltas are located) can be accessed through it.
+    validateShieldedOffer(tx, offerId, price.currency.rawId, expectedAmount);
+  } else if (price.currency.type === 'midnight:unshielded') {
+    // use the intent, since the guaranteed unshielded offer
+    // (where the `utxoOutput` is located) can be accessed through it.
+    validateUnshieldedOffer(intent, offerId, price.currency.rawId, expectedAmount);
+  } else {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      `unsupported currency type: ${price.currency.type}`
+    );
   }
 }
 
@@ -185,15 +251,7 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
     throw new CapacityExchangeOfferMismatchError({ price: exchangePrice.price }, offer);
   }
 
-  // validate only the shielded offers
-  if (exchangePrice.price.currency.type === 'midnight:shielded') {
-    validateDustTx(
-      offer.serializedTx,
-      offer.offerId,
-      exchangePrice.price.currency.rawId,
-      BigInt(exchangePrice.price.amount)
-    );
-  }
+  validateOfferTx(offer.serializedTx, offer.offerId, exchangePrice.price);
 
   return offer;
 }
