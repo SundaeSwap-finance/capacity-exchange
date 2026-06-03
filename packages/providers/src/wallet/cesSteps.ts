@@ -18,10 +18,67 @@ import {
   CapacityExchangeNoPricesAvailableError,
   CapacityExchangeOfferMismatchError,
   CapacityExchangeOfferExpiredError,
+  CapacityExchangeOfferTransactionInvalidError,
 } from './errors';
 
 function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Binding> {
   return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hex);
+}
+
+/**
+ * A valid Dust Tx contains only 1 intent (dust spend), no contract interactions,
+ * and 1 Zswap offer (either fallible or guaranteed) whose delta for the expected token equals -expectedAmount
+ */
+function validateDustTx(serializedTx: string, offerId: string, expectedRawId: string, expectedAmount: bigint): void {
+  let tx: Transaction<SignatureEnabled, Proof, Binding>;
+  try {
+    tx = deserializeTx(hexToBytes(serializedTx));
+  } catch {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'transaction could not be deserialized');
+  }
+
+  if (!tx.intents || tx.intents.size !== 1) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      `expected exactly 1 intent, got ${tx.intents?.size ?? 0}`
+    );
+  }
+  const [intent] = tx.intents.values();
+  if (intent.actions.length > 0) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'contains unexpected contract calls');
+  }
+  if (!intent.dustActions) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'intent is missing expected dust actions');
+  }
+  if (tx.fallibleOffer) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      'contains a fallible offer; a guaranteed offer is required'
+    );
+  }
+  if (!tx.guaranteedOffer) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'missing expected guaranteed shielded offer');
+  }
+
+  const zswapOffer = tx.guaranteedOffer;
+
+  if (zswapOffer.deltas.size !== 1) {
+    throw new CapacityExchangeOfferTransactionInvalidError(
+      offerId,
+      `expected exactly 1 token in offer deltas, got ${zswapOffer.deltas.size}`
+    );
+  }
+
+  const delta = zswapOffer.deltas.get(expectedRawId);
+  if (delta === undefined) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'offer does not contain the expected token');
+  }
+
+  // Delta is input - output. And from createOfferTx function, the CES provides an output, but no input.
+  // Therefore delta must be negative, -expectedAmount.
+  if (delta !== -expectedAmount) {
+    throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'shielded offer amount does not match');
+  }
 }
 
 function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {
@@ -104,6 +161,7 @@ async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: C
  *
  * @throws {CapacityExchangeOfferExpiredError} if the offer is already expired
  * @throws {CapacityExchangeOfferMismatchError} if the offer doesn't match the exchange price
+ * @throws {CapacityExchangeOfferTransactionInvalidError} if the offer transaction is invalid for use
  */
 export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
@@ -118,12 +176,23 @@ export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Off
 
   const offer = convertToOffer(offerResponse);
 
+  // validate the offer
   if (isOfferExpired(offer.expiresAt)) {
     throw new CapacityExchangeOfferExpiredError(offer);
   }
 
   if (offer.offerAmount !== exchangePrice.price.amount || offer.offerCurrency.id !== exchangePrice.price.currency.id) {
     throw new CapacityExchangeOfferMismatchError({ price: exchangePrice.price }, offer);
+  }
+
+  // validate only the shielded offers
+  if (exchangePrice.price.currency.type === 'midnight:shielded') {
+    validateDustTx(
+      offer.serializedTx,
+      offer.offerId,
+      exchangePrice.price.currency.rawId,
+      BigInt(exchangePrice.price.amount)
+    );
   }
 
   return offer;
