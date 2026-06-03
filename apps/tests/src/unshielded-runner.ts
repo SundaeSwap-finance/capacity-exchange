@@ -13,7 +13,13 @@
  *   CHAIN_SNAPSHOT_DIR               directory with cached chain snapshots
  */
 import * as fs from 'fs';
-import { runCli, resolveEnv, createLogger, loadChainSnapshot, requireEnvVar } from '@sundaeswap/capacity-exchange-nodejs';
+import {
+  runCli,
+  resolveEnv,
+  createLogger,
+  loadChainSnapshot,
+  requireEnvVar,
+} from '@sundaeswap/capacity-exchange-nodejs';
 import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { requireEnvSeed, type WalletSeed } from './util/testUtils.js';
@@ -45,7 +51,7 @@ async function main(): Promise<UnshieldedExchangeFlowResult> {
     { seed: serverSeed, stateSource: { kind: 'inMemory', chainSnapshot } },
     counterAddress,
     cesUrl,
-    tokenRawId,
+    tokenRawId
   );
   logger.info(result, 'Unshielded exchange flow result');
   return result;

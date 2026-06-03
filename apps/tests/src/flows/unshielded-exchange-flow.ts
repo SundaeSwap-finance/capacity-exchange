@@ -33,7 +33,7 @@ export async function runUnshieldedExchangeFlow(
   serverFlowConfig: FlowCtxConfig,
   counterAddress: string,
   cesUrl: string,
-  tokenRawId: string,
+  tokenRawId: string
 ): Promise<UnshieldedExchangeFlowResult> {
   const [userCtx, serverCtx] = await Promise.all([
     buildFlowCtx(networkId, userFlowConfig),
@@ -57,6 +57,7 @@ export async function runUnshieldedExchangeFlow(
     contractAddress: counterAddress,
   });
 
+  logger.info('Submitting counter increment via CES unshielded exchange flow (user pays with unshielded token)');
   const result = await submitCallTx(providers, {
     compiledContract: CompiledCounterContract,
     contractAddress: counterAddress,
@@ -69,9 +70,11 @@ export async function runUnshieldedExchangeFlow(
   logger.info(stringify(post), 'Post');
 
   const failures: string[] = [];
-  if (post.userToken >= pre.userToken) failures.push(`user token did not decrease: pre=${pre.userToken} post=${post.userToken}`);
-  if (post.serverToken <= pre.serverToken) failures.push(`server token did not increase: pre=${pre.serverToken} post=${post.serverToken}`);
-  if (post.counter !== pre.counter + 1n) failures.push(`counter did not +1: pre=${pre.counter} post=${post.counter}`);
+  if (post.userToken >= pre.userToken)
+    {failures.push(`user token did not decrease: pre=${pre.userToken} post=${post.userToken}`);}
+  if (post.serverToken <= pre.serverToken)
+    {failures.push(`server token did not increase: pre=${pre.serverToken} post=${post.serverToken}`);}
+  if (post.counter !== pre.counter + 1n) {failures.push(`counter did not +1: pre=${pre.counter} post=${post.counter}`);}
   if (failures.length > 0) {
     throw new Error(`post-condition:\n  - ${failures.join('\n  - ')}`);
   }
@@ -79,7 +82,12 @@ export async function runUnshieldedExchangeFlow(
   return { status: result.public.status, pre: stringify(pre), post: stringify(post) };
 }
 
-async function snapshot(userCtx: AppContext, serverCtx: AppContext, tokenRawId: string, counterAddress: string): Promise<State> {
+async function snapshot(
+  userCtx: AppContext,
+  serverCtx: AppContext,
+  tokenRawId: string,
+  counterAddress: string
+): Promise<State> {
   const [user, server, counter] = await Promise.all([
     walletState(userCtx, tokenRawId),
     walletState(serverCtx, tokenRawId),
@@ -98,7 +106,7 @@ async function walletState(ctx: AppContext, tokenRawId: string): Promise<{ dust:
 
 async function counterRound(ctx: AppContext, counterAddress: string): Promise<bigint> {
   const state = await ctx.publicDataProvider.queryContractState(counterAddress);
-  if (!state) throw new Error(`counter contract not found at ${counterAddress}`);
+  if (!state) {throw new Error(`counter contract not found at ${counterAddress}`);}
   return BigInt(Counter.ledger(state.data).round);
 }
 

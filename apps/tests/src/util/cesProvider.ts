@@ -18,12 +18,7 @@ const BALANCE_TTL_MS = 5 * 60 * 1000;
  *  - currency selection that picks `tokenRawId` from `cesUrl`.
  *  - auto-confirm offer.
  */
-export function createTestCesProvider(
-  ctx: AppContext,
-  networkId: string,
-  cesUrl: string,
-  tokenRawId: string,
-) {
+export function createTestCesProvider(ctx: AppContext, networkId: string, cesUrl: string, tokenRawId: string) {
   return capacityExchangeWalletProvider({
     networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
@@ -45,7 +40,7 @@ async function balanceUnsealed(ctx: AppContext, txHex: string) {
     'signature',
     'proof',
     'pre-binding',
-    Buffer.from(txHex, 'hex'),
+    Buffer.from(txHex, 'hex')
   );
   const ttl = new Date(Date.now() + BALANCE_TTL_MS);
   const balancedTx = await balanceUnboundTransaction(ctx.walletContext, tx, ttl);
@@ -57,7 +52,7 @@ async function balanceSealed(ctx: AppContext, txHex: string) {
     'signature',
     'proof',
     'binding',
-    Buffer.from(txHex, 'hex'),
+    Buffer.from(txHex, 'hex')
   );
   const ttl = new Date(Date.now() + BALANCE_TTL_MS);
   const balancedTx = await balanceFinalizedTransaction(ctx.walletContext, tx, ttl);

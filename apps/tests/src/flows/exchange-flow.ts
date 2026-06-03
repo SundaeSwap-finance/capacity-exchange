@@ -16,7 +16,7 @@ export async function runExchangeFlow(
   flowConfig: FlowCtxConfig,
   counterAddress: string,
   cesUrl: string,
-  derivedTokenColor: string,
+  derivedTokenColor: string
 ): Promise<ExchangeFlowResult> {
   logger.info('Building exchange-flow AppContext');
   const ctx = await buildFlowCtx(networkId, flowConfig);
