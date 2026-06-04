@@ -135,10 +135,20 @@ function validateOfferTx(
     // use the tx, since the guaranteed shielded offer
     // (where the deltas are located) can be accessed through it.
     validateShieldedOffer(tx, offerId, price.currency.rawId, expectedAmount);
+
+    // for shielded offers, the presence of any unshielded offer is unexpected/invalid.
+    if (intent.guaranteedUnshieldedOffer || intent.fallibleUnshieldedOffer) {
+      throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'contains unexpected unshielded offer');
+    }
   } else if (price.currency.type === 'midnight:unshielded') {
     // use the intent, since the guaranteed unshielded offer
     // (where the `utxoOutput` is located) can be accessed through it.
     validateUnshieldedOffer(intent, offerId, price.currency.rawId, expectedAmount);
+
+    // for unshielded offers, the presence of any shielded offer is unexpected/invalid.
+    if (tx.guaranteedOffer || tx.fallibleOffer) {
+      throw new CapacityExchangeOfferTransactionInvalidError(offerId, 'contains unexpected shielded offer');
+    }
   } else {
     throw new CapacityExchangeOfferTransactionInvalidError(
       offerId,

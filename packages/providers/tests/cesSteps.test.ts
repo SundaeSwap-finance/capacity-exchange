@@ -222,6 +222,21 @@ describe('validateOfferTx (via requestCesOffer)', () => {
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('shielded offer amount does not match');
     });
+
+    it('throws when the tx also contains an unshielded offer', async () => {
+      const intentWithUnshielded = new Map([
+        [
+          0,
+          {
+            ...makeValidShieldedIntent(),
+            guaranteedUnshieldedOffer: { outputs: [{ type: OFFER_RAW_ID, value: OFFER_AMOUNT }] },
+          },
+        ],
+      ]);
+      vi.mocked(Transaction.deserialize).mockReturnValue(makeMockShieldedTx({ intents: intentWithUnshielded }) as any);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
+      await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow('contains unexpected unshielded offer');
+    });
   });
 
   describe('unshielded offer', () => {
@@ -337,6 +352,19 @@ describe('validateOfferTx (via requestCesOffer)', () => {
       );
       await expect(requestCesOffer(makeUnshieldedExchangePrice())).rejects.toThrow(
         'unshielded offer amount does not match'
+      );
+    });
+
+    it('throws when the tx also contains a shielded offer', async () => {
+      vi.mocked(Transaction.deserialize).mockReturnValue({
+        ...makeMockUnshieldedTx(),
+        guaranteedOffer: makeValidOfferObj(),
+      } as any);
+      await expect(requestCesOffer(makeUnshieldedExchangePrice())).rejects.toThrow(
+        CapacityExchangeOfferTransactionInvalidError
+      );
+      await expect(requestCesOffer(makeUnshieldedExchangePrice())).rejects.toThrow(
+        'contains unexpected shielded offer'
       );
     });
   });

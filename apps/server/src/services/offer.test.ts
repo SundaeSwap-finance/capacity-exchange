@@ -136,6 +136,47 @@ describe('OfferService', () => {
     }
   });
 
+  it('calls createUnshieldedOfferTx and getUnshieldedAddress for unshielded currency', async () => {
+    deps = createMockDeps();
+    (deps.priceService.getPrice as ReturnType<typeof vi.fn>).mockReturnValue({
+      status: 'ok' as const,
+      price: 2000n,
+      currency: {
+        id: 'midnight:unshielded:0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+        type: 'midnight:unshielded',
+        rawId: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+      },
+    });
+    service = new OfferService(
+      deps.utxoService,
+      deps.txService,
+      deps.priceService,
+      deps.metricsService,
+      deps.getUnshieldedAddress,
+      60,
+      logger,
+    );
+
+    const request = {
+      quoteId: 'q-unshielded',
+      specks: 1000n,
+      offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+    };
+
+    const result = await service.createOffer(request);
+
+    expect(result.status).toBe('ok');
+    expect(deps.txService.createUnshieldedOfferTx).toHaveBeenCalledTimes(1);
+    expect(deps.txService.createShieldedOfferTx).not.toHaveBeenCalled();
+    expect(deps.getUnshieldedAddress).toHaveBeenCalled();
+    const [rawId, value, , , , serverAddress] = (
+      deps.txService.createUnshieldedOfferTx as ReturnType<typeof vi.fn>
+    ).mock.calls[0];
+    expect(rawId).toBe('0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0');
+    expect(value).toBe(2000n);
+    expect(serverAddress).toBe('00'.repeat(32));
+  });
+
   it('unlocks UTXO when tx proving throws', async () => {
     deps = createMockDeps();
     (deps.txService.createShieldedOfferTx as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
