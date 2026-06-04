@@ -66,9 +66,9 @@ export class TxService {
     ctime: Date,
     ttl: Date,
   ): Promise<UnboundTransaction> {
-    const intent = this.buildDustIntent(dust, ctime, ttl);
-    const tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
-    return this.proveTx(tx);
+    return this.#buildTx(dust, ctime, ttl, (intent) =>
+      Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent),
+    );
   }
 
   /** Creates a ZswapOffer tx. */
@@ -80,20 +80,19 @@ export class TxService {
     ttl: Date,
     segmentId?: number,
   ): Promise<UnboundTransaction> {
-    const intent = this.buildDustIntent(dust, ctime, ttl);
-    const coin = createShieldedCoinInfo(rawId, value);
-    const output = ZswapOutput.new(
-      coin,
-      segmentId ?? 0,
-      this.#zswap.coinPublicKey,
-      this.#zswap.encryptionPublicKey,
-    );
-    const offer = ZswapOffer.fromOutput(output, coin.type, coin.value);
-    const tx =
-      segmentId !== undefined
+    return this.#buildTx(dust, ctime, ttl, (intent) => {
+      const coin = createShieldedCoinInfo(rawId, value);
+      const output = ZswapOutput.new(
+        coin,
+        segmentId ?? 0,
+        this.#zswap.coinPublicKey,
+        this.#zswap.encryptionPublicKey,
+      );
+      const offer = ZswapOffer.fromOutput(output, coin.type, coin.value);
+      return segmentId !== undefined
         ? Transaction.fromParts(this.#networkId, offer, undefined, intent)
         : Transaction.fromPartsRandomized(this.#networkId, offer, undefined, intent);
-    return this.proveTx(tx);
+    });
   }
 
   /** Creates a UtxoOutput tx. `serverAddress` is where the unshielded tokens are sent. */
@@ -105,10 +104,21 @@ export class TxService {
     ttl: Date,
     serverAddress: UserAddress,
   ): Promise<UnboundTransaction> {
+    return this.#buildTx(dust, ctime, ttl, (intent) => {
+      const utxoOutput: UtxoOutput = { value, owner: serverAddress, type: rawId };
+      intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [utxoOutput], []);
+      return Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
+    });
+  }
+
+  /** Builds an intent, passes it to `configure` to produce an unproven tx, then proves it. */
+  #buildTx(
+    dust: UnprovenDustSpend,
+    ctime: Date,
+    ttl: Date,
+    configure: (intent: UnprovenIntent) => UnprovenTransaction,
+  ): Promise<UnboundTransaction> {
     const intent = this.buildDustIntent(dust, ctime, ttl);
-    const utxoOutput: UtxoOutput = { value, owner: serverAddress, type: rawId };
-    intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [utxoOutput], []);
-    const tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
-    return this.proveTx(tx);
+    return this.proveTx(configure(intent));
   }
 }
