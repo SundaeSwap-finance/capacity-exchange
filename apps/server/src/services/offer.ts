@@ -162,6 +162,7 @@ export class OfferService {
               lockedInfo.spend,
               lockedInfo.ctime,
               expiration,
+              //TODO: pass in segmentId when we can
             )
           : await this.txService.createUnshieldedOfferTx(
               currency.rawId,
