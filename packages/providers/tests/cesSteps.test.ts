@@ -181,7 +181,7 @@ describe('validateOfferTx (via requestCesOffer)', () => {
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
-        'contains a fallible offer; a guaranteed offer is required'
+        'contains a fallible offer; a guaranteed shielded offer is required'
       );
     });
 
@@ -203,7 +203,7 @@ describe('validateOfferTx (via requestCesOffer)', () => {
       );
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(CapacityExchangeOfferTransactionInvalidError);
       await expect(requestCesOffer(makeExchangePrice())).rejects.toThrow(
-        'expected exactly 1 token in offer deltas, got 2'
+        'expected exactly 1 token in shielded offer deltas, got 2'
       );
     });
 
@@ -249,7 +249,7 @@ describe('validateOfferTx (via requestCesOffer)', () => {
         CapacityExchangeOfferTransactionInvalidError
       );
       await expect(requestCesOffer(makeUnshieldedExchangePrice())).rejects.toThrow(
-        'contains a fallible unshielded offer; a guaranteed offer is required'
+        'contains a fallible unshielded offer; a guaranteed unshielded offer is required'
       );
     });
 
