@@ -21,7 +21,6 @@ import {
   type UnboundTransaction,
 } from '@midnight-ntwrk/midnight-js-types';
 import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
-import type { RawCurrency } from '../config/prices.js';
 
 // The server's dust-spend txs don't take zk config / circuit artifacts.
 class EmptyZKConfigProvider extends ZKConfigProvider<never> {
@@ -72,41 +71,44 @@ export class TxService {
     return this.proveTx(tx);
   }
 
-  /**
-   * Build an offer tx: server sponsors DUST for the user and promises payment
-   * in `currency`/`value`, routed by `currency.type`:
-   * - `midnight:shielded` — creates a ZswapOffer (shielded output); `serverAddress` is ignored.
-   * - `midnight:unshielded` — creates a UtxoOutput addressed to `serverAddress`; must be provided.
-   */
-  async createOfferTx(
-    currency: RawCurrency,
+  /** Creates a ZswapOffer tx. */
+  async createShieldedOfferTx(
+    rawId: string,
     value: bigint,
     dust: UnprovenDustSpend,
     ctime: Date,
     ttl: Date,
-    serverAddress?: UserAddress,
+    segmentId?: number,
   ): Promise<UnboundTransaction> {
     const intent = this.buildDustIntent(dust, ctime, ttl);
-    let tx: UnprovenTransaction;
-    if (currency.type === 'midnight:shielded') {
-      const coin = createShieldedCoinInfo(currency.rawId, value);
-      const output = ZswapOutput.new(
-        coin,
-        0,
-        this.#zswap.coinPublicKey,
-        this.#zswap.encryptionPublicKey,
-      );
-      tx = Transaction.fromPartsRandomized(
-        this.#networkId,
-        ZswapOffer.fromOutput(output, coin.type, coin.value),
-        undefined,
-        intent,
-      );
-    } else {
-      const utxoOutput: UtxoOutput = { value, owner: serverAddress!, type: currency.rawId };
-      intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [utxoOutput], []);
-      tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
-    }
+    const coin = createShieldedCoinInfo(rawId, value);
+    const output = ZswapOutput.new(
+      coin,
+      segmentId ?? 0,
+      this.#zswap.coinPublicKey,
+      this.#zswap.encryptionPublicKey,
+    );
+    const offer = ZswapOffer.fromOutput(output, coin.type, coin.value);
+    const tx =
+      segmentId !== undefined
+        ? Transaction.fromParts(this.#networkId, offer, undefined, intent)
+        : Transaction.fromPartsRandomized(this.#networkId, offer, undefined, intent);
+    return this.proveTx(tx);
+  }
+
+  /** Creates a UtxoOutput tx. `serverAddress` is where the unshielded tokens are sent. */
+  async createUnshieldedOfferTx(
+    rawId: string,
+    value: bigint,
+    dust: UnprovenDustSpend,
+    ctime: Date,
+    ttl: Date,
+    serverAddress: UserAddress,
+  ): Promise<UnboundTransaction> {
+    const intent = this.buildDustIntent(dust, ctime, ttl);
+    const utxoOutput: UtxoOutput = { value, owner: serverAddress, type: rawId };
+    intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [utxoOutput], []);
+    const tx = Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
     return this.proveTx(tx);
   }
 }

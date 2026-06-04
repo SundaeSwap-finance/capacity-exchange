@@ -24,7 +24,12 @@ function createMockDeps() {
   } as unknown as UtxoService;
 
   const txService = {
-    createOfferTx: vi.fn(async () => ({
+    createShieldedOfferTx: vi.fn(async () => ({
+      bind: () => ({
+        serialize: () => new Uint8Array([0xde, 0xad]),
+      }),
+    })),
+    createUnshieldedOfferTx: vi.fn(async () => ({
       bind: () => ({
         serialize: () => new Uint8Array([0xde, 0xad]),
       }),
@@ -85,13 +90,13 @@ describe('OfferService', () => {
     }
     // UTXO locked only once, tx proven only once
     expect(deps.utxoService.lockUtxo).toHaveBeenCalledTimes(1);
-    expect(deps.txService.createOfferTx).toHaveBeenCalledTimes(1);
+    expect(deps.txService.createShieldedOfferTx).toHaveBeenCalledTimes(1);
   });
 
   it('coalesces concurrent requests into a single build', async () => {
     deps = createMockDeps();
     let resolveProve!: () => void;
-    (deps.txService.createOfferTx as ReturnType<typeof vi.fn>).mockImplementation(
+    (deps.txService.createShieldedOfferTx as ReturnType<typeof vi.fn>).mockImplementation(
       () =>
         new Promise((resolve) => {
           resolveProve = () =>
@@ -119,7 +124,7 @@ describe('OfferService', () => {
 
     // Both in-flight, but only one build started
     expect(deps.utxoService.lockUtxo).toHaveBeenCalledTimes(1);
-    expect(deps.txService.createOfferTx).toHaveBeenCalledTimes(1);
+    expect(deps.txService.createShieldedOfferTx).toHaveBeenCalledTimes(1);
 
     resolveProve();
     const [r1, r2] = await Promise.all([first, second]);
@@ -133,7 +138,7 @@ describe('OfferService', () => {
 
   it('unlocks UTXO when tx proving throws', async () => {
     deps = createMockDeps();
-    (deps.txService.createOfferTx as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+    (deps.txService.createShieldedOfferTx as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new Error('proof server down'),
     );
     service = new OfferService(

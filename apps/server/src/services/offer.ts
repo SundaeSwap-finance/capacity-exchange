@@ -152,15 +152,25 @@ export class OfferService {
     const lockedInfo = lockResult.value;
 
     try {
+      const { currency } = getPriceResult;
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const unboundTx = await this.txService.createOfferTx(
-        getPriceResult.currency,
-        getPriceResult.price,
-        lockedInfo.spend,
-        lockedInfo.ctime,
-        expiration,
-        this.getUnshieldedAddress(),
-      );
+      const unboundTx =
+        currency.type === 'midnight:shielded'
+          ? await this.txService.createShieldedOfferTx(
+              currency.rawId,
+              getPriceResult.price,
+              lockedInfo.spend,
+              lockedInfo.ctime,
+              expiration,
+            )
+          : await this.txService.createUnshieldedOfferTx(
+              currency.rawId,
+              getPriceResult.price,
+              lockedInfo.spend,
+              lockedInfo.ctime,
+              expiration,
+              this.getUnshieldedAddress(),
+            );
       const tx = unboundTx.bind();
 
       const offer: OfferResponse = {
