@@ -55,7 +55,11 @@ async function selectFromCandidates(
   walletService: WalletService,
   peerPriceService: PeerPriceService,
 ): ReturnType<PromptForCurrency> {
-  const balances = await walletService.getShieldedTokenBalances();
+  const [shieldedBalances, unshieldedBalances] = await Promise.all([
+    walletService.getShieldedTokenBalances(),
+    walletService.getUnshieldedTokenBalances(),
+  ]);
+  const balances = { ...shieldedBalances, ...unshieldedBalances };
   const candidates = filterCandidates(prices, balances, peerPriceService, dustRequired, log);
 
   if (candidates.length === 0) {
