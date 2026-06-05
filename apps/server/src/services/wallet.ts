@@ -15,7 +15,7 @@ import {
   Transaction,
   type UserAddress,
 } from '@midnight-ntwrk/ledger-v8';
-import type { UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
+
 import {
   balanceFinalizedTransaction,
   balanceUnboundTransaction,
@@ -46,8 +46,7 @@ export class WalletService {
   private dustWalletSub: Subscription | null = null;
   // The current view of the wallet's state, populated by the subscription
   private lastDustWalletState: DustWalletState | null = null;
-  // Cached server unshielded address. Resolved after the facade is synced.
-  private _unshieldedAddress: UnshieldedAddress | null = null;
+  private readonly _unshieldedAddress: string;
 
   constructor(
     walletConnection: WalletConnection,
@@ -57,6 +56,7 @@ export class WalletService {
     this.walletConnection = walletConnection;
     this.logger = logger;
     this.walletStateStore = walletStateStore;
+    this._unshieldedAddress = walletConnection.keys.unshieldedKeystore.getAddress();
   }
 
   async start() {
@@ -91,7 +91,6 @@ export class WalletService {
     // safely build both shielded and unshielded offers once sync state is ok.
     walletFacade.waitForSyncedState().then(
       async () => {
-        this._unshieldedAddress = await walletFacade.unshielded.getAddress();
         this._syncState = { status: 'ok' };
         const { unshielded, shielded, dust } = await this.getBalances();
         this.logger.info(
@@ -99,7 +98,7 @@ export class WalletService {
             unshielded: unshielded.toString(),
             shielded: shielded.toString(),
             dust: dust.toString(),
-            unshieldedAddress: this._unshieldedAddress.hexString,
+            unshieldedAddress: this._unshieldedAddress,
           },
           'Wallet synced, balances:',
         );
@@ -181,12 +180,9 @@ export class WalletService {
     };
   }
 
-  /** Server's unshielded address, as a `UserAddress` (hex). Only valid after sync. */
+  /** Server's unshielded address, as a `UserAddress` (hex). */
   getUnshieldedUserAddress(): UserAddress {
-    if (!this._unshieldedAddress) {
-      throw new Error('unshielded wallet not synced');
-    }
-    return this._unshieldedAddress.hexString;
+    return this._unshieldedAddress;
   }
 
   get syncState(): WalletSyncState {

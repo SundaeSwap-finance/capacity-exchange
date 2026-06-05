@@ -154,24 +154,31 @@ export class OfferService {
     try {
       const { currency } = getPriceResult;
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const unboundTx =
-        currency.type === 'midnight:shielded'
-          ? await this.txService.createShieldedOfferTx(
-              currency.rawId,
-              getPriceResult.price,
-              lockedInfo.spend,
-              lockedInfo.ctime,
-              expiration,
-              //TODO: pass in segmentId when we can
-            )
-          : await this.txService.createUnshieldedOfferTx(
-              currency.rawId,
-              getPriceResult.price,
-              lockedInfo.spend,
-              lockedInfo.ctime,
-              expiration,
-              this.getUnshieldedAddress(),
-            );
+      let unboundTx;
+      switch (currency.type) {
+        case 'midnight:shielded':
+          unboundTx = await this.txService.createShieldedOfferTx(
+            currency.rawId,
+            getPriceResult.price,
+            lockedInfo.spend,
+            lockedInfo.ctime,
+            expiration,
+            //TODO: pass in segmentId when we can
+          );
+          break;
+        case 'midnight:unshielded':
+          unboundTx = await this.txService.createUnshieldedOfferTx(
+            currency.rawId,
+            getPriceResult.price,
+            lockedInfo.spend,
+            lockedInfo.ctime,
+            expiration,
+            this.getUnshieldedAddress(),
+          );
+          break;
+        default:
+          throw new Error(`Unsupported currency type: ${(currency as { type: string }).type}`);
+      }
       const tx = unboundTx.bind();
 
       const offer: OfferResponse = {
