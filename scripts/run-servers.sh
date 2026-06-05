@@ -9,7 +9,7 @@
 #   - Servers 2..N: hold DUST and serve it directly.
 #
 # Servers 2..N share the same price config (price-config.<network>.json in apps/server/).
-# If it doesn't exist, it is generated from DERIVED_TOKEN_COLOR + TOKEN_MINT_ADDRESS.
+# If it doesn't exist, it is generated from DERIVED_TOKEN_COLOR + UNSHIELDED_TOKEN_COLOR + TOKEN_MINT_ADDRESS.
 #
 # Ports:
 #   - Server i API:       BASE_PORT + i - 1           (default base: 3000)
@@ -24,6 +24,7 @@
 #
 # Required env vars (only if price config needs to be generated):
 #   - DERIVED_TOKEN_COLOR
+#   - UNSHIELDED_TOKEN_COLOR
 #   - TOKEN_MINT_ADDRESS
 #
 # Optional env vars:
@@ -170,21 +171,21 @@ generate_quote_secrets() {
 generate_funded_price_config() {
   [ -f "$CES_SERVER_PRICE_CONFIG" ] && return
   log "Generating price config"
-  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
-    log "ERROR: Cannot generate $CES_SERVER_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_PRICE_CONFIG — set DERIVED_TOKEN_COLOR, UNSHIELDED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$UNSHIELDED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
 }
 
 generate_server1_price_config() {
   [ -f "$CES_SERVER_NO_DUST_PRICE_CONFIG" ] && return
   log "Generating server 1 price config (with peer.maxPrices for DUST fallback)"
-  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
-    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR, UNSHIELDED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$UNSHIELDED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
 }
 
 check_balances() {

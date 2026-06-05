@@ -156,6 +156,7 @@ jobs:
           COUNTER_ADDRESS: ${{ vars[format('E2E_COUNTER_ADDRESS_{0}', matrix.env)] }}
           TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
           DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
+          UNSHIELDED_TOKEN_COLOR: ${{ vars[format('E2E_UNSHIELDED_TOKEN_COLOR_{0}', matrix.env)] }}
         run: scripts/ci-test.sh ${{ matrix.env }}
 
       - name: Run fallback smoke test
@@ -165,6 +166,7 @@ jobs:
           CES_WALLET2_MNEMONIC: ${{ secrets[format('CES_WALLET_MNEMONIC_{0}', matrix.env)] }}
           TOKEN_MINT_ADDRESS: ${{ vars[format('E2E_TOKEN_MINT_ADDRESS_{0}', matrix.env)] }}
           DERIVED_TOKEN_COLOR: ${{ vars[format('E2E_DERIVED_TOKEN_COLOR_{0}', matrix.env)] }}
+          UNSHIELDED_TOKEN_COLOR: ${{ vars[format('E2E_UNSHIELDED_TOKEN_COLOR_{0}', matrix.env)] }}
         run: scripts/ci-fallback-test.sh ${{ matrix.env }}
 
       - name: Save wallet state cache

@@ -14,7 +14,8 @@
 #   REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED  — funded wallet for the registry flow (NIGHT + DUST)
 #   COUNTER_ADDRESS                                   — deployed counter contract address
 #   TOKEN_MINT_ADDRESS                                — deployed token-mint contract address
-#   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
+#   DERIVED_TOKEN_COLOR                               — derived shielded token color from token-mint deployment
+#   UNSHIELDED_TOKEN_COLOR                            — derived unshielded token color from token-mint deployment
 
 set -euo pipefail
 # shellcheck source=lib/utils.sh
@@ -59,7 +60,7 @@ validate_env() {
     log "ERROR: Set either REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED"
     exit 1
   fi
-  for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR; do
+  for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR UNSHIELDED_TOKEN_COLOR; do
     if [ -z "${!var:-}" ]; then
       log "ERROR: $var is not set"
       exit 1
@@ -69,7 +70,7 @@ validate_env() {
 
 generate_price_config() {
   log "Generating price config for CES server"
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$UNSHIELDED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
 }
 
 start_ces_server() {
@@ -119,6 +120,7 @@ run_tests() {
     COUNTER_ADDRESS="$COUNTER_ADDRESS" \
     TOKEN_MINT_ADDRESS="$TOKEN_MINT_ADDRESS" \
     DERIVED_TOKEN_COLOR="$DERIVED_TOKEN_COLOR" \
+    UNSHIELDED_TOKEN_COLOR="$UNSHIELDED_TOKEN_COLOR" \
     WALLET_SYNC_TIMEOUT_MS="$WALLET_SYNC_TIMEOUT_MS" \
     bun apps/tests/src/runner.ts
 

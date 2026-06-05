@@ -14,7 +14,8 @@
 #   CES_WALLET_MNEMONIC_NO_DUST_PREVIEW or CES_WALLET_SEED_NO_DUST_PREVIEW  — no-dust wallet for Server 1
 #   CES_WALLET2_MNEMONIC or CES_WALLET2_SEED  — funded wallet (DUST) for Server 2
 #   TOKEN_MINT_ADDRESS                                  — deployed token-mint contract address
-#   DERIVED_TOKEN_COLOR                                 — token color (for price config generation)
+#   DERIVED_TOKEN_COLOR                                 — shielded token color (for price config generation)
+#   UNSHIELDED_TOKEN_COLOR                              — unshielded token color (for price config generation)
 
 set -euo pipefail
 # shellcheck source=lib/utils.sh
@@ -57,6 +58,10 @@ validate_env() {
     log "ERROR: DERIVED_TOKEN_COLOR is not set"
     exit 1
   fi
+  if [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ]; then
+    log "ERROR: UNSHIELDED_TOKEN_COLOR is not set"
+    exit 1
+  fi
 }
 
 start_servers() {
@@ -74,6 +79,8 @@ run_fallback_test() {
     NETWORK_ID="$NETWORK_ID" \
     SPONSOR_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     TOKEN_MINT_ADDRESS="$TOKEN_MINT_ADDRESS" \
+    DERIVED_TOKEN_COLOR="$DERIVED_TOKEN_COLOR" \
+    UNSHIELDED_TOKEN_COLOR="$UNSHIELDED_TOKEN_COLOR" \
     CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
     NO_DUST_CES_URL="http://localhost:${SERVER1_PORT}" \
     WALLET_SYNC_TIMEOUT_MS="$WALLET_SYNC_TIMEOUT_MS" \
