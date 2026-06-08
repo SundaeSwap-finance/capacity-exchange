@@ -1,21 +1,21 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { getLedgerParameters, createConnectedAPI } from '@sundaeswap/capacity-exchange-core';
+import { getLedgerParameters, makeBalanceFunctions } from '@sundaeswap/capacity-exchange-core';
 
 /**
  * Builds a `capacityExchangeWalletProvider` wired to `ctx` for tests, with:
- *  - `createConnectedAPI` balance functions (same code path as seed wallet in production).
+ *  - `makeBalanceFunctions` balance functions (excludes dust, matching CES exchange flow requirements).
  *  - currency selection that picks `tokenRawId` from `cesUrl`.
  *  - auto-confirm offer.
  */
 export function createTestCesProvider(ctx: AppContext, networkId: string, cesUrl: string, tokenRawId: string) {
-  const connectedAPI = createConnectedAPI(ctx.walletContext, networkId, ctx.config.network.endpoints.proofServerUrl);
+  const { balanceUnsealedTransaction, balanceSealedTransaction } = makeBalanceFunctions(ctx.walletContext);
   return capacityExchangeWalletProvider({
     networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
     encryptionPublicKey: ctx.walletContext.walletProvider.getEncryptionPublicKey(),
-    balanceUnsealedTransaction: connectedAPI.balanceUnsealedTransaction.bind(connectedAPI),
-    balanceSealedTransaction: connectedAPI.balanceSealedTransaction.bind(connectedAPI),
+    balanceUnsealedTransaction,
+    balanceSealedTransaction,
     chainStateProvider: {
       queryContractState: (addr, cfg) => ctx.publicDataProvider.queryContractState(addr, cfg),
       getLedgerParameters: () => getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl),
