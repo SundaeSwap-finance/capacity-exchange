@@ -7,7 +7,7 @@
  *   NETWORK_ID                       e.g. preview
  *   CES_URL                          e.g. http://localhost:3000
  *   COUNTER_ADDRESS                  counter contract address
- *   TUSDM_RAW_ID                     unshielded token rawId the user is paying with
+ *   UNSHIELDED_TOKEN_COLOR                     unshielded token rawId the user is paying with
  *   EXCHANGE_WALLET_MNEMONIC         user wallet mnemonic (24 words)
  *   SERVER_WALLET_MNEMONIC_FILE      path to CES server wallet mnemonic file
  *   CHAIN_SNAPSHOT_DIR               directory with cached chain snapshots
@@ -32,7 +32,7 @@ async function main(): Promise<UnshieldedExchangeFlowResult> {
   const networkId = requireEnvVar(env, 'NETWORK_ID');
   const cesUrl = requireEnvVar(env, 'CES_URL');
   const counterAddress = requireEnvVar(env, 'COUNTER_ADDRESS');
-  const tokenRawId = requireEnvVar(env, 'TUSDM_RAW_ID');
+  const tokenRawId = requireEnvVar(env, 'UNSHIELDED_TOKEN_COLOR');
   const chainSnapshotDir = requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR');
   const serverMnemonicFile = requireEnvVar(env, 'SERVER_WALLET_MNEMONIC_FILE');
   const chainSnapshot = loadChainSnapshot(networkId, chainSnapshotDir);

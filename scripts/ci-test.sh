@@ -10,11 +10,13 @@
 #   - Packages built
 #
 # Required environment:
-#   CES_WALLET_MNEMONIC or CES_WALLET_SEED            — CES server wallet credentials (mnemonic or hex seed)
-#   REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED  — funded wallet for the registry flow (NIGHT + DUST)
-#   COUNTER_ADDRESS                                   — deployed counter contract address
-#   TOKEN_MINT_ADDRESS                                — deployed token-mint contract address
-#   DERIVED_TOKEN_COLOR                               — derived token color from token-mint deployment
+#   CES_WALLET_MNEMONIC or CES_WALLET_SEED                        — CES server wallet credentials (mnemonic or hex seed)
+#   REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED              — funded wallet for the registry flow (NIGHT + DUST)
+#   UNSHIELDED_EXCHANGE_WALLET_MNEMONIC or ..._SEED               — wallet with unshielded tokens (no DUST)
+#   COUNTER_ADDRESS                                               — deployed counter contract address
+#   TOKEN_MINT_ADDRESS                                            — deployed token-mint contract address
+#   DERIVED_TOKEN_COLOR                                           — derived token color from token-mint deployment
+#   UNSHIELDED_TOKEN_COLOR                                        — unshielded token rawId for the unshielded exchange flow
 
 set -euo pipefail
 # shellcheck source=lib/utils.sh
@@ -59,7 +61,11 @@ validate_env() {
     log "ERROR: Set either REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED"
     exit 1
   fi
-  for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR; do
+  if [ -z "${UNSHIELDED_EXCHANGE_WALLET_MNEMONIC:-}" ] && [ -z "${UNSHIELDED_EXCHANGE_WALLET_SEED:-}" ]; then
+    log "ERROR: Set either UNSHIELDED_EXCHANGE_WALLET_MNEMONIC or UNSHIELDED_EXCHANGE_WALLET_SEED"
+    exit 1
+  fi
+  for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR UNSHIELDED_TOKEN_COLOR; do
     if [ -z "${!var:-}" ]; then
       log "ERROR: $var is not set"
       exit 1
@@ -107,10 +113,13 @@ run_tests() {
 
   # Sponsor + exchange use a fresh-per-run ephemeral wallet (needs 0 DUST to exercise buying DUST).
   # Registry uses a funded, long-lived persistent wallet (needs NIGHT for collateral + DUST for tx fees).
+  # CES_SERVER_WALLET mirrors the CES server wallet so the exchange flow can verify server-side balances.
   env \
     NETWORK_ID="$NETWORK_ID" \
     SPONSOR_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
     EXCHANGE_WALLET_MNEMONIC="$RUNNER_MNEMONIC" \
+    CES_SERVER_WALLET_MNEMONIC="${CES_WALLET_MNEMONIC:-}" \
+    CES_SERVER_WALLET_SEED="${CES_WALLET_SEED:-}" \
     REGISTRY_WALLET_MNEMONIC="${REGISTRY_WALLET_MNEMONIC:-}" \
     REGISTRY_WALLET_SEED="${REGISTRY_WALLET_SEED:-}" \
     CACHED_WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
@@ -125,6 +134,23 @@ run_tests() {
   log "Tests passed"
 }
 
+run_unshielded_test() {
+  log "Running unshielded exchange flow against $NETWORK_ID"
+  env \
+    NETWORK_ID="$NETWORK_ID" \
+    EXCHANGE_WALLET_MNEMONIC="${UNSHIELDED_EXCHANGE_WALLET_MNEMONIC:-}" \
+    EXCHANGE_WALLET_SEED="${UNSHIELDED_EXCHANGE_WALLET_SEED:-}" \
+    SERVER_WALLET_MNEMONIC="${CES_WALLET_MNEMONIC:-}" \
+    SERVER_WALLET_SEED="${CES_WALLET_SEED:-}" \
+    COUNTER_ADDRESS="$COUNTER_ADDRESS" \
+    UNSHIELDED_TOKEN_COLOR="$UNSHIELDED_TOKEN_COLOR" \
+    CHAIN_SNAPSHOT_DIR="$CHAIN_SNAPSHOT_DIR" \
+    CES_URL=http://localhost:${CES_PORT} \
+    WALLET_SYNC_TIMEOUT_MS="$WALLET_SYNC_TIMEOUT_MS" \
+    bun apps/tests/src/unshielded-runner.ts
+  log "Unshielded exchange flow passed"
+}
+
 trap cleanup EXIT
 cd "$ROOT_DIR"
 
@@ -135,3 +161,4 @@ generate_price_config
 start_ces_server
 wait_for_server "$CES_PORT" "CES server" CES_SERVER_PID "$CES_READINESS_RETRIES"
 run_tests
+run_unshielded_test

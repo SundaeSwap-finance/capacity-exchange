@@ -12,6 +12,7 @@ export interface TestConfig {
   chainSnapshot: ChainSnapshot | undefined;
   sponsorFlowConfig: FlowCtxConfig;
   exchangeFlowConfig: FlowCtxConfig;
+  cesServerFlowConfig: FlowCtxConfig;
   registryFlowConfig: FlowCtxConfig;
 }
 
@@ -34,6 +35,10 @@ export function getTestConfig(env: Env): TestConfig {
     },
     exchangeFlowConfig: {
       seed: requireEnvSeed(env, 'EXCHANGE_WALLET'),
+      stateSource: { kind: 'inMemory', chainSnapshot },
+    },
+    cesServerFlowConfig: {
+      seed: requireEnvSeed(env, 'CES_SERVER_WALLET'),
       stateSource: { kind: 'inMemory', chainSnapshot },
     },
     registryFlowConfig: {
