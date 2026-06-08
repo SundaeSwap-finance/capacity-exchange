@@ -1,20 +1,20 @@
 /**
  * Sponsor Fallback smoke test runner.
  *
- * Runs two back-to-back sponsor flows against a no-dust CES server (NO_DUST_CES_URL),
- * which obtains DUST from its configured peer on each call:
- *   1. Shielded payment  — user pays with DERIVED_TOKEN_COLOR (midnight:shielded)
- *   2. Unshielded payment — user pays with UNSHIELDED_TOKEN_COLOR (midnight:unshielded)
+ * This test runs the sponsor flow against a no-dust CES server (NO_DUST_CES_URL)
+ * but obtains DUST from its configured peer and complete the sponsorship.
+ *
+ * The user submits to Server 1 via the /sponsored-transactions endpoint. Server 1
+ * has no DUST of its own and peer-falls-back to Server 2, paying it with shielded
+ * tokens from Server 1's own wallet. The end user does not select a payment currency.
  *
  * Required environment variables:
- *   NETWORK_ID                 — Midnight network (e.g. "preview")
- *   NO_DUST_CES_URL            — URL of the no-dust CES server under test
- *   TOKEN_MINT_ADDRESS         — deployed token-mint contract address
- *   CHAIN_SNAPSHOT_DIR         — used as sync start point; wallet state is in-memory only
- *   SPONSOR_WALLET_MNEMONIC    — ephemeral wallet mnemonic (needs both shielded + unshielded tokens, no DUST)
- *   DERIVED_TOKEN_COLOR        — rawId of the shielded token used to pay for DUST
- *   UNSHIELDED_TOKEN_COLOR     — rawId of the unshielded token used to pay for DUST
- *   WALLET_SYNC_TIMEOUT_MS     — max ms to wait for wallet sync (default: 25 min)
+ *   NETWORK_ID               — Midnight network (e.g. "preview")
+ *   NO_DUST_CES_URL          — URL of the no-dust CES server under test
+ *   TOKEN_MINT_ADDRESS       — deployed token-mint contract address
+ *   CHAIN_SNAPSHOT_DIR       — used as sync start point; wallet state is in-memory only
+ *   SPONSOR_WALLET_MNEMONIC  — ephemeral wallet mnemonic (needs no DUST)
+ *   WALLET_SYNC_TIMEOUT_MS   — max ms to wait for wallet sync (default: 25 min)
  *
  * Invoked by scripts/ci-fallback-test.sh.
  */
@@ -38,8 +38,6 @@ async function main() {
   const noDustCesUrl = requireEnvVar(env, 'NO_DUST_CES_URL');
   const tokenMintAddress = requireEnvVar(env, 'TOKEN_MINT_ADDRESS');
   const chainSnapshotDir = requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR');
-  const shieldedTokenColor = requireEnvVar(env, 'DERIVED_TOKEN_COLOR');
-  const unshieldedTokenColor = requireEnvVar(env, 'UNSHIELDED_TOKEN_COLOR');
 
   setNetworkId(toNetworkIdEnum(networkId));
 
@@ -48,29 +46,14 @@ async function main() {
     logger.info(`No cached chain snapshot in ${chainSnapshotDir} — wallet will sync from genesis`);
   }
 
-  const makeFlowConfig = (): FlowCtxConfig => ({
+  const flowConfig: FlowCtxConfig = {
     seed: requireEnvSeed(env, 'SPONSOR_WALLET'),
     stateSource: { kind: 'inMemory', chainSnapshot },
-  });
+  };
 
-  logger.info('Running fallback test 1/2: shielded payment');
-  const shieldedResult = await runSponsorFlow(networkId, makeFlowConfig(), tokenMintAddress, noDustCesUrl, undefined, {
-    paymentTokenRawId: shieldedTokenColor,
-  });
-  logger.info({ result: shieldedResult }, 'Fallback test 1/2 (shielded) passed');
-
-  logger.info('Running fallback test 2/2: unshielded payment');
-  const unshieldedResult = await runSponsorFlow(
-    networkId,
-    makeFlowConfig(),
-    tokenMintAddress,
-    noDustCesUrl,
-    undefined,
-    { paymentTokenRawId: unshieldedTokenColor }
-  );
-  logger.info({ result: unshieldedResult }, 'Fallback test 2/2 (unshielded) passed');
-
-  return { shielded: shieldedResult, unshielded: unshieldedResult };
+  const result = await runSponsorFlow(networkId, flowConfig, tokenMintAddress, noDustCesUrl);
+  logger.info({ result }, 'Sponsor Fallback test passed');
+  return result;
 }
 
 runCli(main, { pretty: true });
