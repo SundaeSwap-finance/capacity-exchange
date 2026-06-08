@@ -18,6 +18,14 @@ describe('Prices API', () => {
         },
         amount: '112',
       },
+      {
+        currency: {
+          id: 'midnight:unshielded:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+          type: 'midnight:unshielded',
+          rawId: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+        },
+        amount: '112',
+      },
     ]);
   });
 });
