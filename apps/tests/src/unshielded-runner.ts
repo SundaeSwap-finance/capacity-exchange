@@ -23,7 +23,7 @@ import {
 import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { requireEnvSeed, type WalletSeed } from './util/testUtils.js';
-import { runUnshieldedExchangeFlow, type UnshieldedExchangeFlowResult } from './flows/unshielded-exchange-flow.js';
+import { runUnshieldedExchangeFlow, type UnshieldedExchangeFlowResult } from './flows/exchange-flow.js';
 
 const logger = createLogger(import.meta);
 
