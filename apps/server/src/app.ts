@@ -34,12 +34,7 @@ export async function buildApp(
   config: AppConfig,
   opts: FastifyServerOptions = {},
 ): Promise<FastifyInstance> {
-  // Wallet plugin start can take longer than Fastify's default 10s plugin
-  // timeout when syncing from a stale on-disk state. Allow up to 10 minutes.
-  const app = Fastify({
-    pluginTimeout: 10 * 60 * 1000,
-    ...opts,
-  }).withTypeProvider<TypeBoxTypeProvider>();
+  const app = Fastify(opts).withTypeProvider<TypeBoxTypeProvider>();
   app.decorate('config', config);
   app.register(cors, { origin: '*' });
   await app.register(errorHandler);
