@@ -21,9 +21,6 @@ export default fp(async (fastify: FastifyInstance) => {
   if (!fastify.metricsService) {
     throw new Error("OfferService requires MetricsService to be init'd first");
   }
-  if (!fastify.walletService) {
-    throw new Error("OfferService requires WalletService to be init'd first");
-  }
 
   const service = new OfferService(
     fastify.utxoService,
