@@ -30,7 +30,6 @@ export default fp(async (fastify: FastifyInstance) => {
     fastify.txService,
     fastify.priceService,
     fastify.metricsService,
-    () => fastify.walletService.getUnshieldedUserAddress(),
     fastify.config.offerTtlSeconds,
     fastify.log,
   );

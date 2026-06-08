@@ -39,11 +39,18 @@ export class TxService {
   readonly #networkId: string;
   readonly #zswap: ZswapSecretKeys;
   readonly #proofProvider: ProofProvider;
+  readonly #unshieldedAddress: UserAddress;
 
-  constructor(networkId: string, zswap: ZswapSecretKeys, proofProviderUrl: string) {
+  constructor(
+    networkId: string,
+    zswap: ZswapSecretKeys,
+    unshieldedAddress: UserAddress,
+    proofProviderUrl: string,
+  ) {
     this.#networkId = networkId;
     this.#zswap = zswap;
     this.#proofProvider = httpClientProofProvider(proofProviderUrl, new EmptyZKConfigProvider());
+    this.#unshieldedAddress = unshieldedAddress;
   }
 
   buildDustIntent(dust: UnprovenDustSpend, ctime: Date, ttl: Date): UnprovenIntent {
@@ -95,17 +102,16 @@ export class TxService {
     });
   }
 
-  /** Creates a UtxoOutput tx. `serverAddress` is where the unshielded tokens are sent. */
+  /** Creates a UtxoOutput tx. Tokens are sent to the server's unshielded address. */
   async createUnshieldedOfferTx(
     rawId: string,
     value: bigint,
     dust: UnprovenDustSpend,
     ctime: Date,
     ttl: Date,
-    serverAddress: UserAddress,
   ): Promise<UnboundTransaction> {
     return this.#buildTx(dust, ctime, ttl, (intent) => {
-      const utxoOutput: UtxoOutput = { value, owner: serverAddress, type: rawId };
+      const utxoOutput: UtxoOutput = { value, owner: this.#unshieldedAddress, type: rawId };
       intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [utxoOutput], []);
       return Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
     });

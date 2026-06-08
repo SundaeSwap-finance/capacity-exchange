@@ -40,7 +40,6 @@ export class OfferService {
   private readonly txService: TxService;
   private readonly priceService: PriceService;
   private readonly metricsService: MetricsService;
-  private readonly getUnshieldedAddress: () => string;
   private readonly logger: FastifyBaseLogger;
   private readonly cache: LRUCache<string, OfferResponse>;
   private readonly inflight = new Map<string, Promise<CreateOfferResult>>();
@@ -50,7 +49,6 @@ export class OfferService {
     txService: TxService,
     priceService: PriceService,
     metricsService: MetricsService,
-    getUnshieldedAddress: () => string,
     offerTtlSeconds: number,
     logger: FastifyBaseLogger,
   ) {
@@ -58,7 +56,6 @@ export class OfferService {
     this.txService = txService;
     this.priceService = priceService;
     this.metricsService = metricsService;
-    this.getUnshieldedAddress = getUnshieldedAddress;
     this.logger = logger;
     this.cache = new LRUCache<string, OfferResponse>({
       ttl: offerTtlSeconds * 1000,
@@ -173,7 +170,6 @@ export class OfferService {
             lockedInfo.spend,
             lockedInfo.ctime,
             expiration,
-            this.getUnshieldedAddress(),
           );
           break;
         default:
