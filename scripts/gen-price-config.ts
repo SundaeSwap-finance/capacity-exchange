@@ -6,8 +6,8 @@
  *   bun scripts/gen-price-config.ts <outFile> <tokenColor> <tokenMintAddress> \
  *     [--with-peer-max-prices] [--unshielded-token-color <color>]
  *
- * --with-peer-max-prices           Include a peer.maxPrices section (same values as priceFormulas).
- *                                  Required for the no-dust server to enable DUST fallback via peers.
+ * --with-peer-max-prices          Include a peer.maxPrices section (same values as priceFormulas).
+ *                                 Required for the no-dust server to enable DUST fallback via peers.
  * --unshielded-token-color <color> Also add an unshielded price formula for the given token color.
  */
 
@@ -35,17 +35,17 @@ const shieldedFormula = {
   rateDenominator: '1000',
 };
 
-const unshieldedFormula = unshieldedTokenColor
-  ? {
-      currency: { type: 'midnight:unshielded', rawId: unshieldedTokenColor },
-      basePrice: '101',
-      rateNumerator: '11',
-      rateDenominator: '1000',
-    }
-  : undefined;
+const unshieldedFormula = {
+  currency: { type: 'midnight:unshielded', rawId: unshieldedTokenColor },
+  basePrice: '101',
+  rateNumerator: '11',
+  rateDenominator: '1000',
+};
 
 const priceFormulas: unknown[] = [shieldedFormula];
-if (unshieldedFormula) {
+
+// add unshielded formula if requested
+if (unshieldedTokenColor) {
   priceFormulas.push(unshieldedFormula);
 }
 
