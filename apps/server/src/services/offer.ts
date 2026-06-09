@@ -5,6 +5,7 @@ import { Currency, PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
 import { LRUCache } from 'lru-cache';
 import { recordDuration, recordCounters } from '../decorators/record-metrics.js';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 
 export interface CreateOfferRequest {
   quoteId: string;
@@ -165,7 +166,7 @@ export class OfferService {
           break;
         case 'midnight:unshielded':
           unboundTx = await this.txService.createUnshieldedOfferTx(
-            currency.rawId,
+            toRawTokenType(currency.rawId),
             getPriceResult.price,
             lockedInfo.spend,
             lockedInfo.ctime,

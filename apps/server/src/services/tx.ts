@@ -104,14 +104,14 @@ export class TxService {
 
   /** Creates a UtxoOutput tx. Tokens are sent to the server's unshielded address. */
   async createUnshieldedOfferTx(
-    rawId: string,
+    rawTokenType: string,
     value: bigint,
     dust: UnprovenDustSpend,
     ctime: Date,
     ttl: Date,
   ): Promise<UnboundTransaction> {
     return this.#buildTx(dust, ctime, ttl, (intent) => {
-      const utxoOutput: UtxoOutput = { value, owner: this.#unshieldedAddress, type: rawId };
+      const utxoOutput: UtxoOutput = { value, owner: this.#unshieldedAddress, type: rawTokenType };
       intent.guaranteedUnshieldedOffer = UnshieldedOffer.new([], [utxoOutput], []);
       return Transaction.fromPartsRandomized(this.#networkId, undefined, undefined, intent);
     });
