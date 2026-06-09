@@ -9,12 +9,6 @@ import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledTokenMintContract, type TokenMintContract } from '@capacity-exchange/demo-contracts/token-mint';
 import { createPrivateState } from '@capacity-exchange/demo-contracts/token-mint/witnesses';
 import { buildFlowCtx, type FlowCtxConfig } from '../util/testUtils.js';
-import { createTestCesProvider } from '../util/cesProvider.js';
-
-export interface SponsorFlowOptions {
-  /** When set, use the CES exchange flow paying with this token rawId instead of free sponsorship. */
-  paymentTokenRawId?: string;
-}
 
 const logger = createLogger(import.meta);
 
@@ -28,16 +22,13 @@ export async function runSponsorFlow(
   flowConfig: FlowCtxConfig,
   tokenMintAddress: string,
   cesUrl: string,
-  mintAmount = 1_000_000n,
-  options: SponsorFlowOptions = {}
+  mintAmount = 1_000_000n
 ): Promise<SponsorFlowResult> {
   logger.info('Building sponsor-flow AppContext');
   const ctx = await buildFlowCtx(networkId, flowConfig);
   logger.info('Starting sponsor flow: mint tokens via CES sponsorship');
 
-  const sponsoredProvider = options.paymentTokenRawId
-    ? createTestCesProvider(ctx, networkId, cesUrl, options.paymentTokenRawId)
-    : createSponsoredProvider(ctx, cesUrl);
+  const sponsoredProvider = createSponsoredProvider(ctx, cesUrl);
 
   const providers = {
     ...buildProviders<TokenMintContract>(ctx, CompiledContract.getCompiledAssetsPath(CompiledTokenMintContract)),
