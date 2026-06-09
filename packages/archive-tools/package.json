@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./read": "./src/read.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "archive-write": "bun src/cli/write-archive.ts",
+    "archive-write": "bun src/cli/archive-write.ts",
     "archive-deployment": "bun src/cli/archive-deployment.ts"
   },
   "dependencies": {

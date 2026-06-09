@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 
 import { spawnSync } from 'child_process';
-import { mkdtempSync, realpathSync } from 'fs';
+import { mkdtempSync, readdirSync, realpathSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { program } from 'commander';
 import { runCli, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
-import { archiveKey, asJson, type Provenance } from '../archive.js';
+import { archiveKey, asJson, COMPILE_OUTPUT_SUBDIRS, type Provenance } from '../archive.js';
 import { S3Store } from '../aws/s3-store.js';
+import { uploadDir } from '../aws/s3-fs.js';
 import { assertShaOnRemote, gitHeadSha, gitRemoteSlug, gitRepoRoot, isDirty, pushTag } from '../git.js';
 
 const logger = createLogger(import.meta);
@@ -64,7 +65,7 @@ function deriveProvenance(opts: CliOpts): DeriveProvenanceResult {
   const sourceFileAbs = realpathSync(isAbsolute(opts.sourceFile) ? opts.sourceFile : resolve(opts.sourceFile));
   const repoDir = gitRepoRoot(dirname(sourceFileAbs));
   if (isDirty(repoDir)) {
-    throw new Error(`source repo at ${repoDir} is dirty; commit or stash before archiving`);
+    throw new Error(`source repo at ${repoDir} is dirty. Commit or stash before archiving`);
   }
   const sourceSha = gitHeadSha(repoDir);
   assertShaOnRemote(repoDir, sourceSha);
@@ -77,6 +78,31 @@ function deriveProvenance(opts: CliOpts): DeriveProvenanceResult {
   };
 }
 
+/**
+ * Asserts compactc emitted only the canonical compile-output subdirs. Fails loud if a
+ * new subdir appears so the read-side constant stays in sync with the writer's reality.
+ */
+function assertCanonicalLayout(tempDir: string): void {
+  const canonical = new Set<string>(COMPILE_OUTPUT_SUBDIRS);
+  const entries = readdirSync(tempDir, { withFileTypes: true });
+  const unexpected = entries.filter((e) => !canonical.has(e.name)).map((e) => e.name);
+  const nonDir = entries.filter((e) => canonical.has(e.name) && !e.isDirectory()).map((e) => e.name);
+  const reasons: string[] = [];
+  if (unexpected.length > 0) {
+    reasons.push(
+      `unexpected entries [${unexpected.join(', ')}]. Update COMPILE_OUTPUT_SUBDIRS in archive.ts and the readers that consume it.`
+    );
+  }
+  if (nonDir.length > 0) {
+    reasons.push(
+      `canonical names that are not directories [${nonDir.join(', ')}]. Compactc should emit each as a directory.`
+    );
+  }
+  if (reasons.length > 0) {
+    throw new Error(`compactc output layout check failed: ${reasons.join(' ')}`);
+  }
+}
+
 /** Compiles to temp dir, uploads provenance before artifacts so partial runs never leave artifacts unprovenanced. */
 async function writeToStore(
   store: S3Store,
@@ -87,8 +113,9 @@ async function writeToStore(
 ): Promise<{ uploadedKeys: number }> {
   const tempDir = mkdtempSync(join(tmpdir(), 'archive-write-'));
   runCompactc(sourceFileAbs, tempDir);
+  assertCanonicalLayout(tempDir);
   await store.put(provenanceKey, ...asJson(provenance));
-  const uploadedKeys = await store.putDir(keyPrefix, tempDir);
+  const uploadedKeys = await uploadDir(store, keyPrefix, tempDir);
   return { uploadedKeys: uploadedKeys.length };
 }
 
@@ -107,7 +134,7 @@ async function main(): Promise<CliResult> {
     pushTag(repoDir, tag, provenance.sourceSha);
   } catch (err) {
     throw new Error(
-      `s3 upload succeeded under ${keyPrefix} but tag push failed; re-run to retry: ${(err as Error).message}`
+      `s3 upload succeeded under ${keyPrefix} but tag push failed. Re-run to retry: ${(err as Error).message}`
     );
   }
 

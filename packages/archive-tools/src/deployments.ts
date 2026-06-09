@@ -43,6 +43,12 @@ export const deploymentsKey = {
   pointer: ({ contract }: { contract: string }) => `deployments/${contract}.json`,
 };
 
+/** Canonical kebab names of the contracts whose deploy records ship in the wire bundle. */
+export const CONTRACT_NAMES = ['counter', 'token-mint'] as const;
+
+/** Wire shape of the per-network contract address bundle. One record per name in CONTRACT_NAMES. */
+export type DeployedContracts = { network: string } & Record<(typeof CONTRACT_NAMES)[number], ContractDeployRecord>;
+
 /**
  * Returns the next pointer with `entry` as current. If the prior `current` matches `entry`,
  * the existing pointer is returned unchanged (idempotent re-record). Otherwise the prior
