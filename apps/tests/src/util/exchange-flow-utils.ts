@@ -1,5 +1,6 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledCounterContract, Counter, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
@@ -105,7 +106,10 @@ async function walletState(
   const state = await firstValueFrom(ctx.walletContext.walletFacade.state());
   return {
     dust: state.dust?.balance(new Date()) ?? 0n,
-    token: (tokenKind === 'shielded' ? state.shielded : state.unshielded)?.balances[tokenRawId] ?? 0n,
+    token:
+      (tokenKind === 'shielded'
+        ? state.shielded?.balances[tokenRawId]
+        : state.unshielded?.balances[toRawTokenType(tokenRawId)]) ?? 0n,
   };
 }
 
