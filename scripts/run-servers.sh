@@ -181,11 +181,11 @@ generate_funded_price_config() {
 generate_server1_price_config() {
   [ -f "$CES_SERVER_NO_DUST_PRICE_CONFIG" ] && return
   log "Generating server 1 price config (with peer.maxPrices for DUST fallback)"
-  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
-    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR, UNSHIELDED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$UNSHIELDED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
 }
 
 check_balances() {
