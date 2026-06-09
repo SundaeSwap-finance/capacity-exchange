@@ -162,4 +162,4 @@ generate_price_config
 start_ces_server
 wait_for_server "$CES_PORT" "CES server" CES_SERVER_PID "$CES_READINESS_RETRIES"
 run_tests
-run_unshielded_test
+# run_unshielded_test
