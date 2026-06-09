@@ -13,7 +13,6 @@ import {
   Proof,
   SignatureEnabled,
   Transaction,
-  type UserAddress,
 } from '@midnight-ntwrk/ledger-v8';
 
 import {
@@ -46,8 +45,6 @@ export class WalletService {
   private dustWalletSub: Subscription | null = null;
   // The current view of the wallet's state, populated by the subscription
   private lastDustWalletState: DustWalletState | null = null;
-  private readonly _unshieldedAddress: string;
-
   constructor(
     walletConnection: WalletConnection,
     logger: FastifyBaseLogger,
@@ -56,7 +53,6 @@ export class WalletService {
     this.walletConnection = walletConnection;
     this.logger = logger;
     this.walletStateStore = walletStateStore;
-    this._unshieldedAddress = walletConnection.keys.unshieldedKeystore.getAddress();
   }
 
   async start() {
@@ -98,7 +94,6 @@ export class WalletService {
             unshielded: unshielded.toString(),
             shielded: shielded.toString(),
             dust: dust.toString(),
-            unshieldedAddress: this._unshieldedAddress,
           },
           'Wallet synced, balances:',
         );
@@ -183,11 +178,6 @@ export class WalletService {
       coinPublicKey: shieldedSecretKeys.coinPublicKey,
       encryptionPublicKey: shieldedSecretKeys.encryptionPublicKey,
     };
-  }
-
-  /** Server's unshielded address, as a `UserAddress` (hex). */
-  getUnshieldedUserAddress(): UserAddress {
-    return this._unshieldedAddress;
   }
 
   get syncState(): WalletSyncState {

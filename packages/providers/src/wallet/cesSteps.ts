@@ -10,7 +10,7 @@ import {
 import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
 import type { ChainStateProvider } from './chainStateProvider';
 import { isOfferExpired } from './utils';
-import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
+import { hexToBytes, toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi';
 import { fetchRegistryCesUrls } from './registryLookup';
 import { fetchPricesFromExchanges } from './priceService';
@@ -57,7 +57,7 @@ function parseOfferTx(serializedTx: string, offerId: string) {
 function validateUnshieldedOffer(
   intent: Intent<SignatureEnabled, Proof, Binding>,
   offerId: string,
-  expectedRawId: string,
+  expectedRawTokenType: string,
   expectedAmount: bigint
 ): void {
   if (intent.fallibleUnshieldedOffer) {
@@ -77,7 +77,7 @@ function validateUnshieldedOffer(
     );
   }
   const [output] = outputs;
-  if (output.type !== expectedRawId) {
+  if (output.type !== expectedRawTokenType) {
     throw new CapacityExchangeOfferTransactionInvalidError(
       offerId,
       'unshielded offer does not contain the expected token'
@@ -143,7 +143,7 @@ function validateOfferTx(
   } else if (price.currency.type === 'midnight:unshielded') {
     // use the intent, since the guaranteed unshielded offer
     // (where the `utxoOutput` is located) can be accessed through it.
-    validateUnshieldedOffer(intent, offerId, price.currency.rawId, expectedAmount);
+    validateUnshieldedOffer(intent, offerId, toRawTokenType(price.currency.rawId), expectedAmount);
 
     // for unshielded offers, the presence of any shielded offer is unexpected/invalid.
     if (tx.guaranteedOffer || tx.fallibleOffer) {

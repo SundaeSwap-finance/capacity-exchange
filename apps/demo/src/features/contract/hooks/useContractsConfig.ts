@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ContractDeployRecord } from '@capacity-exchange/archive-tools';
+import type { ContractDeployRecord, DeployedContracts } from '@capacity-exchange/archive-tools/read';
 
 export interface TokenMintConfig {
   contractAddress: string;
@@ -17,12 +17,6 @@ export interface ContractsConfig {
   networkId: string;
   tokenMint: TokenMintConfig;
   counter: CounterConfig;
-}
-
-interface DeployedContracts {
-  network: string;
-  counter: ContractDeployRecord;
-  'token-mint': ContractDeployRecord;
 }
 
 function requirePublicString(record: ContractDeployRecord, contractName: string, field: string): string {

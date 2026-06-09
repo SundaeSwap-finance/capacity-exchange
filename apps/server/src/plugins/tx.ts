@@ -13,6 +13,7 @@ export default fp(async (fastify: FastifyInstance) => {
   const txService = new TxService(
     networkId,
     walletConnection.keys.shieldedSecretKeys,
+    walletConnection.keys.unshieldedKeystore.getAddress(),
     endpoints.proofServerUrl,
   );
   fastify.decorate('txService', txService);

@@ -1,6 +1,17 @@
 import { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { WalletConnection } from './walletFacade.js';
-import { FinalizedTransaction, UnprovenTransaction } from '@midnight-ntwrk/ledger-v8';
+import {
+  type SignatureEnabled,
+  type Proof,
+  type PreBinding,
+  type Binding,
+  Transaction,
+  FinalizedTransaction,
+  UnprovenTransaction,
+} from '@midnight-ntwrk/ledger-v8';
+import { hexToBytes, uint8ArrayToHex } from './hex.js';
+
+const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 async function signUnprovenTransaction(ctx: WalletConnection, tx: UnprovenTransaction) {
   if (!tx.intents?.size) {
@@ -49,4 +60,29 @@ export async function balanceFinalizedTransaction(
     recipe.balancingTransaction = await signUnprovenTransaction(ctx, recipe.balancingTransaction);
   }
   return await walletFacade.finalizeRecipe(recipe);
+}
+
+export function makeBalanceFunctions(connection: WalletConnection, ttlMs = DEFAULT_BALANCE_TTL_MS) {
+  return {
+    async balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
+      const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
+        'signature',
+        'proof',
+        'pre-binding',
+        hexToBytes(txHex)
+      );
+      const balanced = await balanceUnboundTransaction(connection, tx, new Date(Date.now() + ttlMs));
+      return { tx: uint8ArrayToHex(balanced.serialize()) };
+    },
+    async balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
+      const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+        'signature',
+        'proof',
+        'binding',
+        hexToBytes(txHex)
+      ).bind();
+      const balanced = await balanceFinalizedTransaction(connection, tx, new Date(Date.now() + ttlMs));
+      return { tx: uint8ArrayToHex(balanced.serialize()) };
+    },
+  };
 }

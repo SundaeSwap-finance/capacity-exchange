@@ -52,6 +52,7 @@ async function runAllFlows(config: TestConfig): Promise<FlowResult[]> {
       runExchangeFlow(
         config.networkId,
         config.exchangeFlowConfig,
+        config.cesServerFlowConfig,
         config.counterAddress,
         config.cesUrl,
         config.derivedTokenColor

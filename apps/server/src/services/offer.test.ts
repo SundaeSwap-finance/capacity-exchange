@@ -53,9 +53,7 @@ function createMockDeps() {
     recordRevenue: vi.fn(),
   } as unknown as MetricsService;
 
-  const getUnshieldedAddress = vi.fn(() => '00'.repeat(32));
-
-  return { utxoService, txService, priceService, metricsService, getUnshieldedAddress };
+  return { utxoService, txService, priceService, metricsService };
 }
 
 describe('OfferService', () => {
@@ -69,7 +67,6 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
-      deps.getUnshieldedAddress,
       60,
       logger,
     );
@@ -108,7 +105,6 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
-      deps.getUnshieldedAddress,
       60,
       logger,
     );
@@ -152,7 +148,6 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
-      deps.getUnshieldedAddress,
       60,
       logger,
     );
@@ -168,13 +163,10 @@ describe('OfferService', () => {
     expect(result.status).toBe('ok');
     expect(deps.txService.createUnshieldedOfferTx).toHaveBeenCalledTimes(1);
     expect(deps.txService.createShieldedOfferTx).not.toHaveBeenCalled();
-    expect(deps.getUnshieldedAddress).toHaveBeenCalled();
-    const [rawId, value, , , , serverAddress] = (
-      deps.txService.createUnshieldedOfferTx as ReturnType<typeof vi.fn>
-    ).mock.calls[0];
+    const [rawId, value] = (deps.txService.createUnshieldedOfferTx as ReturnType<typeof vi.fn>).mock
+      .calls[0];
     expect(rawId).toBe('0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0');
     expect(value).toBe(2000n);
-    expect(serverAddress).toBe('00'.repeat(32));
   });
 
   it('unlocks UTXO when tx proving throws', async () => {
@@ -187,7 +179,6 @@ describe('OfferService', () => {
       deps.txService,
       deps.priceService,
       deps.metricsService,
-      deps.getUnshieldedAddress,
       60,
       logger,
     );

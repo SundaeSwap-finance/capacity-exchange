@@ -1,11 +1,12 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledCounterContract, Counter, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
 import { firstValueFrom } from 'rxjs';
-import { buildFlowCtx, type FlowCtxConfig } from '../util/testUtils.js';
-import { createTestCesProvider } from '../util/cesProvider.js';
+import { buildFlowCtx, type FlowCtxConfig } from './testUtils.js';
+import { createTestCesProvider } from './cesProvider.js';
 
 const logger = createLogger(import.meta);
 
@@ -16,32 +17,28 @@ interface State {
   counter: bigint;
 }
 
-export interface UnshieldedExchangeFlowResult {
+export interface ExchangeFlowResult {
   status: string;
   pre: Record<string, string>;
   post: Record<string, string>;
 }
 
-/**
- * Case B end-to-end: user pays unshielded `tokenRawId`, CES sponsors counter
- * increment in DUST. Asserts user.dust=0 pre, user.token decreases,
- * server.token increases, counter +1.
- */
-export async function runUnshieldedExchangeFlow(
+export async function runExchangeFlowCore(
+  tokenKind: 'shielded' | 'unshielded',
   networkId: string,
   userFlowConfig: FlowCtxConfig,
   serverFlowConfig: FlowCtxConfig,
   counterAddress: string,
   cesUrl: string,
   tokenRawId: string
-): Promise<UnshieldedExchangeFlowResult> {
+): Promise<ExchangeFlowResult> {
   const [userCtx, serverCtx] = await Promise.all([
     buildFlowCtx(networkId, userFlowConfig),
     buildFlowCtx(networkId, serverFlowConfig),
   ]);
-  logger.info({ tokenRawId, counterAddress, cesUrl }, 'Starting unshielded exchange flow');
+  logger.info({ tokenRawId, counterAddress, cesUrl }, `Starting ${tokenKind} exchange flow`);
 
-  const pre = await snapshot(userCtx, serverCtx, tokenRawId, counterAddress);
+  const pre = await snapshot(tokenKind, userCtx, serverCtx, tokenRawId, counterAddress);
   logger.info(stringify(pre), 'Pre');
 
   if (pre.userDust !== 0n) {
@@ -57,7 +54,7 @@ export async function runUnshieldedExchangeFlow(
     contractAddress: counterAddress,
   });
 
-  logger.info('Submitting counter increment via CES unshielded exchange flow (user pays with unshielded token)');
+  logger.info(`Submitting counter increment via CES ${tokenKind} exchange flow`);
   const result = await submitCallTx(providers, {
     compiledContract: CompiledCounterContract,
     contractAddress: counterAddress,
@@ -66,7 +63,7 @@ export async function runUnshieldedExchangeFlow(
   logger.info({ status: result.public.status }, 'Submitted, waiting for state to settle');
   await new Promise((r) => setTimeout(r, 8_000));
 
-  const post = await snapshot(userCtx, serverCtx, tokenRawId, counterAddress);
+  const post = await snapshot(tokenKind, userCtx, serverCtx, tokenRawId, counterAddress);
   logger.info(stringify(post), 'Post');
 
   const failures: string[] = [];
@@ -87,24 +84,32 @@ export async function runUnshieldedExchangeFlow(
 }
 
 async function snapshot(
+  tokenKind: 'shielded' | 'unshielded',
   userCtx: AppContext,
   serverCtx: AppContext,
   tokenRawId: string,
   counterAddress: string
 ): Promise<State> {
   const [user, server, counter] = await Promise.all([
-    walletState(userCtx, tokenRawId),
-    walletState(serverCtx, tokenRawId),
+    walletState(tokenKind, userCtx, tokenRawId),
+    walletState(tokenKind, serverCtx, tokenRawId),
     counterRound(userCtx, counterAddress),
   ]);
   return { userDust: user.dust, userToken: user.token, serverToken: server.token, counter };
 }
 
-async function walletState(ctx: AppContext, tokenRawId: string): Promise<{ dust: bigint; token: bigint }> {
+async function walletState(
+  tokenKind: 'shielded' | 'unshielded',
+  ctx: AppContext,
+  tokenRawId: string
+): Promise<{ dust: bigint; token: bigint }> {
   const state = await firstValueFrom(ctx.walletContext.walletFacade.state());
   return {
     dust: state.dust?.balance(new Date()) ?? 0n,
-    token: state.unshielded?.balances[tokenRawId] ?? 0n,
+    token:
+      (tokenKind === 'shielded'
+        ? state.shielded?.balances[tokenRawId]
+        : state.unshielded?.balances[toRawTokenType(tokenRawId)]) ?? 0n,
   };
 }
 

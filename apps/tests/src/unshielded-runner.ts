@@ -4,53 +4,41 @@
  * without disturbing the existing sponsor / exchange / registry flows.
  *
  * Required env:
- *   NETWORK_ID                       e.g. preview
- *   CES_URL                          e.g. http://localhost:3000
- *   COUNTER_ADDRESS                  counter contract address
- *   TUSDM_RAW_ID                     unshielded token rawId the user is paying with
- *   EXCHANGE_WALLET_MNEMONIC         user wallet mnemonic (24 words)
- *   SERVER_WALLET_MNEMONIC_FILE      path to CES server wallet mnemonic file
- *   CHAIN_SNAPSHOT_DIR               directory with cached chain snapshots
+ *   NETWORK_ID                                  e.g. preview
+ *   CES_URL                                     e.g. http://localhost:3000
+ *   COUNTER_ADDRESS                             counter contract address
+ *   CHAIN_SNAPSHOT_DIR                          directory with cached chain snapshots
+ *   EXCHANGE_WALLET_MNEMONIC or ..._SEED        user wallet credentials
+ *   CES_SERVER_WALLET_MNEMONIC or ..._SEED      CES server wallet credentials
+ *   UNSHIELDED_TOKEN_COLOR                      unshielded token rawId the user is paying with
  */
-import * as fs from 'fs';
-import {
-  runCli,
-  resolveEnv,
-  createLogger,
-  loadChainSnapshot,
-  requireEnvVar,
-} from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, resolveEnv, createLogger, requireEnvVar } from '@sundaeswap/capacity-exchange-nodejs';
 import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-import { requireEnvSeed, type WalletSeed } from './util/testUtils.js';
-import { runUnshieldedExchangeFlow, type UnshieldedExchangeFlowResult } from './flows/unshielded-exchange-flow.js';
+import { getBaseTestConfig } from './config.js';
+import { runUnshieldedExchangeFlow, type UnshieldedExchangeFlowResult } from './flows/exchange-flow.js';
 
 const logger = createLogger(import.meta);
 
 async function main(): Promise<UnshieldedExchangeFlowResult> {
   const env = resolveEnv();
-  const networkId = requireEnvVar(env, 'NETWORK_ID');
-  const cesUrl = requireEnvVar(env, 'CES_URL');
-  const counterAddress = requireEnvVar(env, 'COUNTER_ADDRESS');
-  const tokenRawId = requireEnvVar(env, 'TUSDM_RAW_ID');
-  const chainSnapshotDir = requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR');
-  const serverMnemonicFile = requireEnvVar(env, 'SERVER_WALLET_MNEMONIC_FILE');
-  const chainSnapshot = loadChainSnapshot(networkId, chainSnapshotDir);
+  const config = getBaseTestConfig(env);
+  const tokenRawId = requireEnvVar(env, 'UNSHIELDED_TOKEN_COLOR');
 
-  const userSeed = requireEnvSeed(env, 'EXCHANGE_WALLET');
-  const serverSeed: WalletSeed = { type: 'mnemonic', mnemonic: fs.readFileSync(serverMnemonicFile, 'utf-8').trim() };
-
-  setNetworkId(toNetworkIdEnum(networkId));
-  if (!chainSnapshot) {
-    logger.info({ chainSnapshotDir }, 'No cached chain snapshot, wallets will sync from genesis');
+  setNetworkId(toNetworkIdEnum(config.networkId));
+  if (!config.chainSnapshot) {
+    logger.info(
+      { chainSnapshotDir: config.chainSnapshotDir },
+      'No cached chain snapshot, wallets will sync from genesis'
+    );
   }
 
   const result = await runUnshieldedExchangeFlow(
-    networkId,
-    { seed: userSeed, stateSource: { kind: 'inMemory', chainSnapshot } },
-    { seed: serverSeed, stateSource: { kind: 'inMemory', chainSnapshot } },
-    counterAddress,
-    cesUrl,
+    config.networkId,
+    config.exchangeFlowConfig,
+    config.cesServerFlowConfig,
+    config.counterAddress,
+    config.cesUrl,
     tokenRawId
   );
   logger.info(result, 'Unshielded exchange flow result');

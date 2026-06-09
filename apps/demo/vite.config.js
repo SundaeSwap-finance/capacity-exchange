@@ -1,10 +1,9 @@
-/* global process, console */
+/* global process */
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { loadWalletSeed, requireEnvVar } from '@sundaeswap/capacity-exchange-nodejs';
-import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
+import { requireEnvVar } from '@sundaeswap/capacity-exchange-nodejs';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -15,11 +14,6 @@ export default defineConfig(({ mode }) => {
     networkId === 'mainnet'
       ? 'https://capacity-exchange.sundae.fi'
       : `https://capacity-exchange.${networkId}.sundae.fi`;
-  try {
-    process.env.VITE_SERVER_SEED_HEX = uint8ArrayToHex(loadWalletSeed(networkId));
-  } catch {
-    console.warn('No wallet seed found — server wallet (faucet) will be unavailable');
-  }
   return {
     define: {
       global: 'globalThis',

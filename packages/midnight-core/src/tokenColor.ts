@@ -10,6 +10,13 @@ function toZeroPadded32Bytes(str: string): Uint8Array {
 
 const DERIVE_TOKEN_PROTOCOL_CONSTANT = toZeroPadded32Bytes('midnight:derive_token');
 
+/** Strips the "unshielded-<networkId>" prefix from an encoded color
+ * to get the bare 32-byte hex RawTokenType.
+ * */
+export function toRawTokenType(rawId: string): string {
+  return rawId.slice(-64);
+}
+
 export function deriveTokenColor(tokenColorHex: string, contractAddress: string): string {
   const contractAddressBytes = hexToBytes(contractAddress);
   const tokenColorBytes = hexToBytes(tokenColorHex);

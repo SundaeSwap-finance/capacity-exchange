@@ -5,6 +5,7 @@ import { Currency, PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
 import { LRUCache } from 'lru-cache';
 import { recordDuration, recordCounters } from '../decorators/record-metrics.js';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 
 export interface CreateOfferRequest {
   quoteId: string;
@@ -40,7 +41,6 @@ export class OfferService {
   private readonly txService: TxService;
   private readonly priceService: PriceService;
   private readonly metricsService: MetricsService;
-  private readonly getUnshieldedAddress: () => string;
   private readonly logger: FastifyBaseLogger;
   private readonly cache: LRUCache<string, OfferResponse>;
   private readonly inflight = new Map<string, Promise<CreateOfferResult>>();
@@ -50,7 +50,6 @@ export class OfferService {
     txService: TxService,
     priceService: PriceService,
     metricsService: MetricsService,
-    getUnshieldedAddress: () => string,
     offerTtlSeconds: number,
     logger: FastifyBaseLogger,
   ) {
@@ -58,7 +57,6 @@ export class OfferService {
     this.txService = txService;
     this.priceService = priceService;
     this.metricsService = metricsService;
-    this.getUnshieldedAddress = getUnshieldedAddress;
     this.logger = logger;
     this.cache = new LRUCache<string, OfferResponse>({
       ttl: offerTtlSeconds * 1000,
@@ -168,12 +166,11 @@ export class OfferService {
           break;
         case 'midnight:unshielded':
           unboundTx = await this.txService.createUnshieldedOfferTx(
-            currency.rawId,
+            toRawTokenType(currency.rawId),
             getPriceResult.price,
             lockedInfo.spend,
             lockedInfo.ctime,
             expiration,
-            this.getUnshieldedAddress(),
           );
           break;
         default:

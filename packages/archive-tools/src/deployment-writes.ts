@@ -26,7 +26,7 @@ export async function writeRecord(
   if (writeStatus === 'written') {
     return { key, status: 'written' };
   }
-  const existing = fromJson<ContractDeployRecord>(await store.get(key));
+  const existing = fromJson<ContractDeployRecord>(await store.getString(key));
   if (existing && JSON.stringify(existing) === JSON.stringify(record)) {
     return { key, status: 'skipped-identical' };
   }
@@ -48,7 +48,7 @@ export async function writePointer(
   entry: DeployPointerEntry
 ): Promise<WritePointerResult> {
   const key = deploymentsKey.pointer({ contract });
-  const existing = fromJson<DeployPointer>(await store.get(key));
+  const existing = fromJson<DeployPointer>(await store.getString(key));
   const updated = nextDeployPointer(existing, entry);
   if (existing && updated === existing) {
     return { key, status: 'unchanged', newCurrent: entry };
