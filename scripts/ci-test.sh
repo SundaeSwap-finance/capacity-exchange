@@ -75,7 +75,8 @@ validate_env() {
 
 generate_price_config() {
   log "Generating price config for CES server"
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" \
+    --unshielded-token-color "$UNSHIELDED_TOKEN_COLOR"
 }
 
 start_ces_server() {
