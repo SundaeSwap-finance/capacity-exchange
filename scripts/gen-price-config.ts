@@ -3,7 +3,8 @@
  * Generates a CES price config file from contract deployment parameters.
  *
  * Usage:
- *   bun scripts/gen-price-config.ts <outFile> <tokenColor> <tokenMintAddress> [--with-peer-max-prices] [--unshielded-token-color <color>]
+ *   bun scripts/gen-price-config.ts <outFile> <tokenColor> <tokenMintAddress> \
+ *     [--with-peer-max-prices] [--unshielded-token-color <color>]
  *
  * --with-peer-max-prices          Include a peer.maxPrices section (same values as priceFormulas).
  *                                 Required for the no-dust server to enable DUST fallback via peers.
@@ -21,7 +22,8 @@ const [outFile, tokenColor, tokenMintAddress] = positional;
 
 if (!outFile || !tokenColor || !tokenMintAddress) {
   console.error(
-    'Usage: gen-price-config.ts <outFile> <tokenColor> <tokenMintAddress> [--with-peer-max-prices] [--unshielded-token-color <color>]'
+    'Usage: gen-price-config.ts <outFile> <tokenColor> <tokenMintAddress>\n' +
+      '  [--with-peer-max-prices] [--unshielded-token-color <color>]'
   );
   process.exit(1);
 }
