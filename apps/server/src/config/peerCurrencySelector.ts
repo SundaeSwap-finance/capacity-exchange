@@ -1,5 +1,6 @@
 import type { FastifyBaseLogger } from 'fastify';
 import type { ExchangePrice, PromptForCurrency } from '@sundaeswap/capacity-exchange-providers';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import type { WalletService } from '../services/wallet.js';
 import type { PeerPriceService } from '../services/peerPrice.js';
 
@@ -110,7 +111,11 @@ function filterCandidates(
       );
       continue;
     }
-    const balance = balances[price.price.currency.rawId] ?? 0n;
+    const balanceKey =
+      price.price.currency.type === 'midnight:unshielded'
+        ? toRawTokenType(price.price.currency.rawId)
+        : price.price.currency.rawId;
+    const balance = balances[balanceKey] ?? 0n;
     if (balance < offered) {
       log.debug(
         {

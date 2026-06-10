@@ -221,6 +221,23 @@ describe('createAutoSelectCurrency', () => {
     });
   });
 
+  it('selects unshielded offer when rawId has network prefix (e.g. unshielded-preview<hex>)', async () => {
+    const bareHex = 'a'.repeat(64);
+    const prefixedRawId = `unshielded-preview${bareHex}`;
+    const peerPriceService = new PeerPriceService([
+      makeUnshieldedFormula(prefixedRawId, '1000', '0', '1'),
+    ]);
+    // Wallet balances keyed by bare hex (no prefix), as the Midnight SDK returns them
+    const walletService = makeWalletService({}, { [bareHex]: 10_000n });
+    const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
+
+    const result = await select([makeUnshieldedPrice(prefixedRawId, '500')], DUST_REQUIRED, REQ_ID);
+    expect(result).toMatchObject({
+      status: 'selected',
+      exchangePrice: { price: { currency: { type: 'midnight:unshielded', rawId: prefixedRawId } } },
+    });
+  });
+
   it('picks shielded over unshielded when shielded has a better ratio', async () => {
     const peerPriceService = new PeerPriceService([
       makeFormula('ada', '1000', '0', '1'), // shielded max 1000
