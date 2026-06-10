@@ -40,10 +40,16 @@ NO_DUST_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.$NETWORK_ID.no-dust.jso
 
 log() { echo "=== [ci-fallback-test] $*"; }
 
+print_server_logs() {
+  log "Server 1 logs:"; cat "$ROOT_DIR/server1.log" 2>/dev/null || true
+  log "Server 2 logs:"; cat "$ROOT_DIR/server2.log" 2>/dev/null || true
+}
+
 stop_servers() {
   if [ -n "$RUN_SERVERS_PID" ]; then
     log "Stopping servers (PID: $RUN_SERVERS_PID)"
     kill "$RUN_SERVERS_PID" 2>/dev/null || true
+    wait "$RUN_SERVERS_PID" 2>/dev/null || true
     RUN_SERVERS_PID=""
   fi
   # Remove generated no-dust price config so next round regenerates it
@@ -51,6 +57,8 @@ stop_servers() {
 }
 
 cleanup() {
+  local exit_code=$?
+  [ $exit_code -ne 0 ] && print_server_logs
   stop_servers
 }
 
