@@ -15,12 +15,14 @@
 #   - Packages built
 #
 # Required environment:
-#   CES_WALLET_MNEMONIC_NO_DUST or CES_WALLET_SEED_NO_DUST_PREVIEW              — Server 1 wallet (shielded tokens, no DUST)
-#   CES_WALLET_MNEMONIC_NO_DUST_UNSHIELDED or ..._SEED (optional)               — Server 1 wallet (unshielded tokens, no DUST); enables round 2
-#   CES_WALLET2_MNEMONIC or CES_WALLET2_SEED                                             — funded wallet (DUST) for Server 2
-#   TOKEN_MINT_ADDRESS                                  — deployed token-mint contract address
-#   DERIVED_TOKEN_COLOR                                 — shielded token color (for price config generation)
-#   UNSHIELDED_TOKEN_COLOR                              — unshielded token color (for price config generation)
+#   CES_WALLET_MNEMONIC_NO_DUST or CES_WALLET_SEED_NO_DUST_PREVIEW    — Server 1 wallet (shielded tokens, no DUST)
+#   CES_WALLET2_MNEMONIC or CES_WALLET2_SEED                          — Server 2 wallet (funded with DUST)
+#   TOKEN_MINT_ADDRESS                                                 — deployed token-mint contract address
+#   DERIVED_TOKEN_COLOR                                                — shielded token color (for price config generation)
+#
+# Optional environment (enables round 2 — unshielded):
+#   CES_WALLET_MNEMONIC_NO_DUST_UNSHIELDED or ..._SEED                — Server 1 wallet (unshielded tokens, no DUST)
+#   UNSHIELDED_TOKEN_COLOR                                            — unshielded token color (for price config generation)
 
 set -euo pipefail
 # shellcheck source=lib/utils.sh
@@ -78,10 +80,6 @@ validate_env() {
   fi
   if [ -z "${DERIVED_TOKEN_COLOR:-}" ]; then
     log "ERROR: DERIVED_TOKEN_COLOR is not set"
-    exit 1
-  fi
-  if [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ]; then
-    log "ERROR: UNSHIELDED_TOKEN_COLOR is not set"
     exit 1
   fi
 }

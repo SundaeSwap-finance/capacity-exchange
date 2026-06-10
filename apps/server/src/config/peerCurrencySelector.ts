@@ -60,8 +60,14 @@ async function selectFromCandidates(
     walletService.getShieldedTokenBalances(),
     walletService.getUnshieldedTokenBalances(),
   ]);
-  const balances = { ...shieldedBalances, ...unshieldedBalances };
-  const candidates = filterCandidates(prices, balances, peerPriceService, dustRequired, log);
+  const candidates = filterCandidates(
+    prices,
+    shieldedBalances,
+    unshieldedBalances,
+    peerPriceService,
+    dustRequired,
+    log,
+  );
 
   if (candidates.length === 0) {
     log.info({ requestId }, 'No peer prices met sponsor fallback criteria');
@@ -84,7 +90,8 @@ async function selectFromCandidates(
 /** Keep only offers that are allowlisted, within max, and affordable. */
 function filterCandidates(
   prices: ExchangePrice[],
-  balances: Record<string, bigint>,
+  shieldedBalances: Record<string, bigint>,
+  unshieldedBalances: Record<string, bigint>,
   peerPriceService: PeerPriceService,
   dustRequired: bigint,
   log: FastifyBaseLogger,
@@ -111,11 +118,11 @@ function filterCandidates(
       );
       continue;
     }
-    const balanceKey =
+    const balance =
       price.price.currency.type === 'midnight:unshielded'
-        ? toRawTokenType(price.price.currency.rawId) // unshielded balances are keyed by raw token type
-        : price.price.currency.rawId;
-    const balance = balances[balanceKey] ?? 0n;
+        ? // unshielded balances are keyed by raw token type
+          (unshieldedBalances[toRawTokenType(price.price.currency.rawId)] ?? 0n)
+        : (shieldedBalances[price.price.currency.rawId] ?? 0n);
     if (balance < offered) {
       log.debug(
         {

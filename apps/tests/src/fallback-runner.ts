@@ -1,20 +1,18 @@
 /**
  * Sponsor Fallback smoke test runner.
  *
- * This test runs the sponsor flow against a no-dust CES server (NO_DUST_CES_URL)
- * but obtains DUST from its configured peer and complete the sponsorship.
- *
- * The user submits to Server 1 via the /sponsored-transactions endpoint. Server 1
- * has no DUST falls back to Server 2, paying it with shielded or unshielded tokens.
- * The end user does not select a payment currency.
+ * Runs the sponsor flow against a no-dust CES server (Server 1). Server 1 has no
+ * DUST and falls back to a funded peer (Server 2), paying it with shielded
+ * or unshielded tokens. The end user does not select a
+ * payment currency — Server 1 auto-selects via its peer price configuration.
  *
  * Required environment variables:
- *   NETWORK_ID               — Midnight network (e.g. "preview")
- *   NO_DUST_CES_URL          — URL of the no-dust CES server under test
- *   TOKEN_MINT_ADDRESS       — deployed token-mint contract address
- *   CHAIN_SNAPSHOT_DIR       — used as sync start point; wallet state is in-memory only
- *   SPONSOR_WALLET_MNEMONIC  — ephemeral wallet mnemonic (needs no DUST)
- *   WALLET_SYNC_TIMEOUT_MS   — max ms to wait for wallet sync (default: 25 min)
+ *   NETWORK_ID                        — Midnight network (e.g. "preview")
+ *   NO_DUST_CES_URL                   — URL of the no-dust CES server (Server 1)
+ *   TOKEN_MINT_ADDRESS                — deployed token-mint contract address
+ *   CHAIN_SNAPSHOT_DIR                — sync start point; wallet state is in-memory only
+ *   SPONSOR_WALLET_MNEMONIC or _SEED  — ephemeral sponsor wallet (needs no DUST)
+ *   WALLET_SYNC_TIMEOUT_MS            — max ms to wait for wallet sync (default: 25 min)
  *
  * Invoked by scripts/ci-fallback-test.sh.
  */
