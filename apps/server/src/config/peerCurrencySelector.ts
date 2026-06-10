@@ -113,7 +113,7 @@ function filterCandidates(
     }
     const balanceKey =
       price.price.currency.type === 'midnight:unshielded'
-        ? toRawTokenType(price.price.currency.rawId)
+        ? toRawTokenType(price.price.currency.rawId) // unshielded balances are keyed by raw token type
         : price.price.currency.rawId;
     const balance = balances[balanceKey] ?? 0n;
     if (balance < offered) {

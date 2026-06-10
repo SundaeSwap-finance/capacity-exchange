@@ -40,6 +40,7 @@ NO_DUST_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.$NETWORK_ID.no-dust.jso
 
 log() { echo "=== [ci-fallback-test] $*"; }
 
+#  only called when the tests fail.
 print_server_logs() {
   log "Server 1 logs:"; cat "$ROOT_DIR/server1.log" 2>/dev/null || true
   log "Server 2 logs:"; cat "$ROOT_DIR/server2.log" 2>/dev/null || true
@@ -127,6 +128,7 @@ RUNNER_MNEMONIC=$(generate_runner_wallet "$ROOT_DIR")
 run_round "shielded"
 
 if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_UNSHIELDED:-}" ] || [ -n "${CES_WALLET_SEED_NO_DUST_UNSHIELDED_PREVIEW:-}" ]; then
+  # replacing CES_WALLET_MNEMONIC_NO_DUST with the unshielded wallet for the second round
   export CES_WALLET_MNEMONIC_NO_DUST="${CES_WALLET_MNEMONIC_NO_DUST_UNSHIELDED:-}"
   export CES_WALLET_SEED_NO_DUST_PREVIEW="${CES_WALLET_SEED_NO_DUST_UNSHIELDED_PREVIEW:-}"
   run_round "unshielded"

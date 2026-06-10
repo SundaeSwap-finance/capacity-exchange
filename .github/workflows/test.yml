@@ -164,6 +164,7 @@ jobs:
       - name: Run fallback smoke tests
         env:
           CES_WALLET_MNEMONIC_NO_DUST: ${{ secrets[format('CES_WALLET_MNEMONIC_NO_DUST_{0}', matrix.env)] }}
+          # Wallet with ONLY unshielded tokens to test paying peers with unshielded tokens.
           CES_WALLET_MNEMONIC_NO_DUST_UNSHIELDED: ${{ secrets[format('CES_WALLET_MNEMONIC_NO_DUST_UNSHIELDED_{0}', matrix.env)] }}
           # CES_WALLET2_MNEMONIC reuses the main CES wallet secret.
           CES_WALLET2_MNEMONIC: ${{ secrets[format('CES_WALLET_MNEMONIC_{0}', matrix.env)] }}

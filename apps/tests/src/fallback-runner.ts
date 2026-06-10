@@ -5,8 +5,8 @@
  * but obtains DUST from its configured peer and complete the sponsorship.
  *
  * The user submits to Server 1 via the /sponsored-transactions endpoint. Server 1
- * has no DUST of its own and peer-falls-back to Server 2, paying it with shielded
- * tokens from Server 1's own wallet. The end user does not select a payment currency.
+ * has no DUST falls back to Server 2, paying it with shielded or unshielded tokens.
+ * The end user does not select a payment currency.
  *
  * Required environment variables:
  *   NETWORK_ID               — Midnight network (e.g. "preview")
