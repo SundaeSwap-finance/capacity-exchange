@@ -175,17 +175,19 @@ generate_funded_price_config() {
     log "ERROR: Cannot generate $CES_SERVER_PRICE_CONFIG — set DERIVED_TOKEN_COLOR, UNSHIELDED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$UNSHIELDED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" \
+    --unshielded-token-color "$UNSHIELDED_TOKEN_COLOR"
 }
 
 generate_server1_price_config() {
   [ -f "$CES_SERVER_NO_DUST_PRICE_CONFIG" ] && return
   log "Generating server 1 price config (with peer.maxPrices for DUST fallback)"
-  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
-    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR, UNSHIELDED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" \
+    --unshielded-token-color "$UNSHIELDED_TOKEN_COLOR" --with-peer-max-prices
 }
 
 check_balances() {
@@ -284,6 +286,7 @@ print_summary() {
   for ((i=2; i<=N; i++)); do
     local port=$((BASE_PORT + i - 1))
     local dashboard_port=$((BASE_DASHBOARD_PORT + i - 1))
+    echo
     log "  Server $i: http://localhost:$port  (funded wallet)  dashboard: http://localhost:$dashboard_port"
   done
 }
