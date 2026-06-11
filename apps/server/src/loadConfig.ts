@@ -35,6 +35,8 @@ export interface AppConfig {
   walletConnection: WalletConnection;
   walletStateStore: WalletStateStore;
   capacityExchangeUrls: string[];
+  blockfrostApiKey?: string;
+  blockfrostBaseUrl?: string;
 }
 
 export interface ServerBootstrap {
@@ -69,6 +71,8 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     peer: priceConfig.peer,
     walletConnection: wallet.walletConnection,
     walletStateStore: wallet.walletStateStore,
+    blockfrostApiKey: env.BLOCKFROST_API_KEY,
+    blockfrostBaseUrl: env.BLOCKFROST_BASE_URL,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
       ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
           .map((u) => u.trim())

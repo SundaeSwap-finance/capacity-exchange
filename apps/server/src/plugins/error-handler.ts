@@ -5,8 +5,10 @@ import fp from 'fastify-plugin';
 declare module 'fastify' {
   interface FastifyReply {
     badRequest: (message?: string, details?: string) => FastifyReply;
+    notFound: (message?: string, details?: string) => FastifyReply;
     gone: (message?: string, details?: string) => FastifyReply;
     conflict: (message?: string, details?: string) => FastifyReply;
+    notImplemented: (message?: string, details?: string) => FastifyReply;
     serviceUnavailable: (message?: string, details?: string) => FastifyReply;
     internalServerError: (message?: string, details?: string) => FastifyReply;
   }
@@ -37,6 +39,17 @@ const errorHandler: FastifyPluginAsync = async (fastify: FastifyInstance, _opts)
     },
   );
 
+  fastify.decorateReply(
+    'notFound',
+    function (this: FastifyReply, message?: string, details?: string) {
+      return this.status(404).send({
+        error: 'Not Found',
+        message,
+        details,
+      });
+    },
+  );
+
   fastify.decorateReply('gone', function (this: FastifyReply, message?: string, details?: string) {
     return this.status(410).send({
       error: 'Gone',
@@ -61,6 +74,17 @@ const errorHandler: FastifyPluginAsync = async (fastify: FastifyInstance, _opts)
     function (this: FastifyReply, message?: string, details?: string) {
       return this.status(500).send({
         error: 'Internal Server Error',
+        message,
+        details,
+      });
+    },
+  );
+
+  fastify.decorateReply(
+    'notImplemented',
+    function (this: FastifyReply, message?: string, details?: string) {
+      return this.status(501).send({
+        error: 'Not Implemented',
         message,
         details,
       });
