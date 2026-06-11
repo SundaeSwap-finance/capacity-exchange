@@ -1,0 +1,137 @@
+import { describe, it, expect, vi } from 'vitest';
+import { randomBytes } from 'crypto';
+import adaOfferRoutes from './adaOffers.js';
+import { OfferService } from '../services/offer.js';
+import { CardanoUtxoService, type BlockfrostTxUtxosResponse } from '../services/cardanoUtxo.js';
+import { QuoteService } from '../services/quote.js';
+import { useRouteTestApp } from './test-utils.js';
+
+const VALID_TX_HASH = 'a'.repeat(64);
+
+const quoteService = new QuoteService(10, randomBytes(32));
+
+const offerStub = Object.create(OfferService.prototype) as OfferService;
+offerStub.createOffer = vi.fn(async (req) => ({
+  status: 'ok' as const,
+  source: 'built' as const,
+  offer: {
+    offerId: 'test-id',
+    offerAmount: '1000',
+    offerCurrency: { id: req.offerCurrency, type: 'midnight:shielded' as const, rawId: 'lovelace' },
+    serializedTx: 'deadbeef',
+    expiresAt: new Date().toISOString(),
+  },
+  specksCommitted: 1000n,
+  revenueCommitted: { amount: 100n, currency: req.offerCurrency },
+}));
+
+const MOCK_UTXO_RESPONSE: BlockfrostTxUtxosResponse = {
+  hash: VALID_TX_HASH,
+  inputs: [],
+  outputs: [{ address: 'addr_test1', amount: [{ unit: 'lovelace', quantity: '5000000' }], tx_hash: VALID_TX_HASH, output_index: 0, data_hash: null, inline_datum: null, reference_script_hash: null, collateral: false }],
+};
+
+const cardanoStub = Object.create(CardanoUtxoService.prototype) as CardanoUtxoService;
+cardanoStub.verifyUtxoExists = vi.fn(async () => MOCK_UTXO_RESPONSE);
+
+describe('POST /api/ada/offers', () => {
+  describe('with cardanoUtxoService configured', () => {
+    const app = useRouteTestApp({
+      decorations: { offerService: offerStub, quoteService, cardanoUtxoService: cardanoStub },
+      routes: { plugin: adaOfferRoutes, prefix: '/api' },
+    });
+
+    function validPayload(quoteId: string) {
+      return { quoteId, offerCurrency: 'midnight:shielded:lovelace', utxoTxHash: VALID_TX_HASH, utxoIndex: 0 };
+    }
+
+    it('returns 201 when UTXO exists', async () => {
+      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
+      const quoteId = quoteService.createQuote(1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: validPayload(quoteId),
+      });
+      expect(res.statusCode).toBe(201);
+      expect(res.json().offerId).toBe('test-id');
+    });
+
+    it('returns 404 when Cardano UTXO does not exist', async () => {
+      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
+      const quoteId = quoteService.createQuote(1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: validPayload(quoteId),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('calls verifyUtxoExists with the provided txHash and index', async () => {
+      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
+      const quoteId = quoteService.createQuote(1000n, []);
+      await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { ...validPayload(quoteId), utxoTxHash: VALID_TX_HASH, utxoIndex: 2 },
+      });
+      expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith({
+        txHash: VALID_TX_HASH,
+        outputIndex: 2,
+      });
+    });
+
+    it('returns 400 for invalid quoteId', async () => {
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { ...validPayload('garbage'), quoteId: 'garbage' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 400 when utxoTxHash is wrong length', async () => {
+      const quoteId = quoteService.createQuote(1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { ...validPayload(quoteId), utxoTxHash: 'tooshort' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 410 for expired quote', async () => {
+      const quoteId = quoteService.createQuote(1000n, []);
+      const realDateNow = Date.now;
+      Date.now = () => realDateNow() + 11_000;
+      try {
+        const res = await app.get().inject({
+          method: 'POST',
+          url: '/api/ada/offers',
+          payload: validPayload(quoteId),
+        });
+        expect(res.statusCode).toBe(410);
+      } finally {
+        Date.now = realDateNow;
+      }
+    });
+  });
+
+  describe('without cardanoUtxoService configured', () => {
+    const app = useRouteTestApp({
+      decorations: { offerService: offerStub, quoteService, cardanoUtxoService: null },
+      routes: { plugin: adaOfferRoutes, prefix: '/api' },
+    });
+
+    it('returns 501 when not configured', async () => {
+      const quoteId = quoteService.createQuote(1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { quoteId, offerCurrency: 'midnight:shielded:lovelace', utxoTxHash: VALID_TX_HASH, utxoIndex: 0 },
+      });
+      expect(res.statusCode).toBe(501);
+    });
+  });
+});
