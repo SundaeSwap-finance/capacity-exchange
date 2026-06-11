@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { persistentHash as ledgerPersistentHash } from '@midnight-ntwrk/ledger-v8';
 import {
   AppContext,
   buildProviders,
@@ -10,7 +9,7 @@ import {
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
-import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
+import { deriveTokenColor, getShieldedBalance, persistentHashBytes32 } from '@sundaeswap/capacity-exchange-core';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
@@ -27,13 +26,6 @@ export interface DeployOutput {
 
 export function generateTokenColor(): string {
   return crypto.randomBytes(32).toString('hex');
-}
-
-/** Compute the Compact persistentHash<Bytes<32>> of a 32-byte value off-chain */
-function persistentHashBytes32(value: Uint8Array): Uint8Array {
-  const alignment = [{ tag: 'atom' as const, value: { tag: 'bytes' as const, length: 32 } }];
-  const result = ledgerPersistentHash(alignment, [value]);
-  return result[0];
 }
 
 export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = false): Promise<DeployOutput> {
