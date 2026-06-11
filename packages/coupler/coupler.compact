@@ -1,0 +1,61 @@
+pragma language_version >= 0.22;
+
+import CompactStandardLibrary;
+
+// Commitment Coupler for the bridgeless escrowed-asset/DUST swap (Midnight side).
+// Chain-agnostic: it knows only secrets and the disclosed cells. The escrow on
+// the foreign chain (Cardano first, any chain later) is a separate plugin.
+//
+// Two-secret construction:
+//   - s  is a public circuit argument. Its raw bytes are surfaced on chain via
+//        the lastS cell write, so the foreign-chain escrow can extract it from
+//        the inclusion proof and gate the claim on hash(s) == commitment.h.
+//   - s' is a private witness, never written to chain. Only hsp = hash(s') is
+//        surfaced (lastHsp), computed inside the circuit from the witness so it
+//        is bound to the real s' (not a caller-supplied value).
+//
+// Coupling (create + nullify transient):
+//   - mintReveal mints a shielded coin of color tokenType(hash(hs || hsp)).
+//   - absorb reconstructs the same fresh coin and SPENDS it via
+//     sendImmediateShielded (createZswapInput plus a nullifier). The spend has
+//     no source unless its color matches the mint, so the merged tx only
+//     balances/lands when (hash(s), hash(s')) == (h, h'). That binding lets the
+//     LP fund the reveal in DUST blind to s: it builds absorb from the public
+//     commitment (h, h') only, the user combines and submits, and the LP learns s
+//     only once the tx lands.
+//
+// State is two bounded Cells, blind-overwritten each reveal (no read, so no
+// cross-tx contention). They are disclosure sinks only: each reveal's s and hsp
+// are read per-tx from that tx's extrinsic (validator) or contract-action state
+// (LP). The live value is irrelevant.
+
+witness sPrime(): Bytes<32>;
+
+export ledger lastS: Bytes<32>;
+export ledger lastHsp: Bytes<32>;
+
+constructor() {}
+
+export circuit mintReveal(s: Bytes<32>, nonce: Bytes<32>): Bytes<32> {
+  const ds = disclose(s);
+  const sp = sPrime();
+  const hs = persistentHash<Bytes<32>>(ds);
+  const hsp = disclose(persistentHash<Bytes<32>>(sp));
+  const domainSep = disclose(persistentHash<Vector<2, Bytes<32>>>([hs, hsp]));
+  lastS = ds;
+  lastHsp = hsp;
+  const coin = mintShieldedToken(domainSep, 1, disclose(nonce), right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+  return coin.color;
+}
+
+export circuit absorb(h: Bytes<32>, hPrime: Bytes<32>, nonce: Bytes<32>): [] {
+  const dh = disclose(h);
+  const dhp = disclose(hPrime);
+  const domainSep = persistentHash<Vector<2, Bytes<32>>>([dh, dhp]);
+  const coin = ShieldedCoinInfo {
+    nonce: disclose(nonce),
+    color: tokenType(domainSep, kernel.self()),
+    value: 1
+  };
+  sendImmediateShielded(coin, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()), 1);
+}

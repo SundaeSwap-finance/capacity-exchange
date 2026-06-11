@@ -1,0 +1,41 @@
+{
+  "name": "@sundaeswap/capacity-exchange-coupler",
+  "version": "0.1.0",
+  "description": "Commitment Coupler: the Midnight-side Compact contract binding the User's reveal to the LP's DUST for the bridgeless ADA/DUST swap",
+  "type": "module",
+  "exports": {
+    ".": "./src/lib/contract.ts",
+    "./operations": "./src/lib/operations.ts",
+    "./out/contract/*": "./out/contract/*"
+  },
+  "scripts": {
+    "clean": "rm -rf out .midnight-private-state .wallet-state .contracts.*.json",
+    "compile": "bunx run-compactc coupler.compact out",
+    "build": "tsc --noEmit",
+    "coupler:deploy": "bun src/cli/deploy.ts"
+  },
+  "keywords": [
+    "midnight",
+    "compact",
+    "bridgeless",
+    "coupler"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/compact-runtime": "0.15.0",
+    "@midnight-ntwrk/ledger-v8": "8.0.3",
+    "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.1",
+    "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@sundaeswap/capacity-exchange-core": "workspace:^",
+    "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
+    "commander": "^14.0.2"
+  },
+  "devDependencies": {
+    "@midnight-ntwrk/midnight-js-compact": "4.0.1",
+    "@types/node": "22.10.7",
+    "typescript": "^5.9.3"
+  }
+}

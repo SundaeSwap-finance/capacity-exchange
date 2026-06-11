@@ -252,6 +252,27 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/coupler": {
+      "name": "@sundaeswap/capacity-exchange-coupler",
+      "version": "0.1.0",
+      "dependencies": {
+        "@midnight-ntwrk/compact-js": "2.5.0",
+        "@midnight-ntwrk/compact-runtime": "0.15.0",
+        "@midnight-ntwrk/ledger-v8": "8.0.3",
+        "@midnight-ntwrk/midnight-js-contracts": "4.0.1",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.1",
+        "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.1",
+        "@midnight-ntwrk/midnight-js-types": "4.0.1",
+        "@sundaeswap/capacity-exchange-core": "workspace:^",
+        "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
+        "commander": "^14.0.2",
+      },
+      "devDependencies": {
+        "@midnight-ntwrk/midnight-js-compact": "4.0.1",
+        "@types/node": "22.10.7",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/midnight-core": {
       "name": "@sundaeswap/capacity-exchange-core",
       "version": "1.2.0",
@@ -1144,6 +1165,8 @@
     "@sundaeswap/capacity-exchange-client": ["@sundaeswap/capacity-exchange-client@workspace:packages/client"],
 
     "@sundaeswap/capacity-exchange-core": ["@sundaeswap/capacity-exchange-core@workspace:packages/midnight-core"],
+
+    "@sundaeswap/capacity-exchange-coupler": ["@sundaeswap/capacity-exchange-coupler@workspace:packages/coupler"],
 
     "@sundaeswap/capacity-exchange-nodejs": ["@sundaeswap/capacity-exchange-nodejs@workspace:packages/midnight-node"],
 
@@ -2553,6 +2576,8 @@
 
     "@smithy/util-stream/@smithy/node-http-handler": ["@smithy/node-http-handler@4.6.1", "", { "dependencies": { "@smithy/protocol-http": "^5.3.14", "@smithy/querystring-builder": "^4.2.14", "@smithy/types": "^4.14.1", "tslib": "^2.6.2" } }, "sha512-iB+orM4x3xrr57X3YaXazfKnntl0LHlZB1kcXSGzMV1Tt0+YwEjGlbjk/44qEGtBzXAz6yFDzkYTKSV6Pj2HUg=="],
 
+    "@sundaeswap/capacity-exchange-coupler/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
+
     "@sundaeswap/capacity-exchange-registry/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@typescript-eslint/eslint-plugin/ignore": ["ignore@7.0.5", "", {}, "sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg=="],
@@ -2676,6 +2701,8 @@
     "@openapitools/openapi-generator-cli/fs-extra/universalify": ["universalify@2.0.1", "", {}, "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw=="],
 
     "@polkadot/x-fetch/node-fetch/data-uri-to-buffer": ["data-uri-to-buffer@4.0.1", "", {}, "sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A=="],
+
+    "@sundaeswap/capacity-exchange-coupler/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
     "@sundaeswap/capacity-exchange-registry/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
