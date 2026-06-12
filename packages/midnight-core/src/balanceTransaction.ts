@@ -33,13 +33,13 @@ export async function balanceUnboundTransaction(
   ctx: WalletConnection,
   tx: UnboundTransaction,
   ttl: Date,
-  tokenKindsToBalance?: TokenKindsToBalance
+  tokenKindsToBalance: TokenKindsToBalance
 ): Promise<FinalizedTransaction> {
   const { walletFacade, keys } = ctx;
   const recipe = await walletFacade.balanceUnboundTransaction(
     tx,
     { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    tokenKindsToBalance === undefined || tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
+    tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
   );
   recipe.baseTransaction = await signUnboundTransaction(ctx, recipe.baseTransaction);
   if (recipe.balancingTransaction) {
@@ -52,13 +52,13 @@ export async function balanceFinalizedTransaction(
   ctx: WalletConnection,
   tx: FinalizedTransaction,
   ttl: Date,
-  tokenKindsToBalance?: TokenKindsToBalance
+  tokenKindsToBalance: TokenKindsToBalance
 ): Promise<FinalizedTransaction> {
   const { walletFacade, keys } = ctx;
   const recipe = await walletFacade.balanceFinalizedTransaction(
     tx,
     { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    tokenKindsToBalance === undefined || tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
+    tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
   );
   if (recipe.balancingTransaction) {
     recipe.balancingTransaction = await signUnprovenTransaction(ctx, recipe.balancingTransaction);
@@ -69,7 +69,7 @@ export async function balanceFinalizedTransaction(
 function makeBalanceFunctionsWithTokenKinds(
   connection: WalletConnection,
   ttlMs: number,
-  tokenKindsToBalance?: TokenKindsToBalance
+  tokenKindsToBalance: TokenKindsToBalance
 ) {
   return {
     async balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
@@ -107,7 +107,7 @@ function makeBalanceFunctionsWithTokenKinds(
 
 /** Balances both DUST and tokens (shielded + unshielded). Use for wallets that hold DUST. */
 export function makeFullBalanceFunctions(connection: WalletConnection, ttlMs = DEFAULT_BALANCE_TTL_MS) {
-  return makeBalanceFunctionsWithTokenKinds(connection, ttlMs);
+  return makeBalanceFunctionsWithTokenKinds(connection, ttlMs, 'all');
 }
 
 /** Balances shielded and unshielded tokens only — skips DUST. Use for wallets that do not hold DUST. */
