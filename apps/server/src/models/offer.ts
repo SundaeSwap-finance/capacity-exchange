@@ -42,9 +42,17 @@ export const AdaCreateOfferRequest = Type.Object({
     pattern: '^[0-9a-fA-F]{64}$',
     description: 'Cardano transaction hash (64 hex chars) containing the UTXO',
   }),
-  utxoIndex: Type.Integer({
-    minimum: 0,
-    description: 'Output index of the UTXO within the Cardano transaction',
+  senderAddress: Type.String({
+    minLength: 1,
+    description:
+      'Cardano address of the sender; at least one transaction input must originate from this address',
+  }),
+  expectedValue: Type.Object({
+    minQuantity: Type.String({
+      minLength: 1,
+      description:
+        'Minimum lovelace the output must carry (as a decimal string); network fee is added back before comparison',
+    }),
   }),
 });
 

@@ -28,7 +28,18 @@ offerStub.createOffer = vi.fn(async (req) => ({
 const MOCK_UTXO_RESPONSE: BlockfrostTxUtxosResponse = {
   hash: VALID_TX_HASH,
   inputs: [],
-  outputs: [{ address: 'addr_test1', amount: [{ unit: 'lovelace', quantity: '5000000' }], tx_hash: VALID_TX_HASH, output_index: 0, data_hash: null, inline_datum: null, reference_script_hash: null, collateral: false }],
+  outputs: [
+    {
+      address: 'addr_test1',
+      amount: [{ unit: 'lovelace', quantity: '5000000' }],
+      tx_hash: VALID_TX_HASH,
+      output_index: 0,
+      data_hash: null,
+      inline_datum: null,
+      reference_script_hash: null,
+      collateral: false,
+    },
+  ],
 };
 
 const cardanoStub = Object.create(CardanoUtxoService.prototype) as CardanoUtxoService;
@@ -42,7 +53,13 @@ describe('POST /api/ada/offers', () => {
     });
 
     function validPayload(quoteId: string) {
-      return { quoteId, offerCurrency: 'midnight:shielded:lovelace', utxoTxHash: VALID_TX_HASH, utxoIndex: 0 };
+      return {
+        quoteId,
+        offerCurrency: 'midnight:shielded:lovelace',
+        utxoTxHash: VALID_TX_HASH,
+        senderAddress: 'addr_test1_sender',
+        expectedValue: { minQuantity: '5000000' },
+      };
     }
 
     it('returns 201 when UTXO exists', async () => {
@@ -68,18 +85,58 @@ describe('POST /api/ada/offers', () => {
       expect(res.statusCode).toBe(404);
     });
 
-    it('calls verifyUtxoExists with the provided txHash and index', async () => {
+    it('calls verifyUtxoExists with txHash, senderAddress, and sentValue', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
       const quoteId = quoteService.createQuote(1000n, []);
       await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
-        payload: { ...validPayload(quoteId), utxoTxHash: VALID_TX_HASH, utxoIndex: 2 },
+        payload: {
+          ...validPayload(quoteId),
+          senderAddress: 'addr_test1abc',
+          expectedValue: { minQuantity: '5000000' },
+        },
       });
       expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith({
         txHash: VALID_TX_HASH,
-        outputIndex: 2,
+        senderAddress: 'addr_test1abc',
+        sentValue: 5000000n,
       });
+    });
+
+    it('returns 404 when sender address does not match any input', async () => {
+      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
+      const quoteId = quoteService.createQuote(1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { ...validPayload(quoteId), senderAddress: 'addr_test1_unknown' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('passes expectedValue to verifyUtxoExists as bigint', async () => {
+      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
+      const quoteId = quoteService.createQuote(1000n, []);
+      await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { ...validPayload(quoteId), expectedValue: { minQuantity: '5000000' } },
+      });
+      expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith(
+        expect.objectContaining({ sentValue: 5000000n }),
+      );
+    });
+
+    it('returns 404 when UTXO value is below the expected minimum', async () => {
+      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
+      const quoteId = quoteService.createQuote(1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: { ...validPayload(quoteId), expectedValue: { minQuantity: '999999999' } },
+      });
+      expect(res.statusCode).toBe(404);
     });
 
     it('returns 400 for invalid quoteId', async () => {
@@ -129,7 +186,13 @@ describe('POST /api/ada/offers', () => {
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
-        payload: { quoteId, offerCurrency: 'midnight:shielded:lovelace', utxoTxHash: VALID_TX_HASH, utxoIndex: 0 },
+        payload: {
+          quoteId,
+          offerCurrency: 'midnight:shielded:lovelace',
+          utxoTxHash: VALID_TX_HASH,
+          senderAddress: 'addr_test1_sender',
+          expectedValue: { minQuantity: '5000000' },
+        },
       });
       expect(res.statusCode).toBe(501);
     });

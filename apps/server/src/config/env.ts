@@ -21,6 +21,7 @@ const AppEnvSchema = Type.Object({
   CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
   BLOCKFROST_API_KEY: Type.Optional(Type.String()),
   BLOCKFROST_BASE_URL: Type.Optional(Type.String()),
+  CARDANO_SERVER_ADDRESS: Type.Optional(Type.String()),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -48,6 +49,7 @@ export function parseAppEnv(): AppEnv {
     CAPACITY_EXCHANGE_PEER_URLS: process.env.CAPACITY_EXCHANGE_PEER_URLS,
     BLOCKFROST_API_KEY: process.env.BLOCKFROST_API_KEY,
     BLOCKFROST_BASE_URL: process.env.BLOCKFROST_BASE_URL,
+    CARDANO_SERVER_ADDRESS: process.env.CARDANO_SERVER_ADDRESS,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS

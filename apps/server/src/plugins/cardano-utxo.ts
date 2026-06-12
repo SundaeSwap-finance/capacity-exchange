@@ -9,11 +9,15 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  const { blockfrostApiKey, blockfrostBaseUrl } = fastify.config;
+  const {
+    blockfrostApiKey: apiKey,
+    blockfrostBaseUrl: baseUrl,
+    cardanoServerAddress: serverAddress,
+  } = fastify.config;
 
   const service =
-    blockfrostApiKey && blockfrostBaseUrl
-      ? new CardanoUtxoService(blockfrostApiKey, blockfrostBaseUrl, fastify.log)
+    apiKey && baseUrl && serverAddress
+      ? new CardanoUtxoService(apiKey, baseUrl, fastify.log, serverAddress)
       : null;
 
   fastify.decorate('cardanoUtxoService', service);
@@ -21,6 +25,8 @@ export default fp(async (fastify: FastifyInstance) => {
   if (service) {
     fastify.log.info("CardanoUtxoService init'd");
   } else {
-    fastify.log.debug('CardanoUtxoService not configured (BLOCKFROST_API_KEY not set)');
+    fastify.log.debug(
+      'CardanoUtxoService not configured (BLOCKFROST_API_KEY, BLOCKFROST_BASE_URL, and CARDANO_SERVER_ADDRESS must all be set)',
+    );
   }
 });
