@@ -13,6 +13,8 @@ import { hexToBytes, uint8ArrayToHex } from './hex.js';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
+type TokenKindsToBalance = 'all' | ('shielded' | 'unshielded' | 'dust')[];
+
 async function signUnprovenTransaction(ctx: WalletConnection, tx: UnprovenTransaction) {
   if (!tx.intents?.size) {
     return tx;
@@ -30,13 +32,14 @@ async function signUnboundTransaction(ctx: WalletConnection, tx: UnboundTransact
 export async function balanceUnboundTransaction(
   ctx: WalletConnection,
   tx: UnboundTransaction,
-  ttl: Date
+  ttl: Date,
+  tokenKindsToBalance?: TokenKindsToBalance
 ): Promise<FinalizedTransaction> {
   const { walletFacade, keys } = ctx;
   const recipe = await walletFacade.balanceUnboundTransaction(
     tx,
     { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    { ttl, tokenKindsToBalance: ['shielded', 'unshielded'] }
+    tokenKindsToBalance === undefined || tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
   );
   recipe.baseTransaction = await signUnboundTransaction(ctx, recipe.baseTransaction);
   if (recipe.balancingTransaction) {
@@ -48,13 +51,14 @@ export async function balanceUnboundTransaction(
 export async function balanceFinalizedTransaction(
   ctx: WalletConnection,
   tx: FinalizedTransaction,
-  ttl: Date
+  ttl: Date,
+  tokenKindsToBalance?: TokenKindsToBalance
 ): Promise<FinalizedTransaction> {
   const { walletFacade, keys } = ctx;
   const recipe = await walletFacade.balanceFinalizedTransaction(
     tx,
     { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    { ttl, tokenKindsToBalance: ['shielded', 'unshielded'] }
+    tokenKindsToBalance === undefined || tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
   );
   if (recipe.balancingTransaction) {
     recipe.balancingTransaction = await signUnprovenTransaction(ctx, recipe.balancingTransaction);
@@ -62,7 +66,11 @@ export async function balanceFinalizedTransaction(
   return await walletFacade.finalizeRecipe(recipe);
 }
 
-export function makeBalanceFunctions(connection: WalletConnection, ttlMs = DEFAULT_BALANCE_TTL_MS) {
+function makeBalanceFunctionsWithTokenKinds(
+  connection: WalletConnection,
+  ttlMs: number,
+  tokenKindsToBalance?: TokenKindsToBalance
+) {
   return {
     async balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
       const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
@@ -71,7 +79,12 @@ export function makeBalanceFunctions(connection: WalletConnection, ttlMs = DEFAU
         'pre-binding',
         hexToBytes(txHex)
       );
-      const balanced = await balanceUnboundTransaction(connection, tx, new Date(Date.now() + ttlMs));
+      const balanced = await balanceUnboundTransaction(
+        connection,
+        tx,
+        new Date(Date.now() + ttlMs),
+        tokenKindsToBalance
+      );
       return { tx: uint8ArrayToHex(balanced.serialize()) };
     },
     async balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
@@ -81,8 +94,23 @@ export function makeBalanceFunctions(connection: WalletConnection, ttlMs = DEFAU
         'binding',
         hexToBytes(txHex)
       ).bind();
-      const balanced = await balanceFinalizedTransaction(connection, tx, new Date(Date.now() + ttlMs));
+      const balanced = await balanceFinalizedTransaction(
+        connection,
+        tx,
+        new Date(Date.now() + ttlMs),
+        tokenKindsToBalance
+      );
       return { tx: uint8ArrayToHex(balanced.serialize()) };
     },
   };
+}
+
+/** Balances both DUST and tokens (shielded + unshielded). Use for wallets that hold DUST. */
+export function makeFullBalanceFunctions(connection: WalletConnection, ttlMs = DEFAULT_BALANCE_TTL_MS) {
+  return makeBalanceFunctionsWithTokenKinds(connection, ttlMs);
+}
+
+/** Balances shielded and unshielded tokens only — skips DUST. Use for wallets that do not hold DUST. */
+export function makeTokenOnlyBalanceFunctions(connection: WalletConnection, ttlMs = DEFAULT_BALANCE_TTL_MS) {
+  return makeBalanceFunctionsWithTokenKinds(connection, ttlMs, ['shielded', 'unshielded']);
 }

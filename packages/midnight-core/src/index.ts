@@ -22,7 +22,12 @@ export {
   WalletSyncTimeoutError,
   type CreateWalletFromMnemonicOptions,
 } from './wallet.js';
-export { balanceUnboundTransaction, balanceFinalizedTransaction, makeBalanceFunctions } from './balanceTransaction.js';
+export {
+  balanceUnboundTransaction,
+  balanceFinalizedTransaction,
+  makeFullBalanceFunctions,
+  makeTokenOnlyBalanceFunctions,
+} from './balanceTransaction.js';
 export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
 export type { Logger } from './logger.js';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
