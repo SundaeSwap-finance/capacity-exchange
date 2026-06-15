@@ -75,17 +75,20 @@ describe('CardanoService.verifyUtxoExists', () => {
     vi.unstubAllGlobals();
   });
 
-  it('returns the full response when all checks pass (real Blockfrost fetch)', async () => {
-    const result = await makeService().verifyUtxoExists({
-      txHash: TEST_TX_HASH,
-      senderAddress: SENDER_ADDRESS,
-      sentValue: 15_000_000n,
-    });
+  it.skipIf(!process.env.BLOCKFROST_API_KEY || process.env.BLOCKFROST_API_KEY === 'api-test-key')(
+    'returns the full response when all checks pass (real Blockfrost fetch)',
+    async () => {
+      const result = await makeService().verifyUtxoExists({
+        txHash: TEST_TX_HASH,
+        senderAddress: SENDER_ADDRESS,
+        sentValue: 15_000_000n,
+      });
 
-    expect(result).not.toBeNull();
-    expect(result!.hash).toBe(TEST_TX_HASH);
-    expect(result!.outputs.some((o) => o.address === SERVER_ADDRESS)).toBe(true);
-  });
+      expect(result).not.toBeNull();
+      expect(result!.hash).toBe(TEST_TX_HASH);
+      expect(result!.outputs.some((o) => o.address === SERVER_ADDRESS)).toBe(true);
+    },
+  );
 
   it('returns null when the transaction is not found (404)', async () => {
     mockFetch(404, { error: 'Not Found' });
