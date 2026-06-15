@@ -42,8 +42,6 @@ export {
 export { type StateStore, withPrefix } from './stateStore.js';
 export { LocalStorageStateStore } from './localStorageStateStore.js';
 export { deriveTokenColor } from './tokenColor.js';
-export { CompositeZkConfigProvider } from './compositeZkConfig.js';
-export { EmptyZkConfigProvider } from './emptyZkConfig.js';
 export {
   runCircuit,
   type Leg,
@@ -60,7 +58,6 @@ export {
   type DustAttachment,
   type FragmentOptions,
 } from './fragment.js';
-export { createDustSpend } from './dust.js';
 export { getLatestBlockTimestamp } from './blockTime.js';
 export { DEFAULT_TTL_MS, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens.js';
 export { getShieldedBalance } from './getShieldedBalance.js';
