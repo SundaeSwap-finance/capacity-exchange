@@ -27,7 +27,7 @@ interface LedgerProofData {
 
 /** compact-runtime declares the same data with its own types, so this is the
  *  one re-type at the boundary. */
-export const asLedgerProofData = (proofData: ProofData) => proofData as unknown as LedgerProofData;
+export const asLedgerProofData = (proofData: ProofData): LedgerProofData => proofData;
 
 /** Re-materialize serialized onchain-runtime contract state as ledger state. */
 export const toLedgerContractState = (serialized: Uint8Array): ContractState => ContractState.deserialize(serialized);

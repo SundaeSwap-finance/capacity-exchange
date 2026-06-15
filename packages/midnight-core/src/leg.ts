@@ -55,7 +55,11 @@ export async function runCircuit(
     privateStateId
   );
   const ctx = createCircuitContext(contractAddress, coinPublicKey, states.contractState, states.privateState);
-  const r = contract.impureCircuits[circuitName](ctx, ...args);
+  const circuit = contract.impureCircuits[circuitName];
+  if (!circuit) {
+    throw new Error(`runCircuit: contract has no circuit '${circuitName}'`);
+  }
+  const r = circuit(ctx, ...args);
   const ls = r.context.currentZswapLocalState;
   return {
     contractAddress,

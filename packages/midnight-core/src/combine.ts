@@ -35,6 +35,19 @@ interface LedgerContract {
   qc: QueryContext;
 }
 
+/** Byte-equality for two Uint8Arrays. */
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /** One ledger state and QueryContext per contract. Same-contract legs may
  *  share these only if built against the same pre-state. Mismatches throw. */
 function toLedgerContracts(legs: Leg[]): Map<string, LedgerContract> {
@@ -43,7 +56,7 @@ function toLedgerContracts(legs: Leg[]): Map<string, LedgerContract> {
   for (const leg of legs) {
     const serialized = leg.contractState.serialize();
     const seen = preStates.get(leg.contractAddress);
-    if (seen && Buffer.compare(seen, serialized) !== 0) {
+    if (seen && !bytesEqual(seen, serialized)) {
       throw new Error(
         `buildIntent: legs for contract ${leg.contractAddress.slice(0, 16)} were built against different pre-states`
       );
