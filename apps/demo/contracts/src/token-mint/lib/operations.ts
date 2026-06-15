@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { persistentHash as ledgerPersistentHash } from '@midnight-ntwrk/ledger-v8';
 import {
   AppContext,
   buildProviders,
@@ -11,6 +10,7 @@ import {
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
+import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
@@ -29,13 +29,6 @@ export function generateTokenColor(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-/** Compute the Compact persistentHash<Bytes<32>> of a 32-byte value off-chain */
-function persistentHashBytes32(value: Uint8Array): Uint8Array {
-  const alignment = [{ tag: 'atom' as const, value: { tag: 'bytes' as const, length: 32 } }];
-  const result = ledgerPersistentHash(alignment, [value]);
-  return result[0];
-}
-
 export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = false): Promise<DeployOutput> {
   const resolvedTokenColor = tokenColor ?? generateTokenColor();
   logger.info(`Deploying token-mint contract with color ${resolvedTokenColor.slice(0, 8)}...`);
@@ -45,7 +38,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
 
   // Generate random admin key and compute its persistent hash
   const adminSecretKey = crypto.randomBytes(32);
-  const adminKeyHash = persistentHashBytes32(adminSecretKey);
+  const adminKeyHash = persistentHash(Bytes32Descriptor, adminSecretKey);
   logger.info(`Generated admin key hash: ${Buffer.from(adminKeyHash).toString('hex').slice(0, 16)}...`);
 
   // Save admin secret key to disk
