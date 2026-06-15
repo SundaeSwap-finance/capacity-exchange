@@ -58,7 +58,7 @@ describe('POST /api/ada/offers', () => {
         offerCurrency: 'midnight:shielded:lovelace',
         utxoTxHash: VALID_TX_HASH,
         senderAddress: 'addr_test1_sender',
-        expectedValue: { minQuantity: '5000000' },
+        expectedValue: '5000000',
       };
     }
 
@@ -94,7 +94,7 @@ describe('POST /api/ada/offers', () => {
         payload: {
           ...validPayload(quoteId),
           senderAddress: 'addr_test1abc',
-          expectedValue: { minQuantity: '5000000' },
+          expectedValue: '5000000',
         },
       });
       expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith({
@@ -121,7 +121,7 @@ describe('POST /api/ada/offers', () => {
       await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
-        payload: { ...validPayload(quoteId), expectedValue: { minQuantity: '5000000' } },
+        payload: { ...validPayload(quoteId), expectedValue: '5000000' },
       });
       expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith(
         expect.objectContaining({ sentValue: 5000000n }),
@@ -134,7 +134,7 @@ describe('POST /api/ada/offers', () => {
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
-        payload: { ...validPayload(quoteId), expectedValue: { minQuantity: '999999999' } },
+        payload: { ...validPayload(quoteId), expectedValue: '999999999' },
       });
       expect(res.statusCode).toBe(404);
     });
@@ -191,7 +191,7 @@ describe('POST /api/ada/offers', () => {
           offerCurrency: 'midnight:shielded:lovelace',
           utxoTxHash: VALID_TX_HASH,
           senderAddress: 'addr_test1_sender',
-          expectedValue: { minQuantity: '5000000' },
+          expectedValue: '5000000',
         },
       });
       expect(res.statusCode).toBe(501);

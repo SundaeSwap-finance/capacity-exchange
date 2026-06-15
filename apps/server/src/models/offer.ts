@@ -47,12 +47,10 @@ export const AdaCreateOfferRequest = Type.Object({
     description:
       'Cardano address of the sender; at least one transaction input must originate from this address',
   }),
-  expectedValue: Type.Object({
-    minQuantity: Type.String({
-      minLength: 1,
-      description:
-        'The lovelace value (decimal string) the sender sends, disregarding the network fee',
-    }),
+  expectedValue: Type.String({
+    minLength: 1,
+    description:
+      'The lovelace value (decimal string) the sender sends, disregarding the network fee',
   }),
 });
 

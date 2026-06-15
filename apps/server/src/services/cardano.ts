@@ -49,7 +49,10 @@ export class CardanoService {
     const url = `${this.baseUrl}/txs/${ref.txHash}/utxos`;
     this.logger.debug({ txHash: ref.txHash }, 'Verifying Cardano UTXO via Blockfrost');
 
-    const res = await fetch(url, { headers: { project_id: this.apiKey } });
+    const res = await fetch(url, {
+      headers: { project_id: this.apiKey },
+      signal: AbortSignal.timeout(10_000),
+    });
 
     if (res.status === 404) {
       return null;

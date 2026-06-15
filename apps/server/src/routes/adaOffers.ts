@@ -25,7 +25,7 @@ const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     const utxoExists = await fastify.cardanoService.verifyUtxoExists({
       txHash: request.body.utxoTxHash,
       senderAddress: request.body.senderAddress,
-      sentValue: BigInt(request.body.expectedValue.minQuantity),
+      sentValue: BigInt(request.body.expectedValue),
     });
 
     if (!utxoExists) {

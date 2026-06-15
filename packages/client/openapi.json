@@ -794,17 +794,9 @@
                     "type": "string"
                   },
                   "expectedValue": {
-                    "type": "object",
-                    "required": [
-                      "minQuantity"
-                    ],
-                    "properties": {
-                      "minQuantity": {
-                        "minLength": 1,
-                        "description": "The lovelace value (decimal string) the sender sends, disregarding the network fee",
-                        "type": "string"
-                      }
-                    }
+                    "minLength": 1,
+                    "description": "The lovelace value (decimal string) the sender sends, disregarding the network fee",
+                    "type": "string"
                   }
                 }
               }
