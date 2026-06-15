@@ -6,7 +6,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import chainStatePlugin from './plugins/chain-state.js';
 import walletPlugin from './plugins/wallet-utxo.js';
 import cesWalletProviderPlugin from './plugins/ces-wallet-provider.js';
-import cardanoUtxoPlugin from './plugins/cardano-utxo.js';
+import cardanoPlugin from './plugins/cardano.js';
 import offerPlugin from './plugins/offer.js';
 import sponsorPlugin from './plugins/sponsor.js';
 import pricesPlugin from './plugins/price.js';
@@ -49,7 +49,7 @@ export async function buildApp(
   await app.register(txPlugin);
   await app.register(quotePlugin);
   await app.register(metricsPlugin);
-  await app.register(cardanoUtxoPlugin);
+  await app.register(cardanoPlugin);
   await app.register(offerPlugin);
   await app.register(sponsorPlugin);
   await registerRoutes(app);

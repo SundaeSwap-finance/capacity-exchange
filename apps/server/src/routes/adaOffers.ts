@@ -1,12 +1,13 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import { AdaCreateOfferRequest, AdaOfferSchema, OfferReply } from '../models/offer.js';
+import { replyWithOfferResult } from './offer-helpers.js';
 
 const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.post<{
     Body: typeof AdaCreateOfferRequest.static;
     Reply: typeof OfferReply.static;
   }>('/ada/offers', AdaOfferSchema, async (request, reply) => {
-    if (!fastify.cardanoUtxoService) {
+    if (!fastify.cardanoService) {
       return reply.notImplemented('ADA offers are not configured on this server');
     }
 
@@ -21,7 +22,7 @@ const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       return reply.badRequest('Invalid currency');
     }
 
-    const utxoExists = await fastify.cardanoUtxoService.verifyUtxoExists({
+    const utxoExists = await fastify.cardanoService.verifyUtxoExists({
       txHash: request.body.utxoTxHash,
       senderAddress: request.body.senderAddress,
       sentValue: BigInt(request.body.expectedValue.minQuantity),
@@ -37,25 +38,7 @@ const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       offerCurrency: request.body.offerCurrency,
     });
 
-    switch (result.status) {
-      case 'ok':
-        return reply.code(201).send(result.offer);
-      case 'insufficient-funds':
-        return reply.conflict(`Insufficient specks available for request of ${result.requested}`);
-      case 'wallet-syncing':
-        return reply.serviceUnavailable(
-          "Wallet is currently sync'ing with the network. Please try again shortly.",
-        );
-      case 'wallet-sync-failed':
-        return reply.internalServerError(
-          'Wallet sync failed. The service is unable to process requests.',
-          result.error,
-        );
-      case 'unsupported-currency':
-        return reply.badRequest(`Unsupported currency: ${result.currency}`);
-      case 'illegal-state':
-        return reply.internalServerError('Service is in an illegal state.', result.error);
-    }
+    return replyWithOfferResult(reply, result);
   });
 };
 

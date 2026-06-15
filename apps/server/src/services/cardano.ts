@@ -12,6 +12,7 @@ export interface CardanoUtxoRef {
 }
 
 export interface BlockfrostAmount {
+  // the currency unit, e.g. "lovelace" for ADA
   unit: string;
   quantity: string;
 }
@@ -36,7 +37,7 @@ export interface BlockfrostTxUtxosResponse {
 /**
  * Verifies Cardano UTXOs via the Blockfrost API.
  */
-export class CardanoUtxoService {
+export class CardanoService {
   constructor(
     private readonly apiKey: string,
     private readonly baseUrl: string,
@@ -58,8 +59,7 @@ export class CardanoUtxoService {
     }
 
     const data = (await res.json()) as BlockfrostTxUtxosResponse;
-    this.logger.debug('Blockfrost response:');
-    process.stdout.write(JSON.stringify(data, null, 2) + '\n');
+    this.logger.debug({ data }, 'Blockfrost response');
 
     const output = data.outputs.find((o) => o.address === this.serverAddress && !o.collateral);
     if (!output) {

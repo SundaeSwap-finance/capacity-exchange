@@ -30,6 +30,10 @@ jobs:
       - name: Build all packages + demo webapp
         run: task build-all
       - name: Run unit tests
+        # a live test against the preview Blockfrost API
+        # in apps/server/src/services/cardano.test.ts
+        env:
+          BLOCKFROST_API_KEY: ${{ secrets.BLOCKFROST_API_KEY_PREVIEW }}
         run: task test
 
   integ:

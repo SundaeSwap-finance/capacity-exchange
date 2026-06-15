@@ -51,7 +51,7 @@ export const AdaCreateOfferRequest = Type.Object({
     minQuantity: Type.String({
       minLength: 1,
       description:
-        'Minimum lovelace the output must carry (as a decimal string); network fee is added back before comparison',
+        'The lovelace value (decimal string) the sender sends, disregarding the network fee',
     }),
   }),
 });

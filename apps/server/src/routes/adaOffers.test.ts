@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { randomBytes } from 'crypto';
 import adaOfferRoutes from './adaOffers.js';
 import { OfferService } from '../services/offer.js';
-import { CardanoUtxoService, type BlockfrostTxUtxosResponse } from '../services/cardanoUtxo.js';
+import { CardanoService, type BlockfrostTxUtxosResponse } from '../services/cardano.js';
 import { QuoteService } from '../services/quote.js';
 import { useRouteTestApp } from './test-utils.js';
 
@@ -42,13 +42,13 @@ const MOCK_UTXO_RESPONSE: BlockfrostTxUtxosResponse = {
   ],
 };
 
-const cardanoStub = Object.create(CardanoUtxoService.prototype) as CardanoUtxoService;
+const cardanoStub = Object.create(CardanoService.prototype) as CardanoService;
 cardanoStub.verifyUtxoExists = vi.fn(async () => MOCK_UTXO_RESPONSE);
 
 describe('POST /api/ada/offers', () => {
-  describe('with cardanoUtxoService configured', () => {
+  describe('with cardanoService configured', () => {
     const app = useRouteTestApp({
-      decorations: { offerService: offerStub, quoteService, cardanoUtxoService: cardanoStub },
+      decorations: { offerService: offerStub, quoteService, cardanoService: cardanoStub },
       routes: { plugin: adaOfferRoutes, prefix: '/api' },
     });
 
@@ -175,9 +175,9 @@ describe('POST /api/ada/offers', () => {
     });
   });
 
-  describe('without cardanoUtxoService configured', () => {
+  describe('without cardanoService configured', () => {
     const app = useRouteTestApp({
-      decorations: { offerService: offerStub, quoteService, cardanoUtxoService: null },
+      decorations: { offerService: offerStub, quoteService, cardanoService: null },
       routes: { plugin: adaOfferRoutes, prefix: '/api' },
     });
 
