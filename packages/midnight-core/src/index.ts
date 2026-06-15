@@ -42,7 +42,6 @@ export {
 export { type StateStore, withPrefix } from './stateStore.js';
 export { LocalStorageStateStore } from './localStorageStateStore.js';
 export { deriveTokenColor } from './tokenColor.js';
-export { persistentHashBytes32 } from './persistentHash.js';
 export {
   runCircuit,
   type Leg,

@@ -9,7 +9,8 @@ import {
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
-import { deriveTokenColor, getShieldedBalance, persistentHashBytes32 } from '@sundaeswap/capacity-exchange-core';
+import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
+import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
@@ -37,7 +38,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
 
   // Generate random admin key and compute its persistent hash
   const adminSecretKey = crypto.randomBytes(32);
-  const adminKeyHash = persistentHashBytes32(adminSecretKey);
+  const adminKeyHash = persistentHash(Bytes32Descriptor, adminSecretKey);
   logger.info(`Generated admin key hash: ${Buffer.from(adminKeyHash).toString('hex').slice(0, 16)}...`);
 
   // Save admin secret key to disk

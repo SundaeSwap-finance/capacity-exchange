@@ -114,6 +114,9 @@ export function buildIntent(legs: Leg[], ttl: Date, ledgerParameters: LedgerPara
       new PreTranscript(ledgerContracts.get(leg.contractAddress)!.qc, asLedgerProofData(leg.proofData).publicTranscript)
   );
   const parts = partitionTranscripts(pres, ledgerParameters);
+  if (parts.length !== legs.length) {
+    throw new Error(`buildIntent: partitioned ${parts.length} transcripts for ${legs.length} legs`);
+  }
   return legs.reduce(
     (intent, leg, i) => intent.addCall(toCallPrototype(leg, operationOf(leg, ledgerContracts), parts[i])),
     Intent.new(ttl)
@@ -140,33 +143,35 @@ export function buildOffer(legs: Leg[]): UnprovenOffer | undefined {
   const outputs = legs.flatMap((leg) => leg.zswapOutputs.map((o) => ({ leg, coinInfo: ownContractCoin(leg, o) })));
   const spends = legs.flatMap((leg) => leg.zswapInputs);
 
-  const outByKey = new Map<string, { out: UnprovenOutput; coin: ReturnType<typeof toLedgerCoin> }>();
+  const outByKey = new Map<string, UnprovenOutput>();
   for (const { leg, coinInfo } of outputs) {
     const key = coinKey(coinInfo);
     if (outByKey.has(key)) {
       throw new Error(`buildOffer: duplicate mint coin ${key.slice(0, 16)} across legs`);
     }
-    const coin = toLedgerCoin(coinInfo);
-    outByKey.set(key, { out: ZswapOutput.newContractOwned(coin, 0, leg.contractAddress), coin });
+    outByKey.set(key, ZswapOutput.newContractOwned(toLedgerCoin(coinInfo), 0, leg.contractAddress));
   }
 
   let offer: UnprovenOffer | undefined;
   const add = (next: UnprovenOffer) => (offer = offer ? offer.merge(next) : next);
+  const consumed = new Set<string>();
   for (const spend of spends) {
     const key = coinKey(spend);
-    const match = outByKey.get(key);
-    if (!match) {
+    if (consumed.has(key)) {
+      throw new Error(`buildOffer: duplicate spend input ${key.slice(0, 16)} across legs`);
+    }
+    const out = outByKey.get(key);
+    if (!out) {
       throw new Error(`buildOffer: unmatched spend input ${key.slice(0, 16)} (no source coin)`);
     }
+    consumed.add(key);
     const qcoin = toLedgerTransientCoin(spend);
-    add(ZswapOffer.fromTransient(ZswapTransient.newFromContractOwnedOutput(qcoin, 0, match.out)));
+    add(ZswapOffer.fromTransient(ZswapTransient.newFromContractOwnedOutput(qcoin, 0, out)));
     outByKey.delete(key);
   }
-  // Unmatched mints stay plain outputs. type/value register the offer's deltas,
-  // which the effects check requires when the tx is finalized by bind() rather
-  // than the wallet's balancing recipe.
-  for (const { out, coin } of outByKey.values()) {
-    add(ZswapOffer.fromOutput(out, coin.type, coin.value));
+  // Mints with no matching spend stay as plain outputs.
+  for (const out of outByKey.values()) {
+    add(ZswapOffer.fromOutput(out));
   }
   return offer;
 }
