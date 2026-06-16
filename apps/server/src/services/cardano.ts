@@ -1,3 +1,4 @@
+import { BlockFrostAPI, BlockfrostServerError } from '@blockfrost/blockfrost-js';
 import { FastifyBaseLogger } from 'fastify';
 
 const LOVELACE = 'lovelace';
@@ -11,57 +12,37 @@ export interface CardanoUtxoRef {
   sentValue: bigint;
 }
 
-export interface BlockfrostAmount {
-  // the currency unit, e.g. "lovelace" for ADA
-  unit: string;
-  quantity: string;
-}
+type TxUtxos = Awaited<ReturnType<BlockFrostAPI['txsUtxos']>>;
 
-export interface BlockfrostUtxoEntry {
-  address: string;
-  amount: BlockfrostAmount[];
-  tx_hash: string;
-  output_index: number;
-  data_hash: string | null;
-  inline_datum: string | null;
-  reference_script_hash: string | null;
-  collateral: boolean;
-}
-
-export interface BlockfrostTxUtxosResponse {
-  hash: string;
-  inputs: (BlockfrostUtxoEntry & { reference: boolean })[];
-  outputs: BlockfrostUtxoEntry[];
-}
-
-/**
- * Verifies Cardano UTXOs via the Blockfrost API.
- */
 export class CardanoService {
+  private readonly api: BlockFrostAPI;
+
   constructor(
-    private readonly apiKey: string,
-    private readonly baseUrl: string,
+    apiKey: string,
+    baseUrl: string,
     private readonly logger: FastifyBaseLogger,
     private readonly serverAddress: string,
-  ) {}
+  ) {
+    this.api = new BlockFrostAPI({
+      projectId: apiKey,
+      customBackend: baseUrl,
+      requestTimeout: 10_000,
+    });
+  }
 
-  async verifyUtxoExists(ref: CardanoUtxoRef): Promise<BlockfrostTxUtxosResponse | null> {
-    const url = `${this.baseUrl}/txs/${ref.txHash}/utxos`;
+  async verifyUtxoExists(ref: CardanoUtxoRef): Promise<TxUtxos | null> {
     this.logger.debug({ txHash: ref.txHash }, 'Verifying Cardano UTXO via Blockfrost');
 
-    const res = await fetch(url, {
-      headers: { project_id: this.apiKey },
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (res.status === 404) {
-      return null;
-    }
-    if (!res.ok) {
-      throw new Error(`Blockfrost request failed with status ${res.status}`);
+    let data: TxUtxos;
+    try {
+      data = await this.api.txsUtxos(ref.txHash);
+    } catch (err) {
+      if (err instanceof BlockfrostServerError && err.status_code === 404) {
+        return null;
+      }
+      throw err;
     }
 
-    const data = (await res.json()) as BlockfrostTxUtxosResponse;
     this.logger.debug({ data }, 'Blockfrost response');
 
     const output = data.outputs.find((o) => o.address === this.serverAddress && !o.collateral);
@@ -96,8 +77,8 @@ export class CardanoService {
     return data;
   }
 
-  private calcFee(data: BlockfrostTxUtxosResponse): bigint {
-    const lovelaceSum = (entries: BlockfrostUtxoEntry[]) =>
+  private calcFee(data: TxUtxos): bigint {
+    const lovelaceSum = (entries: TxUtxos['inputs'] | TxUtxos['outputs']) =>
       entries.reduce((sum, e) => {
         const a = e.amount.find((a) => a.unit === LOVELACE);
         return sum + (a ? BigInt(a.quantity) : 0n);

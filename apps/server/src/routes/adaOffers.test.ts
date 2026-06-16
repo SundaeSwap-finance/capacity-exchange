@@ -2,7 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { randomBytes } from 'crypto';
 import adaOfferRoutes from './adaOffers.js';
 import { OfferService } from '../services/offer.js';
-import { CardanoService, type BlockfrostTxUtxosResponse } from '../services/cardano.js';
+import { CardanoService } from '../services/cardano.js';
+import type { BlockFrostAPI } from '@blockfrost/blockfrost-js';
+
+type TxUtxos = Awaited<ReturnType<BlockFrostAPI['txsUtxos']>>;
 import { QuoteService } from '../services/quote.js';
 import { useRouteTestApp } from './test-utils.js';
 
@@ -25,14 +28,13 @@ offerStub.createOffer = vi.fn(async (req) => ({
   revenueCommitted: { amount: 100n, currency: req.offerCurrency },
 }));
 
-const MOCK_UTXO_RESPONSE: BlockfrostTxUtxosResponse = {
+const MOCK_UTXO_RESPONSE: TxUtxos = {
   hash: VALID_TX_HASH,
   inputs: [],
   outputs: [
     {
       address: 'addr_test1',
       amount: [{ unit: 'lovelace', quantity: '5000000' }],
-      tx_hash: VALID_TX_HASH,
       output_index: 0,
       data_hash: null,
       inline_datum: null,

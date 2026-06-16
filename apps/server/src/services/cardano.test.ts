@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import pino from 'pino';
-import { CardanoService, type BlockfrostTxUtxosResponse } from './cardano.js';
+import { CardanoService } from './cardano.js';
+import type { BlockFrostAPI } from '@blockfrost/blockfrost-js';
 
-const logger = pino({ level: 'silent' });
+type TxUtxos = Awaited<ReturnType<BlockFrostAPI['txsUtxos']>>;
+
+const logger = pino({ level: process.env.LOG_LEVEL ?? 'silent' });
 
 const TEST_TX_HASH = 'ae8674c45b7763a549729f47c42477b16cf587b0f2ff9976d8026b047ff9ba87';
 const SERVER_ADDRESS =
@@ -31,7 +34,7 @@ function mockFetch(status: number, body: unknown) {
 // Server output: 5_000_000, change output: 700_000
 // fee = 6_000_000 - (5_000_000 + 700_000) = 300_000
 // effective = received + fee = 5_000_000 + 300_000 = 5_300_000
-const MOCK_RESPONSE: BlockfrostTxUtxosResponse = {
+const MOCK_RESPONSE: TxUtxos = {
   hash: TEST_TX_HASH,
   inputs: [
     {
@@ -50,7 +53,6 @@ const MOCK_RESPONSE: BlockfrostTxUtxosResponse = {
     {
       address: 'addr_server1',
       amount: [{ unit: 'lovelace', quantity: '5000000' }],
-      tx_hash: TEST_TX_HASH,
       output_index: 0,
       data_hash: null,
       inline_datum: null,
@@ -60,7 +62,6 @@ const MOCK_RESPONSE: BlockfrostTxUtxosResponse = {
     {
       address: 'addr_sender1',
       amount: [{ unit: 'lovelace', quantity: '700000' }],
-      tx_hash: TEST_TX_HASH,
       output_index: 1,
       data_hash: null,
       inline_datum: null,
