@@ -15,6 +15,7 @@ import {
   ZswapTransient,
   QueryContext,
   type ContractState,
+  type ShieldedCoinInfo,
   type UnprovenOffer,
   type UnprovenOutput,
   type ContractOperation,
@@ -23,7 +24,7 @@ import {
 import { communicationCommitmentRandomness } from '@midnight-ntwrk/compact-runtime';
 import { asLedgerProofData, toLedgerContractState, toLedgerCoin, toLedgerTransientCoin } from './toLedger.js';
 import { uint8ArrayToHex } from './hex.js';
-import type { Leg } from './leg.js';
+import type { Leg, EncodedInput } from './leg.js';
 
 /** Coin key for pairing a mint output with the matching spend input. */
 const coinKey = (c: { nonce: Uint8Array; color: Uint8Array; value: bigint }) =>
@@ -123,55 +124,79 @@ export function buildIntent(legs: Leg[], ttl: Date, ledgerParameters: LedgerPara
   );
 }
 
-/** The output's coin, required to be owned by the leg's own contract (the
- *  only recipient the offer assembly supports). */
-function ownContractCoin(leg: Leg, output: Leg['zswapOutputs'][number]) {
-  const { recipient } = output;
-  const ownedByLegContract = !recipient.is_left && uint8ArrayToHex(recipient.right.bytes) === leg.contractAddress;
-  if (!ownedByLegContract) {
-    throw new Error(
-      `buildOffer: output from '${leg.circuitName}' is not owned by its own contract (only contract-owned mints are supported)`
-    );
-  }
-  return output.coinInfo;
+/** Builds an output for a non-contract recipient. Injected, since the assembler
+ *  has no recipient encryption key (the coupler's burn policy supplies one). */
+export type ForeignOutputBuilder = (output: Leg['zswapOutputs'][number], coin: ShieldedCoinInfo) => UnprovenOutput;
+
+/** Outputs split by transient-eligibility: contract-owned mints (keyed, pairable)
+ *  and foreign outputs (always plain). */
+interface CollectedOutputs {
+  mints: Map<string, UnprovenOutput>;
+  foreign: UnprovenOutput[];
 }
 
-/** ONE offer over all legs' coins: each spend pairs with its matching mint as
- *  a ZswapTransient (created and consumed in-tx, off the chain tree). Unmatched
- *  mints stay plain outputs. An unmatched spend throws. */
-export function buildOffer(legs: Leg[]): UnprovenOffer | undefined {
-  const outputs = legs.flatMap((leg) => leg.zswapOutputs.map((o) => ({ leg, coinInfo: ownContractCoin(leg, o) })));
-  const spends = legs.flatMap((leg) => leg.zswapInputs);
-
-  const outByKey = new Map<string, UnprovenOutput>();
-  for (const { leg, coinInfo } of outputs) {
-    const key = coinKey(coinInfo);
-    if (outByKey.has(key)) {
+/** Build each leg output: contract-owned mints into the keyed pool, others via
+ *  buildForeign. Duplicate mint coins throw; a foreign recipient with no builder throws. */
+function collectOutputs(legs: Leg[], buildForeign?: ForeignOutputBuilder): CollectedOutputs {
+  const mints = new Map<string, UnprovenOutput>();
+  const foreign: UnprovenOutput[] = [];
+  const outputs = legs.flatMap((leg) => leg.zswapOutputs.map((output) => ({ leg, output })));
+  for (const { leg, output } of outputs) {
+    const { recipient } = output;
+    const coin = toLedgerCoin(output.coinInfo);
+    const contractOwned = !recipient.is_left && uint8ArrayToHex(recipient.right.bytes) === leg.contractAddress;
+    if (!contractOwned) {
+      if (!buildForeign) {
+        throw new Error(
+          `buildOffer: output from '${leg.circuitName}' is not contract-owned and no foreign-output builder was supplied`
+        );
+      }
+      foreign.push(buildForeign(output, coin));
+      continue;
+    }
+    const key = coinKey(output.coinInfo);
+    if (mints.has(key)) {
       throw new Error(`buildOffer: duplicate mint coin ${key.slice(0, 16)} across legs`);
     }
-    outByKey.set(key, ZswapOutput.newContractOwned(toLedgerCoin(coinInfo), 0, leg.contractAddress));
+    mints.set(key, ZswapOutput.newContractOwned(coin, 0, leg.contractAddress));
   }
+  return { mints, foreign };
+}
 
-  let offer: UnprovenOffer | undefined;
-  const add = (next: UnprovenOffer) => (offer = offer ? offer.merge(next) : next);
+/** Pair each spend with its matching mint as a transient, removing the paired
+ *  mint. Only contract-owned mints are passed in, so a transient is never built
+ *  from a foreign output. Duplicate or unmatched spend throws. */
+function takeTransients(spends: EncodedInput[], mints: Map<string, UnprovenOutput>): UnprovenOffer[] {
+  const transients: UnprovenOffer[] = [];
   const consumed = new Set<string>();
   for (const spend of spends) {
     const key = coinKey(spend);
     if (consumed.has(key)) {
       throw new Error(`buildOffer: duplicate spend input ${key.slice(0, 16)} across legs`);
     }
-    const out = outByKey.get(key);
+    const out = mints.get(key);
     if (!out) {
       throw new Error(`buildOffer: unmatched spend input ${key.slice(0, 16)} (no source coin)`);
     }
     consumed.add(key);
+    mints.delete(key);
     const qcoin = toLedgerTransientCoin(spend);
-    add(ZswapOffer.fromTransient(ZswapTransient.newFromContractOwnedOutput(qcoin, 0, out)));
-    outByKey.delete(key);
+    transients.push(ZswapOffer.fromTransient(ZswapTransient.newFromContractOwnedOutput(qcoin, 0, out)));
   }
-  // Mints with no matching spend stay as plain outputs.
-  for (const out of outByKey.values()) {
-    add(ZswapOffer.fromOutput(out));
-  }
-  return offer;
+  return transients;
+}
+
+/** One offer over all legs' coins: spends paired with their mints as transients,
+ *  leftover mints and foreign outputs emitted plain. */
+export function buildOffer(legs: Leg[], buildForeign?: ForeignOutputBuilder): UnprovenOffer | undefined {
+  const { mints, foreign } = collectOutputs(legs, buildForeign);
+  const transients = takeTransients(
+    legs.flatMap((leg) => leg.zswapInputs),
+    mints
+  );
+  const plain = [...mints.values(), ...foreign].map((out) => ZswapOffer.fromOutput(out));
+  return [...transients, ...plain].reduce<UnprovenOffer | undefined>(
+    (offer, next) => (offer ? offer.merge(next) : next),
+    undefined
+  );
 }

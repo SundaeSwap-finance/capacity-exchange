@@ -50,7 +50,7 @@ export {
   type EncodedOutput,
   type EncodedInput,
 } from './leg.js';
-export { buildIntent, buildOffer } from './combine.js';
+export { buildIntent, buildOffer, type ForeignOutputBuilder } from './combine.js';
 export {
   buildFragmentTx,
   buildDustIntent,
