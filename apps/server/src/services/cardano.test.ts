@@ -11,7 +11,7 @@ vi.mock('@blockfrost/blockfrost-js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@blockfrost/blockfrost-js')>();
   return {
     ...actual,
-     
+
     BlockFrostAPI: vi.fn().mockImplementation(function (this: any) {
       this.txsUtxos = txsUtxosMock;
     }),
