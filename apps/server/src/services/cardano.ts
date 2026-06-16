@@ -40,6 +40,9 @@ export class CardanoService {
       if (err instanceof BlockfrostServerError && err.status_code === 404) {
         return null;
       }
+      if (err instanceof BlockfrostServerError) {
+        throw new Error(`Blockfrost request failed with status ${err.status_code}`);
+      }
       throw err;
     }
 

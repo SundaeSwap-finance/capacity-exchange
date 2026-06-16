@@ -1,9 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import pino from 'pino';
 import { CardanoService } from './cardano.js';
-import type { BlockFrostAPI } from '@blockfrost/blockfrost-js';
+import { BlockFrostAPI, BlockfrostServerError } from '@blockfrost/blockfrost-js';
 
 type TxUtxos = Awaited<ReturnType<BlockFrostAPI['txsUtxos']>>;
+
+const txsUtxosMock = vi.fn<BlockFrostAPI['txsUtxos']>();
+
+vi.mock('@blockfrost/blockfrost-js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@blockfrost/blockfrost-js')>();
+  return {
+    ...actual,
+     
+    BlockFrostAPI: vi.fn().mockImplementation(function (this: any) {
+      this.txsUtxos = txsUtxosMock;
+    }),
+  };
+});
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? 'silent' });
 
@@ -19,14 +32,13 @@ function makeService(serverAddress = SERVER_ADDRESS) {
   return new CardanoService(apiKey, baseUrl, logger, serverAddress);
 }
 
-function mockFetch(status: number, body: unknown) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => ({
-      status,
-      ok: status >= 200 && status < 300,
-      json: async () => body,
-    })),
+function mockTxsUtxos(data: TxUtxos) {
+  txsUtxosMock.mockResolvedValue(data);
+}
+
+function mockTxsUtxosError(status_code: number) {
+  txsUtxosMock.mockRejectedValue(
+    new BlockfrostServerError({ status_code, message: 'Error', error: 'Error', url: '' }),
   );
 }
 
@@ -73,7 +85,7 @@ const MOCK_RESPONSE: TxUtxos = {
 
 describe('CardanoService.verifyUtxoExists', () => {
   beforeEach(() => {
-    vi.unstubAllGlobals();
+    txsUtxosMock.mockReset();
   });
 
   it.skipIf(!process.env.BLOCKFROST_API_KEY || process.env.BLOCKFROST_API_KEY === 'api-test-key')(
@@ -92,7 +104,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   );
 
   it('returns null when the transaction is not found (404)', async () => {
-    mockFetch(404, { error: 'Not Found' });
+    mockTxsUtxosError(404);
     const result = await makeService().verifyUtxoExists({
       txHash: 'a'.repeat(64),
       senderAddress: 'addr_sender1',
@@ -102,7 +114,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   });
 
   it('throws when Blockfrost returns an unexpected error status', async () => {
-    mockFetch(500, { error: 'Internal Server Error' });
+    mockTxsUtxosError(500);
     await expect(
       makeService().verifyUtxoExists({
         txHash: TEST_TX_HASH,
@@ -113,7 +125,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   });
 
   it('returns null when no output is addressed to the server', async () => {
-    mockFetch(200, MOCK_RESPONSE);
+    mockTxsUtxos(MOCK_RESPONSE);
     const result = await makeService('addr_unknown_server').verifyUtxoExists({
       txHash: TEST_TX_HASH,
       senderAddress: 'addr_sender1',
@@ -123,7 +135,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   });
 
   it('returns null when no input originates from the sender address', async () => {
-    mockFetch(200, MOCK_RESPONSE);
+    mockTxsUtxos(MOCK_RESPONSE);
     const result = await makeService('addr_server1').verifyUtxoExists({
       txHash: TEST_TX_HASH,
       senderAddress: 'addr_unknown_sender',
@@ -133,7 +145,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   });
 
   it('returns null when received + fee is below sentValue', async () => {
-    mockFetch(200, MOCK_RESPONSE);
+    mockTxsUtxos(MOCK_RESPONSE);
     // effective = 5_000_000 + 300_000 = 5_300_000 < 6_000_000
     const result = await makeService('addr_server1').verifyUtxoExists({
       txHash: TEST_TX_HASH,
@@ -144,7 +156,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   });
 
   it('returns the full response when received + fee meets sentValue', async () => {
-    mockFetch(200, MOCK_RESPONSE);
+    mockTxsUtxos(MOCK_RESPONSE);
     // effective = 5_000_000 + 300_000 = 5_300_000 >= 5_300_000
     const result = await makeService('addr_server1').verifyUtxoExists({
       txHash: TEST_TX_HASH,
