@@ -22,7 +22,12 @@ export {
   WalletSyncTimeoutError,
   type CreateWalletFromMnemonicOptions,
 } from './wallet.js';
-export { balanceUnboundTransaction, balanceFinalizedTransaction, makeBalanceFunctions } from './balanceTransaction.js';
+export {
+  balanceUnboundTransaction,
+  balanceFinalizedTransaction,
+  makeFullBalanceFunctions,
+  makeTokenOnlyBalanceFunctions,
+} from './balanceTransaction.js';
 export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
 export type { Logger } from './logger.js';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
@@ -42,6 +47,15 @@ export {
 export { type StateStore, withPrefix } from './stateStore.js';
 export { LocalStorageStateStore } from './localStorageStateStore.js';
 export { deriveTokenColor, toRawTokenType } from './tokenColor.js';
+export {
+  runCircuit,
+  type Leg,
+  type LegProviders,
+  type CircuitRunner,
+  type EncodedOutput,
+  type EncodedInput,
+} from './leg.js';
+export { buildIntent, buildOffer } from './combine.js';
 export { DEFAULT_TTL_MS, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens.js';
 export { getShieldedBalance } from './getShieldedBalance.js';
 export { getLedgerParameters } from './getLedgerParameters.js';

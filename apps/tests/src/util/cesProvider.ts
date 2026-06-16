@@ -1,15 +1,15 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { capacityExchangeWalletProvider, type ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { getLedgerParameters, makeBalanceFunctions } from '@sundaeswap/capacity-exchange-core';
+import { getLedgerParameters, makeTokenOnlyBalanceFunctions } from '@sundaeswap/capacity-exchange-core';
 
 /**
  * Builds a `capacityExchangeWalletProvider` wired to `ctx` for tests, with:
- *  - `makeBalanceFunctions` balance functions (excludes dust, matching CES exchange flow requirements).
+ *  - `makeTokenOnlyBalanceFunctions` balance functions (excludes dust, matching CES exchange flow requirements).
  *  - currency selection that picks `tokenRawId` from `cesUrl`.
  *  - auto-confirm offer.
  */
 export function createTestCesProvider(ctx: AppContext, networkId: string, cesUrl: string, tokenRawId: string) {
-  const { balanceUnsealedTransaction, balanceSealedTransaction } = makeBalanceFunctions(ctx.walletContext);
+  const { balanceUnsealedTransaction, balanceSealedTransaction } = makeTokenOnlyBalanceFunctions(ctx.walletContext);
   return capacityExchangeWalletProvider({
     networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),

@@ -6,25 +6,13 @@ import {
 } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
-import {
-  Binding,
-  nativeToken,
-  PreBinding,
-  Proof,
-  SignatureEnabled,
-  Transaction,
-} from '@midnight-ntwrk/ledger-v8';
+import { nativeToken } from '@midnight-ntwrk/ledger-v8';
 
 import {
-  balanceFinalizedTransaction,
-  balanceUnboundTransaction,
-  hexToBytes,
-  uint8ArrayToHex,
+  makeTokenOnlyBalanceFunctions,
   WalletConnection,
   type WalletStateStore,
 } from '@sundaeswap/capacity-exchange-core';
-
-const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 export type WalletSyncState =
   | { status: 'syncing' }
@@ -38,6 +26,7 @@ export class WalletService {
   private readonly logger: FastifyBaseLogger;
   private readonly walletConnection: WalletConnection;
   private readonly walletStateStore: WalletStateStore;
+  private readonly balanceFns: ReturnType<typeof makeTokenOnlyBalanceFunctions>;
 
   // Holds the higher-level wallet sync state
   private _syncState: WalletSyncState = { status: 'syncing' };
@@ -53,6 +42,7 @@ export class WalletService {
     this.walletConnection = walletConnection;
     this.logger = logger;
     this.walletStateStore = walletStateStore;
+    this.balanceFns = makeTokenOnlyBalanceFunctions(walletConnection);
   }
 
   async start() {
@@ -142,34 +132,18 @@ export class WalletService {
     const state = await this.walletConnection.walletFacade.shielded.waitForSyncedState();
     return state.balances;
   }
-
+  
   public async getUnshieldedTokenBalances(): Promise<Record<string, bigint>> {
     const state = await this.walletConnection.walletFacade.unshielded.waitForSyncedState();
     return state.balances;
   }
 
-  public async balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
-    const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
-      'signature',
-      'proof',
-      'pre-binding',
-      hexToBytes(txHex),
-    );
-    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const balancedTx = await balanceUnboundTransaction(this.walletConnection, tx, ttl);
-    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
+  public balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
+    return this.balanceFns.balanceUnsealedTransaction(txHex);
   }
 
-  public async balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
-    const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-      'signature',
-      'proof',
-      'binding',
-      hexToBytes(txHex),
-    );
-    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const balancedTx = await balanceFinalizedTransaction(this.walletConnection, tx, ttl);
-    return { tx: uint8ArrayToHex(balancedTx.serialize()) };
+  public balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
+    return this.balanceFns.balanceSealedTransaction(txHex);
   }
 
   get shieldedPublicKeys() {
