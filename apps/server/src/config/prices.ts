@@ -3,7 +3,7 @@ import { Type, type Static } from '@sinclair/typebox';
 import { readFileOrError } from './files.js';
 
 const RawCurrencySchema = Type.Object({
-  type: Type.Literal('midnight:shielded'),
+  type: Type.Union([Type.Literal('midnight:shielded'), Type.Literal('midnight:unshielded')]),
   rawId: Type.String(),
 });
 

@@ -24,7 +24,12 @@ function createMockDeps() {
   } as unknown as UtxoService;
 
   const txService = {
-    createOfferTx: vi.fn(async () => ({
+    createShieldedOfferTx: vi.fn(async () => ({
+      bind: () => ({
+        serialize: () => new Uint8Array([0xde, 0xad]),
+      }),
+    })),
+    createUnshieldedOfferTx: vi.fn(async () => ({
       bind: () => ({
         serialize: () => new Uint8Array([0xde, 0xad]),
       }),
@@ -82,13 +87,13 @@ describe('OfferService', () => {
     }
     // UTXO locked only once, tx proven only once
     expect(deps.utxoService.lockUtxo).toHaveBeenCalledTimes(1);
-    expect(deps.txService.createOfferTx).toHaveBeenCalledTimes(1);
+    expect(deps.txService.createShieldedOfferTx).toHaveBeenCalledTimes(1);
   });
 
   it('coalesces concurrent requests into a single build', async () => {
     deps = createMockDeps();
     let resolveProve!: () => void;
-    (deps.txService.createOfferTx as ReturnType<typeof vi.fn>).mockImplementation(
+    (deps.txService.createShieldedOfferTx as ReturnType<typeof vi.fn>).mockImplementation(
       () =>
         new Promise((resolve) => {
           resolveProve = () =>
@@ -115,7 +120,7 @@ describe('OfferService', () => {
 
     // Both in-flight, but only one build started
     expect(deps.utxoService.lockUtxo).toHaveBeenCalledTimes(1);
-    expect(deps.txService.createOfferTx).toHaveBeenCalledTimes(1);
+    expect(deps.txService.createShieldedOfferTx).toHaveBeenCalledTimes(1);
 
     resolveProve();
     const [r1, r2] = await Promise.all([first, second]);
@@ -127,9 +132,46 @@ describe('OfferService', () => {
     }
   });
 
+  it('calls createUnshieldedOfferTx and getUnshieldedAddress for unshielded currency', async () => {
+    deps = createMockDeps();
+    (deps.priceService.getPrice as ReturnType<typeof vi.fn>).mockReturnValue({
+      status: 'ok' as const,
+      price: 2000n,
+      currency: {
+        id: 'midnight:unshielded:0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+        type: 'midnight:unshielded',
+        rawId: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+      },
+    });
+    service = new OfferService(
+      deps.utxoService,
+      deps.txService,
+      deps.priceService,
+      deps.metricsService,
+      60,
+      logger,
+    );
+
+    const request = {
+      quoteId: 'q-unshielded',
+      specks: 1000n,
+      offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
+    };
+
+    const result = await service.createOffer(request);
+
+    expect(result.status).toBe('ok');
+    expect(deps.txService.createUnshieldedOfferTx).toHaveBeenCalledTimes(1);
+    expect(deps.txService.createShieldedOfferTx).not.toHaveBeenCalled();
+    const [rawId, value] = (deps.txService.createUnshieldedOfferTx as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(rawId).toBe('0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0');
+    expect(value).toBe(2000n);
+  });
+
   it('unlocks UTXO when tx proving throws', async () => {
     deps = createMockDeps();
-    (deps.txService.createOfferTx as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+    (deps.txService.createShieldedOfferTx as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new Error('proof server down'),
     );
     service = new OfferService(

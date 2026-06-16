@@ -4,8 +4,8 @@ import { TxService } from './tx.js';
 import { Currency, PriceService } from './price.js';
 import { MetricsService } from './metrics.js';
 import { LRUCache } from 'lru-cache';
-import { createShieldedCoinInfo } from '@midnight-ntwrk/ledger-v8';
 import { recordDuration, recordCounters } from '../decorators/record-metrics.js';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 
 export interface CreateOfferRequest {
   quoteId: string;
@@ -140,13 +140,9 @@ export class OfferService {
     );
 
     const getPriceResult = this.priceService.getPrice(request.offerCurrency, request.specks);
-    if (
-      getPriceResult.status === 'unsupported-currency' ||
-      getPriceResult.currency.type !== 'midnight:shielded'
-    ) {
+    if (getPriceResult.status === 'unsupported-currency') {
       return { status: 'unsupported-currency', currency: request.offerCurrency };
     }
-
     const lockResult = this.utxoService.lockUtxo(request.specks);
     if (lockResult.status !== 'ok') {
       return lockResult;
@@ -154,14 +150,32 @@ export class OfferService {
     const lockedInfo = lockResult.value;
 
     try {
-      const coin = createShieldedCoinInfo(getPriceResult.currency.rawId, getPriceResult.price);
+      const { currency } = getPriceResult;
       const expiration = new Date(lockedInfo.expiresAtMillis);
-      const unboundTx = await this.txService.createOfferTx(
-        coin,
-        lockedInfo.spend,
-        lockedInfo.ctime,
-        expiration,
-      );
+      let unboundTx;
+      switch (currency.type) {
+        case 'midnight:shielded':
+          unboundTx = await this.txService.createShieldedOfferTx(
+            currency.rawId,
+            getPriceResult.price,
+            lockedInfo.spend,
+            lockedInfo.ctime,
+            expiration,
+            //TODO: pass in segmentId when we can
+          );
+          break;
+        case 'midnight:unshielded':
+          unboundTx = await this.txService.createUnshieldedOfferTx(
+            toRawTokenType(currency.rawId),
+            getPriceResult.price,
+            lockedInfo.spend,
+            lockedInfo.ctime,
+            expiration,
+          );
+          break;
+        default:
+          throw new Error(`Unsupported currency type: ${(currency as { type: string }).type}`);
+      }
       const tx = unboundTx.bind();
 
       const offer: OfferResponse = {

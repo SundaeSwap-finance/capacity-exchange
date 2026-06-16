@@ -1,14 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import {
-  type CoinPublicKey,
-  type EncPublicKey,
-  SignatureEnabled,
-  type Proof,
-  type Binding,
-  Transaction,
-  PreBinding,
-} from '@midnight-ntwrk/ledger-v8';
+import { type CoinPublicKey, type EncPublicKey } from '@midnight-ntwrk/ledger-v8';
 import type { BalanceSealedTransaction, BalanceUnsealedTransaction } from '@sundaeswap/capacity-exchange-providers';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';
@@ -16,14 +8,10 @@ import type { WalletCapabilities, WalletInfoState } from '../wallet/types';
 import {
   connectedApiProvidersAdapter,
   createConnectedAPI,
+  makeTokenOnlyBalanceFunctions,
   type WalletIdentity,
-  uint8ArrayToHex,
-  balanceFinalizedTransaction,
-  balanceUnboundTransaction,
 } from '@sundaeswap/capacity-exchange-core';
 import { useNetworkConfig } from '../../config';
-
-const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 export interface WalletProviders {
   walletProvider: WalletProvider;
@@ -43,34 +31,7 @@ function buildSeedWalletProviders(
     encryptionPublicKey: keys.shieldedSecretKeys.encryptionPublicKey,
   };
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
-
-  const balanceUnsealedTransaction: BalanceUnsealedTransaction = async (txHex) => {
-    const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
-      'signature',
-      'proof',
-      'pre-binding',
-      Buffer.from(txHex, 'hex')
-    );
-    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const balancedTx = await balanceUnboundTransaction(walletConnection, tx, ttl);
-    return {
-      tx: uint8ArrayToHex(balancedTx.serialize()),
-    };
-  };
-
-  const balanceSealedTransaction: BalanceSealedTransaction = async (txHex) => {
-    const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-      'signature',
-      'proof',
-      'binding',
-      Buffer.from(txHex, 'hex')
-    );
-    const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-    const balancedTx = await balanceFinalizedTransaction(walletConnection, tx, ttl);
-    return {
-      tx: uint8ArrayToHex(balancedTx.serialize()),
-    };
-  };
+  const { balanceUnsealedTransaction, balanceSealedTransaction } = makeTokenOnlyBalanceFunctions(walletConnection);
 
   return { walletProvider, midnightProvider, balanceUnsealedTransaction, balanceSealedTransaction };
 }
