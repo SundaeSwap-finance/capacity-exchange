@@ -9,7 +9,7 @@
 #   - Servers 2..N: hold DUST and serve it directly.
 #
 # Servers 2..N share the same price config (price-config.<network>.json in apps/server/).
-# If it doesn't exist, it is generated from DERIVED_TOKEN_COLOR + TOKEN_MINT_ADDRESS.
+# If it doesn't exist, it is generated from DERIVED_TOKEN_COLOR + UNSHIELDED_TOKEN_COLOR + TOKEN_MINT_ADDRESS.
 #
 # Ports:
 #   - Server i API:       BASE_PORT + i - 1           (default base: 3000)
@@ -17,13 +17,14 @@
 #
 # Wallet env vars accept either a file path or a raw mnemonic/seed string.
 # Raw strings are written to a temp file automatically.
-#   - No-dust Server: CES_WALLET_MNEMONIC_NO_DUST_PREVIEW (default: wallet-mnemonic-no-dust.<network>.txt)
+#   - No-dust Server: CES_WALLET_MNEMONIC_NO_DUST (default: wallet-mnemonic-no-dust.<network>.txt)
 #               or CES_WALLET_SEED_NO_DUST_PREVIEW as fallback.
 #   - Server i: CES_WALLET{i}_MNEMONIC or CES_WALLET{i}_SEED env var,
 #               falling back to wallet-mnemonic-{i}.<network>.txt or wallet-seed-{i}.<network>.hex
 #
 # Required env vars (only if price config needs to be generated):
 #   - DERIVED_TOKEN_COLOR
+#   - UNSHIELDED_TOKEN_COLOR
 #   - TOKEN_MINT_ADDRESS
 #
 # Optional env vars:
@@ -70,12 +71,12 @@ write_wallet_files() {
   local old_umask
   old_umask="$(umask)"
   umask 077
-  if [ -n "${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" ]; then
-    printf '%s\n' "$CES_WALLET_MNEMONIC_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+  if [ -n "${CES_WALLET_MNEMONIC_NO_DUST:-}" ] && [ ! -f "$CES_WALLET_MNEMONIC_NO_DUST" ]; then
+    printf '%s\n' "$CES_WALLET_MNEMONIC_NO_DUST" > "$CES_SERVER_NO_DUST_MNEMONIC_FILE"
    
     # track CES_SERVER_NO_DUST_MNEMONIC_FILE file for cleanup
     CREATED_FILES+=("$CES_SERVER_NO_DUST_MNEMONIC_FILE")
-    export CES_WALLET_MNEMONIC_NO_DUST_PREVIEW="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
+    export CES_WALLET_MNEMONIC_NO_DUST="$CES_SERVER_NO_DUST_MNEMONIC_FILE"
   elif [ -n "${CES_WALLET_SEED_NO_DUST_PREVIEW:-}" ] && [ ! -f "$CES_WALLET_SEED_NO_DUST_PREVIEW" ]; then
     printf '%s\n' "$CES_WALLET_SEED_NO_DUST_PREVIEW" > "$CES_SERVER_NO_DUST_SEED_FILE"
     
@@ -129,7 +130,7 @@ validate_args() {
 }
 
 resolve_server1_wallet() {
-  local mnemonic="${CES_WALLET_MNEMONIC_NO_DUST_PREVIEW:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}"
+  local mnemonic="${CES_WALLET_MNEMONIC_NO_DUST:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}"
   local seed="${CES_WALLET_SEED_NO_DUST_PREVIEW:-}"
   if [ -f "$mnemonic" ]; then
     NO_DUST_WALLET_KEY="WALLET_MNEMONIC_FILE"
@@ -138,7 +139,7 @@ resolve_server1_wallet() {
     NO_DUST_WALLET_KEY="WALLET_SEED_FILE"
     NO_DUST_WALLET_VAL="$seed"
   else
-    log "ERROR: No-dust Server wallet not found. Set CES_WALLET_MNEMONIC_NO_DUST_PREVIEW or CES_WALLET_SEED_NO_DUST_PREVIEW."
+    log "ERROR: No-dust Server wallet not found. Set CES_WALLET_MNEMONIC_NO_DUST or CES_WALLET_SEED_NO_DUST_PREVIEW."
     exit 1
   fi
 }
@@ -174,17 +175,21 @@ generate_funded_price_config() {
     log "ERROR: Cannot generate $CES_SERVER_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS"
+  local unshielded_arg=""
+  [ -n "${UNSHIELDED_TOKEN_COLOR:-}" ] && unshielded_arg="--unshielded-token-color $UNSHIELDED_TOKEN_COLOR"
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" \
+    $unshielded_arg
 }
 
 generate_server1_price_config() {
   [ -f "$CES_SERVER_NO_DUST_PRICE_CONFIG" ] && return
   log "Generating server 1 price config (with peer.maxPrices for DUST fallback)"
-  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
-    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
+  if [ -z "${DERIVED_TOKEN_COLOR:-}" ] || [ -z "${UNSHIELDED_TOKEN_COLOR:-}" ] || [ -z "${TOKEN_MINT_ADDRESS:-}" ]; then
+    log "ERROR: Cannot generate $CES_SERVER_NO_DUST_PRICE_CONFIG — set DERIVED_TOKEN_COLOR, UNSHIELDED_TOKEN_COLOR and TOKEN_MINT_ADDRESS"
     exit 1
   fi
-  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" --with-peer-max-prices
+  bun "$ROOT_DIR/scripts/gen-price-config.ts" "$CES_SERVER_NO_DUST_PRICE_CONFIG" "$DERIVED_TOKEN_COLOR" "$TOKEN_MINT_ADDRESS" \
+    --unshielded-token-color "$UNSHIELDED_TOKEN_COLOR" --with-peer-max-prices
 }
 
 check_balances() {
@@ -283,6 +288,7 @@ print_summary() {
   for ((i=2; i<=N; i++)); do
     local port=$((BASE_PORT + i - 1))
     local dashboard_port=$((BASE_DASHBOARD_PORT + i - 1))
+    echo
     log "  Server $i: http://localhost:$port  (funded wallet)  dashboard: http://localhost:$dashboard_port"
   done
 }

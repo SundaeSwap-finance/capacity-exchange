@@ -133,6 +133,11 @@ export class WalletService {
     return state.balances;
   }
 
+  public async getUnshieldedTokenBalances(): Promise<Record<string, bigint>> {
+    const state = await this.walletConnection.walletFacade.unshielded.waitForSyncedState();
+    return state.balances;
+  }
+
   public balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
     return this.balanceFns.balanceUnsealedTransaction(txHex);
   }

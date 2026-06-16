@@ -1,5 +1,6 @@
 import type { FastifyBaseLogger } from 'fastify';
 import type { ExchangePrice, PromptForCurrency } from '@sundaeswap/capacity-exchange-providers';
+import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import type { WalletService } from '../services/wallet.js';
 import type { PeerPriceService } from '../services/peerPrice.js';
 
@@ -55,7 +56,21 @@ async function selectFromCandidates(
   walletService: WalletService,
   peerPriceService: PeerPriceService,
 ): ReturnType<PromptForCurrency> {
-  const balances = await walletService.getShieldedTokenBalances();
+  const [shieldedBalances, unshieldedBalances] = await Promise.all([
+    walletService.getShieldedTokenBalances(),
+    walletService.getUnshieldedTokenBalances(),
+  ]);
+
+  const balances: Record<string, bigint> = {};
+  for (const ep of prices) {
+    const { currency } = ep.price;
+    balances[currency.id] =
+      currency.type === 'midnight:unshielded'
+        ? // unshielded balances are keyed by raw token type
+          (unshieldedBalances[toRawTokenType(currency.rawId)] ?? 0n)
+        : (shieldedBalances[currency.rawId] ?? 0n);
+  }
+
   const candidates = filterCandidates(prices, balances, peerPriceService, dustRequired, log);
 
   if (candidates.length === 0) {
@@ -106,7 +121,7 @@ function filterCandidates(
       );
       continue;
     }
-    const balance = balances[price.price.currency.rawId] ?? 0n;
+    const balance = balances[price.price.currency.id] ?? 0n;
     if (balance < offered) {
       log.debug(
         {

@@ -28,6 +28,17 @@ function makePrice(rawId: string, amount: string, quoteId = `q-${rawId}`): Excha
   };
 }
 
+function makeUnshieldedPrice(rawId: string, amount: string, quoteId = `q-${rawId}`): ExchangePrice {
+  return {
+    quoteId,
+    exchangeApi: {} as ExchangePrice['exchangeApi'],
+    price: {
+      amount,
+      currency: { id: `midnight:unshielded:${rawId}`, type: 'midnight:unshielded', rawId },
+    },
+  };
+}
+
 function makeFormula(
   rawId: string,
   basePrice: string,
@@ -42,9 +53,27 @@ function makeFormula(
   };
 }
 
-function makeWalletService(balances: Record<string, bigint>): WalletService {
+function makeUnshieldedFormula(
+  rawId: string,
+  basePrice: string,
+  rateNumerator = '1',
+  rateDenominator = '1',
+): RawPriceFormula {
   return {
-    getShieldedTokenBalances: async () => balances,
+    currency: { type: 'midnight:unshielded', rawId },
+    basePrice,
+    rateNumerator,
+    rateDenominator,
+  };
+}
+
+function makeWalletService(
+  shieldedBalances: Record<string, bigint>,
+  unshieldedBalances: Record<string, bigint> = {},
+): WalletService {
+  return {
+    getShieldedTokenBalances: async () => shieldedBalances,
+    getUnshieldedTokenBalances: async () => unshieldedBalances,
   } as unknown as WalletService;
 }
 
@@ -161,6 +190,71 @@ describe('createAutoSelectCurrency', () => {
     expect(result).toMatchObject({
       status: 'selected',
       exchangePrice: { price: { currency: { rawId: 'aaa' } } },
+    });
+  });
+
+  it('selects an unshielded offer when the server has sufficient unshielded balance', async () => {
+    const peerPriceService = new PeerPriceService([
+      makeUnshieldedFormula('tusdm', '1000', '0', '1'),
+    ]);
+    const walletService = makeWalletService({}, { tusdm: 10_000n });
+    const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
+
+    const result = await select([makeUnshieldedPrice('tusdm', '500')], DUST_REQUIRED, REQ_ID);
+    expect(result).toMatchObject({
+      status: 'selected',
+      exchangePrice: { price: { currency: { type: 'midnight:unshielded', rawId: 'tusdm' } } },
+    });
+  });
+
+  it('skips unshielded offer when unshielded balance is insufficient', async () => {
+    const peerPriceService = new PeerPriceService([
+      makeUnshieldedFormula('tusdm', '1000', '0', '1'),
+    ]);
+    const walletService = makeWalletService({}, { tusdm: 0n });
+    const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
+
+    await expect(
+      select([makeUnshieldedPrice('tusdm', '500')], DUST_REQUIRED, REQ_ID),
+    ).resolves.toEqual({
+      status: 'no-eligible',
+    });
+  });
+
+  it('selects unshielded offer when rawId has network prefix (e.g. unshielded-preview<hex>)', async () => {
+    const bareHex = 'a'.repeat(64);
+    const prefixedRawId = `unshielded-preview${bareHex}`;
+    const peerPriceService = new PeerPriceService([
+      makeUnshieldedFormula(prefixedRawId, '1000', '0', '1'),
+    ]);
+    // Wallet balances keyed by bare hex (no prefix), as the Midnight SDK returns them
+    const walletService = makeWalletService({}, { [bareHex]: 10_000n });
+    const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
+
+    const result = await select([makeUnshieldedPrice(prefixedRawId, '500')], DUST_REQUIRED, REQ_ID);
+    expect(result).toMatchObject({
+      status: 'selected',
+      exchangePrice: { price: { currency: { type: 'midnight:unshielded', rawId: prefixedRawId } } },
+    });
+  });
+
+  it('picks shielded over unshielded when shielded has a better ratio', async () => {
+    const peerPriceService = new PeerPriceService([
+      makeFormula('ada', '1000', '0', '1'), // shielded max 1000
+      makeUnshieldedFormula('tusdm', '10', '0', '1'), // unshielded max 10
+    ]);
+    // ada offered 2 vs max 1000 (ratio 0.002); tusdm offered 9 vs max 10 (ratio 0.9)
+    const walletService = makeWalletService({ ada: 10_000n }, { tusdm: 10_000n });
+    const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
+
+    const result = await select(
+      [makePrice('ada', '2'), makeUnshieldedPrice('tusdm', '9')],
+      DUST_REQUIRED,
+      REQ_ID,
+    );
+    expect(result).toMatchObject({
+      status: 'selected',
+      exchangePrice: { price: { currency: { rawId: 'ada' } } },
     });
   });
 
