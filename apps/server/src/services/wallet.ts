@@ -132,7 +132,7 @@ export class WalletService {
     const state = await this.walletConnection.walletFacade.shielded.waitForSyncedState();
     return state.balances;
   }
-  
+
   public async getUnshieldedTokenBalances(): Promise<Record<string, bigint>> {
     const state = await this.walletConnection.walletFacade.unshielded.waitForSyncedState();
     return state.balances;
