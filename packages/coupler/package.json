@@ -12,7 +12,8 @@
     "clean": "rm -rf out .midnight-private-state .wallet-state .contracts.*.json",
     "compile": "bunx run-compactc coupler.compact out",
     "build": "tsc --noEmit",
-    "coupler:deploy": "bun src/cli/deploy.ts"
+    "coupler:deploy": "bun src/cli/deploy.ts",
+    "test": "vitest run"
   },
   "keywords": [
     "midnight",
@@ -31,11 +32,13 @@
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
-    "commander": "^14.0.2"
+    "commander": "^14.0.2",
+    "rxjs": "^7"
   },
   "devDependencies": {
     "@midnight-ntwrk/midnight-js-compact": "4.0.1",
     "@types/node": "22.10.7",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

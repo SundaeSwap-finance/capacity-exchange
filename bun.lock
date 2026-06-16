@@ -266,11 +266,13 @@
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
         "commander": "^14.0.2",
+        "rxjs": "^7",
       },
       "devDependencies": {
         "@midnight-ntwrk/midnight-js-compact": "4.0.1",
         "@types/node": "22.10.7",
         "typescript": "^5.9.3",
+        "vitest": "^4.0.18",
       },
     },
     "packages/midnight-core": {

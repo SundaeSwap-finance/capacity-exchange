@@ -57,5 +57,5 @@ export circuit absorb(h: Bytes<32>, hPrime: Bytes<32>, nonce: Bytes<32>): [] {
     color: tokenType(domainSep, kernel.self()),
     value: 1
   };
-  sendImmediateShielded(coin, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()), 1);
+  sendImmediateShielded(coin, shieldedBurnAddress(), 1);
 }

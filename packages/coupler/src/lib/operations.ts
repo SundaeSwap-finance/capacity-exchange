@@ -1,3 +1,3 @@
 export { deploy, type DeployOutput } from './deploy.js';
 export { generateSwapSecrets, provisionSPrime, type SwapSecrets } from './secrets.js';
-export { verify, type VerifyOutput } from './verify.js';
+export { verifyAtTx, type VerifyOutput } from './verify.js';

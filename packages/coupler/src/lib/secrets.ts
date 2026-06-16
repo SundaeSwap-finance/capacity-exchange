@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { persistentHashBytes32 } from '@sundaeswap/capacity-exchange-core';
+import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
 
 /** The User's per-swap secrets and their commitments (h, h'). */
@@ -17,7 +17,12 @@ export interface SwapSecrets {
 export function generateSwapSecrets(): SwapSecrets {
   const s = crypto.randomBytes(32);
   const sPrime = crypto.randomBytes(32);
-  return { s, sPrime, h: persistentHashBytes32(s), hPrime: persistentHashBytes32(sPrime) };
+  return {
+    s,
+    sPrime,
+    h: persistentHash(Bytes32Descriptor, s),
+    hPrime: persistentHash(Bytes32Descriptor, sPrime),
+  };
 }
 
 /** Store s' in the User's local witness store so mintReveal can consume it.

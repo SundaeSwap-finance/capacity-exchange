@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { ledger } from './contract.js';
@@ -8,12 +9,12 @@ export interface VerifyOutput {
   lastHsp: string;
 }
 
-/** Read the disclosed cells (what the LP extracts to claim). */
-export async function verify(ctx: AppContext, contractAddress: string): Promise<VerifyOutput> {
-  const state = await ctx.publicDataProvider.queryContractState(contractAddress);
-  if (!state) {
-    throw new Error(`Contract not found at ${contractAddress}`);
-  }
+/** Read the disclosed cells for a specific coupling tx (txId-keyed), so a later
+ *  reveal cannot clobber them. The read the LP uses to extract s. */
+export async function verifyAtTx(ctx: AppContext, contractAddress: string, txId: string): Promise<VerifyOutput> {
+  const state = await firstValueFrom(
+    ctx.publicDataProvider.contractStateObservable(contractAddress, { type: 'txId', txId, inclusive: true })
+  );
   const cells = ledger(state.data);
   return { contractAddress, lastS: uint8ArrayToHex(cells.lastS), lastHsp: uint8ArrayToHex(cells.lastHsp) };
 }
