@@ -55,7 +55,15 @@ export {
   type EncodedOutput,
   type EncodedInput,
 } from './leg.js';
-export { buildIntent, buildOffer } from './combine.js';
+export { buildIntent, buildOffer, type ForeignOutputBuilder } from './combine.js';
+export {
+  buildFragmentTx,
+  buildDustIntent,
+  buildDustFragmentTx,
+  type DustAttachment,
+  type FragmentOptions,
+} from './fragment.js';
+export { getLatestBlockTimestamp } from './blockTime.js';
 export { DEFAULT_TTL_MS, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens.js';
 export { getShieldedBalance } from './getShieldedBalance.js';
 export { getLedgerParameters } from './getLedgerParameters.js';

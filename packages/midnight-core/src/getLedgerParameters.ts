@@ -1,4 +1,5 @@
 import { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import { indexerQuery } from './indexer.js';
 
 const query = `
     query BlockQuery {
@@ -16,18 +17,15 @@ export const getLedgerParameters = async (
   graphQLEndpoint: string,
   options: GetLedgerParametersOptions = {}
 ): Promise<LedgerParameters> => {
-  const response = await fetch(graphQLEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query,
-    }),
-    signal: options.signal,
-  });
-
-  const result = await response.json();
-  const bytes = Buffer.from(result.data.block.ledgerParameters, 'hex');
-  return LedgerParameters.deserialize(bytes);
+  const data = await indexerQuery<{ block?: { ledgerParameters?: string } }>(
+    graphQLEndpoint,
+    query,
+    'block.ledgerParameters',
+    options.signal
+  );
+  const hex = data.block?.ledgerParameters;
+  if (typeof hex !== 'string') {
+    throw new Error(`Indexer returned no block.ledgerParameters (got: ${JSON.stringify(data)})`);
+  }
+  return LedgerParameters.deserialize(Buffer.from(hex, 'hex'));
 };
