@@ -25,10 +25,15 @@ export function generateSwapSecrets(): SwapSecrets {
   };
 }
 
-/** Store s' in the User's local witness store so mintReveal can consume it.
- *  Returns the private state id the coupling must use. */
-export async function provisionSPrime(ctx: AppContext, sPrime: Uint8Array): Promise<string> {
-  const privateStateId = crypto.randomBytes(32).toString('hex');
-  await ctx.privateStateProvider.set(privateStateId, createPrivateState(sPrime));
-  return privateStateId;
+/** Store s' in the user's witness store so mintReveal can read it. The dapp calls
+ *  this at escrow time. setContractAddress is required, the durable provider scopes
+ *  keys by contract address. */
+export async function provisionSPrime(
+  ctx: AppContext,
+  couplerAddress: string,
+  swapId: string,
+  sPrime: Uint8Array
+): Promise<void> {
+  ctx.privateStateProvider.setContractAddress(couplerAddress);
+  await ctx.privateStateProvider.set(swapId, createPrivateState(sPrime));
 }
