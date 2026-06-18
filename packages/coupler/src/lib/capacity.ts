@@ -1,6 +1,11 @@
 import { firstValueFrom } from 'rxjs';
 import { AppContext, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
-import { getLatestBlockTimestamp, getLedgerParameters, buildFragmentTx } from '@sundaeswap/capacity-exchange-core';
+import {
+  getLatestBlockTimestamp,
+  getLedgerParameters,
+  buildFragmentTx,
+  type DustAttachment,
+} from '@sundaeswap/capacity-exchange-core';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
@@ -22,14 +27,17 @@ export interface CapacityFragment {
 }
 
 /**
- * LP side. Fix the LP-owned terms (ttl, chain params) over the request, then build,
- * dust-fund, and prove the capacity fragment: absorb and the LP's dust spend, sealed
- * in one intent so the dust can't be lifted onto another tx. The LP never sees the user's tx.
+ * LP side. Fix the LP-owned terms (ttl, chain params) over the request, then build
+ * and prove the capacity fragment: absorb and the supplied dust payment, sealed in
+ * one intent so the dust can't be lifted onto another tx. The dust spend is passed
+ * in, not selected here, so the caller that owns the dust UTXOs and their in-use
+ * tracking decides which to spend. The LP never sees the user's tx.
  */
 export async function buildCapacityFragment(
   ctx: AppContext,
   couplerAddress: string,
-  request: CouplingRequest
+  request: CouplingRequest,
+  dust: DustAttachment
 ): Promise<CapacityFragment> {
   const ledgerParameters = await getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl);
   const priced: PricedCoupling = {
@@ -40,11 +48,7 @@ export async function buildCapacityFragment(
 
   const absorbLeg = await buildAbsorbLeg(ctx, couplerAddress, priced.h, priced.hPrime, priced.nonce);
 
-  const ctime = await getLatestBlockTimestamp(ctx.config.network.endpoints.indexerHttpUrl);
-  const dustState = (await firstValueFrom(ctx.walletContext.walletFacade.state())).dust;
-  const spend = createDustSpend(dustState, ctx.walletContext.keys.dustSecretKey, priced.vFeeSpecks, ctime);
-
-  const fragment = buildFragmentTx([absorbLeg], priced.ttl, ledgerParameters, { dust: { spend, ctime } });
+  const fragment = buildFragmentTx([absorbLeg], priced.ttl, ledgerParameters, { dust });
   logger.info(`Proving capacity fragment (absorb and ${priced.vFeeSpecks} specks dust)...`);
   const proofProvider = httpClientProofProvider(
     ctx.config.network.endpoints.proofServerUrl,
@@ -60,10 +64,16 @@ export interface CapacityProvider {
   requestCapacity(couplerAddress: string, request: CouplingRequest): Promise<CapacityFragment>;
 }
 
-/** Local LP: builds and dust-funds the capacity in this process. Swap for a
- *  CES-server impl in production without touching the user side. */
+/** Local LP: selects a dust UTXO in this process, with no in-use tracking, then
+ *  builds the fragment. A server provider selects dust against its own usage
+ *  tracking instead. Swap for a CES-server impl without touching the user side. */
 export function localCapacityProvider(ctx: AppContext): CapacityProvider {
   return {
-    requestCapacity: (couplerAddress, request) => buildCapacityFragment(ctx, couplerAddress, request),
+    requestCapacity: async (couplerAddress, request) => {
+      const ctime = await getLatestBlockTimestamp(ctx.config.network.endpoints.indexerHttpUrl);
+      const dustState = (await firstValueFrom(ctx.walletContext.walletFacade.state())).dust;
+      const spend = createDustSpend(dustState, ctx.walletContext.keys.dustSecretKey, request.vFeeSpecks, ctime);
+      return buildCapacityFragment(ctx, couplerAddress, request, { spend, ctime });
+    },
   };
 }
