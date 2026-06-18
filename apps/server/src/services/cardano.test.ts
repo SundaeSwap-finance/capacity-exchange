@@ -83,7 +83,7 @@ const MOCK_RESPONSE: TxUtxos = {
   ],
 };
 
-describe('CardanoService.verifyUtxoExists', () => {
+describe('CardanoService.verifyPayment', () => {
   beforeEach(() => {
     txsUtxosMock.mockReset();
   });
@@ -91,7 +91,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   it.skipIf(!process.env.BLOCKFROST_API_KEY || process.env.BLOCKFROST_API_KEY === 'api-test-key')(
     'returns the full response when all checks pass (real Blockfrost fetch)',
     async () => {
-      const result = await makeService().verifyUtxoExists({
+      const result = await makeService().verifyPayment({
         txHash: TEST_TX_HASH,
         senderAddress: SENDER_ADDRESS,
         sentValue: 15_000_000n,
@@ -105,7 +105,7 @@ describe('CardanoService.verifyUtxoExists', () => {
 
   it('returns null when the transaction is not found (404)', async () => {
     mockTxsUtxosError(404);
-    const result = await makeService().verifyUtxoExists({
+    const result = await makeService().verifyPayment({
       txHash: 'a'.repeat(64),
       senderAddress: 'addr_sender1',
       sentValue: 1n,
@@ -116,7 +116,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   it('throws when Blockfrost returns an unexpected error status', async () => {
     mockTxsUtxosError(500);
     await expect(
-      makeService().verifyUtxoExists({
+      makeService().verifyPayment({
         txHash: TEST_TX_HASH,
         senderAddress: 'addr_sender1',
         sentValue: 1n,
@@ -126,7 +126,7 @@ describe('CardanoService.verifyUtxoExists', () => {
 
   it('returns null when no output is addressed to the server', async () => {
     mockTxsUtxos(MOCK_RESPONSE);
-    const result = await makeService('addr_unknown_server').verifyUtxoExists({
+    const result = await makeService('addr_unknown_server').verifyPayment({
       txHash: TEST_TX_HASH,
       senderAddress: 'addr_sender1',
       sentValue: 1n,
@@ -136,7 +136,7 @@ describe('CardanoService.verifyUtxoExists', () => {
 
   it('returns null when no input originates from the sender address', async () => {
     mockTxsUtxos(MOCK_RESPONSE);
-    const result = await makeService('addr_server1').verifyUtxoExists({
+    const result = await makeService('addr_server1').verifyPayment({
       txHash: TEST_TX_HASH,
       senderAddress: 'addr_unknown_sender',
       sentValue: 1n,
@@ -147,7 +147,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   it('returns null when received + fee is below sentValue', async () => {
     mockTxsUtxos(MOCK_RESPONSE);
     // effective = 5_000_000 + 300_000 = 5_300_000 < 6_000_000
-    const result = await makeService('addr_server1').verifyUtxoExists({
+    const result = await makeService('addr_server1').verifyPayment({
       txHash: TEST_TX_HASH,
       senderAddress: 'addr_sender1',
       sentValue: 6_000_000n,
@@ -158,7 +158,7 @@ describe('CardanoService.verifyUtxoExists', () => {
   it('returns the full response when received + fee meets sentValue', async () => {
     mockTxsUtxos(MOCK_RESPONSE);
     // effective = 5_000_000 + 300_000 = 5_300_000 >= 5_300_000
-    const result = await makeService('addr_server1').verifyUtxoExists({
+    const result = await makeService('addr_server1').verifyPayment({
       txHash: TEST_TX_HASH,
       senderAddress: 'addr_sender1',
       sentValue: 5_300_000n,

@@ -22,7 +22,7 @@ const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       return reply.badRequest('Invalid currency');
     }
 
-    const utxoExists = await fastify.cardanoService.verifyUtxoExists({
+    const utxoExists = await fastify.cardanoService.verifyPayment({
       txHash: request.body.utxoTxHash,
       senderAddress: request.body.senderAddress,
       sentValue: BigInt(request.body.expectedValue),

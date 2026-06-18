@@ -45,7 +45,7 @@ const MOCK_UTXO_RESPONSE: TxUtxos = {
 };
 
 const cardanoStub = Object.create(CardanoService.prototype) as CardanoService;
-cardanoStub.verifyUtxoExists = vi.fn(async () => MOCK_UTXO_RESPONSE);
+cardanoStub.verifyPayment = vi.fn(async () => MOCK_UTXO_RESPONSE);
 
 describe('POST /api/ada/offers', () => {
   describe('with cardanoService configured', () => {
@@ -65,7 +65,7 @@ describe('POST /api/ada/offers', () => {
     }
 
     it('returns 201 when UTXO exists', async () => {
-      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
+      vi.mocked(cardanoStub.verifyPayment).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
       const quoteId = quoteService.createQuote(1000n, []);
       const res = await app.get().inject({
         method: 'POST',
@@ -77,7 +77,7 @@ describe('POST /api/ada/offers', () => {
     });
 
     it('returns 404 when Cardano UTXO does not exist', async () => {
-      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
+      vi.mocked(cardanoStub.verifyPayment).mockResolvedValueOnce(null);
       const quoteId = quoteService.createQuote(1000n, []);
       const res = await app.get().inject({
         method: 'POST',
@@ -87,8 +87,8 @@ describe('POST /api/ada/offers', () => {
       expect(res.statusCode).toBe(404);
     });
 
-    it('calls verifyUtxoExists with txHash, senderAddress, and sentValue', async () => {
-      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
+    it('calls verifyPayment with txHash, senderAddress, and sentValue', async () => {
+      vi.mocked(cardanoStub.verifyPayment).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
       const quoteId = quoteService.createQuote(1000n, []);
       await app.get().inject({
         method: 'POST',
@@ -99,7 +99,7 @@ describe('POST /api/ada/offers', () => {
           expectedValue: '5000000',
         },
       });
-      expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith({
+      expect(cardanoStub.verifyPayment).toHaveBeenCalledWith({
         txHash: VALID_TX_HASH,
         senderAddress: 'addr_test1abc',
         sentValue: 5000000n,
@@ -107,7 +107,7 @@ describe('POST /api/ada/offers', () => {
     });
 
     it('returns 404 when sender address does not match any input', async () => {
-      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
+      vi.mocked(cardanoStub.verifyPayment).mockResolvedValueOnce(null);
       const quoteId = quoteService.createQuote(1000n, []);
       const res = await app.get().inject({
         method: 'POST',
@@ -117,21 +117,21 @@ describe('POST /api/ada/offers', () => {
       expect(res.statusCode).toBe(404);
     });
 
-    it('passes expectedValue to verifyUtxoExists as bigint', async () => {
-      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
+    it('passes expectedValue to verifyPayment as bigint', async () => {
+      vi.mocked(cardanoStub.verifyPayment).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
       const quoteId = quoteService.createQuote(1000n, []);
       await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
         payload: { ...validPayload(quoteId), expectedValue: '5000000' },
       });
-      expect(cardanoStub.verifyUtxoExists).toHaveBeenCalledWith(
+      expect(cardanoStub.verifyPayment).toHaveBeenCalledWith(
         expect.objectContaining({ sentValue: 5000000n }),
       );
     });
 
     it('returns 404 when UTXO value is below the expected minimum', async () => {
-      vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
+      vi.mocked(cardanoStub.verifyPayment).mockResolvedValueOnce(null);
       const quoteId = quoteService.createQuote(1000n, []);
       const res = await app.get().inject({
         method: 'POST',

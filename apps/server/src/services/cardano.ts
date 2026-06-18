@@ -3,18 +3,16 @@ import { FastifyBaseLogger } from 'fastify';
 
 const LOVELACE = 'lovelace';
 
-export interface CardanoUtxoRef {
-  txHash: string;
-  // required to check from where the ADA came from
-  senderAddress: string;
-  // the amount of lovelace sent by the sender, in the transaction
-  // (excluding network fee, which is added back for comparison since it comes out of the same output)
-  sentValue: bigint;
-}
+import { ChainService, PaymentRef } from './paymentRef.js';
+
+// sentValue excludes the network fee — CardanoService adds it back before comparing
+export type CardanoUtxoRef = PaymentRef;
 
 type TxUtxos = Awaited<ReturnType<BlockFrostAPI['txsUtxos']>>;
 
-export class CardanoService {
+export type { TxUtxos };
+
+export class CardanoService implements ChainService<CardanoUtxoRef, TxUtxos> {
   private readonly api: BlockFrostAPI;
 
   constructor(
@@ -30,7 +28,7 @@ export class CardanoService {
     });
   }
 
-  async verifyUtxoExists(ref: CardanoUtxoRef): Promise<TxUtxos | null> {
+  async verifyPayment(ref: CardanoUtxoRef): Promise<TxUtxos | null> {
     this.logger.debug({ txHash: ref.txHash }, 'Verifying Cardano UTXO via Blockfrost');
 
     let data: TxUtxos;

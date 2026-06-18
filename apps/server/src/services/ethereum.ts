@@ -1,27 +1,21 @@
 /**
- * POC: Ethereum balance / TX verification service.
+ * Ethereum payment verification service.
  *
- * Mirrors CardanoService (services/cardano.ts) but for Ethereum.
- * Uses ethers.js JsonRpcProvider instead of Blockfrost.
+ * Mirrors CardanoService; verifies a transaction
+ * was sent to the server address with the expected value, polling until
+ * confirmed or the max wait time is exceeded.
  *
- * Install: bun add ethers  (in apps/server)
+ * Uses ethers.js JsonRpcProvider.
  */
 
 import { JsonRpcProvider, type TransactionResponse } from 'ethers';
 import { FastifyBaseLogger } from 'fastify';
+import { ChainService, PaymentRef } from './paymentRef.js';
 
-/** 1 ETH in wei — Ethereum's equivalent of 1 ADA in lovelace. */
-export const WEI_PER_ETH = 1_000_000_000_000_000_000n;
+// sentValue is in wei; gas fees are paid separately and do not reduce the received value
+export type EthTxRef = PaymentRef;
 
-export interface EthTxRef {
-  txHash: string;
-  /** ETH address that sent the payment (0x…). */
-  senderAddress: string;
-  /** Minimum ETH value expected, in wei. */
-  sentValue: bigint;
-}
-
-export class EthereumService {
+export class EthereumService implements ChainService<EthTxRef, TransactionResponse> {
   private readonly provider: JsonRpcProvider;
 
   constructor(
@@ -45,26 +39,48 @@ export class EthereumService {
    * Note: unlike Cardano/lovelace, Ethereum gas fees are paid separately by
    * the sender and do NOT reduce the received value — no fee adjustment needed.
    */
-  async verifyTxExists(ref: EthTxRef): Promise<TransactionResponse | null> {
+  async verifyPayment(
+    ref: EthTxRef,
+    { pollIntervalMs = 10_000, maxWaitMs = 3 * 60_000 } = {},
+  ): Promise<TransactionResponse | null> {
     this.logger.debug({ txHash: ref.txHash }, 'Verifying Ethereum TX via JSON-RPC');
 
+    const deadline = Date.now() + maxWaitMs;
+
     let tx: TransactionResponse | null;
-    try {
-      tx = await this.provider.getTransaction(ref.txHash);
-    } catch (err) {
-      throw new Error(`JSON-RPC request failed: ${err instanceof Error ? err.message : err}`);
+    while (true) {
+      try {
+        tx = await this.provider.getTransaction(ref.txHash);
+        this.logger.debug({ tx }, 'getTransaction result');
+      } catch (err) {
+        throw new Error(`JSON-RPC request failed: ${err instanceof Error ? err.message : err}`);
+      }
+
+      if (!tx) {
+        this.logger.warn({ txHash: ref.txHash }, 'Transaction not found');
+        return null;
+      }
+
+      this.logger.debug({ to: tx.to, from: tx.from, value: tx.value.toString() }, 'TX found');
+
+      if (tx.blockNumber !== null) {
+        break;
+      }
+
+      if (Date.now() + pollIntervalMs > deadline) {
+        this.logger.warn({ txHash: ref.txHash }, 'Transaction still pending after max wait');
+        return null;
+      }
+
+      this.logger.info({ txHash: ref.txHash, pollIntervalMs }, 'Transaction pending, retrying');
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     }
 
-    if (!tx) {
-      this.logger.warn({ txHash: ref.txHash }, 'Transaction not found');
-      return null;
-    }
-
-    this.logger.debug({ to: tx.to, from: tx.from, value: tx.value.toString() }, 'TX found');
-
-    // Must be mined (blockNumber is null for pending TXs)
-    if (tx.blockNumber === null) {
-      this.logger.warn({ txHash: ref.txHash }, 'Transaction is still pending');
+    if (tx.data !== '0x') {
+      this.logger.warn(
+        { txHash: ref.txHash, data: tx.data },
+        'Transaction is not a plain ETH transfer',
+      );
       return null;
     }
 
@@ -88,7 +104,7 @@ export class EthereumService {
     if (received < ref.sentValue) {
       this.logger.warn(
         { sentValue: ref.sentValue.toString(), received: received.toString() },
-        'Transaction value below expected minimum',
+        'Transaction value below expected',
       );
       return null;
     }
