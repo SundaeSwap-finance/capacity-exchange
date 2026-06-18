@@ -1,12 +1,16 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
-import { CreateOfferRequest, OfferReply, OfferSchema } from '../models/offer.js';
+import { AdaCreateOfferRequest, AdaOfferSchema, OfferReply } from '../models/offer.js';
 import { replyWithOfferResult } from './offer-helpers.js';
 
-const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
+const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.post<{
-    Body: typeof CreateOfferRequest.static;
+    Body: typeof AdaCreateOfferRequest.static;
     Reply: typeof OfferReply.static;
-  }>('/offers', OfferSchema, async (request, reply) => {
+  }>('/ada/offers', AdaOfferSchema, async (request, reply) => {
+    if (!fastify.cardanoService) {
+      return reply.notImplemented('ADA offers are not configured on this server');
+    }
+
     const quoteResult = fastify.quoteService.getQuote(request.body.quoteId);
     if (quoteResult.status === 'invalid') {
       return reply.badRequest('Invalid quote ID');
@@ -16,6 +20,16 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     }
     if (quoteResult.quote.currency !== 'DUST') {
       return reply.badRequest('Invalid currency');
+    }
+
+    const utxoExists = await fastify.cardanoService.verifyUtxoExists({
+      txHash: request.body.utxoTxHash,
+      senderAddress: request.body.senderAddress,
+      sentValue: BigInt(request.body.expectedValue),
+    });
+
+    if (!utxoExists) {
+      return reply.notFound('Cardano UTXO not found');
     }
 
     const result = await fastify.offerService.createOffer({
@@ -28,4 +42,4 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   });
 };
 
-export default offerRoutes;
+export default adaOfferRoutes;

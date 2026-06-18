@@ -16,17 +16,52 @@ export const CreateOfferResponse = Type.Object({
 
 export const OfferReply = Type.Union([CreateOfferResponse, ErrorResponse]);
 
+const commonOfferResponse = {
+  201: CreateOfferResponse,
+  400: ErrorResponse,
+  409: ErrorResponse,
+  410: ErrorResponse,
+  500: ErrorResponse,
+  503: ErrorResponse,
+};
+
 // For /api/offers
 export const OfferSchema = {
   schema: {
     body: CreateOfferRequest,
+    response: commonOfferResponse,
+  },
+};
+
+export const AdaCreateOfferRequest = Type.Object({
+  quoteId: Type.String({ minLength: 1 }),
+  offerCurrency: Type.String({ minLength: 1 }),
+  utxoTxHash: Type.String({
+    minLength: 64,
+    maxLength: 64,
+    pattern: '^[0-9a-fA-F]{64}$',
+    description: 'Cardano transaction hash (64 hex chars) containing the UTXO',
+  }),
+  senderAddress: Type.String({
+    minLength: 1,
+    description:
+      'Cardano address of the sender; at least one transaction input must originate from this address',
+  }),
+  expectedValue: Type.String({
+    minLength: 1,
+    description:
+      'The lovelace value (decimal string) the sender sends, disregarding the network fee',
+  }),
+});
+
+// For /api/ada/offers
+export const AdaOfferSchema = {
+  schema: {
+    body: AdaCreateOfferRequest,
     response: {
-      201: CreateOfferResponse,
-      400: ErrorResponse,
-      409: ErrorResponse,
-      410: ErrorResponse,
-      500: ErrorResponse,
-      503: ErrorResponse,
+      ...commonOfferResponse,
+      404: ErrorResponse,
+      501: ErrorResponse,
     },
   },
 };

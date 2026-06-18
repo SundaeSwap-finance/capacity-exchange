@@ -6,6 +6,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import chainStatePlugin from './plugins/chain-state.js';
 import walletPlugin from './plugins/wallet-utxo.js';
 import cesWalletProviderPlugin from './plugins/ces-wallet-provider.js';
+import cardanoPlugin from './plugins/cardano.js';
 import offerPlugin from './plugins/offer.js';
 import sponsorPlugin from './plugins/sponsor.js';
 import pricesPlugin from './plugins/price.js';
@@ -18,6 +19,7 @@ import observability from './plugins/observability.js';
 import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/offers.js';
+import adaOfferRoutes from './routes/adaOffers.js';
 import sponsorRoutes from './routes/sponsor.js';
 import priceRoutes from './routes/prices.js';
 import metricsRoutes from './routes/metrics.js';
@@ -47,6 +49,7 @@ export async function buildApp(
   await app.register(txPlugin);
   await app.register(quotePlugin);
   await app.register(metricsPlugin);
+  await app.register(cardanoPlugin);
   await app.register(offerPlugin);
   await app.register(sponsorPlugin);
   await registerRoutes(app);
@@ -69,6 +72,7 @@ export async function registerRoutes(app: FastifyInstance) {
   app.register(healthRoutes, { prefix: '/health' });
   app.register(priceRoutes, { prefix: '/api' });
   app.register(offerRoutes, { prefix: '/api' });
+  app.register(adaOfferRoutes, { prefix: '/api' });
   app.register(sponsorRoutes, { prefix: '/api' });
   app.register(metricsRoutes, { prefix: '/api' });
 }
