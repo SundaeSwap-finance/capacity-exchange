@@ -7,4 +7,18 @@ export {
   type CapacityFragment,
   type CapacityProvider,
 } from './capacity.js';
+export {
+  couplerWalletProvider,
+  type CouplerWalletProviderConfig,
+  type CouplingRecord,
+  type SwapBinding,
+} from './walletProvider.js';
+export {
+  prepareUserFragment,
+  finalizeCoupling,
+  type PrepareUserFragmentParams,
+  type PreparedUserFragment,
+  type FinalizeCouplingParams,
+  type CoupleOutput,
+} from './userCoupling.js';
 export { verifyAtTx, type VerifyOutput } from './verify.js';
