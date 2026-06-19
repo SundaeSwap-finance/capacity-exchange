@@ -29,23 +29,26 @@ describe('generateSwapSecrets', () => {
 });
 
 describe('provisionSPrime', () => {
+  const COUPLER = 'coupler-test-address';
   const makeCtx = () => {
     const privateStateProvider = inMemoryPrivateStateProvider();
     return { privateStateProvider, ctx: { privateStateProvider } as unknown as AppContext };
   };
 
-  it('round-trips s-prime through the private-state store', async () => {
+  it('stores s-prime under the given swapId', async () => {
     const { privateStateProvider, ctx } = makeCtx();
     const { sPrime } = generateSwapSecrets();
-    const id = await provisionSPrime(ctx, sPrime);
-    expect(await privateStateProvider.get(id)).toEqual(createPrivateState(sPrime));
+    await provisionSPrime(ctx, COUPLER, 'swap-1', sPrime);
+    expect(await privateStateProvider.get('swap-1')).toEqual(createPrivateState(sPrime));
   });
 
-  it('uses a distinct id per call', async () => {
-    const { ctx } = makeCtx();
-    const { sPrime } = generateSwapSecrets();
-    const id1 = await provisionSPrime(ctx, sPrime);
-    const id2 = await provisionSPrime(ctx, sPrime);
-    expect(id1).not.toEqual(id2);
+  it('keeps distinct swaps under distinct ids without overwriting', async () => {
+    const { privateStateProvider, ctx } = makeCtx();
+    const a = generateSwapSecrets();
+    const b = generateSwapSecrets();
+    await provisionSPrime(ctx, COUPLER, 'swap-a', a.sPrime);
+    await provisionSPrime(ctx, COUPLER, 'swap-b', b.sPrime);
+    expect(await privateStateProvider.get('swap-a')).toEqual(createPrivateState(a.sPrime));
+    expect(await privateStateProvider.get('swap-b')).toEqual(createPrivateState(b.sPrime));
   });
 });

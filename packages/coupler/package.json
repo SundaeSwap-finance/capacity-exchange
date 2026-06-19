@@ -30,6 +30,7 @@
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.1",
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.1",
     "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": "3.0.0",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "commander": "^14.0.2",
