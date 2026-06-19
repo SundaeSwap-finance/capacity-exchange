@@ -1,15 +1,11 @@
-import { AppContext, buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { uint8ArrayToHex, getLedgerParameters, buildOffer, buildFragmentTx } from '@sundaeswap/capacity-exchange-core';
 import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
-import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import type { ZKConfigProvider, UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import { COUPLER_OUT_DIR, CouplerContract } from './contract.js';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { buildRevealLeg, buildAbsorbLeg, burnOutputBuilder } from './couplerLegs.js';
 import { type CapacityFragment } from './capacity.js';
 import { type CouplingRequest } from './couplingParams.js';
-
-const logger = createLogger(import.meta);
+import { type CouplingEnv } from './env.js';
 
 export interface PrepareUserFragmentParams {
   couplerAddress: string;
@@ -58,26 +54,29 @@ export interface CoupleOutput {
  * at the final merge. Uses the user's own params/ttl, so nothing waits on the LP.
  */
 export async function prepareUserFragment(
-  ctx: AppContext,
+  env: CouplingEnv,
   params: PrepareUserFragmentParams
 ): Promise<PreparedUserFragment> {
   const { couplerAddress, swapId, s, hPrime, nonce, vFeeSpecks, ttl } = params;
   const h = persistentHash(Bytes32Descriptor, s);
-  const ledgerParameters = await getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl);
-  const prove = (zkConfig: ZKConfigProvider<string>) =>
-    httpClientProofProvider(ctx.config.network.endpoints.proofServerUrl, zkConfig);
+  const ledgerParameters = await getLedgerParameters(env.indexerHttpUrl);
 
   // Reveal fragment: mintReveal and the offer pairing its mint with the absorb
   // spend (the absorb call is the LP's). Coupler keys only.
-  logger.info('Proving reveal fragment...');
-  const absorbLeg = await buildAbsorbLeg(ctx, couplerAddress, h, hPrime, nonce);
-  const providers = buildProviders<CouplerContract>(ctx, COUPLER_OUT_DIR);
-  providers.privateStateProvider.setContractAddress(couplerAddress);
-  const { leg: revealLeg, hs } = await buildRevealLeg(providers, couplerAddress, swapId, s, nonce);
+  env.logger.info('Proving reveal fragment...');
+  const walletProvider = { getCoinPublicKey: () => env.coinPublicKey };
+  const absorbLeg = await buildAbsorbLeg(walletProvider, env.publicDataProvider, couplerAddress, h, hPrime, nonce);
+  env.privateStateProvider.setContractAddress(couplerAddress);
+  const revealProviders = {
+    walletProvider,
+    publicDataProvider: env.publicDataProvider,
+    privateStateProvider: env.privateStateProvider,
+  };
+  const { leg: revealLeg, hs } = await buildRevealLeg(revealProviders, couplerAddress, swapId, s, nonce);
   const revealFragment = buildFragmentTx([revealLeg], ttl, ledgerParameters, {
     offer: buildOffer([revealLeg, absorbLeg], burnOutputBuilder),
   });
-  const proven = await prove(new NodeZkConfigProvider<string>(COUPLER_OUT_DIR)).proveTx(revealFragment);
+  const proven = await httpClientProofProvider(env.proofServerUrl, env.zkConfigProvider).proveTx(revealFragment);
 
   return { proven, request: { h, hPrime, nonce, vFeeSpecks }, hs };
 }
@@ -87,23 +86,23 @@ export async function prepareUserFragment(
  * and submit, no wallet balancing. A wrong-commitment capacity carries an absorb
  * coin that matches no mint, so bind rejects it.
  */
-export async function finalizeCoupling(ctx: AppContext, params: FinalizeCouplingParams): Promise<CoupleOutput> {
+export async function finalizeCoupling(env: CouplingEnv, params: FinalizeCouplingParams): Promise<CoupleOutput> {
   const { couplerAddress, prepared, capacity } = params;
   const { priced } = capacity;
 
-  logger.info('Merging fragments, binding, submitting...');
+  env.logger.info('Merging fragments, binding, submitting...');
   const bound = capacity.proven.merge(prepared.proven).bind();
-  const txId = await ctx.midnightProvider.submitTx(bound);
+  const txId = await env.midnightProvider.submitTx(bound);
   // A watch failure (e.g. timeout) means we could not confirm, not that the tx failed.
-  const fin = await ctx.publicDataProvider.watchForTxData(txId).catch((e) => {
-    logger.warn(`watch failed: ${(e as Error).message}`);
+  const fin = await env.publicDataProvider.watchForTxData(txId).catch((e) => {
+    env.logger.warn(`watch failed: ${(e as Error).message}`);
     return undefined;
   });
   if (fin && fin.status !== 'SucceedEntirely') {
     throw new Error(`finalizeCoupling: coupling failed on chain: ${fin.status} (tx ${txId})`);
   }
   const status = fin?.status ?? `submitted:${txId}`;
-  logger.info(`Coupling with capacity ${status}`);
+  env.logger.info(`Coupling with capacity ${status}`);
   return {
     contractAddress: couplerAddress,
     txHash: txId,
