@@ -8,11 +8,15 @@ export {
   type CapacityProvider,
 } from './capacity.js';
 export {
-  couplerWalletProvider,
-  type CouplerWalletProviderConfig,
-  type CouplingRecord,
+  createCoupler,
+  type Coupler,
+  type CouplerConfig,
   type SwapBinding,
-} from './walletProvider.js';
+  type CoupleOpts,
+  type CoupleResult,
+} from './coupler.js';
+export { type CouplingEnv } from './env.js';
+export { couplingEnvFromAppContext } from './couplingEnvNode.js';
 export {
   prepareUserFragment,
   finalizeCoupling,
