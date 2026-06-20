@@ -273,6 +273,7 @@
         "rxjs": "^7",
       },
       "devDependencies": {
+        "@capacity-exchange/demo-contracts": "workspace:^",
         "@midnight-ntwrk/midnight-js-compact": "4.0.1",
         "@types/node": "22.10.7",
         "typescript": "^5.9.3",
