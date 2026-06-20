@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 import { createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { inMemoryPrivateStateProvider, getLedgerParameters, buildFragmentTx } from '@sundaeswap/capacity-exchange-core';
-import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
+import { inMemoryPrivateStateProvider } from '@sundaeswap/capacity-exchange-core';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import {
   generateSwapSecrets,
@@ -15,7 +14,7 @@ import {
   type CouplingEnv,
 } from '../lib/operations.js';
 import { COUPLER_OUT_DIR } from '../lib/contract.js';
-import { buildCounterIncrementLeg } from '../lib/counter.js';
+import { buildCounterIncrementTx } from '../lib/counter.js';
 
 const logger = createLogger(import.meta);
 
@@ -43,8 +42,8 @@ export interface CoupleDeps {
 }
 
 /** One swap as a dapp would run it: generate the secret, provision s' under a swapId,
- *  prove a counter op, couple it (the LP funds the dust, the user nothing), and submit the
- *  bound tx. */
+ *  build and prove a counter op the normal SDK way, couple it (the LP funds the dust, the
+ *  user nothing), and submit the bound tx. */
 export async function coupleOnce(deps: CoupleDeps, label: string): Promise<Coupling> {
   const { ctx, userCtx, couplerAddress, counterAddress } = deps;
   logger.info(`--- ${label} ---`);
@@ -59,11 +58,8 @@ export async function coupleOnce(deps: CoupleDeps, label: string): Promise<Coupl
     vFeeSpecks: VFEE_SPECKS,
   });
 
-  const op = await buildCounterIncrementLeg(userCtx, counterAddress);
-  const ledgerParameters = await getLedgerParameters(userCtx.config.network.endpoints.indexerHttpUrl);
-  const userTx = await httpClientProofProvider(userCtx.config.network.endpoints.proofServerUrl, op.zkConfig).proveTx(
-    buildFragmentTx([op.leg], new Date(Date.now() + USER_TTL_MS), ledgerParameters)
-  );
+  // The dapp builds and proves its own op the normal way, no special tx construction.
+  const userTx = await buildCounterIncrementTx(userCtx, counterAddress);
   const { bound } = await coupler.couple(userTx, { swapId, s: secrets.s, hPrime: secrets.hPrime });
   logger.info('Submitting...');
   const txId = await userCtx.midnightProvider.submitTx(bound);
@@ -72,10 +68,10 @@ export async function coupleOnce(deps: CoupleDeps, label: string): Promise<Coupl
     logger.warn(`watch failed: ${(e as Error).message}`);
     return undefined;
   });
-  if (fin && fin.status !== 'SucceedEntirely') {
-    throw new Error(`coupling failed on chain: ${fin.status} (tx ${txId})`);
+  if (!fin || fin.status !== 'SucceedEntirely') {
+    throw new Error(`coupling failed on chain: ${fin?.status ?? 'submitted'} (tx ${txId})`);
   }
-  return { swapId, secrets, txHash: txId, status: fin?.status ?? `submitted:${txId}` };
+  return { swapId, secrets, txHash: txId, status: fin.status };
 }
 
 /** Negative test: a capacity built with the WRONG h' must not compose with a matching
