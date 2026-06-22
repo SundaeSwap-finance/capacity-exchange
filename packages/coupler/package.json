@@ -13,6 +13,7 @@
     "compile": "bunx run-compactc coupler.compact out",
     "build": "tsc --noEmit",
     "coupler:deploy": "bun src/cli/deploy.ts",
+    "coupler:e2e": "bun src/cli/e2e.ts",
     "test": "vitest run"
   },
   "keywords": [
@@ -37,6 +38,7 @@
     "rxjs": "^7"
   },
   "devDependencies": {
+    "@capacity-exchange/demo-contracts": "workspace:^",
     "@midnight-ntwrk/midnight-js-compact": "4.0.1",
     "@types/node": "22.10.7",
     "typescript": "^5.9.3",
