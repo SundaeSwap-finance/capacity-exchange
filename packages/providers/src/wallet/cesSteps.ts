@@ -11,7 +11,7 @@ import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTra
 import type { ChainStateProvider } from './chainStateProvider.js';
 import { isOfferExpired } from './utils.js';
 import { hexToBytes, toRawTokenType } from '@sundaeswap/capacity-exchange-core';
-import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi.js';
+import { createCesApis, getDefaultRegistryAddress, resolveCesUrls, type CesApi } from './exchangeApi.js';
 import { fetchRegistryCesUrls } from './registryLookup.js';
 import { fetchPricesFromExchanges } from './priceService.js';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
@@ -172,11 +172,26 @@ export interface FetchCesPricesResult {
   specksRequired: bigint;
 }
 
+/** Supplies the exchange clients to fetch prices from. */
+export type CesApiResolver = () => Promise<CesApi[]>;
+
+/** Registry members plus the network defaults and any extra URLs, as live clients. */
+export function registryCesApiResolver(
+  networkId: string,
+  chainStateProvider: ChainStateProvider,
+  additionalCapacityExchangeUrls: string[]
+): CesApiResolver {
+  return async () => {
+    const registeredUrls = await resolveRegisteredCesUrls(networkId, chainStateProvider);
+    const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls, registeredUrls);
+    return createCesApis(urls);
+  };
+}
+
 export interface FetchCesPricesOptions {
-  networkId: string;
   chainStateProvider: ChainStateProvider;
-  additionalCapacityExchangeUrls: string[];
   margin: number;
+  resolveCesApis: CesApiResolver;
   /** Currency types this wallet can pay in: the native ones plus every registered
    *  bridgeless payer. Anything else is filtered out of the prices offered. */
   payableCurrencyTypes: ReadonlySet<string>;
@@ -184,7 +199,7 @@ export interface FetchCesPricesOptions {
 
 /**
  * Fetches CES prices for a transaction.
- * Calculates the DUST required (with margin) and queries all exchanges for prices.
+ * Calculates the DUST required (with margin) and queries the resolved exchanges for prices.
  *
  * @throws {CapacityExchangeNoPricesAvailableError} if no prices are returned
  */
@@ -192,11 +207,9 @@ export async function fetchCesPrices(
   tx: UnboundTransaction,
   options: FetchCesPricesOptions
 ): Promise<FetchCesPricesResult> {
-  const { networkId, chainStateProvider, additionalCapacityExchangeUrls, margin, payableCurrencyTypes } = options;
+  const { chainStateProvider, margin, resolveCesApis, payableCurrencyTypes } = options;
   const specksRequired = await estimateSpecksRequired(tx, chainStateProvider, margin);
-  const registeredUrls = await resolveRegisteredCesUrls(networkId, chainStateProvider);
-  const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls, registeredUrls);
-  const prices = await fetchPricesFromExchanges(createCesApis(urls), specksRequired, payableCurrencyTypes);
+  const prices = await fetchPricesFromExchanges(await resolveCesApis(), specksRequired, payableCurrencyTypes);
 
   if (prices.length === 0) {
     throw new CapacityExchangeNoPricesAvailableError();

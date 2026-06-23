@@ -2,7 +2,13 @@ import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import type { BridgelessPayers } from './bridgelessPayer.js';
 import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types.js';
 import { isOfferExpired } from './utils.js';
-import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps.js';
+import {
+  fetchCesPrices,
+  requestCesOffer,
+  processTransactionWithOffer,
+  registryCesApiResolver,
+  type CesApiResolver,
+} from './cesSteps.js';
 import { bridgelessQuoteFromPrice } from './bridgelessPayer.js';
 import {
   CapacityExchangeUserCancelledError,
@@ -74,14 +80,26 @@ function payableCurrencyTypes(payers: BridgelessPayers | undefined): ReadonlySet
 }
 
 export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
+  const resolveCesApis = registryCesApiResolver(
+    config.networkId,
+    config.chainStateProvider,
+    config.additionalCapacityExchangeUrls ?? []
+  );
+  return createCapacityExchangeWalletProvider(config, resolveCesApis);
+}
+
+/** The same provider, with the exchange resolver injected rather than built from the registry.
+ *  Exported only through the testing entry point, so tests can supply a fake resolver. */
+export function createCapacityExchangeWalletProvider(
+  config: CapacityExchangeConfig,
+  resolveCesApis: CesApiResolver
+): WalletProvider {
   const {
-    networkId,
     coinPublicKey,
     encryptionPublicKey,
     balanceUnsealedTransaction,
     balanceSealedTransaction,
     chainStateProvider,
-    additionalCapacityExchangeUrls = [],
     margin = 3,
     promptForCurrency,
     confirmOffer,
@@ -96,10 +114,9 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
       console.debug('[CapacityExchange] balanceTx called');
 
       const { prices, specksRequired } = await fetchCesPrices(tx, {
-        networkId,
         chainStateProvider,
-        additionalCapacityExchangeUrls,
         margin,
+        resolveCesApis,
         payableCurrencyTypes: payableCurrencyTypes(bridgelessPayers),
       });
 
