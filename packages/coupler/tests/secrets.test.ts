@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
 import { inMemoryPrivateStateProvider } from '@sundaeswap/capacity-exchange-core';
-import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { generateSwapSecrets, provisionSPrime } from '../src/lib/secrets.js';
+import { generateSwapSecrets, writeSPrimeWitness } from '../src/lib/secrets.js';
 import { createPrivateState } from '../src/lib/witnesses.js';
 
 describe('generateSwapSecrets', () => {
@@ -28,26 +27,22 @@ describe('generateSwapSecrets', () => {
   });
 });
 
-describe('provisionSPrime', () => {
+describe('writeSPrimeWitness', () => {
   const COUPLER = 'coupler-test-address';
-  const makeCtx = () => {
-    const privateStateProvider = inMemoryPrivateStateProvider();
-    return { privateStateProvider, ctx: { privateStateProvider } as unknown as AppContext };
-  };
 
   it('stores s-prime under the given swapId', async () => {
-    const { privateStateProvider, ctx } = makeCtx();
+    const privateStateProvider = inMemoryPrivateStateProvider();
     const { sPrime } = generateSwapSecrets();
-    await provisionSPrime(ctx, COUPLER, 'swap-1', sPrime);
+    await writeSPrimeWitness(privateStateProvider, COUPLER, 'swap-1', sPrime);
     expect(await privateStateProvider.get('swap-1')).toEqual(createPrivateState(sPrime));
   });
 
   it('keeps distinct swaps under distinct ids without overwriting', async () => {
-    const { privateStateProvider, ctx } = makeCtx();
+    const privateStateProvider = inMemoryPrivateStateProvider();
     const a = generateSwapSecrets();
     const b = generateSwapSecrets();
-    await provisionSPrime(ctx, COUPLER, 'swap-a', a.sPrime);
-    await provisionSPrime(ctx, COUPLER, 'swap-b', b.sPrime);
+    await writeSPrimeWitness(privateStateProvider, COUPLER, 'swap-a', a.sPrime);
+    await writeSPrimeWitness(privateStateProvider, COUPLER, 'swap-b', b.sPrime);
     expect(await privateStateProvider.get('swap-a')).toEqual(createPrivateState(a.sPrime));
     expect(await privateStateProvider.get('swap-b')).toEqual(createPrivateState(b.sPrime));
   });

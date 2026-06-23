@@ -1,6 +1,7 @@
 import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
 import type { CesApi } from './exchangeApi.js';
 import type { ChainStateProvider } from './chainStateProvider.js';
+import type { BridgelessPayers } from './bridgelessPayer.js';
 
 /**
  * A price which the caller may pay to sponsor their transaction.
@@ -159,6 +160,11 @@ export interface CapacityExchangeConfig {
    * Returns the user's decision.
    */
   confirmOffer: ConfirmOffer;
+  /**
+   * Optional: foreign-currency payers keyed by currency type (`cardano:`). A selected foreign
+   * currency with no payer throws `CapacityExchangeUnsupportedCurrencyError`.
+   */
+  bridgelessPayers?: BridgelessPayers;
 }
 
 export interface SponsoredTransactionsConfig {
