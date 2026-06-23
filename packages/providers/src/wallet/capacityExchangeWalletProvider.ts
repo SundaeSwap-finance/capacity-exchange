@@ -1,11 +1,14 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { BridgelessPayers } from './bridgelessPayer.js';
 import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types.js';
 import { isOfferExpired } from './utils.js';
 import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps.js';
+import { bridgelessQuoteFromPrice } from './bridgelessPayer.js';
 import {
   CapacityExchangeUserCancelledError,
   CapacityExchangeNoEligibleOfferError,
   CapacityExchangeOfferExpiredError,
+  CapacityExchangeUnsupportedCurrencyError,
 } from './errors.js';
 
 async function selectCurrency(
@@ -65,6 +68,11 @@ async function confirmOfferWithUser(
  * The returned WalletProvider uses the provided identity keys and replaces
  * balanceTx with logic that acquires DUST through the Capacity Exchange server.
  */
+/** The native currencies plus every foreign one a payer is registered for. */
+function payableCurrencyTypes(payers: BridgelessPayers | undefined): ReadonlySet<string> {
+  return new Set(['midnight:shielded', 'midnight:unshielded', ...Object.keys(payers ?? {})]);
+}
+
 export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
   const {
     networkId,
@@ -77,6 +85,7 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
     margin = 3,
     promptForCurrency,
     confirmOffer,
+    bridgelessPayers,
   } = config;
 
   return {
@@ -91,14 +100,27 @@ export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): 
         chainStateProvider,
         additionalCapacityExchangeUrls,
         margin,
+        payableCurrencyTypes: payableCurrencyTypes(bridgelessPayers),
       });
 
       while (true) {
         const requestId = crypto.randomUUID();
         const exchangePrice = await selectCurrency(prices, specksRequired, requestId, promptForCurrency);
+        const currencyType = exchangePrice.price.currency.type;
+
+        const payer = bridgelessPayers?.[currencyType];
+        if (payer) {
+          // Foreign-chain payment. Selecting the currency commits: the payer locks the escrow.
+          return payer.pay(tx, bridgelessQuoteFromPrice(exchangePrice), specksRequired);
+        }
+        // TODO: replace these hardcoded native types with a parsed currency type plus a known-types
+        // list in core, so foreign-vs-native is decided by a value, not a string compare.
+        if (currencyType !== 'midnight:shielded' && currencyType !== 'midnight:unshielded') {
+          throw new CapacityExchangeUnsupportedCurrencyError(currencyType);
+        }
+
         const offer = await requestCesOffer(exchangePrice);
         const result = await confirmOfferWithUser(offer, specksRequired, requestId, confirmOffer);
-
         if (result === 'confirmed') {
           return processTransactionWithOffer(tx, offer, balanceUnsealedTransaction, balanceSealedTransaction);
         }

@@ -108,6 +108,7 @@ export class SponsorService {
           case 'offer-mismatch':
           case 'offer-transaction-invalid':
           case 'server-error':
+          case 'unsupported-currency':
             this.logger.error({ err }, 'Peer fallback failed');
             return { status: 'illegal-state', error: `peer-fallback:${err.type}` };
           default:

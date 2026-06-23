@@ -17,7 +17,6 @@
     "clean": "rm -rf out .midnight-private-state .wallet-state .contracts.*.json",
     "compile": "bunx run-compactc coupler.compact out",
     "build": "tsc --noEmit",
-    "coupler:deploy": "bun src/cli/deploy.ts",
     "test": "vitest run",
     "publish:prod": "bun publish --tolerate-republish"
   },
@@ -29,18 +28,13 @@
   ],
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "@midnight-ntwrk/compact-js": "2.5.1",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/ledger-v8": "8.1.0",
     "@midnight-ntwrk/midnight-js": "4.1.1",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js-types": "4.1.1",
     "@midnight-ntwrk/wallet-sdk": "1.1.0",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
-    "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
-    "commander": "^14.0.2",
-    "rxjs": "^7"
+    "@sundaeswap/capacity-exchange-providers": "workspace:^"
   },
   "devDependencies": {
     "@midnight-ntwrk/midnight-js-compact": "4.1.1",

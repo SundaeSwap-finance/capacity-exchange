@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import { randomHex } from './random.js';
 import {
   inMemoryPrivateStateProvider,
   runCircuit,
@@ -55,7 +55,7 @@ export async function buildAbsorbLeg(
 ): Promise<Leg> {
   const privateStateProvider = inMemoryPrivateStateProvider();
   privateStateProvider.setContractAddress(couplerAddress);
-  const privateStateId = crypto.randomBytes(32).toString('hex');
+  const privateStateId = randomHex(32);
   await privateStateProvider.set(privateStateId, createPrivateState(new Uint8Array(32)));
   const providers: LegProviders = { walletProvider, publicDataProvider, privateStateProvider };
   return runCouplerCircuit(providers, couplerAddress, privateStateId, 'absorb', [h, hPrime, nonce]);
