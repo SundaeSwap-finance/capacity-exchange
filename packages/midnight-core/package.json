@@ -27,6 +27,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
+    "test": "vitest run",
     "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
@@ -43,7 +44,8 @@
   },
   "devDependencies": {
     "@midnight-ntwrk/ledger-v8": "8.1.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "@midnight-ntwrk/ledger-v8": "8.1.0"
