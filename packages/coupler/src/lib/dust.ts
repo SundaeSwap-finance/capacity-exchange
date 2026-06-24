@@ -13,7 +13,7 @@ export function createDustSpend(
   vFeeSpecks: bigint,
   ctime: Date
 ): UnprovenDustSpend {
-  const utxos = dustState.availableCoins;
+  const utxos = dustState.capabilities.coinsAndBalances.getAvailableCoins(dustState.state, ctime);
   const utxo = utxos.find((u) => u.generatedNow >= vFeeSpecks);
   if (!utxo) {
     throw new Error(`No dust UTXO with ${vFeeSpecks} specks available`);
