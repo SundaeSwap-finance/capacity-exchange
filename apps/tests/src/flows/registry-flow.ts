@@ -1,7 +1,7 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { getNightBalance } from '@sundaeswap/capacity-exchange-core';
-import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
+import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import {
   computeRegistryKey,
   deploy,

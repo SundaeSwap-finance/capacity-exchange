@@ -1,6 +1,6 @@
 import type { DustSecretKey } from '@midnight-ntwrk/ledger-v8';
-import type { DustWalletState } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
-import { CoreWallet, type UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
+import type { DustWalletState } from '@midnight-ntwrk/wallet-sdk/dust';
+import { CoreWallet, type UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
 
 /**
  * Build a dust spend of `vFeeSpecks` (consumed entirely). `ctime` must be the
@@ -13,7 +13,7 @@ export function createDustSpend(
   vFeeSpecks: bigint,
   ctime: Date
 ): UnprovenDustSpend {
-  const utxos = dustState.availableCoinsWithFullInfo(ctime);
+  const utxos = dustState.availableCoins;
   const utxo = utxos.find((u) => u.generatedNow >= vFeeSpecks);
   if (!utxo) {
     throw new Error(`No dust UTXO with ${vFeeSpecks} specks available`);

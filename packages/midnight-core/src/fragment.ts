@@ -6,8 +6,8 @@ import {
   type UnprovenOffer,
   type LedgerParameters,
 } from '@midnight-ntwrk/ledger-v8';
-import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
-import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
+import { getNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { buildIntent } from './combine.js';
 import type { Leg } from './leg.js';
 

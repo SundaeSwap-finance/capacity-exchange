@@ -1,11 +1,8 @@
-import { ShieldedWallet, type ShieldedWallet as ShieldedWalletType } from '@midnight-ntwrk/wallet-sdk-shielded';
-import {
-  UnshieldedWallet,
-  NoOpTransactionHistoryStorage,
-  PublicKey,
-} from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
-import { DustWallet, type DustWallet as DustWalletType } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
-import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import { InMemoryTransactionHistoryStorage, TransactionHistoryStorage } from '@midnight-ntwrk/wallet-sdk';
+import { ShieldedWallet, type ShieldedWallet as ShieldedWalletType } from '@midnight-ntwrk/wallet-sdk/shielded';
+import { UnshieldedWallet, PublicKey } from '@midnight-ntwrk/wallet-sdk/unshielded';
+import { DustWallet, type DustWallet as DustWalletType } from '@midnight-ntwrk/wallet-sdk/dust';
+import { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import type { ZswapSecretKeys, DustSecretKey } from '@midnight-ntwrk/ledger-v8';
 import { deriveWalletKeys, type WalletKeys } from './keys.js';
 import { DUST_PARAMS } from './params.js';
@@ -40,7 +37,10 @@ export async function createWallet(options: CreateWalletOptions): Promise<Wallet
 
   // TODO: Move wallet creation into the factory functions
   const walletFacade = await WalletFacade.init({
-    configuration: { ...walletConfig, txHistoryStorage: new NoOpTransactionHistoryStorage() },
+    configuration: {
+      ...walletConfig,
+      txHistoryStorage: new InMemoryTransactionHistoryStorage(TransactionHistoryStorage.TransactionHistoryCommonSchema),
+    },
     shielded: () => shieldedWallet,
     unshielded: () => unshieldedWallet,
     dust: () => dustWallet,
@@ -56,12 +56,20 @@ function createShieldedWallet(
 ): ShieldedWalletType {
   if (savedState) {
     try {
-      return ShieldedWallet(config).restore(savedState);
+      return ShieldedWallet({
+        ...config,
+        txHistoryStorage: new InMemoryTransactionHistoryStorage(
+          TransactionHistoryStorage.TransactionHistoryCommonSchema
+        ),
+      }).restore(savedState);
     } catch {
       // Fall through to fresh start
     }
   }
-  return ShieldedWallet(config).startWithSecretKeys(shieldedSecretKeys);
+  return ShieldedWallet({
+    ...config,
+    txHistoryStorage: new InMemoryTransactionHistoryStorage(TransactionHistoryStorage.TransactionHistoryCommonSchema),
+  }).startWithSecretKeys(shieldedSecretKeys);
 }
 
 function createUnshieldedWallet(
@@ -72,7 +80,7 @@ function createUnshieldedWallet(
   // We don't use transaction history; NoOp avoids accumulating unused data in memory
   const walletBuilder = UnshieldedWallet({
     ...config,
-    txHistoryStorage: new NoOpTransactionHistoryStorage(),
+    txHistoryStorage: new InMemoryTransactionHistoryStorage(TransactionHistoryStorage.TransactionHistoryCommonSchema),
   });
   if (savedState) {
     try {
@@ -87,10 +95,18 @@ function createUnshieldedWallet(
 function createDustWallet(config: WalletConfig, dustSecretKey: DustSecretKey, savedState?: string): DustWalletType {
   if (savedState) {
     try {
-      return DustWallet(config).restore(savedState);
+      return DustWallet({
+        ...config,
+        txHistoryStorage: new InMemoryTransactionHistoryStorage(
+          TransactionHistoryStorage.TransactionHistoryCommonSchema
+        ),
+      }).restore(savedState);
     } catch {
       // Fall through to fresh start
     }
   }
-  return DustWallet(config).startWithSecretKey(dustSecretKey, DUST_PARAMS);
+  return DustWallet({
+    ...config,
+    txHistoryStorage: new InMemoryTransactionHistoryStorage(TransactionHistoryStorage.TransactionHistoryCommonSchema),
+  }).startWithSecretKey(dustSecretKey, DUST_PARAMS);
 }

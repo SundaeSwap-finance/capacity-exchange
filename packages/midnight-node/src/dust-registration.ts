@@ -1,5 +1,5 @@
-import { type WalletFacade, FacadeState } from '@midnight-ntwrk/wallet-sdk-facade';
-import type { DustAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
+import { type WalletFacade, FacadeState } from '@midnight-ntwrk/wallet-sdk/facade';
+import type { DustAddress } from '@midnight-ntwrk/wallet-sdk/address-format';
 import type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
 import { DEFAULT_TTL_MS, waitForState } from '@sundaeswap/capacity-exchange-core';
 import { createLogger } from './createLogger.js';

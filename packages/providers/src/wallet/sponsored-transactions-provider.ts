@@ -1,4 +1,4 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import type { SponsoredTransactionsConfig } from './types.js';
 import { createCesApi } from './exchangeApi.js';
 import { requestSponsorship } from './sponsored-transactions-steps.js';

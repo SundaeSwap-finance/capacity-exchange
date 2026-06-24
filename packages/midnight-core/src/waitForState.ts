@@ -1,5 +1,5 @@
 import * as Rx from 'rxjs';
-import type { FacadeState } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { FacadeState } from '@midnight-ntwrk/wallet-sdk/facade';
 
 /** Wait for a synced wallet state matching an optional predicate. */
 export function waitForState(

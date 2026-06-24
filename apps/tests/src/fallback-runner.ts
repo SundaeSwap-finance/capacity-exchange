@@ -24,7 +24,7 @@ import {
   createLogger,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
-import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { requireEnvSeed, type FlowCtxConfig } from './util/testUtils.js';
 

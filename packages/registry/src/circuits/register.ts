@@ -4,7 +4,7 @@ import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types.js';
 import { CompiledRegistryContract } from '../contract.js';
 import { getProviders } from '../utils.js';
 
-import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
+import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js/types';
 
 const logger = createLogger(import.meta);
 

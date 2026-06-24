@@ -1,4 +1,4 @@
-import type { MidnightProvider, WalletProvider, MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
+import type { MidnightProvider, WalletProvider, MidnightProviders } from '@midnight-ntwrk/midnight-js/types';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';

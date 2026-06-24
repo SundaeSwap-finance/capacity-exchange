@@ -28,6 +28,7 @@ export async function deploy(ctx: AppContext, dryRun = false): Promise<DeployOut
       compiledContract: CompiledCouplerContract,
       privateStateId,
       initialPrivateState: createPrivateState(new Uint8Array(32)),
+      args: [],
     },
     dryRun
   );

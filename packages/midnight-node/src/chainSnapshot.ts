@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { extractChainSnapshotFromFacade, type ChainSnapshot } from '@sundaeswap/capacity-exchange-core';
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import { createLogger } from './createLogger.js';
 
 const logger = createLogger(import.meta);

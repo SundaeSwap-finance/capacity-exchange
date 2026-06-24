@@ -1,5 +1,5 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
 
 export function createMockWalletProvider(): WalletProvider {

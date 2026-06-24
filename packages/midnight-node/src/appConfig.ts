@@ -8,7 +8,7 @@ import {
   type NetworkEndpoints,
   type ChainSnapshot,
 } from '@sundaeswap/capacity-exchange-core';
-import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
+import type { NetworkId } from '@midnight-ntwrk/wallet-sdk';
 import type { Env } from './env.js';
 import { loadWalletSeedFromEnv } from './walletFile.js';
 

@@ -1,7 +1,7 @@
 import type { WalletKeys, WalletConnection } from '@sundaeswap/capacity-exchange-core';
 export type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
-import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { NetworkId } from '@midnight-ntwrk/wallet-sdk';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import type { NetworkConfig } from '../../../config';
 import { loadSnapshots } from '../../../lib/walletSnapshot';
 

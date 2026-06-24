@@ -1,5 +1,5 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
 
 export interface BalanceData {

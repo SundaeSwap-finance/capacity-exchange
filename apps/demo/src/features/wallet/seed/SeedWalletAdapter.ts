@@ -1,5 +1,5 @@
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
-import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
+import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import { combineLatest } from 'rxjs';
 import type { BalanceUpdate, WalletCapabilities } from '../types';
 

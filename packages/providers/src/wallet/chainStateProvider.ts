@@ -1,5 +1,5 @@
 import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
-import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 

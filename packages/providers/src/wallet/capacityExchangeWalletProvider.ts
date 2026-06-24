@@ -1,4 +1,4 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types.js';
 import { isOfferExpired } from './utils.js';
 import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps.js';

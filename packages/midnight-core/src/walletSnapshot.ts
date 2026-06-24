@@ -1,6 +1,6 @@
 import type { WalletKeys } from './keys.js';
-import { PublicKey } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import { PublicKey } from '@midnight-ntwrk/wallet-sdk/unshielded';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import type { SavedWalletState } from './walletStateStore.js';
 
 export interface ChainSnapshot {

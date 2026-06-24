@@ -1,4 +1,4 @@
-import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
+import { NetworkId } from '@midnight-ntwrk/wallet-sdk';
 
 // TestNet is defined in the SDK enum but has no public endpoints.
 const NETWORK_ID_MAP: Record<string, NetworkId.NetworkId> = {

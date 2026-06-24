@@ -1,4 +1,4 @@
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import {
   Intent,
   Proof,

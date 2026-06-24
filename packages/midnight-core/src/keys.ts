@@ -1,7 +1,7 @@
 import { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v8';
-import { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
-import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk-hd';
-import { createKeystore, UnshieldedKeystore } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+import { NetworkId } from '@midnight-ntwrk/wallet-sdk';
+import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk/hd';
+import { createKeystore, UnshieldedKeystore } from '@midnight-ntwrk/wallet-sdk/unshielded';
 import { hexToBytes } from './hex.js';
 
 export interface WalletKeys {

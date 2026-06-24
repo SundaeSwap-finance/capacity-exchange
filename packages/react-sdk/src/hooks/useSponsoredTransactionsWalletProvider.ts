@@ -2,7 +2,7 @@ import {
   sponsoredTransactionsWalletProvider,
   type SponsoredTransactionsConfig,
 } from '@sundaeswap/capacity-exchange-providers';
-import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { useMemo } from 'react';
 
 export { type SponsoredTransactionsConfig };

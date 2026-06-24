@@ -1,4 +1,4 @@
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import type { StateStore } from './stateStore.js';
 import { withPrefix } from './stateStore.js';
 

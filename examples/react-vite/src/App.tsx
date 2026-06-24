@@ -10,7 +10,7 @@ import { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { MidnightProviders, UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
+import { MidnightProviders, UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
 import { useMockWallet } from './mocks/wallet';
 
 async function getWalletDetails(wallet: ConnectedAPI, zkConfigProvider: ZKConfigProvider<string>) {

@@ -15,7 +15,7 @@ import {
 import { FileStateStore } from './fileStateStore.js';
 import { createLogger } from './createLogger.js';
 import type { AppConfig } from './appConfig.js';
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 
 const logger = createLogger(import.meta);
 

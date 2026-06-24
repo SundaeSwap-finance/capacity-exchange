@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { indexerChainStateProvider } from '@sundaeswap/capacity-exchange-providers';
 import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
 import { createAutoSelectCurrency } from '../config/peerCurrencySelector.js';

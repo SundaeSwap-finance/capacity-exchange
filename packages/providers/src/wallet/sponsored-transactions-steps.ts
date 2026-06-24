@@ -5,7 +5,7 @@ import {
   type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import type { CesApi } from './exchangeApi.js';
 

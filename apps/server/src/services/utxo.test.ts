@@ -31,7 +31,7 @@ function createMockWalletService(opts: { balance?: bigint; coins?: any[] } = {})
   return {
     state: {
       balance: () => opts.balance ?? 0n,
-      availableCoinsWithFullInfo: () => opts.coins ?? [],
+      availableCoins: opts.coins ?? [],
       state: { state: { syncTime: new Date() } },
     },
     syncState: { status: 'ok' as const },

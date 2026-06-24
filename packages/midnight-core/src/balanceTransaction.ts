@@ -1,4 +1,4 @@
-import { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import { WalletConnection } from './walletFacade.js';
 import {
   type SignatureEnabled,
