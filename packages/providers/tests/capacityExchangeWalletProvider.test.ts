@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { capacityExchangeWalletProvider } from '../src/wallet/capacityExchangeWalletProvider';
-import { CapacityExchangeOfferMismatchError } from '../src/wallet/errors';
-import { createMockUnboundTransaction } from './mocks/mockProviders';
+import { capacityExchangeWalletProvider } from '../src/wallet/capacityExchangeWalletProvider.js';
+import { CapacityExchangeOfferMismatchError } from '../src/wallet/errors.js';
+import { createMockUnboundTransaction } from './mocks/mockProviders.js';
 import {
   createTestContext,
   createTestConfig,
   setupFetchMock,
   type TestContext,
-} from './setup/capacityExchangeWalletProviderSetup';
+} from './setup/capacityExchangeWalletProviderSetup.js';
 
 vi.mock('@midnight-ntwrk/ledger-v8', async () => {
   const actual = await vi.importActual('@midnight-ntwrk/ledger-v8');

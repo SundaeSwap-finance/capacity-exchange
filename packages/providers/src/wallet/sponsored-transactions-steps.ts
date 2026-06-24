@@ -7,7 +7,7 @@ import {
 } from '@midnight-ntwrk/ledger-v8';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
-import type { CesApi } from './exchangeApi';
+import type { CesApi } from './exchangeApi.js';
 
 /**
  * Sends a proven (unbound) transaction to the CES for sponsorship.

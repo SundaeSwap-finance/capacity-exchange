@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Transaction } from '@midnight-ntwrk/ledger-v8';
-import { requestCesOffer } from '../src/wallet/cesSteps';
-import { CapacityExchangeOfferTransactionInvalidError } from '../src/wallet/errors';
-import type { ExchangePrice } from '../src/wallet/types';
+import { requestCesOffer } from '../src/wallet/cesSteps.js';
+import { CapacityExchangeOfferTransactionInvalidError } from '../src/wallet/errors.js';
+import type { ExchangePrice } from '../src/wallet/types.js';
 
 vi.mock('@midnight-ntwrk/ledger-v8', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@midnight-ntwrk/ledger-v8')>();

@@ -1,5 +1,5 @@
 import { Offer } from '@sundaeswap/capacity-exchange-providers';
-import { currencyName, currencyTitle, formatDust } from './utils';
+import { currencyName, currencyTitle, formatDust } from './utils.js';
 
 export interface ConfirmOfferProps {
   offer: Offer;

@@ -12,14 +12,14 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { Get200ResponseEnv } from './Get200ResponseEnv';
+import { mapValues } from '../runtime.js';
+import type { Get200ResponseEnv } from './Get200ResponseEnv.js';
 import {
     Get200ResponseEnvFromJSON,
     Get200ResponseEnvFromJSONTyped,
     Get200ResponseEnvToJSON,
     Get200ResponseEnvToJSONTyped,
-} from './Get200ResponseEnv';
+} from './Get200ResponseEnv.js';
 
 /**
  * 

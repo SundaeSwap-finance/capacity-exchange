@@ -1,4 +1,4 @@
-import type { ChainStateProvider } from './chainStateProvider';
+import type { ChainStateProvider } from './chainStateProvider.js';
 import { ledger, registryEntries, toSrvName, type DomainName } from '@sundaeswap/capacity-exchange-registry';
 
 interface DohSrvRecord {

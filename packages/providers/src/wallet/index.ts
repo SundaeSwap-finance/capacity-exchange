@@ -1,7 +1,7 @@
-export * from './types';
-export * from './errors';
-export { capacityExchangeWalletProvider } from './capacityExchangeWalletProvider';
-export { sponsoredTransactionsWalletProvider } from './sponsored-transactions-provider';
-export { checkCesHealth, type CesHealthStatus } from './cesHealth';
-export { type ChainStateProvider, indexerChainStateProvider } from './chainStateProvider';
-export { getDefaultRegistryAddress } from './exchangeApi';
+export * from './types.js';
+export * from './errors.js';
+export { capacityExchangeWalletProvider } from './capacityExchangeWalletProvider.js';
+export { sponsoredTransactionsWalletProvider } from './sponsored-transactions-provider.js';
+export { checkCesHealth, type CesHealthStatus } from './cesHealth.js';
+export { type ChainStateProvider, indexerChainStateProvider } from './chainStateProvider.js';
+export { getDefaultRegistryAddress } from './exchangeApi.js';

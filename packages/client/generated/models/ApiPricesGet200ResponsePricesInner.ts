@@ -12,14 +12,14 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { ApiPricesGet200ResponsePricesInnerCurrency } from './ApiPricesGet200ResponsePricesInnerCurrency';
+import { mapValues } from '../runtime.js';
+import type { ApiPricesGet200ResponsePricesInnerCurrency } from './ApiPricesGet200ResponsePricesInnerCurrency.js';
 import {
     ApiPricesGet200ResponsePricesInnerCurrencyFromJSON,
     ApiPricesGet200ResponsePricesInnerCurrencyFromJSONTyped,
     ApiPricesGet200ResponsePricesInnerCurrencyToJSON,
     ApiPricesGet200ResponsePricesInnerCurrencyToJSONTyped,
-} from './ApiPricesGet200ResponsePricesInnerCurrency';
+} from './ApiPricesGet200ResponsePricesInnerCurrency.js';
 
 /**
  * 

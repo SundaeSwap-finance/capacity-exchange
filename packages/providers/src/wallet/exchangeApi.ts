@@ -1,5 +1,5 @@
 import { Configuration, DefaultApi, ResponseError } from '@sundaeswap/capacity-exchange-client';
-import { CapacityExchangeServerError } from './errors';
+import { CapacityExchangeServerError } from './errors.js';
 
 export interface CesApi {
   url: string;

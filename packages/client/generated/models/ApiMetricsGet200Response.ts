@@ -12,42 +12,42 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { ApiMetricsGet200ResponseContention } from './ApiMetricsGet200ResponseContention';
+import { mapValues } from '../runtime.js';
+import type { ApiMetricsGet200ResponseContention } from './ApiMetricsGet200ResponseContention.js';
 import {
     ApiMetricsGet200ResponseContentionFromJSON,
     ApiMetricsGet200ResponseContentionFromJSONTyped,
     ApiMetricsGet200ResponseContentionToJSON,
     ApiMetricsGet200ResponseContentionToJSONTyped,
-} from './ApiMetricsGet200ResponseContention';
-import type { ApiMetricsGet200ResponseServer } from './ApiMetricsGet200ResponseServer';
+} from './ApiMetricsGet200ResponseContention.js';
+import type { ApiMetricsGet200ResponseServer } from './ApiMetricsGet200ResponseServer.js';
 import {
     ApiMetricsGet200ResponseServerFromJSON,
     ApiMetricsGet200ResponseServerFromJSONTyped,
     ApiMetricsGet200ResponseServerToJSON,
     ApiMetricsGet200ResponseServerToJSONTyped,
-} from './ApiMetricsGet200ResponseServer';
-import type { ApiMetricsGet200ResponseRevenue } from './ApiMetricsGet200ResponseRevenue';
+} from './ApiMetricsGet200ResponseServer.js';
+import type { ApiMetricsGet200ResponseRevenue } from './ApiMetricsGet200ResponseRevenue.js';
 import {
     ApiMetricsGet200ResponseRevenueFromJSON,
     ApiMetricsGet200ResponseRevenueFromJSONTyped,
     ApiMetricsGet200ResponseRevenueToJSON,
     ApiMetricsGet200ResponseRevenueToJSONTyped,
-} from './ApiMetricsGet200ResponseRevenue';
-import type { ApiMetricsGet200ResponseDustUsage } from './ApiMetricsGet200ResponseDustUsage';
+} from './ApiMetricsGet200ResponseRevenue.js';
+import type { ApiMetricsGet200ResponseDustUsage } from './ApiMetricsGet200ResponseDustUsage.js';
 import {
     ApiMetricsGet200ResponseDustUsageFromJSON,
     ApiMetricsGet200ResponseDustUsageFromJSONTyped,
     ApiMetricsGet200ResponseDustUsageToJSON,
     ApiMetricsGet200ResponseDustUsageToJSONTyped,
-} from './ApiMetricsGet200ResponseDustUsage';
-import type { ApiMetricsGet200ResponseHealth } from './ApiMetricsGet200ResponseHealth';
+} from './ApiMetricsGet200ResponseDustUsage.js';
+import type { ApiMetricsGet200ResponseHealth } from './ApiMetricsGet200ResponseHealth.js';
 import {
     ApiMetricsGet200ResponseHealthFromJSON,
     ApiMetricsGet200ResponseHealthFromJSONTyped,
     ApiMetricsGet200ResponseHealthToJSON,
     ApiMetricsGet200ResponseHealthToJSONTyped,
-} from './ApiMetricsGet200ResponseHealth';
+} from './ApiMetricsGet200ResponseHealth.js';
 
 /**
  * 

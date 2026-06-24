@@ -1,5 +1,6 @@
 apis/DefaultApi.ts
 apis/index.ts
+docs/ApiAdaOffersPostRequest.md
 docs/ApiMetricsGet200Response.md
 docs/ApiMetricsGet200ResponseContention.md
 docs/ApiMetricsGet200ResponseDustUsage.md
@@ -22,6 +23,7 @@ docs/HealthReadyGet200Response.md
 docs/HealthReadyGet200ResponseIndexer.md
 docs/HealthReadyGet200ResponseWallet.md
 index.ts
+models/ApiAdaOffersPostRequest.ts
 models/ApiMetricsGet200Response.ts
 models/ApiMetricsGet200ResponseContention.ts
 models/ApiMetricsGet200ResponseDustUsage.ts

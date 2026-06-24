@@ -13,8 +13,9 @@
  */
 
 
-import * as runtime from '../runtime';
+import * as runtime from '../runtime.js';
 import type {
+  ApiAdaOffersPostRequest,
   ApiMetricsGet200Response,
   ApiOffersPost201Response,
   ApiOffersPostRequest,
@@ -25,8 +26,10 @@ import type {
   Get200Response,
   HealthGet200Response,
   HealthReadyGet200Response,
-} from '../models/index';
+} from '../models/index.js';
 import {
+    ApiAdaOffersPostRequestFromJSON,
+    ApiAdaOffersPostRequestToJSON,
     ApiMetricsGet200ResponseFromJSON,
     ApiMetricsGet200ResponseToJSON,
     ApiOffersPost201ResponseFromJSON,
@@ -47,7 +50,11 @@ import {
     HealthGet200ResponseToJSON,
     HealthReadyGet200ResponseFromJSON,
     HealthReadyGet200ResponseToJSON,
-} from '../models/index';
+} from '../models/index.js';
+
+export interface ApiAdaOffersPostOperationRequest {
+    apiAdaOffersPostRequest: ApiAdaOffersPostRequest;
+}
 
 export interface ApiOffersPostOperationRequest {
     apiOffersPostRequest: ApiOffersPostRequest;
@@ -66,6 +73,43 @@ export interface ApiSponsorPostOperationRequest {
  * 
  */
 export class DefaultApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async apiAdaOffersPostRaw(requestParameters: ApiAdaOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiOffersPost201Response>> {
+        if (requestParameters['apiAdaOffersPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiAdaOffersPostRequest',
+                'Required parameter "apiAdaOffersPostRequest" was null or undefined when calling apiAdaOffersPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/ada/offers`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiAdaOffersPostRequestToJSON(requestParameters['apiAdaOffersPostRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiOffersPost201ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiAdaOffersPost(requestParameters: ApiAdaOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiOffersPost201Response> {
+        const response = await this.apiAdaOffersPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

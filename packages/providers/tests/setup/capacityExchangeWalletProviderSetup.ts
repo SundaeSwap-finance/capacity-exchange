@@ -8,9 +8,9 @@ import type {
   OfferConfirmationResult,
   BalanceSealedTransaction,
   BalanceUnsealedTransaction,
-} from '../../src/wallet/types';
-import type { ChainStateProvider } from '../../src/wallet/chainStateProvider';
-import { createMockWalletProvider } from '../mocks/mockProviders';
+} from '../../src/wallet/types.js';
+import type { ChainStateProvider } from '../../src/wallet/chainStateProvider.js';
+import { createMockWalletProvider } from '../mocks/mockProviders.js';
 
 export interface TestContext {
   mockWalletProvider: ReturnType<typeof createMockWalletProvider>;

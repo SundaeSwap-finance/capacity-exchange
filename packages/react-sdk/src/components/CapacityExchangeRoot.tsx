@@ -1,11 +1,11 @@
 import { PropsWithChildren, useEffect, useReducer, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ConfirmOfferProps, DefaultConfirmOffer } from './ConfirmOffer';
-import { DefaultPromptForCurrency, PromptForCurrencyProps } from './PromptForCurrency';
-import { CapacityExchangeContext } from '../stores/CapacityExchangeContext/context';
-import { capacityExchangeReducer } from '../stores/CapacityExchangeContext/reducer';
-import { injectStyles } from '../styles';
-import { WaitForOfferProps, DefaultWaitForOffer } from './WaitForOffer';
+import { ConfirmOfferProps, DefaultConfirmOffer } from './ConfirmOffer.js';
+import { DefaultPromptForCurrency, PromptForCurrencyProps } from './PromptForCurrency.js';
+import { CapacityExchangeContext } from '../stores/CapacityExchangeContext/context.js';
+import { capacityExchangeReducer } from '../stores/CapacityExchangeContext/reducer.js';
+import { injectStyles } from '../styles.js';
+import { WaitForOfferProps, DefaultWaitForOffer } from './WaitForOffer.js';
 
 injectStyles();
 
