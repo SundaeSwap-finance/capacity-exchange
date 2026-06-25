@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@sundaeswap/capacity-exchange-core": "workspace:^",
-    "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/compact-js": "2.5.1",
     "@midnight-ntwrk/midnight-js": "4.1.1",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",

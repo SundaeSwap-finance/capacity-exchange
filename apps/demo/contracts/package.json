@@ -38,7 +38,7 @@
   "dependencies": {
     "@sundaeswap/capacity-exchange-core": "workspace:^",
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
-    "@midnight-ntwrk/compact-js": "2.5.0",
+    "@midnight-ntwrk/compact-js": "2.5.1",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/ledger-v8": "8.1.0",
     "@scure/bip32": "2.0.1",
