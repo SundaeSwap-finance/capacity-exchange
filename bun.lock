@@ -157,7 +157,7 @@
     },
     "apps/tests": {
       "name": "@capacity-exchange/tests",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "dependencies": {
         "@capacity-exchange/demo-contracts": "workspace:^",
         "@midnight-ntwrk/compact-js": "2.5.1",
@@ -297,7 +297,7 @@
     },
     "packages/providers": {
       "name": "@sundaeswap/capacity-exchange-providers",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "dependencies": {
         "@midnight-ntwrk/midnight-js": "4.1.1",
         "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
@@ -342,7 +342,7 @@
     },
     "packages/registry": {
       "name": "@sundaeswap/capacity-exchange-registry",
-      "version": "2.0.3",
+      "version": "3.0.0",
       "dependencies": {
         "@midnight-ntwrk/compact-js": "2.5.1",
         "@midnight-ntwrk/compact-runtime": "0.15.0",
@@ -361,7 +361,7 @@
     },
     "packages/registry-node": {
       "name": "@sundaeswap/capacity-exchange-registry-nodejs",
-      "version": "2.0.3",
+      "version": "3.0.0",
       "dependencies": {
         "@midnight-ntwrk/compact-js": "2.5.1",
         "@midnight-ntwrk/compact-runtime": "0.15.0",

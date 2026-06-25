@@ -1,5 +1,14 @@
 # @capacity-exchange/tests
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [50dc9bd]
+  - @sundaeswap/capacity-exchange-registry-nodejs@3.0.0
+  - @sundaeswap/capacity-exchange-registry@3.0.0
+  - @sundaeswap/capacity-exchange-providers@3.0.3
+
 ## 1.0.3
 
 ### Patch Changes
