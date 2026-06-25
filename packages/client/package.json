@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-client",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Capacity Exchange Client",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",

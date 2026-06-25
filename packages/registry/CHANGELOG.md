@@ -1,5 +1,14 @@
 # @sundaeswap/capacity-exchange-registry
 
+## 2.0.3
+
+### Patch Changes
+
+- c3f36f9: Update CI to bump versions as needed
+- Updated dependencies [c3f36f9]
+  - @sundaeswap/capacity-exchange-core@1.3.2
+  - @sundaeswap/capacity-exchange-nodejs@2.1.2
+
 ## 2.0.2
 
 ### Patch Changes

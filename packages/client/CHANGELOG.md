@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-client
 
+## 1.2.2
+
+### Patch Changes
+
+- c3f36f9: Update CI to bump versions as needed
+
 ## 1.2.1
 
 ### Patch Changes
