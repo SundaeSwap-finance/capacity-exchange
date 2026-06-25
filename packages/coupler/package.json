@@ -13,7 +13,8 @@
     "compile": "bunx run-compactc coupler.compact out",
     "build": "tsc --noEmit",
     "coupler:deploy": "bun src/cli/deploy.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "publish:prod": "bun publish --tolerate-republish"
   },
   "keywords": [
     "midnight",
