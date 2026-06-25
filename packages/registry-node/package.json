@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc",
     "generate-secret": "bun src/cli/generate-secret-key.ts",
     "deploy": "bun src/cli/deploy.ts",
     "register": "bun src/cli/register.ts",
