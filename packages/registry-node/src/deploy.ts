@@ -1,10 +1,16 @@
 import * as crypto from 'crypto';
 import { deployContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { AppContext, buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
-import { CompiledRegistryContract, constructorArgs, createPrivateState, type RegistryContract } from './contract.js';
-import { getContractOutDir } from './utils.js';
-import { RegistrySecretKey, RegistryConstructorArgs, generateRandomSecretKey } from './types.js';
-
+import {
+  CompiledRegistryContract,
+  constructorArgs,
+  createPrivateState,
+  type RegistryContract,
+  type RegistrySecretKey,
+  type RegistryConstructorArgs,
+} from '@sundaeswap/capacity-exchange-registry';
+import { getContractOutDir } from '@sundaeswap/capacity-exchange-registry/node';
+import { generateRandomSecretKey } from './types.js';
 const logger = createLogger(import.meta);
 
 export interface DeployOutput {

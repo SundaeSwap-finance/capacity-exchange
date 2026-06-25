@@ -1,6 +1,5 @@
 import { AppContext, createLogger, submitStatefulCallTxDirect } from '@sundaeswap/capacity-exchange-nodejs';
-import { RegistrySecretKey } from '../types.js';
-import { CompiledRegistryContract } from '../contract.js';
+import { RegistrySecretKey, CompiledRegistryContract } from '@sundaeswap/capacity-exchange-registry';
 import { getProviders } from '../utils.js';
 import { toTxResult, TxResult } from '@sundaeswap/capacity-exchange-core';
 

@@ -9,9 +9,12 @@ import {
 import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
 import { program } from 'commander';
 
-import { Registry } from '../contract.js';
-import { RegistryMapping, registryEntries } from '../types.js';
-import { resolveRegistryAddress } from '../defaultAddresses.js';
+import {
+  Registry,
+  RegistryMapping,
+  registryEntries,
+  resolveRegistryAddress,
+} from '@sundaeswap/capacity-exchange-registry';
 
 const logger = createLogger(import.meta);
 

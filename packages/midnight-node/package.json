@@ -7,6 +7,10 @@
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE.md"
+  ],
   "exports": {
     ".": {
       "bun": "./src/index.ts",

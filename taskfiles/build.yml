@@ -34,12 +34,17 @@ tasks:
       - bun run --filter @sundaeswap/capacity-exchange-client build
 
   libs:
-    deps: [react-sdk]
+    deps: [react-sdk, registry-node, coupler]
 
   registry:
-    deps: [midnight-node, compile-contracts]
+    deps: [compile-contracts]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-registry build
+
+  registry-node:
+    deps: [midnight-node, registry]
+    cmds:
+      - bun run --filter @sundaeswap/capacity-exchange-registry-nodejs build
 
   coupler:
     deps: [midnight-node, compile-contracts]
@@ -47,7 +52,7 @@ tasks:
       - bun run --filter @sundaeswap/capacity-exchange-coupler build
 
   providers:
-    deps: [midnight-node, client, coupler, compile-contracts, registry]
+    deps: [client, registry]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-providers build
 

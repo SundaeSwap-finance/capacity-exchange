@@ -1,7 +1,11 @@
 import { AppContext, createLogger, WalletContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildUnprovenCallTx, DEFAULT_TTL_MS, toTxResult } from '@sundaeswap/capacity-exchange-core';
-import { entryToContract, RegistryEntry, RegistrySecretKey } from '../types.js';
-import { CompiledRegistryContract } from '../contract.js';
+import {
+  entryToContract,
+  RegistryEntry,
+  RegistrySecretKey,
+  CompiledRegistryContract,
+} from '@sundaeswap/capacity-exchange-registry';
 import { getProviders } from '../utils.js';
 
 import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js/types';

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "nodenext",
-    "lib": ["ES2022", "dom"],
+    "lib": ["ES2022"],
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,6 +14,6 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*", "contract/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/zkir", "**/keys"]
 }
