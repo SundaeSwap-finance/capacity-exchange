@@ -12,7 +12,7 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": "./src"
   },
   "include": ["src/**/*", "contract/**/*"],
   "exclude": ["node_modules", "dist", "**/zkir", "**/keys"]

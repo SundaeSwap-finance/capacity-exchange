@@ -3,10 +3,11 @@
   "version": "2.0.3",
   "description": "Registry contract types and utilities for the capacity exchange SDK",
   "type": "module",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf contract/out/",
     "compile": "bunx run-compactc contract/src/registry.compact contract/out",
-    "build": "tsc --noEmit",
+    "build": "tsc",
     "test": "vitest run",
     "publish:prod": "bun publish --tolerate-republish"
   },
