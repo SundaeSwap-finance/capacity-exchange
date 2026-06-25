@@ -1,5 +1,13 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
+## 2.1.2
+
+### Patch Changes
+
+- c3f36f9: Update CI to bump versions as needed
+- Updated dependencies [c3f36f9]
+  - @sundaeswap/capacity-exchange-providers@3.0.2
+
 ## 2.1.1
 
 ### Patch Changes
