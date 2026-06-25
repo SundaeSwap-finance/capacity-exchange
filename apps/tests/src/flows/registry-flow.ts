@@ -4,17 +4,14 @@ import { getNightBalance } from '@sundaeswap/capacity-exchange-core';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import {
   computeRegistryKey,
-  deploy,
-  generateRandomSecretKey,
   ledger,
-  register,
-  deregister,
   registryEntries,
   toDomainName,
   type DomainName,
   type RegistryEntry,
   type RegistrySecretKey,
 } from '@sundaeswap/capacity-exchange-registry';
+import { deploy, generateRandomSecretKey, register, deregister } from '@sundaeswap/capacity-exchange-registry-nodejs';
 import { buildFlowCtx, pollUntil, type FlowCtxConfig } from '../util/testUtils.js';
 
 const logger = createLogger(import.meta);

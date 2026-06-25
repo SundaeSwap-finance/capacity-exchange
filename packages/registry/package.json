@@ -12,8 +12,8 @@
   },
   "exports": {
     ".": {
-      "browser": "./src/index.browser.ts",
-      "default": "./src/index.ts"
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
     },
     "./contract/*": "./contract/out/contract/*"
   },

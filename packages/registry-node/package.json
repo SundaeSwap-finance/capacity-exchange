@@ -3,6 +3,12 @@
   "version": "2.0.3",
   "description": "Registry utilities for the capacity exchange SDK",
   "type": "module",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc --noEmit",
     "generate-secret": "bun src/cli/generate-secret-key.ts",

@@ -170,6 +170,7 @@
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
         "@sundaeswap/capacity-exchange-providers": "workspace:^",
         "@sundaeswap/capacity-exchange-registry": "workspace:^",
+        "@sundaeswap/capacity-exchange-registry-nodejs": "workspace:^",
         "commander": "^14.0.2",
         "rxjs": "^7.5",
       },

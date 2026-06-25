@@ -8,6 +8,7 @@
     "@capacity-exchange/demo-contracts": "workspace:^",
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "@sundaeswap/capacity-exchange-registry": "workspace:^",
+    "@sundaeswap/capacity-exchange-registry-nodejs": "workspace:^",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
     "@sundaeswap/capacity-exchange-providers": "workspace:^",
     "@midnight-ntwrk/compact-js": "2.5.1",
