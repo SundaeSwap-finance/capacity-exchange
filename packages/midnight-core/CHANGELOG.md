@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-core
 
+## 1.3.1
+
+### Patch Changes
+
+- 0f612a3: Reference latest versions of internal modules
+
 ## 1.3.0
 
 ### Minor Changes

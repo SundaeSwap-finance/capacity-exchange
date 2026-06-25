@@ -1,5 +1,14 @@
 # @sundaeswap/capacity-exchange-coupler
 
+## 0.2.2
+
+### Patch Changes
+
+- 0f612a3: Reference latest versions of internal modules
+- Updated dependencies [0f612a3]
+  - @sundaeswap/capacity-exchange-core@1.3.1
+  - @sundaeswap/capacity-exchange-nodejs@2.1.1
+
 ## 0.2.1
 
 ### Patch Changes
