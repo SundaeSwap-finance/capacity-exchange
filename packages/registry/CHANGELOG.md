@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-registry
 
+## 2.0.1
+
+### Patch Changes
+
+- fb55574: Publish modules to npm
+
 ## 2.0.0
 
 ### Major Changes

@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-coupler
 
+## 0.2.1
+
+### Patch Changes
+
+- fb55574: Publish modules to npm
+
 ## 0.2.0
 
 ### Minor Changes
