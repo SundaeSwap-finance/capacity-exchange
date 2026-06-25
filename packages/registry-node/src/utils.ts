@@ -5,10 +5,10 @@ import { AppContext, buildProviders } from '@sundaeswap/capacity-exchange-nodejs
 import type { Logger } from '@sundaeswap/capacity-exchange-core';
 import {
   createPrivateState,
-  getContractOutDir,
   type RegistryContract,
   type RegistrySecretKey,
 } from '@sundaeswap/capacity-exchange-registry';
+import { getContractOutDir } from '@sundaeswap/capacity-exchange-registry/node';
 
 const SECRET_KEY_BYTES = 64;
 

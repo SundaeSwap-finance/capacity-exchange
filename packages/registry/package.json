@@ -22,6 +22,10 @@
       "bun": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./node": {
+      "bun": "./src/utils.ts",
+      "default": "./dist/utils.js"
+    },
     "./contract/*": "./contract/out/contract/*"
   },
   "author": "",

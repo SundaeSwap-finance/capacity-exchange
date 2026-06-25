@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, it, expect } from 'vitest';
-import { getContractOutDir } from '../src/utils.js';
+import { getContractOutDir } from '@sundaeswap/capacity-exchange-registry/node';
 
 describe('getContractOutDir', () => {
   it('returns a directory containing keys/ and zkir/ subdirectories', () => {
