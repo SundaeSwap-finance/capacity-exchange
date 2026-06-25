@@ -5,12 +5,12 @@ import {
   CompiledRegistryContract,
   constructorArgs,
   createPrivateState,
+  getContractOutDir,
   type RegistryContract,
   type RegistrySecretKey,
   type RegistryConstructorArgs,
 } from '@sundaeswap/capacity-exchange-registry';
 import { generateRandomSecretKey } from './types.js';
-import { getContractOutDir } from './utils.js';
 const logger = createLogger(import.meta);
 
 export interface DeployOutput {
