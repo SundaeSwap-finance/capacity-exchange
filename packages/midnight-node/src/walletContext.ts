@@ -4,6 +4,7 @@ import {
   createAndSyncWalletWithStore,
   deriveWalletKeys,
   resolveWalletConfig,
+  redactUrl,
   DustWalletProvider,
   uint8ArrayToHex,
   type ChainSnapshot,
@@ -64,7 +65,7 @@ function wrapSyncError(err: unknown, endpoints: NetworkEndpoints): Error {
   const msg = err instanceof Error ? err.message : String(err);
   return new Error(
     `Wallet sync failed: ${msg}\n` +
-      `  node:       ${endpoints.nodeUrl}\n` +
+      `  node:       ${redactUrl(endpoints.nodeUrl)}\n` +
       `  indexer:    ${endpoints.indexerHttpUrl}\n` +
       `  proofServer: ${endpoints.proofServerUrl}`
   );

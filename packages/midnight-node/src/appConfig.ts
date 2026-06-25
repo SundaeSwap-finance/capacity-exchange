@@ -46,7 +46,7 @@ export function resolveEnv(): Env {
 
 export function buildNetworkConfig(networkName: string, env: Env): NetworkConfig {
   const networkId = toNetworkIdEnum(networkName);
-  const endpoints = resolveEndpoints(networkId, env.PROOF_SERVER_URL);
+  const endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL, nodeUrl: env.NODE_URL });
   return { networkName, networkId, endpoints };
 }
 

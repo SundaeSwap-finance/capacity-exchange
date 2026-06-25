@@ -69,14 +69,33 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
   ],
 ]);
 
-export function resolveEndpoints(networkId: NetworkId.NetworkId, proofServerUrl?: string): NetworkEndpoints {
+export function resolveEndpoints(
+  networkId: NetworkId.NetworkId,
+  overrides: Partial<NetworkEndpoints> = {}
+): NetworkEndpoints {
   const defaults = NETWORK_DEFAULTS.get(networkId);
   if (!defaults) {
     throw new Error(`Unsupported network '${networkId}'. Supported: ${[...NETWORK_DEFAULTS.keys()].join(', ')}`);
   }
-  const resolvedProofServerUrl = proofServerUrl ?? defaults.proofServerUrl;
-  if (!resolvedProofServerUrl) {
+  const proofServerUrl = overrides.proofServerUrl ?? defaults.proofServerUrl;
+  if (!proofServerUrl) {
     throw new Error(`No proof server configured for '${networkId}'. Set PROOF_SERVER_URL in your .env file.`);
   }
-  return { ...defaults, proofServerUrl: resolvedProofServerUrl };
+  return {
+    nodeUrl: overrides.nodeUrl ?? defaults.nodeUrl,
+    proofServerUrl,
+    indexerHttpUrl: overrides.indexerHttpUrl ?? defaults.indexerHttpUrl,
+    indexerWsUrl: overrides.indexerWsUrl ?? defaults.indexerWsUrl,
+  };
+}
+
+/** Returns scheme://host for logging, dropping path, query, and credentials so an API key
+ *  embedded anywhere in a node URL never reaches logs. */
+export function redactUrl(raw: string): string {
+  try {
+    const u = new URL(raw);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return '[redacted url]';
+  }
 }

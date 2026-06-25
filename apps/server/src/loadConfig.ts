@@ -51,7 +51,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   const logger = createServerLogger();
   const env = parseAppEnv();
   const networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
-  const endpoints = resolveEndpoints(networkId, env.PROOF_SERVER_URL);
+  const endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL });
 
   const priceConfig = loadPriceConfig(env.PRICE_CONFIG_FILE);
   const wallet = await createWalletResources(env, networkId, logger);
