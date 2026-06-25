@@ -1,30 +1,30 @@
 import { TxResult } from '@sundaeswap/capacity-exchange-core';
 import { requireEnvVar, resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { program } from 'commander';
-import { claimExpired } from '../circuits/claim-expired.js';
-import { parseRegistryKeyHex } from '../types.js';
-import { resolveRegistryAddress } from '../defaultAddresses.js';
+import { deregister } from '../circuits/deregister.js';
+import { readSecretKeyFile } from '../utils.js';
+import { resolveRegistryAddress } from '@sundaeswap/capacity-exchange-registry';
 
 function main(): Promise<TxResult> {
   program
-    .name('claim-expired')
-    .description('Claims the collateral from an expired registry entry')
-    .argument('<registryKey>', 'hex-encoded 32-byte registry key of the expired entry')
+    .name('deregister')
+    .description('Deregisters a server from the registry contract')
+    .argument('<secretKeyFile>', 'registry secret key file')
     .argument('<recipientAddress>', 'the address that will receive the collateral refund')
     .argument('[contractAddress]', 'address of the registry contract (defaults to well-known address for network)')
     .parse();
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
 
-  const [registryKeyHex, recipientAddress, contractAddressArg] = program.args;
+  const [secretKeyFile, recipientAddress, contractAddressArg] = program.args;
   const contractAddress = resolveRegistryAddress(networkId, contractAddressArg);
 
-  const registryKey = parseRegistryKeyHex(registryKeyHex);
+  const secretKey = readSecretKeyFile(secretKeyFile);
 
   return withAppContextFromEnv(networkId, (ctx) =>
-    claimExpired(ctx, {
+    deregister(ctx, {
       contractAddress,
-      registryKey,
+      secretKey,
       recipientAddress,
     })
   );

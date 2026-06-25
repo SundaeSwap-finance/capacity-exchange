@@ -5,8 +5,11 @@ import { fileURLToPath } from 'url';
 
 import { AppContext, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
 import type { Logger } from '@sundaeswap/capacity-exchange-core';
-import { createPrivateState, type RegistryContract } from './contract.js';
-import type { RegistrySecretKey } from './types.js';
+import {
+  createPrivateState,
+  type RegistryContract,
+  type RegistrySecretKey,
+} from '@sundaeswap/capacity-exchange-registry';
 
 const SECRET_KEY_BYTES = 64;
 
