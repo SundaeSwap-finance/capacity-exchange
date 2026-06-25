@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import { program } from 'commander';
 import { runCli } from '@sundaeswap/capacity-exchange-nodejs';
-
-import { generateRandomSecretKey, type RegistrySecretKey } from '../types.js';
+import type { RegistrySecretKey } from '@sundaeswap/capacity-exchange-registry';
+import { generateRandomSecretKey } from '../types.js';
 
 async function main(): Promise<void> {
   program
