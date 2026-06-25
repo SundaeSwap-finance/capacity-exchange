@@ -1,5 +1,21 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
+## 2.1.0
+
+### Minor Changes
+
+- 6b97231: Upgrade midnight dependencies to latest preprod versions.
+  Fix import style to work on npm without bundling.
+
+### Patch Changes
+
+- 571226c: Add bun-specific exports of uncompiled TS code
+- Updated dependencies [6b97231]
+- Updated dependencies [5a6ab4f]
+- Updated dependencies [df0e5d6]
+- Updated dependencies [d0ddfd8]
+  - @sundaeswap/capacity-exchange-providers@3.0.0
+
 ## 2.0.0
 
 ### Major Changes
