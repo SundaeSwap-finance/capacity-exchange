@@ -41,7 +41,7 @@ jobs:
       - name: Create Release PR or Publish
         uses: changesets/action@v1
         with:
-          version: bunx changeset version && bun update
+          version: bash -c "bunx changeset version && bun update"
           publish: bun run publish:ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
