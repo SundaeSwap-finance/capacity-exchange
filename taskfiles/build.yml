@@ -47,7 +47,7 @@ tasks:
       - bun run --filter @sundaeswap/capacity-exchange-coupler build
 
   providers:
-    deps: [midnight-node, client, compile-contracts, registry]
+    deps: [midnight-node, client, coupler, compile-contracts, registry]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-providers build
 
@@ -79,7 +79,7 @@ tasks:
 
   # TODO: Also typecheck test directories (packages/*/tests)
   build-all:
-    deps: [libs, server, typecheck-demo-contracts, coupler]
+    deps: [libs, server, typecheck-demo-contracts]
     cmds:
       - task: webapp
         vars:

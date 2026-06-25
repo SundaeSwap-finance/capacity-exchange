@@ -66,7 +66,6 @@ export async function incrementCounter(
     compiledContract: compiledCounterContract,
     contractAddress,
     circuitId: 'increment' as CounterCircuitId,
-    args: [],
   });
 }
 
@@ -114,6 +113,5 @@ export async function findAndIncrementCounter(
     compiledContract: compiledCounterContract,
     contractAddress,
     circuitId: 'increment' as CounterCircuitId,
-    args: [],
   });
 }

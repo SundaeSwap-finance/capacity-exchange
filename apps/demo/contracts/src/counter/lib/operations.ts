@@ -23,7 +23,6 @@ export async function deploy(ctx: AppContext, dryRun = false): Promise<DeployOut
     providers,
     {
       compiledContract: CompiledCounterContract,
-      args: [],
     },
     dryRun
   );
