@@ -12,6 +12,7 @@
   "scripts": {
     "clean": "rm -rf contract/out/",
     "compile": "bunx run-compactc contract/src/registry.compact contract/out",
+    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-core' build",
     "build": "tsc",
     "test": "vitest run",
     "publish:prod": "bun publish --tolerate-republish"
