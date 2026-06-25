@@ -1,5 +1,15 @@
 # @sundaeswap/capacity-exchange-providers
 
+## 3.0.1
+
+### Patch Changes
+
+- 0f612a3: Reference latest versions of internal modules
+- Updated dependencies [0f612a3]
+  - @sundaeswap/capacity-exchange-client@1.2.1
+  - @sundaeswap/capacity-exchange-core@1.3.1
+  - @sundaeswap/capacity-exchange-registry@2.0.2
+
 ## 3.0.0
 
 ### Major Changes

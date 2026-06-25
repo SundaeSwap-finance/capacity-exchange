@@ -1,5 +1,13 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
+## 2.1.1
+
+### Patch Changes
+
+- 0f612a3: Reference latest versions of internal modules
+- Updated dependencies [0f612a3]
+  - @sundaeswap/capacity-exchange-providers@3.0.1
+
 ## 2.1.0
 
 ### Minor Changes
