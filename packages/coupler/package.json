@@ -3,6 +3,11 @@
   "version": "0.2.3",
   "description": "Commitment Coupler: the Midnight-side Compact contract binding the User's reveal to the LP's DUST for the bridgeless ADA/DUST swap",
   "type": "module",
+  "files": [
+    "dist",
+    "out",
+    "LICENSE.md"
+  ],
   "exports": {
     ".": "./src/lib/contract.ts",
     "./operations": "./src/lib/operations.ts",

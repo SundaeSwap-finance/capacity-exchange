@@ -1,12 +1,11 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 
 import { AppContext, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
 import type { Logger } from '@sundaeswap/capacity-exchange-core';
 import {
   createPrivateState,
+  getContractOutDir,
   type RegistryContract,
   type RegistrySecretKey,
 } from '@sundaeswap/capacity-exchange-registry';
@@ -25,13 +24,6 @@ export function readSecretKeyFile(filePath: string): RegistrySecretKey {
     );
   }
   return bytes;
-}
-
-export function getContractOutDir(logger: Logger) {
-  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-  const contractOutDir = path.resolve(moduleDir, '../contract/out');
-  logger.debug(`Contract output directory: ${contractOutDir}`);
-  return contractOutDir;
 }
 
 export async function getProviders(

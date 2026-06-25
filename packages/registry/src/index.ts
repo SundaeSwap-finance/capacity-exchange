@@ -22,6 +22,8 @@ export {
 
 export { computeRegistryKey } from './compact-types.js';
 
+export { getContractOutDir } from './utils.js';
+
 export { getDefaultRegistryAddress, resolveRegistryAddress } from './defaultAddresses.js';
 
 export {

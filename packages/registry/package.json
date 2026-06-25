@@ -4,6 +4,11 @@
   "description": "Registry contract types and utilities for the capacity exchange SDK",
   "type": "module",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "contract/out",
+    "LICENSE.md"
+  ],
   "scripts": {
     "clean": "rm -rf contract/out/",
     "compile": "bunx run-compactc contract/src/registry.compact contract/out",

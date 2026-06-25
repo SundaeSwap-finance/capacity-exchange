@@ -3,6 +3,10 @@
   "version": "2.0.3",
   "description": "Registry utilities for the capacity exchange SDK",
   "type": "module",
+  "files": [
+    "dist",
+    "LICENSE.md"
+  ],
   "exports": {
     ".": {
       "bun": "./src/index.ts",
