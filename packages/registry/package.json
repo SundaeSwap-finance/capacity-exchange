@@ -14,7 +14,8 @@
     "claim-expired": "bun src/cli/claim-expired.ts",
     "renew-registration": "bun src/cli/renew-registration.ts",
     "list-servers": "bun src/cli/list-registered-servers.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "publish:prod": "bun publish --tolerate-republish"
   },
   "exports": {
     ".": {
