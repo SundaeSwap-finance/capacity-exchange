@@ -1,6 +1,6 @@
 import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
-import type { CesApi } from './exchangeApi';
-import type { ChainStateProvider } from './chainStateProvider';
+import type { CesApi } from './exchangeApi.js';
+import type { ChainStateProvider } from './chainStateProvider.js';
 
 /**
  * A price which the caller may pay to sponsor their transaction.

@@ -30,8 +30,12 @@ const logger = pino({ level: 'silent' });
 function createMockWalletService(opts: { balance?: bigint; coins?: any[] } = {}) {
   return {
     state: {
+      capabilities: {
+        coinsAndBalances: {
+          getAvailableCoins: () => opts.coins ?? [],
+        },
+      },
       balance: () => opts.balance ?? 0n,
-      availableCoinsWithFullInfo: () => opts.coins ?? [],
       state: { state: { syncTime: new Date() } },
     },
     syncState: { status: 'ok' as const },

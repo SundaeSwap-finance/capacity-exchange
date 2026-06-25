@@ -1,4 +1,4 @@
-import type { ExchangePrice, Offer } from './types';
+import type { ExchangePrice, Offer } from './types.js';
 
 /** Discriminator tags on `CapacityExchangeError` subclasses. */
 export type CapacityExchangeErrorType =

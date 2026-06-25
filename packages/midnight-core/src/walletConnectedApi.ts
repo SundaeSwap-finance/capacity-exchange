@@ -1,7 +1,7 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { SignatureEnabled, Proof, PreBinding, Binding } from '@midnight-ntwrk/ledger-v8';
 import { Transaction } from '@midnight-ntwrk/ledger-v8';
-import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
+import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import { hexToBytes, uint8ArrayToHex } from './hex.js';
 import { toNetworkIdEnum, resolveEndpoints } from './networks.js';
 import { createWalletFromMnemonic, type CreateWalletFromMnemonicOptions } from './wallet.js';

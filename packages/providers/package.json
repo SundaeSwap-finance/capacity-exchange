@@ -31,23 +31,17 @@
     "@sundaeswap/capacity-exchange-registry": "workspace:^",
     "@sundaeswap/capacity-exchange-client": "workspace:^",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.1",
-    "@midnight-ntwrk/midnight-js-types": "4.0.1",
-    "@midnight-ntwrk/wallet-sdk-facade": "3.0.0"
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js": "4.1.1"
   },
   "peerDependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",
-    "@midnight-ntwrk/ledger-v8": "8.0.3",
-    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0"
+    "@midnight-ntwrk/ledger-v8": "8.1.0"
   },
   "devDependencies": {
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "@eslint/js": "^9.39.2",
-    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
-    "@midnight-ntwrk/ledger-v8": "8.0.3",
-    "@midnight-ntwrk/midnight-js-types": "4.0.1",
-    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
     "@types/node": "^25.1.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",

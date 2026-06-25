@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
+import { deployContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { AppContext, buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { CompiledRegistryContract, constructorArgs, createPrivateState, type RegistryContract } from './contract.js';
 import { getContractOutDir } from './utils.js';

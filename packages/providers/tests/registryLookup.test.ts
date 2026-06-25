@@ -1,12 +1,12 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { resolveCesUrl } from '../src/wallet/registryLookup';
-import { SRV_NAME, makeDohAnswer } from './helpers/srvFixtures';
+import { resolveCesUrl } from '../src/wallet/registryLookup.js';
+import { SRV_NAME, makeDohAnswer } from './helpers/srvFixtures.js';
 
 /** Fetch mock that respects AbortSignal — rejects with AbortError when the signal fires. */
 const mockHangingFetch = () =>
   vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
     return new Promise((_resolve, reject) => {
-      init?.signal?.addEventListener('abort', () => {
+      (init as any)?.signal?.addEventListener('abort', () => {
         reject(new DOMException('The operation was aborted.', 'AbortError'));
       });
     });

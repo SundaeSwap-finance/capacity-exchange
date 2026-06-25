@@ -4,8 +4,8 @@ import type {
   BalancingRecipe,
   ShieldedTokenTransfer,
   UnshieldedTokenTransfer,
-} from '@midnight-ntwrk/wallet-sdk-facade';
-import type { ShieldedAddress, UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
+} from '@midnight-ntwrk/wallet-sdk/facade';
+import type { ShieldedAddress, UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk/address-format';
 import type { WalletKeys } from './keys.js';
 
 export const DEFAULT_TTL_MS = 5 * 60 * 1000;

@@ -10,7 +10,7 @@ import {
   type Transaction,
   Intent,
 } from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { MetricsService } from './metrics.js';

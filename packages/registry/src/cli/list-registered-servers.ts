@@ -6,7 +6,7 @@ import {
   resolveEnv,
   runCli,
 } from '@sundaeswap/capacity-exchange-nodejs';
-import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
 import { program } from 'commander';
 
 import { Registry } from '../contract.js';

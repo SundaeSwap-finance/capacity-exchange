@@ -1,4 +1,4 @@
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import { deriveWalletKeys } from './keys.js';
 import { resolveWalletConfig } from './walletConfig.js';
 import { toNetworkIdEnum } from './networks.js';

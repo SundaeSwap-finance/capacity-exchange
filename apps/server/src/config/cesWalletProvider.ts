@@ -1,5 +1,5 @@
 import type { FastifyBaseLogger } from 'fastify';
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import {
   capacityExchangeWalletProvider,
   type ChainStateProvider,

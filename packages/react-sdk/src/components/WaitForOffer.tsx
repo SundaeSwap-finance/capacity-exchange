@@ -1,5 +1,5 @@
 import { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
-import { currencyName, currencyTitle } from './utils';
+import { currencyName, currencyTitle } from './utils.js';
 
 export interface WaitForOfferProps {
   price: ExchangePrice;

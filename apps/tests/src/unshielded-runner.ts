@@ -14,7 +14,7 @@
  */
 import { runCli, resolveEnv, createLogger, requireEnvVar } from '@sundaeswap/capacity-exchange-nodejs';
 import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
-import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { getBaseTestConfig } from './config.js';
 import { runUnshieldedExchangeFlow, type UnshieldedExchangeFlowResult } from './flows/exchange-flow.js';
 

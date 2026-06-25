@@ -1,12 +1,12 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types';
-import { isOfferExpired } from './utils';
-import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps';
+import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types.js';
+import { isOfferExpired } from './utils.js';
+import { fetchCesPrices, requestCesOffer, processTransactionWithOffer } from './cesSteps.js';
 import {
   CapacityExchangeUserCancelledError,
   CapacityExchangeNoEligibleOfferError,
   CapacityExchangeOfferExpiredError,
-} from './errors';
+} from './errors.js';
 
 async function selectCurrency(
   prices: ExchangePrice[],

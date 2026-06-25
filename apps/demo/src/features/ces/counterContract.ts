@@ -1,7 +1,7 @@
-import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js-contracts';
+import { findDeployedContract, submitCallTx } from '@midnight-ntwrk/midnight-js/contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
-import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js/types';
 import {
   capacityExchangeWalletProvider,
   type BalanceUnsealedTransaction,

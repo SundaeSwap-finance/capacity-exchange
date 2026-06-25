@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**apiAdaOffersPost**](DefaultApi.md#apiadaofferspostoperation) | **POST** /api/ada/offers |  |
 | [**apiMetricsGet**](DefaultApi.md#apimetricsget) | **GET** /api/metrics |  |
 | [**apiOffersPost**](DefaultApi.md#apiofferspostoperation) | **POST** /api/offers |  |
 | [**apiPricesGet**](DefaultApi.md#apipricesget) | **GET** /api/prices |  |
@@ -12,6 +13,78 @@ All URIs are relative to *http://localhost*
 | [**healthReadyGet**](DefaultApi.md#healthreadyget) | **GET** /health/ready |  |
 | [**rootGet**](DefaultApi.md#rootget) | **GET** / |  |
 
+
+
+## apiAdaOffersPost
+
+> ApiOffersPost201Response apiAdaOffersPost(apiAdaOffersPostRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiAdaOffersPostOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // ApiAdaOffersPostRequest
+    apiAdaOffersPostRequest: ...,
+  } satisfies ApiAdaOffersPostOperationRequest;
+
+  try {
+    const data = await api.apiAdaOffersPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **apiAdaOffersPostRequest** | [ApiAdaOffersPostRequest](ApiAdaOffersPostRequest.md) |  | |
+
+### Return type
+
+[**ApiOffersPost201Response**](ApiOffersPost201Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **201** | Default Response |  -  |
+| **400** | Default Response |  -  |
+| **404** | Default Response |  -  |
+| **409** | Default Response |  -  |
+| **410** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **501** | Default Response |  -  |
+| **503** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
 ## apiMetricsGet

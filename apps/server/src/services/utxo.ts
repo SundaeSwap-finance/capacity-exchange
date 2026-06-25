@@ -1,4 +1,4 @@
-import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
+import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
 import { FastifyBaseLogger } from 'fastify';
 import { meterService } from '../meter.js';
 import { WalletService } from './wallet.js';
@@ -89,7 +89,11 @@ export class UtxoService {
     if (!walletState) {
       return 0;
     }
-    return walletState.availableCoinsWithFullInfo(new Date()).length;
+    const availableCoins = walletState.capabilities.coinsAndBalances.getAvailableCoins(
+      walletState.state,
+      new Date(),
+    );
+    return availableCoins.length;
   }
 
   /** Releases a lock early */
@@ -117,7 +121,11 @@ export class UtxoService {
       return { status: 'illegal-state', error: "Wallet is sync'd but no wallet state" };
     }
 
-    const utxos = walletState.availableCoinsWithFullInfo(new Date(now));
+    //const utxos = walletState.availableCoins;
+    const utxos = walletState.capabilities.coinsAndBalances.getAvailableCoins(
+      walletState.state,
+      ctime,
+    );
     this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
 
     const selectedUtxo = utxos.find((utxoInfo) => {

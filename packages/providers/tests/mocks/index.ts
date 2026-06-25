@@ -1,3 +1,3 @@
-export * from './mockProviders';
-export * from './mockCapacityExchangeAPI';
-export * from './mockIndexer';
+export * from './mockProviders.js';
+export * from './mockCapacityExchangeAPI.js';
+export * from './mockIndexer.js';

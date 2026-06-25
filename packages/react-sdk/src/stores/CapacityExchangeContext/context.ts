@@ -1,6 +1,6 @@
 import { createContext, Dispatch, useContext } from 'react';
-import { FundingStatus } from './types';
-import { CapacityExchangeAction } from './actions';
+import { FundingStatus } from './types.js';
+import { CapacityExchangeAction } from './actions.js';
 
 interface Context {
   state: FundingStatus;

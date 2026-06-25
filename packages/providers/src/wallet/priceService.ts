@@ -1,5 +1,5 @@
-import type { CesApi } from './exchangeApi';
-import { Currency, ExchangePrice } from './types';
+import type { CesApi } from './exchangeApi.js';
+import { Currency, ExchangePrice } from './types.js';
 
 /**
  * Fetches prices from all capacity exchanges in parallel.

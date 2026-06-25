@@ -1,4 +1,4 @@
-import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
 
 export function inMemoryPrivateStateProvider(): PrivateStateProvider {
   const statesByContract = new Map<string, Map<string, unknown>>();

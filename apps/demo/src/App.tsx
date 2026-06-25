@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { resolveNetworkConfig, NetworkConfigProvider, requireEnvOneOf } from './config';
 import { useSeedWallet, useExtensionWallet } from './features/wallet';
 import { useActiveWallet } from './features/wallet';

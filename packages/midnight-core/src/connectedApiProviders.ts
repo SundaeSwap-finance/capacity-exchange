@@ -1,6 +1,6 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js-types';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import type {
   CoinPublicKey,
   EncPublicKey,

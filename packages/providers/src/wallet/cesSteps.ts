@@ -1,4 +1,4 @@
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import {
   Intent,
   Proof,
@@ -7,20 +7,20 @@ import {
   type Binding,
   type FinalizedTransaction,
 } from '@midnight-ntwrk/ledger-v8';
-import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types';
-import type { ChainStateProvider } from './chainStateProvider';
-import { isOfferExpired } from './utils';
+import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types.js';
+import type { ChainStateProvider } from './chainStateProvider.js';
+import { isOfferExpired } from './utils.js';
 import { hexToBytes, toRawTokenType } from '@sundaeswap/capacity-exchange-core';
-import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi';
-import { fetchRegistryCesUrls } from './registryLookup';
-import { fetchPricesFromExchanges } from './priceService';
+import { createCesApis, getDefaultRegistryAddress, resolveCesUrls } from './exchangeApi.js';
+import { fetchRegistryCesUrls } from './registryLookup.js';
+import { fetchPricesFromExchanges } from './priceService.js';
 import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 import {
   CapacityExchangeNoPricesAvailableError,
   CapacityExchangeOfferMismatchError,
   CapacityExchangeOfferExpiredError,
   CapacityExchangeOfferTransactionInvalidError,
-} from './errors';
+} from './errors.js';
 
 function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Binding> {
   return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hex);

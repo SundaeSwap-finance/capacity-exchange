@@ -8,7 +8,7 @@ import {
 } from '@sundaeswap/capacity-exchange-core';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import { COUPLER_OUT_DIR } from './contract.js';
 import { createDustSpend } from './dust.js';
 import { buildAbsorbLeg } from './couplerLegs.js';

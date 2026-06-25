@@ -3,7 +3,7 @@ import { toTxResult, TxResult } from '@sundaeswap/capacity-exchange-core';
 import { generateRandomSecretKey } from '../types.js';
 import { CompiledRegistryContract } from '../contract.js';
 import { getProviders } from '../utils.js';
-import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
+import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import { circuitId } from './deregister.js';
 
 const logger = createLogger(import.meta);

@@ -1,5 +1,5 @@
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
-import { MidnightProvider, PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
+import { MidnightProvider, PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
 import type { AppConfig, NetworkConfig } from './appConfig.js';
 import { checkWebSocket, checkIndexerFreshness, checkProofServer } from './connectivity.js';
 import { createPrivateStateProvider } from './levelPrivateStateProvider.js';

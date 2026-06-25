@@ -4,7 +4,7 @@ import {
   ShieldedAddress,
   ShieldedCoinPublicKey,
   ShieldedEncryptionPublicKey,
-} from '@midnight-ntwrk/wallet-sdk-address-format';
+} from '@midnight-ntwrk/wallet-sdk/address-format';
 
 export type ParseCoinPublicKeyResult = { ok: true; coinPublicKey: string } | { ok: false; error: string };
 

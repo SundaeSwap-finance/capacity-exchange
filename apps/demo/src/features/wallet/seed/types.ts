@@ -1,4 +1,4 @@
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 import type { WalletCapabilities } from '../types';
 import type { WalletKeys } from './walletService';
 import type { SyncProgressInfo } from './walletService';

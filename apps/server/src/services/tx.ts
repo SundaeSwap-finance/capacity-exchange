@@ -19,8 +19,8 @@ import {
   ProofProvider,
   ZKConfigProvider,
   type UnboundTransaction,
-} from '@midnight-ntwrk/midnight-js-types';
-import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk-dust-wallet/v1';
+} from '@midnight-ntwrk/midnight-js/types';
+import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
 
 // The server's dust-spend txs don't take zk config / circuit artifacts.
 class EmptyZKConfigProvider extends ZKConfigProvider<never> {

@@ -19,8 +19,8 @@
     "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
-    "@midnight-ntwrk/ledger-v8": "8.0.3",
-    "@midnight-ntwrk/midnight-js-types": "4.0.1",
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
+    "@midnight-ntwrk/midnight-js": "4.1.1",
     "@sundaeswap/capacity-exchange-providers": "workspace:^"
   },
   "devDependencies": {

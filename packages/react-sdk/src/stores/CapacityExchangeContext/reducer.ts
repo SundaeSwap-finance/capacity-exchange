@@ -1,5 +1,5 @@
-import { CapacityExchangeAction } from './actions';
-import { FundingStatus } from './types';
+import { CapacityExchangeAction } from './actions.js';
+import { FundingStatus } from './types.js';
 
 export const capacityExchangeReducer = (state: FundingStatus, action: CapacityExchangeAction): FundingStatus => {
   if (action.action === 'prompt-for-currency') {

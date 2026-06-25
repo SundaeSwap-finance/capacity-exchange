@@ -6,8 +6,8 @@ import {
   OfferConfirmationResult,
   PromptForCurrency,
 } from '@sundaeswap/capacity-exchange-providers';
-import { WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { useCapacityExchangeContext } from '../stores/CapacityExchangeContext/context';
+import { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { useCapacityExchangeContext } from '../stores/CapacityExchangeContext/context.js';
 import { useCallback, useMemo, useRef } from 'react';
 
 export type CapacityExchangeConfig = Omit<CapacityExchangeImplConfig, 'promptForCurrency' | 'confirmOffer'>;

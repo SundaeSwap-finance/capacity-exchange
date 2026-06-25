@@ -12,14 +12,14 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { HealthReadyGet200ResponseWallet } from './HealthReadyGet200ResponseWallet';
+import { mapValues } from '../runtime.js';
+import type { HealthReadyGet200ResponseWallet } from './HealthReadyGet200ResponseWallet.js';
 import {
     HealthReadyGet200ResponseWalletFromJSON,
     HealthReadyGet200ResponseWalletFromJSONTyped,
     HealthReadyGet200ResponseWalletToJSON,
     HealthReadyGet200ResponseWalletToJSONTyped,
-} from './HealthReadyGet200ResponseWallet';
+} from './HealthReadyGet200ResponseWallet.js';
 
 /**
  * 

@@ -1,4 +1,4 @@
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk/facade';
 
 /**
  * Returns the shielded balance for a given token type.

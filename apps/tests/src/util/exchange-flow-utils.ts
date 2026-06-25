@@ -1,7 +1,7 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
-import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
+import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledCounterContract, Counter, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
 import { firstValueFrom } from 'rxjs';
@@ -59,6 +59,7 @@ export async function runExchangeFlowCore(
     compiledContract: CompiledCounterContract,
     contractAddress: counterAddress,
     circuitId: 'increment' as const,
+    args: [],
   });
   logger.info({ status: result.public.status }, 'Submitted, waiting for state to settle');
   await new Promise((r) => setTimeout(r, 8_000));

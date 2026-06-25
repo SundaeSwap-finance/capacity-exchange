@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
+import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import { runCli, withAppContextFromEnv } from '../cli.js';
 import { createLogger } from '../createLogger.js';
 import { registerAllForDust, waitForDustBalance } from '../dust-registration.js';

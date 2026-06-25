@@ -1,5 +1,5 @@
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js-types';
+import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
 
 const DB_PATH = '.midnight-private-state';
 

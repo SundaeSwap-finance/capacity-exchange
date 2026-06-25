@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchRegistryCesUrls } from '../src/wallet/registryLookup';
-import { makeDohAnswer } from './helpers/srvFixtures';
+import { fetchRegistryCesUrls } from '../src/wallet/registryLookup.js';
+import { makeDohAnswer } from './helpers/srvFixtures.js';
 
 vi.mock('@sundaeswap/capacity-exchange-registry', () => ({
   SRV_SERVICE_PREFIX: '_capacityexchange._tcp.',

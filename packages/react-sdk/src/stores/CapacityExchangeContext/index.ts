@@ -1,3 +1,3 @@
-export { useCapacityExchangeContext } from './context';
-export type { CapacityExchangeAction } from './actions';
-export type { FundingStatus } from './types';
+export { useCapacityExchangeContext } from './context.js';
+export type { CapacityExchangeAction } from './actions.js';
+export type { FundingStatus } from './types.js';

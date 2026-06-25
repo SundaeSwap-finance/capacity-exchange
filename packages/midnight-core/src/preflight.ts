@@ -4,9 +4,9 @@ import {
   verifyContractState,
   type UnprovenCallTxProvidersBase,
   type UnprovenCallTxProvidersWithPrivateState,
-} from '@midnight-ntwrk/midnight-js-contracts';
-import type { CallTxOptionsBase, CallTxOptionsWithPrivateStateId } from '@midnight-ntwrk/midnight-js-contracts';
-import type { UnsubmittedCallTxData } from '@midnight-ntwrk/midnight-js-contracts';
+} from '@midnight-ntwrk/midnight-js/contracts';
+import type { CallTxOptionsBase, CallTxOptionsWithPrivateStateId } from '@midnight-ntwrk/midnight-js/contracts';
+import type { UnsubmittedCallTxData } from '@midnight-ntwrk/midnight-js/contracts';
 
 /**
  * Fetches the on-chain contract state and verifies that the local verifier key

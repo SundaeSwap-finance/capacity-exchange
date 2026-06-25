@@ -1,4 +1,4 @@
-import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
+import type { NetworkId } from '@midnight-ntwrk/wallet-sdk';
 import { COST_PARAMS } from './params.js';
 import { resolveEndpoints, type NetworkEndpoints } from './networks.js';
 

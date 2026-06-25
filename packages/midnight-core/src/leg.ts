@@ -5,8 +5,8 @@ import {
   type ProofData,
   type EncodedZswapLocalState,
 } from '@midnight-ntwrk/compact-runtime';
-import { getStates } from '@midnight-ntwrk/midnight-js-contracts';
-import type { PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js-types';
+import { getStates } from '@midnight-ntwrk/midnight-js/contracts';
+import type { PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
 
 export type EncodedOutput = EncodedZswapLocalState['outputs'][number];
 export type EncodedInput = EncodedZswapLocalState['inputs'][number];

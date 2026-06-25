@@ -1,7 +1,7 @@
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import type { MidnightProviders, FinalizedTxData } from '@midnight-ntwrk/midnight-js-types';
-import { SucceedEntirely } from '@midnight-ntwrk/midnight-js-types';
+import type { MidnightProviders, FinalizedTxData } from '@midnight-ntwrk/midnight-js/types';
+import { SucceedEntirely } from '@midnight-ntwrk/midnight-js/types';
 import type { Contract } from '@midnight-ntwrk/compact-js';
 import {
   createUnprovenDeployTx,
@@ -9,7 +9,7 @@ import {
   submitTx,
   CallTxFailedError,
   type ContractProviders,
-} from '@midnight-ntwrk/midnight-js-contracts';
+} from '@midnight-ntwrk/midnight-js/contracts';
 import { buildUnprovenCallTx } from '@sundaeswap/capacity-exchange-core';
 import type {
   CallTxOptionsWithPrivateStateId,
@@ -18,7 +18,7 @@ import type {
   UnsubmittedCallTxData,
   DeployContractOptions,
   DeployedContract,
-} from '@midnight-ntwrk/midnight-js-contracts';
+} from '@midnight-ntwrk/midnight-js/contracts';
 import { AppContext } from './appContext.js';
 import { createLogger } from './createLogger.js';
 
