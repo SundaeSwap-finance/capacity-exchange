@@ -89,8 +89,8 @@ export function resolveEndpoints(
   };
 }
 
-/** Returns scheme://host for logging, dropping path, query, and credentials so an API key
- *  embedded anywhere in a node URL never reaches logs. */
+/** Returns scheme://host for logging, dropping the path, query, and credentials. A secret in
+ *  the path or query is removed. One embedded in the host would still appear. */
 export function redactUrl(raw: string): string {
   try {
     const u = new URL(raw);

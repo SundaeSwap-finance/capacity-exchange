@@ -92,7 +92,7 @@ async function syncWallet(
 export async function createWalletContext(config: AppConfig): Promise<WalletContext> {
   const seedHex = uint8ArrayToHex(config.wallet.seed);
   const timeoutMs = config.wallet.walletSyncTimeoutMs ?? 120_000;
-  const walletConfig = resolveWalletConfig(config.network.networkId, config.network.endpoints.proofServerUrl);
+  const walletConfig = resolveWalletConfig(config.network.networkId, config.network.endpoints);
 
   logger.info('Creating and syncing wallets...');
   let synced: SyncedWallet;
