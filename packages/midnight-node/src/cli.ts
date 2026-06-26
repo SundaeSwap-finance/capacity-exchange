@@ -1,4 +1,5 @@
 import { setNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
+import { redactUrl } from '@sundaeswap/capacity-exchange-core';
 import { AppContext, createAppContext } from './appContext.js';
 import { AppConfig, buildAppConfig, resolveEnv } from './appConfig.js';
 import { createLogger } from './createLogger.js';
@@ -12,7 +13,11 @@ const logger = createLogger(import.meta);
 export async function withAppContext<T>(config: AppConfig, fn: (ctx: AppContext) => T | Promise<T>): Promise<T> {
   logger.info(`Process ID: ${process.pid}`);
   const { seed: _, ...loggableWallet } = config.wallet;
-  logger.info('Config:', { network: config.network, wallet: loggableWallet });
+  const loggableNetwork = {
+    ...config.network,
+    endpoints: { ...config.network.endpoints, nodeUrl: redactUrl(config.network.endpoints.nodeUrl) },
+  };
+  logger.info('Config:', { network: loggableNetwork, wallet: loggableWallet });
   setNetworkId(config.network.networkId);
   logger.info('Starting app context...');
   const ctx = await createAppContext(config);

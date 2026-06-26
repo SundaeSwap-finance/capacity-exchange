@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import { redactUrl } from '@sundaeswap/capacity-exchange-core';
 import { createLogger } from './createLogger.js';
 
 const logger = createLogger(import.meta);
@@ -31,23 +32,24 @@ async function fetchLatestBlock(indexerHttpUrl: string): Promise<{ height: numbe
 }
 
 export function checkWebSocket(url: string, timeoutMs = 10_000): Promise<void> {
-  logger.info(`Checking ws at ${url}...`);
+  const safeUrl = redactUrl(url);
+  logger.info(`Checking ws at ${safeUrl}...`);
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     const timer = setTimeout(() => {
       ws.terminate();
-      reject(new Error(`Connection to ${url} timed out after ${timeoutMs / 1000}s`));
+      reject(new Error(`Connection to ${safeUrl} timed out after ${timeoutMs / 1000}s`));
     }, timeoutMs);
     ws.once('open', () => {
       clearTimeout(timer);
       ws.close();
-      logger.info(`${url} is healthy`);
+      logger.info(`${safeUrl} is healthy`);
       resolve();
     });
     ws.once('error', () => {
       clearTimeout(timer);
       ws.terminate();
-      reject(new Error(`Failed to connect to ${url}`));
+      reject(new Error(`Failed to connect to ${safeUrl}`));
     });
   });
 }

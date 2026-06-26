@@ -32,7 +32,7 @@ export function createConnectedAPI(
   const { walletFacade, keys } = connection;
   const { shieldedSecretKeys, dustSecretKey } = keys;
   const enumId = toNetworkIdEnum(networkId);
-  const endpoints = resolveEndpoints(enumId, proofServerUrl);
+  const endpoints = resolveEndpoints(enumId, { proofServerUrl });
 
   return {
     async getShieldedBalances() {
