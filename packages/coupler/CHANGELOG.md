@@ -1,5 +1,13 @@
 # @sundaeswap/capacity-exchange-coupler
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [b1d5ce6]
+  - @sundaeswap/capacity-exchange-core@2.0.0
+  - @sundaeswap/capacity-exchange-nodejs@2.2.0
+
 ## 0.2.3
 
 ### Patch Changes
