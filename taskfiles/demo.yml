@@ -12,16 +12,17 @@ tasks:
 
   copy-configs:
     cmds:
-      - mkdir -p {{.WEBAPP_DIR}}/public/contracts
-      - cp {{.CONTRACTS_DIR}}/.contracts.*.public.json {{.WEBAPP_DIR}}/public/contracts/ 2>/dev/null || true
+      # Stage the active network's deploy bundle as the webapp's /contracts.json (the path
+      # the demo fetches at runtime). No-op if the network hasn't been deployed locally.
+      - cp {{.CONTRACTS_DIR}}/.contracts.{{.NETWORK_ID}}.deployed.json {{.WEBAPP_DIR}}/public/contracts.json 2>/dev/null || true
 
   # --- Preconditions ---
 
   require-deployed:
     run: once
     preconditions:
-      - sh: 'ls {{.WEBAPP_DIR}}/public/contracts/.contracts.*.public.json >/dev/null 2>&1'
-        msg: "Deployed contract configs not found. Run 'NETWORK_ID=... task setup:demo' first."
+      - sh: 'test -f {{.WEBAPP_DIR}}/public/contracts.json && grep -q ''"network": "{{.NETWORK_ID}}"'' {{.WEBAPP_DIR}}/public/contracts.json'
+        msg: "Deployed contract config for '{{.NETWORK_ID}}' not found at public/contracts.json. Run 'NETWORK_ID={{.NETWORK_ID}} task setup:demo' first."
 
   require-demo-price-config:
     run: once

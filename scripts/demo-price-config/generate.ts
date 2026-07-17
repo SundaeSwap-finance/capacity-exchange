@@ -20,7 +20,7 @@ export function generate(networkId: string): void {
   const config = {
     priceFormulas: example.priceFormulas.map((pf: Record<string, string>) => ({
       ...pf,
-      currency: contracts.tokenMint.derivedTokenColor,
+      currency: { type: 'midnight:shielded', rawId: contracts.tokenMint.derivedTokenColor },
     })),
     sponsorAll: example.sponsorAll ?? false,
     sponsoredContracts: [
