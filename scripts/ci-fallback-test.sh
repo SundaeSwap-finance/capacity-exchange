@@ -37,7 +37,9 @@ SERVER2_PORT=3001
 SERVER_READINESS_RETRIES=900
 WALLET_SYNC_TIMEOUT_MS=1500000  # 25 minutes — first run syncs from genesis
 
-CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
+# Sync start point; defaults to the committed snapshots (refreshed weekly by the
+# weekly-wallet-snapshot workflow). Override with CHAIN_SNAPSHOT_DIR if needed.
+CHAIN_SNAPSHOT_DIR="${CHAIN_SNAPSHOT_DIR:-$ROOT_DIR/apps/demo/public/wallet-snapshots}"
 NO_DUST_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.$NETWORK_ID.no-dust.json"
 
 log() { echo "=== [ci-fallback-test] $*"; }

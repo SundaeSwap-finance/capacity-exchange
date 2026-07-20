@@ -58,59 +58,9 @@ jobs:
         if: always()
         run: cat apps/server/*_server.log 2>/dev/null || true
 
-  chain-snapshot:
-    name: 'Chain snapshot (${{ matrix.env }})'
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    strategy:
-      matrix:
-        env: [preview]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - uses: go-task/setup-task@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build packages
-        run: task build:libs
-
-      - name: Restore cached chain snapshot
-        if: ${{ !inputs.force_fresh }}
-        uses: actions/cache/restore@v4
-        with:
-          path: .chain-snapshots
-          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
-            chain-snapshot-${{ matrix.env }}-
-
-      - name: Update chain snapshot
-        run: |
-          bun scripts/update-wallet-snapshots.ts \
-            --out-dir .chain-snapshots \
-            ${{ inputs.force_fresh && '--force-fresh' || '' }} \
-            ${{ matrix.env }}
-
-      - name: Save chain snapshot cache
-        uses: actions/cache/save@v4
-        with:
-          path: .chain-snapshots
-          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
-
-      - name: Upload chain snapshot artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chain-snapshot-${{ matrix.env }}
-          path: .chain-snapshots/
-          include-hidden-files: true
-          retention-days: 5
-
   smoke:
     name: 'Smoke tests (${{ matrix.env }})'
-    needs: chain-snapshot
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -130,14 +80,9 @@ jobs:
       - name: Build packages
         run: task build:libs
 
-      - name: Restore chain snapshot
-        uses: actions/cache/restore@v4
-        with:
-          path: .chain-snapshots
-          key: chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            chain-snapshot-${{ matrix.env }}-${{ hashFiles('bun.lock') }}-
-            chain-snapshot-${{ matrix.env }}-
+      # Chain snapshot sync start point comes from the committed snapshots in
+      # apps/demo/public/wallet-snapshots (refreshed weekly by the
+      # weekly-wallet-snapshot workflow), so no cache restore is needed here.
 
       - name: Restore wallet state
         if: ${{ !inputs.force_fresh }}
