@@ -61,10 +61,6 @@ validate_env() {
     log "ERROR: Set either REGISTRY_WALLET_MNEMONIC or REGISTRY_WALLET_SEED"
     exit 1
   fi
-  if [ -z "${UNSHIELDED_EXCHANGE_WALLET_MNEMONIC:-}" ] && [ -z "${UNSHIELDED_EXCHANGE_WALLET_SEED:-}" ]; then
-    log "ERROR: Set either UNSHIELDED_EXCHANGE_WALLET_MNEMONIC or UNSHIELDED_EXCHANGE_WALLET_SEED"
-    exit 1
-  fi
   for var in COUNTER_ADDRESS TOKEN_MINT_ADDRESS DERIVED_TOKEN_COLOR UNSHIELDED_TOKEN_COLOR; do
     if [ -z "${!var:-}" ]; then
       log "ERROR: $var is not set"
@@ -136,6 +132,10 @@ run_tests() {
 }
 
 run_unshielded_test() {
+  if [ -z "${UNSHIELDED_EXCHANGE_WALLET_MNEMONIC:-}" ] && [ -z "${UNSHIELDED_EXCHANGE_WALLET_SEED:-}" ]; then
+    log "Skipping unshielded exchange test; no wallet configured"
+    exit 0
+  fi
   log "Running unshielded exchange flow against $NETWORK_ID"
   env \
     NETWORK_ID="$NETWORK_ID" \
