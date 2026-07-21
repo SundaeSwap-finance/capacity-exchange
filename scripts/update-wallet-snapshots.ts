@@ -11,8 +11,8 @@
  *
  * Examples:
  *   bun scripts/update-wallet-snapshots.ts --out-dir apps/demo/public/wallet-snapshots
- *   bun scripts/update-wallet-snapshots.ts --out-dir .chain-snapshots preview
- *   bun scripts/update-wallet-snapshots.ts --out-dir .chain-snapshots --force-fresh preview
+ *   bun scripts/update-wallet-snapshots.ts --out-dir apps/demo/public/wallet-snapshots preview
+ *   bun scripts/update-wallet-snapshots.ts --out-dir apps/demo/public/wallet-snapshots --force-fresh preview
  */
 
 import * as path from 'path';

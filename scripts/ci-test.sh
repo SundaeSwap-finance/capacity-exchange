@@ -37,7 +37,9 @@ CES_SERVER_PRICE_CONFIG="$ROOT_DIR/apps/server/price-config.ci.json"
 CES_SERVER_QUOTE_SECRET="$ROOT_DIR/apps/server/.quote-secret.ci.key"
 
 CACHED_WALLET_STATE_DIR="$ROOT_DIR/.wallet-states"
-CHAIN_SNAPSHOT_DIR="$ROOT_DIR/.chain-snapshots"
+# Sync start point; defaults to the committed snapshots (refreshed weekly by the
+# weekly-wallet-snapshot workflow). Override with CHAIN_SNAPSHOT_DIR if needed.
+CHAIN_SNAPSHOT_DIR="${CHAIN_SNAPSHOT_DIR:-$ROOT_DIR/apps/demo/public/wallet-snapshots}"
 
 log() { echo "=== [ci-test] $*"; }
 

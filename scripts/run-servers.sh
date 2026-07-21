@@ -32,7 +32,7 @@
 #   - BASE_DASHBOARD_PORT     Dashboard base port (default: 4000)
 #   - MIDNIGHT_NETWORK        Network to connect to (default: preview)
 #   - SKIP_BALANCE_CHECK      Set to 1 to bypass wallet balance checks (default: 0)
-#   - CHAIN_SNAPSHOT_DIR      Path to chain snapshots (default: .chain-snapshots/ at repo root).
+#   - CHAIN_SNAPSHOT_DIR      Path to chain snapshots (default: apps/demo/public/wallet-snapshots/ at repo root).
 #   - LOG_DIR                 Directory for server log files (default: repo root).
 #   - WALLET_STATE_DIR        Directory for wallet state (default: .wallet-states/ at repo root).
 
@@ -50,7 +50,7 @@ MIDNIGHT_NETWORK=${MIDNIGHT_NETWORK:-preview}
 SKIP_BALANCE_CHECK=${SKIP_BALANCE_CHECK:-0}
 LOG_DIR=${LOG_DIR:-$ROOT_DIR}
 WALLET_STATE_DIR="${WALLET_STATE_DIR:-$ROOT_DIR/.wallet-states}"
-CHAIN_SNAPSHOT_DIR="${CHAIN_SNAPSHOT_DIR:-$ROOT_DIR/.chain-snapshots}"
+CHAIN_SNAPSHOT_DIR="${CHAIN_SNAPSHOT_DIR:-$ROOT_DIR/apps/demo/public/wallet-snapshots}"
 CES_SERVER_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.json"
 CES_SERVER_NO_DUST_PRICE_CONFIG="$PROJECT_ROOT/price-config.$MIDNIGHT_NETWORK.no-dust.json"
 QUOTE_TTL_SECONDS=${QUOTE_TTL_SECONDS:-300}
