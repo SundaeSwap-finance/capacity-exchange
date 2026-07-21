@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-registry-nodejs",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Registry utilities for the capacity exchange SDK",
   "type": "module",
   "files": [
