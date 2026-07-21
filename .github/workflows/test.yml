@@ -80,10 +80,6 @@ jobs:
       - name: Build packages
         run: task build:libs
 
-      # Chain snapshot sync start point comes from the committed snapshots in
-      # apps/demo/public/wallet-snapshots (refreshed weekly by the
-      # weekly-wallet-snapshot workflow), so no cache restore is needed here.
-
       - name: Restore wallet state
         if: ${{ !inputs.force_fresh }}
         uses: actions/cache/restore@v4
