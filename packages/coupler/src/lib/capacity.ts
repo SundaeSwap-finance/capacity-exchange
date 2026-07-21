@@ -46,7 +46,14 @@ export async function buildCapacityFragment(
     ledgerParameters,
   };
 
-  const absorbLeg = await buildAbsorbLeg(ctx, couplerAddress, priced.h, priced.hPrime, priced.nonce);
+  const absorbLeg = await buildAbsorbLeg(
+    ctx.walletContext.walletProvider,
+    ctx.publicDataProvider,
+    couplerAddress,
+    priced.h,
+    priced.hPrime,
+    priced.nonce
+  );
 
   const fragment = buildFragmentTx([absorbLeg], priced.ttl, ledgerParameters, { dust });
   logger.info(`Proving capacity fragment (absorb and ${priced.vFeeSpecks} specks dust)...`);
