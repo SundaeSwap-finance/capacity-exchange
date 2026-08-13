@@ -269,6 +269,11 @@ function InlineCurrencySelection({
     if (!canAffordA && canAffordB) {
       return 1;
     }
+    const knownA = resolveTokenLabel(a.price.currency, mintedTokenColor).known;
+    const knownB = resolveTokenLabel(b.price.currency, mintedTokenColor).known;
+    if (knownA !== knownB) {
+      return knownA ? -1 : 1;
+    }
     return 0;
   });
 

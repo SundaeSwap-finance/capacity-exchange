@@ -23,14 +23,14 @@ const KNOWN_TOKENS: Record<string, { label: string; className: string; decimals?
 export function resolveTokenLabel(
   currency: Currency,
   mintedTokenColor: string | null
-): { label: string; className: string; decimals: number } {
+): { label: string; className: string; decimals: number; known: boolean } {
   if (mintedTokenColor && currency.type === 'midnight:shielded' && currency.rawId === mintedTokenColor) {
-    return { label: 'Tutorial Tokens', className: 'text-ces-gold', decimals: 0 };
+    return { label: 'Tutorial Tokens', className: 'text-ces-gold', decimals: 0, known: true };
   }
 
-  const known = KNOWN_TOKENS[currency.rawId];
-  if (known) {
-    return { ...known, decimals: known.decimals ?? 0 };
+  const entry = KNOWN_TOKENS[currency.rawId];
+  if (entry) {
+    return { ...entry, decimals: entry.decimals ?? 0, known: true };
   }
 
   // Truncated hex fallback
@@ -38,5 +38,6 @@ export function resolveTokenLabel(
     label: `${currency.rawId.slice(0, 8)}...${currency.rawId.slice(-6)}`,
     className: 'text-ces-text-muted',
     decimals: 0,
+    known: false,
   };
 }
