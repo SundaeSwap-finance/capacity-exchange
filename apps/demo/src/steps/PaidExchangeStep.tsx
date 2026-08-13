@@ -4,7 +4,7 @@ import { RotatingStatusText } from '../components/RotatingStatusText';
 import { CounterCard } from '../components/CounterCard';
 import { TokenBalanceCard } from '../components/TokenBalanceCard';
 import { TransactionProgress } from '../components/TransactionProgress';
-import { formatDust } from '../utils/format';
+import { formatDust, formatUnits } from '../utils/format';
 import type { WalletData } from '../features/wallet/types';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { ExchangePrice, CurrencySelectionResult } from '../features/ces/types';
@@ -299,8 +299,8 @@ function InlineCurrencySelection({
             <div className="flex justify-between items-center">
               <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
               <div className="text-right">
-                <span className="text-ces-gold font-display font-semibold">{ep.price.amount}</span>
-                <span className="text-ces-text-muted/50 text-[10px] ml-1.5">(bal: {balance.toString()})</span>
+                <span className="text-ces-gold font-display font-semibold">{formatUnits(cost, token.decimals)}</span>
+                <span className="text-ces-text-muted/50 text-[10px] ml-1.5">(bal: {formatUnits(balance, token.decimals)})</span>
               </div>
             </div>
           </button>

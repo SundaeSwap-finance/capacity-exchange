@@ -8,6 +8,7 @@ import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
 import { resolveTokenLabel } from '../utils/tokenLabels';
+import { formatUnits } from '../utils/format';
 import { DevAccessForm } from './DevAccessStep';
 
 interface PlaygroundStepProps {
@@ -297,7 +298,7 @@ function CesPlaygroundAction({
                     >
                       <div className="flex justify-between">
                         <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
-                        <span className="text-ces-gold font-semibold">{ep.price.amount}</span>
+                        <span className="text-ces-gold font-semibold">{formatUnits(BigInt(ep.price.amount), token.decimals)}</span>
                       </div>
                     </button>
                   );

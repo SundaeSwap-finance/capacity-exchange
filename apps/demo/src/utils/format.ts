@@ -41,6 +41,24 @@ export function formatDust(specks: bigint): string {
   return `${whole.toLocaleString()}.${decimal}`;
 }
 
+// Formats a raw token amount using the token's decimal places.
+//   formatUnits(20000n, 6) → "0.02"
+//   formatUnits(1_500_000n, 6) → "1.5"
+//   formatUnits(125n, 0) → "125"
+export function formatUnits(amount: bigint, decimals: number): string {
+  if (decimals === 0) {
+    return amount.toLocaleString();
+  }
+  const unit = 10n ** BigInt(decimals);
+  const whole = amount / unit;
+  const remainder = amount % unit;
+  if (remainder === 0n) {
+    return whole.toLocaleString();
+  }
+  const decimal = remainder.toString().padStart(decimals, '0').replace(/0+$/, '');
+  return `${whole.toLocaleString()}.${decimal}`;
+}
+
 export function formatDustFull(specks: bigint): string {
   const { whole, decimal } = getDustParts(specks);
   return decimal ? `${whole.toLocaleString()}.${decimal}` : whole.toLocaleString();
