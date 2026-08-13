@@ -45,6 +45,8 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     extensionWallet.status !== 'connecting' &&
     extensionWallet.status !== 'connected';
 
+  const extensionAvailable = extensionWallet.status !== 'unavailable';
+
   // Skip intro if already connecting/connected
   useEffect(() => {
     if (isConnecting || isConnected) {
@@ -211,12 +213,15 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       </NarrativeCard>
 
       <div className="ces-section-stack">
-        {/* TODO: re-enable once newer Lace build is released */}
-        {/* extensionAvailable && (
-            <button onClick={() => extensionWallet.connect()} className="ces-btn-primary w-full py-4">
-              Connect Wallet Extension
-            </button>
-          ) */}
+        {extensionAvailable && (
+          <button
+            onClick={() => extensionWallet.connect()}
+            disabled={extensionWallet.status === 'connecting'}
+            className="ces-btn-primary w-full py-4"
+          >
+            {extensionWallet.status === 'connecting' ? 'Waiting for wallet approval...' : 'Connect Wallet Extension'}
+          </button>
+        )}
 
         {/* Saved wallets */}
         {wallets.length > 0 && (
