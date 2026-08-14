@@ -39,7 +39,7 @@ export function connectedApiProvidersAdapter(connectedAPI: ConnectedAPI, identit
     },
     async balanceTx(tx: UnboundTransaction): Promise<FinalizedTransaction> {
       const serialized = uint8ArrayToHex(tx.serialize());
-      const result = await connectedAPI.balanceUnsealedTransaction(serialized);
+      const result = await connectedAPI.balanceUnsealedTransaction(serialized, { payFees: false });
       return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
         'signature',
         'proof',
