@@ -303,7 +303,9 @@ function CesPlaygroundAction({
                     >
                       <div className="flex justify-between">
                         <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
-                        <span className="text-ces-gold font-semibold">{formatUnits(BigInt(ep.price.amount), token.decimals)}</span>
+                        <span className="text-ces-gold font-semibold">
+                          {formatUnits(BigInt(ep.price.amount), token.decimals)}
+                        </span>
                       </div>
                     </button>
                   );

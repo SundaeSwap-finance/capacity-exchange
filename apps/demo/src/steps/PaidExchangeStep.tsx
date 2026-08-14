@@ -305,7 +305,9 @@ function InlineCurrencySelection({
               <span className={`text-xs font-semibold ${token.className}`}>{token.label}</span>
               <div className="text-right">
                 <span className="text-ces-gold font-display font-semibold">{formatUnits(cost, token.decimals)}</span>
-                <span className="text-ces-text-muted/50 text-[10px] ml-1.5">(bal: {formatUnits(balance, token.decimals)})</span>
+                <span className="text-ces-text-muted/50 text-[10px] ml-1.5">
+                  (bal: {formatUnits(balance, token.decimals)})
+                </span>
               </div>
             </div>
           </button>
