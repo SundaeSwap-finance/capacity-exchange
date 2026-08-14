@@ -43,8 +43,8 @@ function buildExtensionWalletProviders(
   const { connectedAPI } = walletConnection;
   const { walletProvider, midnightProvider } = connectedApiProvidersAdapter(connectedAPI, identity);
 
-  const balanceUnsealedTransaction = connectedAPI.balanceUnsealedTransaction.bind(connectedAPI);
-  const balanceSealedTransaction = connectedAPI.balanceSealedTransaction.bind(connectedAPI);
+  const balanceUnsealedTransaction = (tx: string) => connectedAPI.balanceUnsealedTransaction(tx, { payFees: false });
+  const balanceSealedTransaction = (tx: string) => connectedAPI.balanceSealedTransaction(tx, { payFees: false });
 
   return { walletProvider, midnightProvider, balanceUnsealedTransaction, balanceSealedTransaction };
 }
