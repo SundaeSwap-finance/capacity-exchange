@@ -41,9 +41,15 @@ export {
   type EncodeShieldedAddressResult,
   detectMidnightExtension,
   connectMidnightExtension,
+  type ConnectMidnightExtensionOptions,
   type ConnectMidnightExtensionResult,
   type DetectMidnightExtensionResult,
 } from './midnight.js';
+export {
+  withExtensionApprovalGuard,
+  type ExtensionApprovalGuardOptions,
+  type ExtensionApprovalRetryInfo,
+} from './extensionApprovalGuard.js';
 export { type StateStore, withPrefix } from './stateStore.js';
 export { LocalStorageStateStore } from './localStorageStateStore.js';
 export { deriveTokenColor, toRawTokenType } from './tokenColor.js';

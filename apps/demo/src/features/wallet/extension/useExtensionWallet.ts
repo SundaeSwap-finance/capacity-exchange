@@ -56,7 +56,15 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
     setError(null);
 
     try {
-      const result = await connectMidnightExtension(networkId);
+      const result = await connectMidnightExtension(networkId, {
+        approvalGuard: {
+          onRetry: ({ method, attempt, elapsedMs }) =>
+            console.warn(
+              `[ExtensionWallet] ${method} was rejected after ${elapsedMs}ms without a prompt; ` +
+                `retrying (${attempt})`
+            ),
+        },
+      });
       if (!result.ok) {
         throw new Error(result.error);
       }

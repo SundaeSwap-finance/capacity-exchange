@@ -5,6 +5,7 @@ import {
   ShieldedCoinPublicKey,
   ShieldedEncryptionPublicKey,
 } from '@midnight-ntwrk/wallet-sdk/address-format';
+import { withExtensionApprovalGuard, type ExtensionApprovalGuardOptions } from './extensionApprovalGuard.js';
 
 export type ParseCoinPublicKeyResult = { ok: true; coinPublicKey: string } | { ok: false; error: string };
 
@@ -68,8 +69,21 @@ export function detectMidnightExtension(): DetectMidnightExtensionResult {
 
 export type ConnectMidnightExtensionResult = { ok: true; wallet: ConnectedAPI } | { ok: false; error: string };
 
+export interface ConnectMidnightExtensionOptions {
+  /**
+   * Guard the returned API against the wallet's popup-teardown race, which makes
+   * back-to-back approvals fail with "User rejected transaction". Enabled by
+   * default; pass `false` to opt out, or an options object to tune the timings.
+   * See {@link withExtensionApprovalGuard}.
+   */
+  approvalGuard?: boolean | ExtensionApprovalGuardOptions;
+}
+
 /** Detects and connects to the Midnight wallet extension. */
-export async function connectMidnightExtension(networkId: string): Promise<ConnectMidnightExtensionResult> {
+export async function connectMidnightExtension(
+  networkId: string,
+  options: ConnectMidnightExtensionOptions = {}
+): Promise<ConnectMidnightExtensionResult> {
   const detected = detectMidnightExtension();
   if ('reason' in detected) {
     return { ok: false, error: `Extension not found (${detected.reason})` };
@@ -77,7 +91,11 @@ export async function connectMidnightExtension(networkId: string): Promise<Conne
 
   try {
     const wallet = await detected.connector.connect(networkId);
-    return { ok: true, wallet };
+    const { approvalGuard = true } = options;
+    if (approvalGuard === false) {
+      return { ok: true, wallet };
+    }
+    return { ok: true, wallet: withExtensionApprovalGuard(wallet, approvalGuard === true ? {} : approvalGuard) };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'Failed to connect to Midnight wallet' };
   }
