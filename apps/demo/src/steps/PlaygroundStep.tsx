@@ -10,6 +10,7 @@ import type { UseSponsoredTransactionResult } from '../features/ces/useSponsored
 import { resolveTokenLabel } from '../utils/tokenLabels';
 import { formatUnits } from '../utils/format';
 import { DevAccessForm } from './DevAccessStep';
+import { ExchangePrice } from '../features/ces/types';
 
 interface PlaygroundStepProps {
   walletData: WalletData | null;
@@ -100,6 +101,7 @@ export function PlaygroundStep({
         <CesPlaygroundAction
           cesTransaction={cesTransaction}
           shieldedBalances={displayWalletData?.shieldedBalances ?? {}}
+          unshieldedBalances={displayWalletData?.unshieldedBalances ?? {}}
           mintedTokenColor={mintedTokenColor}
         />
       </div>
@@ -183,10 +185,12 @@ function PlaygroundAction({
 function CesPlaygroundAction({
   cesTransaction,
   shieldedBalances,
+  unshieldedBalances,
   mintedTokenColor,
 }: {
   cesTransaction: UseCesTransactionResult;
   shieldedBalances: Record<string, bigint>;
+  unshieldedBalances: Record<string, bigint>;
   mintedTokenColor: string;
 }) {
   const {
@@ -208,6 +212,16 @@ function CesPlaygroundAction({
       return () => clearTimeout(t);
     }
   }, [status, dismissOffer]);
+
+  const getBalance = (price: ExchangePrice) => {
+    if (price.price.currency.type === 'midnight:shielded') {
+      return shieldedBalances[price.price.currency.rawId] ?? 0n;
+    }
+    if (price.price.currency.type === 'midnight:unshielded') {
+      return unshieldedBalances[price.price.currency.rawId] ?? 0n;
+    }
+    return 0n;
+  };
 
   return (
     <div className="ces-card ces-section-stack p-4">
@@ -273,8 +287,8 @@ function CesPlaygroundAction({
             <div className="ces-compact-stack ces-input-pulse">
               {[...currencySelection.prices]
                 .sort((a, b) => {
-                  const balA = shieldedBalances[a.price.currency.rawId] ?? 0n;
-                  const balB = shieldedBalances[b.price.currency.rawId] ?? 0n;
+                  const balA = getBalance(a);
+                  const balB = getBalance(b);
                   const canA = balA >= BigInt(a.price.amount);
                   const canB = balB >= BigInt(b.price.amount);
                   if (canA && !canB) {
@@ -291,7 +305,7 @@ function CesPlaygroundAction({
                   return 0;
                 })
                 .map((ep, i) => {
-                  const balance = shieldedBalances[ep.price.currency.rawId] ?? 0n;
+                  const balance = getBalance(ep);
                   const canAfford = balance >= BigInt(ep.price.amount);
                   const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);
                   return (

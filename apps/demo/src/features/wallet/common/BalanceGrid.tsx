@@ -5,11 +5,11 @@ import { formatDust } from '../../../utils/format';
 
 interface BalanceGridProps {
   dustBalance: bigint;
-  nightBalances: Record<string, bigint>;
+  unshieldedBalances: Record<string, bigint>;
 }
 
-export function BalanceGrid({ dustBalance, nightBalances }: BalanceGridProps) {
-  const nightDisplay = starsToNight(getNightBalance(nightBalances)) || '-';
+export function BalanceGrid({ dustBalance, unshieldedBalances }: BalanceGridProps) {
+  const nightDisplay = starsToNight(getNightBalance(unshieldedBalances)) || '-';
 
   return (
     <div className="grid grid-cols-2 gap-3">

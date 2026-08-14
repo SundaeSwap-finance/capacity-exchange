@@ -4,7 +4,7 @@ import type { WalletKeys } from '@sundaeswap/capacity-exchange-core';
 
 export interface BalanceData {
   dustBalance: bigint;
-  nightBalances: Record<string, bigint>;
+  unshieldedBalances: Record<string, bigint>;
   shieldedBalances: Record<string, bigint>;
 }
 
@@ -32,7 +32,7 @@ export interface WalletData {
   shieldedAddress: string;
   dustAddress: string;
   dustBalance: bigint;
-  nightBalances: Record<string, bigint>;
+  unshieldedBalances: Record<string, bigint>;
   shieldedBalances: Record<string, bigint>;
 }
 

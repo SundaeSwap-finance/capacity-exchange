@@ -12,7 +12,7 @@ interface WalletInfoSectionProps {
 export function WalletInfoSection({ data }: WalletInfoSectionProps) {
   return (
     <div className="space-y-4">
-      <BalanceGrid dustBalance={data.dustBalance} nightBalances={data.nightBalances} />
+      <BalanceGrid dustBalance={data.dustBalance} unshieldedBalances={data.unshieldedBalances} />
       <ShieldedTokensList balances={data.shieldedBalances} />
       <Collapsible title="Addresses" defaultOpen={false}>
         <AddressList

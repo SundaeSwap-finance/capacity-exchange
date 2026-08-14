@@ -83,7 +83,7 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
       shieldedAddress: 'midnight_shielded_mock_demo_001',
       dustAddress: 'midnight_dust_mock_demo_001',
       dustBalance: 25000000n,
-      nightBalances: {},
+      unshieldedBalances: {},
       shieldedBalances: {
         [MOCK_TOKEN_COLOR]: tokenBalance,
       },

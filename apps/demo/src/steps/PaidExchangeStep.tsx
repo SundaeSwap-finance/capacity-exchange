@@ -170,6 +170,7 @@ function CesCounterAction({
               prices={currencySelection.prices}
               specksRequired={currencySelection.specksRequired}
               shieldedBalances={displayWalletData?.shieldedBalances ?? {}}
+              unshieldedBalances={displayWalletData?.unshieldedBalances ?? {}}
               mintedTokenColor={mintedTokenColor}
               onSelect={onCurrencySelected}
             />
@@ -249,18 +250,29 @@ function InlineCurrencySelection({
   prices,
   specksRequired,
   shieldedBalances,
+  unshieldedBalances,
   mintedTokenColor,
   onSelect,
 }: {
   prices: ExchangePrice[];
   specksRequired: bigint;
   shieldedBalances: Record<string, bigint>;
+  unshieldedBalances: Record<string, bigint>;
   mintedTokenColor: string | null;
   onSelect: (result: CurrencySelectionResult) => void;
 }) {
+  const getBalance = (price: ExchangePrice) => {
+    if (price.price.currency.type === 'midnight:shielded') {
+      return shieldedBalances[price.price.currency.rawId] ?? 0n;
+    }
+    if (price.price.currency.type === 'midnight:unshielded') {
+      return unshieldedBalances[price.price.currency.rawId] ?? 0n;
+    }
+    return 0n;
+  };
   const sortedPrices = [...prices].sort((a, b) => {
-    const balA = shieldedBalances[a.price.currency.rawId] ?? 0n;
-    const balB = shieldedBalances[b.price.currency.rawId] ?? 0n;
+    const balA = getBalance(a);
+    const balB = getBalance(b);
     const canAffordA = balA >= BigInt(a.price.amount);
     const canAffordB = balB >= BigInt(b.price.amount);
     if (canAffordA && !canAffordB) {
@@ -285,7 +297,7 @@ function InlineCurrencySelection({
         it:
       </p>
       {sortedPrices.map((ep, i) => {
-        const balance = shieldedBalances[ep.price.currency.rawId] ?? 0n;
+        const balance = getBalance(ep);
         const cost = BigInt(ep.price.amount);
         const canAfford = balance >= cost;
         const token = resolveTokenLabel(ep.price.currency, mintedTokenColor);

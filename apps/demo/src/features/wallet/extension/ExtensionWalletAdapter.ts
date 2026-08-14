@@ -46,7 +46,7 @@ export class ExtensionWalletAdapter implements WalletCapabilities {
 
     return {
       dustBalance: dust.balance,
-      nightBalances: unshielded,
+      unshieldedBalances: unshielded,
       shieldedBalances: shielded,
     };
   }

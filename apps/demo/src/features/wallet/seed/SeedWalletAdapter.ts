@@ -65,7 +65,7 @@ export class SeedWalletAdapter implements WalletCapabilities {
           status: 'success',
           data: {
             dustBalance: dustState.balance(new Date()),
-            nightBalances: {},
+            unshieldedBalances: {},
             shieldedBalances: shieldedState.balances,
           },
         });
@@ -85,7 +85,7 @@ export class SeedWalletAdapter implements WalletCapabilities {
           status: 'success',
           data: {
             dustBalance: dust.balance,
-            nightBalances: {},
+            unshieldedBalances: {},
             shieldedBalances: shielded,
           },
         });
