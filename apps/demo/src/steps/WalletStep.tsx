@@ -32,6 +32,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const [showExportSeed, setShowExportSeed] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
   const [activeWalletIsPasskey, setActiveWalletIsPasskey] = useState(false);
+  const [activeWalletIsNew, setActiveWalletIsNew] = useState(false);
 
   const isConnecting = seedWallet.status === 'connecting' || extensionWallet.status === 'connecting';
   const isConnected = seedWallet.status === 'connected' || extensionWallet.status === 'connected';
@@ -39,11 +40,8 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
   const error = walletError || seedWallet.error || extensionWallet.error;
 
   const sp = seedWallet.syncProgress;
-  const isSeedWalletSyncing =
-    (isConnecting || isConnected) &&
-    !isSynced &&
-    extensionWallet.status !== 'connecting' &&
-    extensionWallet.status !== 'connected';
+  const isExtensionWallet = extensionWallet.status === 'connecting' || extensionWallet.status === 'connected';
+  const isSeedWalletSyncing = (isConnecting || isConnected) && !isSynced && !isExtensionWallet;
 
   const extensionAvailable = extensionWallet.status !== 'unavailable';
 
@@ -68,6 +66,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
       }
       const { meta, secrets } = await createWallet();
       setActiveWalletIsPasskey(meta.mode === 'passkey');
+      setActiveWalletIsNew(true);
       setActiveMnemonic(secrets.mnemonic);
       seedWallet.connect(secrets.seedHex, { isNewWallet: true });
     } catch (err) {
@@ -81,6 +80,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     try {
       const { secrets } = await createWallet();
       setActiveWalletIsPasskey(false);
+      setActiveWalletIsNew(true);
       setActiveMnemonic(secrets.mnemonic);
       seedWallet.connect(secrets.seedHex, { isNewWallet: true });
     } catch (err) {
@@ -92,6 +92,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     setWalletError(null);
     try {
       setActiveWalletIsPasskey(saved.mode === 'passkey');
+      setActiveWalletIsNew(false);
       const secrets = await unlockWallet(saved.id);
       setActiveMnemonic(secrets.mnemonic);
       seedWallet.connect(secrets.seedHex);
@@ -126,14 +127,21 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
     return (
       <div className="ces-step-stack">
         <NarrativeCard heading={isSynced ? 'Wallet Ready' : 'Syncing Wallet'}>
-          {isSeedWalletSyncing || isSynced ? (
+          {isExtensionWallet ? (
+            <>
+              <p>
+                You&apos;ve connected your <strong className="text-ces-accent">Midnight wallet extension</strong>.
+              </p>
+              {!isSynced && <p>Loading balances, addresses, and DUST context.</p>}
+            </>
+          ) : isSeedWalletSyncing || isSynced ? (
             <>
               {activeWalletIsPasskey ? (
                 <>
                   <p>
-                    You&apos;ve generated a <strong className="text-ces-accent">secure passkey wallet</strong>.
-                    Depending on your device, this is likely secured by{' '}
-                    <strong className="text-ces-text">biometrics</strong>, a{' '}
+                    You&apos;ve {activeWalletIsNew ? 'generated' : 'unlocked'} a{' '}
+                    <strong className="text-ces-accent">secure passkey wallet</strong>. Depending on your device, this
+                    is likely secured by <strong className="text-ces-text">biometrics</strong>, a{' '}
                     <strong className="text-ces-text">pin</strong>, or your{' '}
                     <strong className="text-ces-text">password manager</strong>. Your wallet is secure even from
                     malicious browser extensions, as any attempt to access it will{' '}
@@ -149,7 +157,9 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
               ) : (
                 <>
                   <p>
-                    You&apos;ve generated a new wallet in your browser for this test
+                    {activeWalletIsNew
+                      ? "You've generated a new wallet in your browser for this test"
+                      : "You've unlocked your saved browser wallet"}
                     {!isSynced && ', and are now loading relevant data directly from the Midnight Blockchain'}.
                   </p>
                   {!isSynced && <p>This might take a while, and will get faster with future updates.</p>}
