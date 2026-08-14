@@ -1,16 +1,13 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import { encodeShieldedAddress } from '@sundaeswap/capacity-exchange-core';
 import type { WalletCapabilities, BalanceUpdate, BalanceData } from '../types';
 
 const DEFAULT_POLL_INTERVAL = 5000;
 
 export class ExtensionWalletAdapter implements WalletCapabilities {
-  #networkId: string;
   #wallet: ConnectedAPI;
   #pollInterval: number;
 
-  constructor(networkId: string, wallet: ConnectedAPI, pollInterval = DEFAULT_POLL_INTERVAL) {
-    this.#networkId = networkId;
+  constructor(wallet: ConnectedAPI, pollInterval = DEFAULT_POLL_INTERVAL) {
     this.#wallet = wallet;
     this.#pollInterval = pollInterval;
   }
@@ -25,17 +22,7 @@ export class ExtensionWalletAdapter implements WalletCapabilities {
   }
 
   async getShieldedAddresses() {
-    const result = await this.#wallet.getShieldedAddresses();
-    // TODO(SUNDAE-2364): Use result.shieldedAddress directly once Lace returns bech32m instead of raw hex
-    const encoded = encodeShieldedAddress(
-      this.#networkId,
-      result.shieldedCoinPublicKey,
-      result.shieldedEncryptionPublicKey
-    );
-    if (!encoded.ok) {
-      throw new Error(encoded.error);
-    }
-    return { ...result, shieldedAddress: encoded.address };
+    return await this.#wallet.getShieldedAddresses();
   }
 
   getShieldedBalances() {

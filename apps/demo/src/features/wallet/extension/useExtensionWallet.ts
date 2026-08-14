@@ -60,7 +60,7 @@ export function useExtensionWallet(networkId: string): ExtensionWalletState {
       if (!result.ok) {
         throw new Error(result.error);
       }
-      setWallet(new ExtensionWalletAdapter(networkId, result.wallet));
+      setWallet(new ExtensionWalletAdapter(result.wallet));
       setConnectedAPI(result.wallet);
       setConnectionStatus('connected');
     } catch (err) {
