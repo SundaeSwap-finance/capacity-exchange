@@ -240,6 +240,7 @@
         "@midnight-ntwrk/midnight-js": "4.1.1",
         "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
         "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+        "@midnight-ntwrk/midnight-js-types": "4.1.1",
         "@midnight-ntwrk/wallet-sdk": "1.1.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",

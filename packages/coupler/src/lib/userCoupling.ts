@@ -94,7 +94,7 @@ export async function finalizeCoupling(env: CouplingEnv, params: FinalizeCouplin
   const bound = capacity.proven.merge(prepared.proven).bind();
   const txId = await env.midnightProvider.submitTx(bound);
   // A watch failure (e.g. timeout) means we could not confirm, not that the tx failed.
-  const fin = await env.publicDataProvider.watchForTxData(txId).catch((e) => {
+  const fin = await env.publicDataProvider.watchForTxData(txId).catch((e: unknown) => {
     env.logger.warn(`watch failed: ${(e as Error).message}`);
     return undefined;
   });
