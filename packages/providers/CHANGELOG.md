@@ -1,5 +1,13 @@
 # @sundaeswap/capacity-exchange-providers
 
+## 3.0.4
+
+### Patch Changes
+
+- Updated dependencies [b1d5ce6]
+  - @sundaeswap/capacity-exchange-core@2.0.0
+  - @sundaeswap/capacity-exchange-registry@3.0.1
+
 ## 3.0.3
 
 ### Patch Changes

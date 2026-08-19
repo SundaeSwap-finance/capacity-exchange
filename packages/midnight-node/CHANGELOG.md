@@ -1,5 +1,16 @@
 # @sundaeswap/capacity-exchange-nodejs
 
+## 2.2.0
+
+### Minor Changes
+
+- b1d5ce6: BREAKING: resolveEndpoints and resolveWalletConfig now take an overrides object (Partial<NetworkEndpoints>) instead of a positional proofServerUrl string. Adds a NODE_URL env override for the Midnight node, exports redactUrl, and redacts node URLs in logs so an embedded API key is not exposed.
+
+### Patch Changes
+
+- Updated dependencies [b1d5ce6]
+  - @sundaeswap/capacity-exchange-core@2.0.0
+
 ## 2.1.2
 
 ### Patch Changes
