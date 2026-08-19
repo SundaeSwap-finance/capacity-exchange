@@ -1,5 +1,13 @@
 # @capacity-exchange/demo-contracts
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [b1d5ce6]
+  - @sundaeswap/capacity-exchange-core@2.0.0
+  - @sundaeswap/capacity-exchange-nodejs@2.2.0
+
 ## 1.0.2
 
 ### Patch Changes
