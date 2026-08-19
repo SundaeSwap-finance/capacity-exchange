@@ -82,9 +82,16 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/demo-contracts build
 
+  # The e2e app is not built or published, but it is the only in-repo consumer of the
+  # coupler and of the providers testing seam, so nothing else catches a break in either.
+  typecheck-coupler-cli:
+    deps: [coupler]
+    cmds:
+      - bunx tsc --noEmit -p apps/coupler-cli/tsconfig.json
+
   # TODO: Also typecheck test directories (packages/*/tests)
   build-all:
-    deps: [libs, server, typecheck-demo-contracts]
+    deps: [libs, server, typecheck-demo-contracts, typecheck-coupler-cli]
     cmds:
       - task: webapp
         vars:

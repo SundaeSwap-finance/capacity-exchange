@@ -1,0 +1,35 @@
+{
+  "name": "@capacity-exchange/coupler-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nodejs e2e and deploy harness for the Commitment Coupler",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --noEmit",
+    "coupler:deploy": "bun src/deploy-cli.ts",
+    "coupler:e2e": "bun src/e2e.ts"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.5.1",
+    "@midnight-ntwrk/compact-runtime": "0.15.0",
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
+    "@midnight-ntwrk/midnight-js": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/wallet-sdk": "1.1.0",
+    "@sundaeswap/capacity-exchange-core": "workspace:^",
+    "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
+    "@sundaeswap/capacity-exchange-coupler": "workspace:^",
+    "@sundaeswap/capacity-exchange-providers": "workspace:^",
+    "@capacity-exchange/demo-contracts": "workspace:^",
+    "commander": "^14.0.2",
+    "rxjs": "^7"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
