@@ -29,7 +29,6 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "0.15.0",
-    "@midnight-ntwrk/ledger-v8": "8.1.0",
     "@midnight-ntwrk/midnight-js": "4.1.1",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
     "@midnight-ntwrk/wallet-sdk": "1.1.0",
@@ -37,9 +36,13 @@
     "@sundaeswap/capacity-exchange-providers": "workspace:^"
   },
   "devDependencies": {
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
     "@midnight-ntwrk/midnight-js-compact": "4.1.1",
     "@types/node": "22.10.7",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "@midnight-ntwrk/ledger-v8": "8.1.0"
   }
 }

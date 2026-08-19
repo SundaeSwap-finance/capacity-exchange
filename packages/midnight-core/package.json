@@ -33,7 +33,6 @@
     "@midnight-ntwrk/compact-js": "2.5.1",
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
-    "@midnight-ntwrk/ledger-v8": "8.1.0",
     "@midnight-ntwrk/midnight-js": "4.1.1",
     "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.1.1",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
@@ -43,6 +42,10 @@
     "rxjs": "^7.5"
   },
   "devDependencies": {
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@midnight-ntwrk/ledger-v8": "8.1.0"
   }
 }

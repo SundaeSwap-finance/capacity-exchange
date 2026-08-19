@@ -47,7 +47,7 @@ tasks:
       - bun run --filter @sundaeswap/capacity-exchange-registry-nodejs build
 
   coupler:
-    deps: [midnight-node, compile-contracts]
+    deps: [providers, compile-contracts]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-coupler build
 
