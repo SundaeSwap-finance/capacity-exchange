@@ -25,7 +25,8 @@
   ],
   "overrides": {
     "whatwg-url": "14.1.1",
-    "tr46": "5.1.1"
+    "tr46": "5.1.1",
+    "@midnight-ntwrk/ledger-v8": "8.1.0"
   },
   "devDependencies": {
     "@capacity-exchange/archive-tools": "workspace:^",

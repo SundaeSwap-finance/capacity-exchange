@@ -8,6 +8,7 @@ export type CapacityExchangeErrorType =
   | 'offer-mismatch'
   | 'offer-transaction-invalid'
   | 'no-prices-available'
+  | 'unsupported-currency'
   | 'server-error';
 
 /** Base class for all Capacity Exchange errors. */
@@ -81,6 +82,15 @@ export class CapacityExchangeNoPricesAvailableError extends CapacityExchangeErro
   constructor() {
     super('no-prices-available', 'No prices available from any capacity exchange');
     this.name = 'CapacityExchangeNoPricesAvailableError';
+  }
+}
+
+/** Thrown when the user selects a currency this provider cannot service: a foreign currency with
+ *  no registered payment method, or an unknown currency type. */
+export class CapacityExchangeUnsupportedCurrencyError extends CapacityExchangeError {
+  constructor(readonly currencyType: string) {
+    super('unsupported-currency', `No payment method for currency type ${currencyType}`);
+    this.name = 'CapacityExchangeUnsupportedCurrencyError';
   }
 }
 
