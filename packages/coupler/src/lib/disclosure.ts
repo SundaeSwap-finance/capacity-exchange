@@ -16,8 +16,8 @@ import { hexToBytes, uint8ArrayToHex, queryTxRaw } from '@sundaeswap/capacity-ex
 type FinalizedTransaction = Transaction<SignatureEnabled, Proof, Binding>;
 type CellValue = AlignedValue['value'];
 
-const S_SLOT = 0;
-const HSP_SLOT = 1;
+export const S_SLOT = 0;
+export const HSP_SLOT = 1;
 
 const BYTES_32 = new CompactTypeBytes(32);
 const VECTOR_2_BYTES_32 = new CompactTypeVector(2, BYTES_32);
@@ -104,12 +104,12 @@ function transcriptsOf(call: ContractCall<Proof>): Transcript<AlignedValue>[] {
   return [call.guaranteedTranscript, call.fallibleTranscript].filter((t) => t != null);
 }
 
-/** Every whole-field write a call made, gathered up by which field it wrote. Lets us ask for
- *  a field by number rather than guessing from the order things happened in. */
-function cellWritesBySlot(call: ContractCall<Proof>): Map<number, Uint8Array> {
+/** Every whole-field write in a transcript program, gathered up by which field it wrote. Lets us
+ *  ask for a field by number rather than guessing from the order things happened in. Exported so a
+ *  test can run the circuit locally and check the slot numbers still match the contract. */
+export function cellWritesInProgram(program: Op<AlignedValue>[]): Map<number, Uint8Array> {
   const bySlot = new Map<number, Uint8Array>();
-  const program = transcriptsOf(call).flatMap((transcript) => transcript.program);
-  for (let i = 0; i < program.length; i++) {
+  for (let i = 2; i < program.length; i++) {
     if (insertArity(program[i]) !== 1) {
       continue;
     }
@@ -124,6 +124,10 @@ function cellWritesBySlot(call: ContractCall<Proof>): Map<number, Uint8Array> {
     }
   }
   return bySlot;
+}
+
+function cellWritesBySlot(call: ContractCall<Proof>): Map<number, Uint8Array> {
+  return cellWritesInProgram(transcriptsOf(call).flatMap((transcript) => transcript.program));
 }
 
 /** The coins a call created. */

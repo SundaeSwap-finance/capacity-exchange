@@ -20,7 +20,8 @@ afterEach(() => {
 describe('queryTxRaw rejects a txId it would otherwise interpolate into the query', () => {
   // The txId is substituted into the GraphQL string, so the hex guard is what stops a
   // caller-supplied identifier from closing the quote and appending its own selection.
-  for (const bad of ['" } } #', 'not-hex', 'abc 123', '']) {
+  // 'abc' is hex but half a byte, so it can never name a real identifier.
+  for (const bad of ['" } } #', 'not-hex', 'abc 123', '', 'abc']) {
     it(`refuses ${JSON.stringify(bad)} without issuing a request`, async () => {
       const fetchSpy = vi.fn();
       global.fetch = fetchSpy;

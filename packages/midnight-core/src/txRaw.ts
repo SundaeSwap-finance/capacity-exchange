@@ -3,7 +3,7 @@ import { indexerQuery } from './indexer.js';
 /** A transaction's raw serialized bytes, by one of its identifiers. Identifiers survive a
  *  merge, the tx hash does not. Must be hex, it is interpolated into the query. */
 export async function queryTxRaw(indexerUrl: string, txId: string, signal?: AbortSignal): Promise<string> {
-  if (!/^[0-9a-fA-F]+$/.test(txId)) {
+  if (!/^([0-9a-fA-F]{2})+$/.test(txId)) {
     throw new Error(`Invalid txId, expected hex: ${txId.slice(0, 32)}`);
   }
   const query = `query { transactions(offset: { identifier: "${txId}" }) { raw } }`;

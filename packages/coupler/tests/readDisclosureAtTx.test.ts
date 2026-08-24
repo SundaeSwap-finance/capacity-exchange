@@ -76,7 +76,7 @@ describe('readDisclosureAtTx turns every failure into a result, never a throw', 
   // a stubbed return of 32 zero bytes satisfies it. This is the only test of the assembled
   // path (fetch, hex-decode, deserialize, extract), so it has to check the values.
   it('recovers the real s and hsp end to end, not merely an ok result', async () => {
-    const c = fix.single[0];
+    const c = fix.couplings[0];
     stubIndexer(() => rowsResponse([{ raw: c.raw }]));
     const result = await readDisclosureAtTx(INDEXER, fix.couplerAddress, TX_ID);
     expect(result.ok).toBe(true);
