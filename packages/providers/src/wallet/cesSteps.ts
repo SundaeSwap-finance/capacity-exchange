@@ -177,6 +177,9 @@ export interface FetchCesPricesOptions {
   chainStateProvider: ChainStateProvider;
   additionalCapacityExchangeUrls: string[];
   margin: number;
+  /** Currency types this wallet can pay in: the native ones plus every registered
+   *  bridgeless payer. Anything else is filtered out of the prices offered. */
+  payableCurrencyTypes: ReadonlySet<string>;
 }
 
 /**
@@ -189,11 +192,11 @@ export async function fetchCesPrices(
   tx: UnboundTransaction,
   options: FetchCesPricesOptions
 ): Promise<FetchCesPricesResult> {
-  const { networkId, chainStateProvider, additionalCapacityExchangeUrls, margin } = options;
+  const { networkId, chainStateProvider, additionalCapacityExchangeUrls, margin, payableCurrencyTypes } = options;
   const specksRequired = await estimateSpecksRequired(tx, chainStateProvider, margin);
   const registeredUrls = await resolveRegisteredCesUrls(networkId, chainStateProvider);
   const urls = resolveCesUrls(networkId, additionalCapacityExchangeUrls, registeredUrls);
-  const prices = await fetchPricesFromExchanges(createCesApis(urls), specksRequired);
+  const prices = await fetchPricesFromExchanges(createCesApis(urls), specksRequired, payableCurrencyTypes);
 
   if (prices.length === 0) {
     throw new CapacityExchangeNoPricesAvailableError();

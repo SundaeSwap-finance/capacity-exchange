@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import { randomHex } from './random.js';
 import {
   inMemoryPrivateStateProvider,
   runCircuit,
@@ -9,7 +9,6 @@ import {
 } from '@sundaeswap/capacity-exchange-core';
 import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
 import { ZswapOutput, sampleEncryptionPublicKey } from '@midnight-ntwrk/ledger-v8';
-import { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { CouplerRawContract } from './contract.js';
 import { createPrivateState, witnesses } from './witnesses.js';
 
@@ -47,7 +46,8 @@ export const burnOutputBuilder: ForeignOutputBuilder = (output, coin) => {
  *  with a matching mint in the offer. A wrong h' changes the coin so nothing
  *  matches. Either party can build it (LP to dust-fund, user to assemble the offer). */
 export async function buildAbsorbLeg(
-  ctx: AppContext,
+  walletProvider: LegProviders['walletProvider'],
+  publicDataProvider: LegProviders['publicDataProvider'],
   couplerAddress: string,
   h: Uint8Array,
   hPrime: Uint8Array,
@@ -55,13 +55,9 @@ export async function buildAbsorbLeg(
 ): Promise<Leg> {
   const privateStateProvider = inMemoryPrivateStateProvider();
   privateStateProvider.setContractAddress(couplerAddress);
-  const privateStateId = crypto.randomBytes(32).toString('hex');
+  const privateStateId = randomHex(32);
   await privateStateProvider.set(privateStateId, createPrivateState(new Uint8Array(32)));
-  const providers: LegProviders = {
-    walletProvider: ctx.walletContext.walletProvider,
-    publicDataProvider: ctx.publicDataProvider,
-    privateStateProvider,
-  };
+  const providers: LegProviders = { walletProvider, publicDataProvider, privateStateProvider };
   return runCouplerCircuit(providers, couplerAddress, privateStateId, 'absorb', [h, hPrime, nonce]);
 }
 

@@ -1,5 +1,5 @@
-import * as crypto from 'crypto';
-import { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
+import { randomBytes } from './random.js';
+import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
 import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
 
@@ -15,8 +15,8 @@ export interface SwapSecrets {
 
 /** Generate the User's two secrets for one swap, at quote time. */
 export function generateSwapSecrets(): SwapSecrets {
-  const s = crypto.randomBytes(32);
-  const sPrime = crypto.randomBytes(32);
+  const s = randomBytes(32);
+  const sPrime = randomBytes(32);
   return {
     s,
     sPrime,
@@ -25,15 +25,15 @@ export function generateSwapSecrets(): SwapSecrets {
   };
 }
 
-/** Store s' in the user's witness store so mintReveal can read it. The dapp calls
- *  this at escrow time. setContractAddress is required, the durable provider scopes
- *  keys by contract address. */
-export async function provisionSPrime(
-  ctx: AppContext,
+/** Store s' in a witness store (keyed by swapId) so mintReveal can read it. setContractAddress
+ *  is required, the provider scopes keys by contract address. The bridgeless payment method passes
+ *  a fresh in-memory provider per call (ephemeral s'). A dapp may pass a durable one. */
+export async function writeSPrimeWitness(
+  privateStateProvider: PrivateStateProvider,
   couplerAddress: string,
   swapId: string,
   sPrime: Uint8Array
 ): Promise<void> {
-  ctx.privateStateProvider.setContractAddress(couplerAddress);
-  await ctx.privateStateProvider.set(swapId, createPrivateState(sPrime));
+  privateStateProvider.setContractAddress(couplerAddress);
+  await privateStateProvider.set(swapId, createPrivateState(sPrime));
 }
