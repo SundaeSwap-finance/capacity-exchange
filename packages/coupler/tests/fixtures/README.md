@@ -4,13 +4,9 @@
 
 `couplerAddress` is the contract they were settled against. Each entry in `couplings` has a `label` name, the raw saved transaction as `raw`, and the `s` and hash of `s'` that coupling revealed, as `expectedS` and `expectedHsp`.
 
-Each transaction carries exactly one coupling. Tests that need a transaction carrying several merge these together, which is how such a transaction arises for real, since the coupler merges the user's reveal onto the LP's capacity leg.
-
-Three is the minimum that means anything. One covers most tests, two covers the merge and distinctness cases, and the third is what makes "found by its own commitment rather than by position" more than luck.
-
 ## If these ever need rebuilding
 
-Producing new ones means running real couplings against a network and saving each submitted transaction along with the `s` and hash of `s'` it disclosed. Every entry here must be settled against the same coupler, which is the one constraint that is easy to miss.
+Producing new ones means running real couplings against a network and saving each submitted transaction along with the `s` and hash of `s'` it disclosed. Every entry must be settled against the same coupler, since the reader keeps only the calls matching `couplerAddress` and silently drops couplings from any other.
 
 Given a transaction's identifier, which each entry stores as `txId`, this fetches the bytes to save:
 
@@ -20,7 +16,7 @@ curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
   -d '{"query":"query { transactions(offset: { identifier: \"<hex>\" }) { raw } }"}'
 ```
 
-The three saved here, exactly as they can be fetched today:
+The three saved in the fixtures file can be fetched today:
 
 ```bash
 curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
@@ -30,9 +26,3 @@ curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
 curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
   -d '{"query":"query { transactions(offset: { identifier: \"001aba7268547d005438e6ccab2ae47f02c3403efd18312d0b498ec3824e674ba6\" }) { raw } }"}'   # coupling3
 ```
-
-Each returns one row whose `raw` equals the `raw` in this file. An empty result means preview has been reset since these were captured, in which case they cannot be re-fetched and have to be produced again.
-
-## Notes
-
-All three transactions must differ from each other. The tests merge them and pick each one out by its values--they'll break if transactions are alike.

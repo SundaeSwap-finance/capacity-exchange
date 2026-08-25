@@ -218,6 +218,15 @@ tasks:
     deps: [_build:install]
     cmds:
       - bun run check
+      - task: semgrep
+
+  semgrep:
+    desc: Static analysis rules in .semgrep
+    preconditions:
+      - sh: command -v semgrep
+        msg: 'semgrep is not installed. Install it with `pipx install semgrep`.'
+    cmds:
+      - semgrep --config .semgrep --error --quiet .
 
   fix:
     desc: Lint and format fix
