@@ -1,12 +1,12 @@
 # disclosure fixtures
 
-`disclosureTxs.json` holds three real coupling transactions from preview, saved as hex. The tests read them from disk instead of deploying a contract and submitting to a chain, so they run faster and offline.
+`disclosureTxs.json` holds real coupling transactions from preview, saved as hex. The tests read them from disk instead of deploying a contract and submitting to a chain, so they run faster and offline.
 
-`couplerAddress` is the contract they were settled against. Each entry in `couplings` has a `label` name, the raw saved transaction as `raw`, and the `s` and hash of `s'` that coupling revealed, as `expectedS` and `expectedHsp`.
+Each entry in `couplings` has a `label` to select it by, the `couplerAddress` it settled against, its `txId`, the raw saved transaction as `raw`, and the `s` and hash of `s'` that coupling revealed, as `expectedS` and `expectedHsp`.
 
 ## If these ever need rebuilding
 
-Producing new ones means running real couplings against a network and saving each submitted transaction along with the `s` and hash of `s'` it disclosed. Every entry must be settled against the same coupler, since the reader keeps only the calls matching `couplerAddress` and silently drops couplings from any other.
+Producing new ones means running real couplings against a network and saving each submitted transaction along with the `s` and hash of `s'` it disclosed, plus the coupler it settled against.
 
 Given a transaction's identifier, which each entry stores as `txId`, this fetches the bytes to save:
 
@@ -16,7 +16,7 @@ curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
   -d '{"query":"query { transactions(offset: { identifier: \"<hex>\" }) { raw } }"}'
 ```
 
-The three saved in the fixtures file can be fetched today:
+The ones saved here can be fetched today:
 
 ```bash
 curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \

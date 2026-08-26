@@ -39,14 +39,39 @@ function mergeAll(raws: string[]): Tx {
   return raws.map(deserialize).reduce((acc, tx) => acc.merge(tx));
 }
 
-const allFixtures: { label: string; raw: string }[] = fix.couplings;
-const pair: { label: string; raw: string }[] = fix.couplings.slice(1);
+/** One saved coupling. Each names the coupler it settled against, so a fixture from any run can
+ *  live here and a test selects the ones it needs. */
+interface Fixture {
+  label: string;
+  couplerAddress: string;
+  txId: string;
+  raw: string;
+  expectedS?: string;
+  expectedHsp?: string;
+  note?: string;
+}
+
+const fixtures: Fixture[] = fix.couplings;
+const byLabel = (label: string): Fixture => {
+  const found = fixtures.find((f) => f.label === label);
+  if (!found) {
+    throw new Error(`no fixture labelled ${label}`);
+  }
+  return found;
+};
+/** Every fixture settled against the same coupler, which is what a merge needs: the reader keeps
+ *  only calls matching one address and drops the rest without saying so. */
+const sameCoupler = (address: string): Fixture[] => fixtures.filter((f) => f.couplerAddress === address);
+
+const HAPPY = byLabel('coupling1').couplerAddress;
+const allFixtures = sameCoupler(HAPPY);
+const pair = [byLabel('coupling2'), byLabel('coupling3')];
 
 function couplerCalls(tx: Tx, entryPoint: string): ContractCall<Proof>[] {
   return [...(tx.intents?.values() ?? [])]
     .flatMap((intent) => intent.actions)
     .filter((action): action is ContractCall<Proof> => 'guaranteedTranscript' in action)
-    .filter((call) => call.address === fix.couplerAddress)
+    .filter((call) => call.address === HAPPY)
     .filter(
       (call) =>
         (typeof call.entryPoint === 'string' ? call.entryPoint : new TextDecoder().decode(call.entryPoint)) ===
@@ -54,8 +79,8 @@ function couplerCalls(tx: Tx, entryPoint: string): ContractCall<Proof>[] {
     );
 }
 
-function ok(tx: Tx): Disclosure[] {
-  const result = extractDisclosed(tx, fix.couplerAddress);
+function ok(tx: Tx, couplerAddress: string = HAPPY): Disclosure[] {
+  const result = extractDisclosed(tx, couplerAddress);
   if (!result.ok) {
     throw new Error(`expected couplings, got ${JSON.stringify(result.error)}`);
   }
@@ -66,9 +91,9 @@ const bySecret = (couplings: Disclosure[]): Map<string, Disclosure> =>
   new Map(couplings.map((c) => [uint8ArrayToHex(c.s), c]));
 
 describe('extractDisclosed: per-tx s and hsp from each mintReveal transcript', () => {
-  for (const c of fix.couplings) {
+  for (const c of fixtures) {
     it(`recovers s and hsp for ${c.label}`, () => {
-      const couplings = ok(deserialize(c.raw));
+      const couplings = ok(deserialize(c.raw), c.couplerAddress);
       expect(couplings).toHaveLength(1);
       expect(uint8ArrayToHex(couplings[0].s)).toBe(c.expectedS);
       expect(uint8ArrayToHex(couplings[0].hsp)).toBe(c.expectedHsp);
@@ -76,10 +101,10 @@ describe('extractDisclosed: per-tx s and hsp from each mintReveal transcript', (
   }
 
   it('names each coupling by the token its own reveal minted', () => {
-    const [coupling] = ok(deserialize(fix.couplings[0].raw));
+    const [coupling] = ok(deserialize(byLabel('coupling1').raw));
     const h = persistentHash(new CompactTypeBytes(32), coupling.s);
     expect(coupling.domainSep).toEqual(couplingDomainSep(h, coupling.hsp));
-    expect(coupling.tokenColor).toBe(rawTokenType(coupling.domainSep, fix.couplerAddress));
+    expect(coupling.tokenColor).toBe(rawTokenType(coupling.domainSep, HAPPY));
   });
 
   it('recovers DISTINCT s and hsp for two separate reveals', () => {
@@ -96,7 +121,7 @@ describe('extractDisclosed: per-tx s and hsp from each mintReveal transcript', (
 
   it('returns a noMintReveal error, not a throw, for a different coupler address', () => {
     const wrongAddress = '00'.repeat(32);
-    const result = extractDisclosed(deserialize(fix.couplings[0].raw), wrongAddress);
+    const result = extractDisclosed(deserialize(byLabel('coupling1').raw), wrongAddress);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -229,7 +254,7 @@ describe('extractDisclosed: one bad reveal does not sink the others', () => {
     const [revealB] = couplerCalls(b, 'mintReveal');
     const tx = txWithCalls(a, [revealA, swapDisclosedCells(revealB)]);
 
-    const result = extractDisclosed(tx, fix.couplerAddress);
+    const result = extractDisclosed(tx, HAPPY);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
@@ -247,7 +272,7 @@ describe('extractDisclosed: one bad reveal does not sink the others', () => {
     const [revealA] = couplerCalls(a, 'mintReveal');
     const tx = txWithCalls(a, [revealA, hostileReveal(revealA)]);
 
-    const result = extractDisclosed(tx, fix.couplerAddress);
+    const result = extractDisclosed(tx, HAPPY);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
@@ -261,7 +286,7 @@ describe('extractDisclosed: one bad reveal does not sink the others', () => {
     const [revealA] = couplerCalls(a, 'mintReveal');
     const tx = txWithCalls(a, [hostileReveal(revealA), revealA]);
 
-    const result = extractDisclosed(tx, fix.couplerAddress);
+    const result = extractDisclosed(tx, HAPPY);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
@@ -277,7 +302,7 @@ describe('extractDisclosed: one bad reveal does not sink the others', () => {
     const [revealB] = couplerCalls(b, 'mintReveal');
     const tx = txWithCalls(a, [swapDisclosedCells(revealB), revealA]);
 
-    const result = extractDisclosed(tx, fix.couplerAddress);
+    const result = extractDisclosed(tx, HAPPY);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
@@ -289,9 +314,9 @@ describe('extractDisclosed: one bad reveal does not sink the others', () => {
   // Every reveal being unreadable is a different situation from some being unreadable, and the
   // caller should not have to inspect an empty list to notice.
   it('fails when no reveal survives', () => {
-    const tx = deserialize(fix.couplings[0].raw);
+    const tx = deserialize(byLabel('coupling1').raw);
     const [reveal] = couplerCalls(tx, 'mintReveal');
-    const result = extractDisclosed(txWithCalls(tx, [swapDisclosedCells(reveal)]), fix.couplerAddress);
+    const result = extractDisclosed(txWithCalls(tx, [swapDisclosedCells(reveal)]), HAPPY);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -300,7 +325,7 @@ describe('extractDisclosed: one bad reveal does not sink the others', () => {
   });
 
   it('reports nothing skipped when every reveal is honest', () => {
-    const result = extractDisclosed(mergeAll([pair[0].raw, pair[1].raw]), fix.couplerAddress);
+    const result = extractDisclosed(mergeAll([pair[0].raw, pair[1].raw]), HAPPY);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
@@ -317,13 +342,13 @@ describe('cellWritesBySlot ignores writes that are not top-level disclosure slot
   // that guard were dropped the write would land and corrupt the secret, so these pin the
   // guards rather than merely showing an unrelated write is harmless.
   const stillReadsRealSecret = (call: unknown): void => {
-    const tx = deserialize(fix.couplings[0].raw);
-    const result = extractDisclosed(txWithCalls(tx, [call]), fix.couplerAddress);
+    const tx = deserialize(byLabel('coupling1').raw);
+    const result = extractDisclosed(txWithCalls(tx, [call]), HAPPY);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
     }
-    expect(uint8ArrayToHex(result.couplings[0].s)).toBe(fix.couplings[0].expectedS);
+    expect(uint8ArrayToHex(result.couplings[0].s)).toBe(byLabel('coupling1').expectedS);
   };
 
   const SLOT_0 = [new Uint8Array([])];
@@ -331,28 +356,28 @@ describe('cellWritesBySlot ignores writes that are not top-level disclosure slot
 
   // Higher arity means a write INTO a container, not a slot of its own.
   it('a container insert aimed at slot 0 does not overwrite the secret', () => {
-    stillReadsRealSecret(withExtraWrite(revealOf(fix.couplings[0].raw), SLOT_0, DECOY, 2));
+    stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), SLOT_0, DECOY, 2));
   });
 
   // The disclosure cells are 32 bytes. Anything else is some other field.
   it('a non-32-byte write aimed at slot 0 does not overwrite the secret', () => {
-    stillReadsRealSecret(withExtraWrite(revealOf(fix.couplings[0].raw), SLOT_0, new Uint8Array(16).fill(9)));
+    stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), SLOT_0, new Uint8Array(16).fill(9)));
   });
 
   // A map key is one 32-byte cell, not a slot index, so it must not resolve to a slot at all.
   it('a 32-byte map key is not read as a slot index', () => {
-    stillReadsRealSecret(withExtraWrite(revealOf(fix.couplings[0].raw), [new Uint8Array(32).fill(0)], DECOY));
+    stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), [new Uint8Array(32).fill(0)], DECOY));
   });
 
   // A contract that grows another stored field must stay readable.
   it('a genuine third slot does not disturb the read', () => {
-    stillReadsRealSecret(withExtraWrite(revealOf(fix.couplings[0].raw), [new Uint8Array([2])], DECOY));
+    stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), [new Uint8Array([2])], DECOY));
   });
 
   // Losing a slot we DO need is still a hard failure, since nothing can be verified without it.
   it('reports unexpectedSlots when a disclosure slot is missing', () => {
-    const tx = deserialize(fix.couplings[0].raw);
-    const reveal = revealOf(fix.couplings[0].raw);
+    const tx = deserialize(byLabel('coupling1').raw);
+    const reveal = revealOf(byLabel('coupling1').raw);
     const program = (reveal.guaranteedTranscript?.program ?? []).slice(3);
     const truncated = {
       address: reveal.address,
@@ -360,7 +385,7 @@ describe('cellWritesBySlot ignores writes that are not top-level disclosure slot
       guaranteedTranscript: { ...reveal.guaranteedTranscript, program },
       fallibleTranscript: reveal.fallibleTranscript,
     };
-    const result = extractDisclosed(txWithCalls(tx, [truncated]), fix.couplerAddress);
+    const result = extractDisclosed(txWithCalls(tx, [truncated]), HAPPY);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -374,9 +399,9 @@ describe('the verification compares whole values, not prefixes', () => {
   // silently swapped secret. A comparison that stops early would accept a wrong token, and
   // every other negative case here differs in its first byte, so nothing would notice.
   it('rejects a reveal whose minted token differs only in the last character', () => {
-    const tx = deserialize(fix.couplings[0].raw);
+    const tx = deserialize(byLabel('coupling1').raw);
     const [reveal] = couplerCalls(tx, 'mintReveal');
-    const result = extractDisclosed(txWithCalls(tx, [nearMissMint(reveal)]), fix.couplerAddress);
+    const result = extractDisclosed(txWithCalls(tx, [nearMissMint(reveal)]), HAPPY);
 
     expect(result.ok).toBe(false);
     if (result.ok) {
@@ -396,7 +421,7 @@ describe('the verification compares whole values, not prefixes', () => {
   // failure is the ordinary one: a real escrow that this tx does not settle.
   it('findCoupling returns undefined for a commitment pair this tx does not settle', () => {
     const couplings = ok(mergeAll(pair.map((t: { raw: string }) => t.raw)));
-    const other = ok(deserialize(fix.couplings[0].raw))[0];
+    const other = ok(deserialize(byLabel('coupling1').raw))[0];
 
     // The single fixture's coupling is real, and absent from the sameBlock merge.
     const h = persistentHash(new CompactTypeBytes(32), other.s);
@@ -412,10 +437,10 @@ describe('the verification compares whole values, not prefixes', () => {
 
 describe('extractDisclosed: degenerate shapes stay discriminated errors', () => {
   it('rejects a reveal whose disclosed cells do not derive the token it minted', () => {
-    const tx = deserialize(fix.couplings[0].raw);
+    const tx = deserialize(byLabel('coupling1').raw);
     const [reveal] = couplerCalls(tx, 'mintReveal');
     const tampered = txWithCalls(tx, [swapDisclosedCells(reveal), ...couplerCalls(tx, 'absorb')]);
-    const result = extractDisclosed(tampered, fix.couplerAddress);
+    const result = extractDisclosed(tampered, HAPPY);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -436,7 +461,7 @@ describe('extractDisclosed: degenerate shapes stay discriminated errors', () => 
         throw new Error('intents unavailable');
       },
     } as unknown as Tx;
-    const result = extractDisclosed(broken, fix.couplerAddress);
+    const result = extractDisclosed(broken, HAPPY);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;

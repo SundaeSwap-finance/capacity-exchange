@@ -32,7 +32,7 @@ afterEach(() => {
 describe('readDisclosureAtTx turns every failure into a result, never a throw', () => {
   it('reports txUnavailable when the indexer is unreachable', async () => {
     stubIndexer(() => Promise.reject(new Error('connect ECONNREFUSED 127.0.0.1:8088')));
-    const result = await readDisclosureAtTx(INDEXER, fix.couplerAddress, TX_ID);
+    const result = await readDisclosureAtTx(INDEXER, fix.couplings[0].couplerAddress, TX_ID);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -42,7 +42,7 @@ describe('readDisclosureAtTx turns every failure into a result, never a throw', 
 
   it('reports txUnavailable when the tx is not indexed yet', async () => {
     stubIndexer(() => rowsResponse([]));
-    const result = await readDisclosureAtTx(INDEXER, fix.couplerAddress, TX_ID);
+    const result = await readDisclosureAtTx(INDEXER, fix.couplings[0].couplerAddress, TX_ID);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -53,7 +53,7 @@ describe('readDisclosureAtTx turns every failure into a result, never a throw', 
   it('reports txUnavailable for a non-hex txId, without issuing a request', async () => {
     const fetchSpy = vi.fn();
     global.fetch = fetchSpy;
-    const result = await readDisclosureAtTx(INDEXER, fix.couplerAddress, 'not-hex');
+    const result = await readDisclosureAtTx(INDEXER, fix.couplings[0].couplerAddress, 'not-hex');
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -64,7 +64,7 @@ describe('readDisclosureAtTx turns every failure into a result, never a throw', 
 
   it('reports decodeFailed when the raw bytes are not a transaction', async () => {
     stubIndexer(() => rowsResponse([{ raw: 'deadbeef' }]));
-    const result = await readDisclosureAtTx(INDEXER, fix.couplerAddress, TX_ID);
+    const result = await readDisclosureAtTx(INDEXER, fix.couplings[0].couplerAddress, TX_ID);
     expect(result.ok).toBe(false);
     if (result.ok) {
       return;
@@ -76,9 +76,9 @@ describe('readDisclosureAtTx turns every failure into a result, never a throw', 
   // a stubbed return of 32 zero bytes satisfies it. This is the only test of the assembled
   // path (fetch, hex-decode, deserialize, extract), so it has to check the values.
   it('recovers the real s and hsp end to end, not merely an ok result', async () => {
-    const c = fix.couplings[0];
+    const c = fix.couplings.find((c: { label: string }) => c.label === 'coupling1');
     stubIndexer(() => rowsResponse([{ raw: c.raw }]));
-    const result = await readDisclosureAtTx(INDEXER, fix.couplerAddress, TX_ID);
+    const result = await readDisclosureAtTx(INDEXER, fix.couplings[0].couplerAddress, TX_ID);
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
