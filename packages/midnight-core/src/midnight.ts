@@ -40,7 +40,7 @@ export function encodeShieldedAddress(
 }
 
 export type DetectMidnightExtensionResult =
-  | { ok: true; connector: InitialAPI }
+  | { ok: true; connector: InitialAPI; /** `globalThis.midnight` key it was injected under. */ key: string }
   | { ok: false; reason: 'no-midnight' }
   | { ok: false; reason: 'no-compatible-connector'; keys: string[] };
 
@@ -54,14 +54,14 @@ export function detectMidnightExtension(): DetectMidnightExtensionResult {
   if (!midnight) {
     return { ok: false, reason: 'no-midnight' };
   }
-  for (const value of Object.values(midnight)) {
+  for (const [key, value] of Object.entries(midnight)) {
     if (
       value &&
       typeof value === 'object' &&
       'connect' in value &&
       typeof (value as InitialAPI).connect === 'function'
     ) {
-      return { ok: true, connector: value as InitialAPI };
+      return { ok: true, connector: value as InitialAPI, key };
     }
   }
   return { ok: false, reason: 'no-compatible-connector', keys: Object.keys(midnight) };
@@ -69,14 +69,30 @@ export function detectMidnightExtension(): DetectMidnightExtensionResult {
 
 export type ConnectMidnightExtensionResult = { ok: true; wallet: ConnectedAPI } | { ok: false; error: string };
 
+/**
+ * Wallets whose popup-teardown race {@link withExtensionApprovalGuard} works
+ * around, matched against the connector's `name`, `rdns` and injection key.
+ */
+const APPROVAL_GUARD_WALLETS = /lace/i;
+
+function needsApprovalGuard({ connector, key }: { connector: InitialAPI; key: string }): boolean {
+  return [key, connector.name, connector.rdns].some(
+    (value) => typeof value === 'string' && APPROVAL_GUARD_WALLETS.test(value)
+  );
+}
+
 export interface ConnectMidnightExtensionOptions {
   /**
    * Guard the returned API against the wallet's popup-teardown race, which makes
-   * back-to-back approvals fail with "User rejected transaction". Enabled by
-   * default; pass `false` to opt out, or an options object to tune the timings.
+   * back-to-back approvals fail with "User rejected transaction".
+   *
+   * Defaults to `'auto'`: guard only wallets known to have the bug
+   * ({@link APPROVAL_GUARD_WALLETS}), so other wallets get their own API back
+   * untouched. An options object also means `'auto'`, with those timings. Pass
+   * `true` to guard whatever wallet connected, or `false` to opt out entirely.
    * See {@link withExtensionApprovalGuard}.
    */
-  approvalGuard?: boolean | ExtensionApprovalGuardOptions;
+  approvalGuard?: boolean | 'auto' | ExtensionApprovalGuardOptions;
 }
 
 /** Detects and connects to the Midnight wallet extension. */
@@ -91,11 +107,15 @@ export async function connectMidnightExtension(
 
   try {
     const wallet = await detected.connector.connect(networkId);
-    const { approvalGuard = true } = options;
-    if (approvalGuard === false) {
+    const { approvalGuard = 'auto' } = options;
+    const guard = approvalGuard === true || (approvalGuard !== false && needsApprovalGuard(detected));
+    if (!guard) {
       return { ok: true, wallet };
     }
-    return { ok: true, wallet: withExtensionApprovalGuard(wallet, approvalGuard === true ? {} : approvalGuard) };
+    return {
+      ok: true,
+      wallet: withExtensionApprovalGuard(wallet, typeof approvalGuard === 'object' ? approvalGuard : {}),
+    };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'Failed to connect to Midnight wallet' };
   }
