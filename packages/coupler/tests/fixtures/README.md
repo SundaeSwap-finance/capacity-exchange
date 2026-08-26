@@ -25,4 +25,6 @@ curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
   -d '{"query":"query { transactions(offset: { identifier: \"00cec0df7119412d2302def2c57c4980ef99633c81c02b1ac178073d9616e2e15b\" }) { raw } }"}'   # coupling2
 curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
   -d '{"query":"query { transactions(offset: { identifier: \"001aba7268547d005438e6ccab2ae47f02c3403efd18312d0b498ec3824e674ba6\" }) { raw } }"}'   # coupling3
+curl -s -X POST "$INDEXER" -H 'Content-Type: application/json' \
+  -d '{"query":"query { transactions(offset: { identifier: \"0066e316992459625bab112dc2f9bb780a5a21560098f1ee8d1710c1de1f909ac0\" }) { raw } }"}'   # trimmedS
 ```
