@@ -8,6 +8,32 @@ Each entry in `couplings` has a `label` to select it by, the `couplerAddress` it
 
 Producing new ones means running real couplings against a network and saving each submitted transaction along with the `s` and hash of `s'` it disclosed, plus the coupler it settled against.
 
+The e2e harness does both, one run at a time. Each run couples twice, so two runs give the three entries here. The first deploys a coupler, and `COUPLER_ADDRESS` points the second at that same one, which is what keeps every entry readable:
+
+```bash
+cd apps/coupler-cli
+FIXTURES=../../packages/coupler/tests/fixtures/disclosureTxs.json
+
+# first run: deploys a coupler, writes coupling1 and coupling2
+COUNTER_ADDRESS=$(gh variable get E2E_COUNTER_ADDRESS_PREVIEW) \
+CHAIN_SNAPSHOT_DIR=../../.chain-snapshots \
+WALLET_MNEMONIC_FILE=../../wallet-mnemonic.preview.txt \
+WALLET_STATE_DIR=../../.wallet-state-preview \
+bun run coupler:e2e preview --save-fixtures "$FIXTURES"
+
+# second run: reuses that coupler, appends coupling3
+COUPLER_ADDRESS=<couplerAddress from the first run> \
+COUNTER_ADDRESS=$(gh variable get E2E_COUNTER_ADDRESS_PREVIEW) \
+CHAIN_SNAPSHOT_DIR=../../.chain-snapshots \
+WALLET_MNEMONIC_FILE=../../wallet-mnemonic.preview.txt \
+WALLET_STATE_DIR=../../.wallet-state-preview \
+bun run coupler:e2e preview --save-fixtures "$FIXTURES"
+```
+
+Delete the file first to start over, since a run appends. Appending a run settled against a different coupler is refused rather than written, because the reader would drop those entries without saying so.
+
+Below is how to fetch a transaction's bytes by hand, if you ever have a txId but not the run that produced it.
+
 Given a transaction's identifier, which each entry stores as `txId`, this fetches the bytes to save:
 
 ```bash

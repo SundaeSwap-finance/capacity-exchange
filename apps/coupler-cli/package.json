@@ -8,7 +8,8 @@
     "test": "vitest run",
     "build": "tsc --noEmit",
     "coupler:deploy": "bun src/cli/deploy.ts",
-    "coupler:e2e": "bun src/cli/e2e.ts"
+    "coupler:e2e": "bun src/cli/e2e.ts",
+    "coupler:capture": "bun src/cli/capture.ts"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
