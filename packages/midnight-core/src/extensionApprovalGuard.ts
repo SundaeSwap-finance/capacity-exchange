@@ -79,6 +79,11 @@ function isRejectionError(err: unknown): boolean {
  *
  * Read-only methods (balances, addresses, configuration) are passed straight
  * through — they need no approval and must not be delayed.
+ *
+ * Only wallets known to have the bug are wrapped — see
+ * {@link connectMidnightExtension}. The Proxy cannot wrap a connector API the
+ * extension froze: `get` must return a frozen property's exact value, never a
+ * bound or queued wrapper.
  */
 export function withExtensionApprovalGuard(
   api: ConnectedAPI,
