@@ -6,7 +6,7 @@ import {
   createLogger,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import { createPrivateState, type CouplerContract } from '@sundaeswap/capacity-exchange-coupler/operations';
-import { CompiledCouplerContract, COUPLER_OUT_DIR } from './compiledContract.js';
+import { CompiledCouplerContract, COUPLER_OUT_DIR } from './contract.js';
 
 const logger = createLogger(import.meta);
 

@@ -5,7 +5,7 @@ import {
   type CouplingCommitment,
   type CouplingOutcome,
   type DisclosureRead,
-} from './couplingOutcome.js';
+} from './commitments.js';
 
 /** What a submitted tx finalized as, as far as the run needs to care. */
 export interface TxFinal {
@@ -33,22 +33,23 @@ export interface CouplingRunResult {
   outcome: CouplingOutcome;
 }
 
+/** One transaction and the couplings it should disclose. */
+export interface CouplingSubmission {
+  bound: FinalizedTransaction;
+  expected: CouplingCommitment[];
+}
+
 /** Submit every coupling, read back what each submission disclosed, and resolve the result
- *  against the commitments the caller funded.
- *
- *  One tx per coupling, which is the only shape anything produces. The READ side is separately
- *  defensive about a tx carrying several couplings, since that shape is constructible even
- *  though nothing here builds it. */
+ *  against the commitments the caller funded. */
 export async function runCouplings(
-  bounds: FinalizedTransaction[],
-  expected: CouplingCommitment[],
+  submissions: CouplingSubmission[],
   deps: CouplingRunDeps
 ): Promise<CouplingRunResult> {
-  if (bounds.length === 0) {
+  if (submissions.length === 0) {
     throw new Error('runCouplings: nothing to submit');
   }
   const txIds: string[] = [];
-  for (const bound of bounds) {
+  for (const { bound } of submissions) {
     txIds.push(await deps.submitTx(bound));
   }
 
@@ -60,5 +61,6 @@ export async function runCouplings(
   for (const txId of txIds) {
     reads.push({ txId, result: await deps.readDisclosure(txId) });
   }
+  const expected = submissions.map((sub, i) => ({ txId: txIds[i], couplings: sub.expected }));
   return { txIds, finals, reads, outcome: couplingOutcome(reads, expected) };
 }

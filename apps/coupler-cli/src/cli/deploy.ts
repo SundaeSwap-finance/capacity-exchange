@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
-import { deploy, type DeployOutput } from './deploy.js';
+import { deploy, type DeployOutput } from '../chain/deploy.js';
 
 function main(): Promise<DeployOutput> {
   program

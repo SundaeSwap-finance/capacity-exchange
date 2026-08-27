@@ -8,9 +8,9 @@ import {
   prepareUserFragment,
   type CouplerContext,
 } from '@sundaeswap/capacity-exchange-coupler/operations';
-import { localCapacityProvider } from './localLp.js';
-import { COUPLER_OUT_DIR } from './compiledContract.js';
-import { couplerContextFromAppContext } from './e2e-bridgeless.js';
+import { localCapacityProvider } from '../local/lp.js';
+import { COUPLER_OUT_DIR } from '../chain/contract.js';
+import { couplerContextFromAppContext } from '../coupling/prepare.js';
 import { assertFundsThisSwap } from '@sundaeswap/capacity-exchange-coupler/operations';
 
 const logger = createLogger(import.meta);

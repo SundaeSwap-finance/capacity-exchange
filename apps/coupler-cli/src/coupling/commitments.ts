@@ -12,6 +12,12 @@ export interface CouplingCommitment {
   hPrime: Uint8Array;
 }
 
+/** What one tx is expected to disclose. The mirror of DisclosureRead. */
+export interface CouplingExpectation {
+  txId: string;
+  couplings: CouplingCommitment[];
+}
+
 /** One disclosure read, keyed by the tx it came from. Separate submission yields one of these
  *  per coupling. Merged submission yields a single read carrying every coupling. */
 export interface DisclosureRead {
@@ -39,24 +45,26 @@ export interface CouplingOutcome {
  *  Kept free of chain access so a run's outcome can be exercised offline against recorded
  *  transactions. The run itself only supplies the reads. A read may carry several couplings,
  *  so this resolves each expectation by commitment rather than by position. */
-export function couplingOutcome(reads: DisclosureRead[], expected: CouplingCommitment[]): CouplingOutcome {
+export function couplingOutcome(reads: DisclosureRead[], expected: CouplingExpectation[]): CouplingOutcome {
   const failures: Record<string, string> = {};
-  const recovered: Disclosure[] = [];
+  const byTxId = new Map<string, Disclosure[]>();
 
   for (const read of reads) {
     if (read.result.ok) {
-      recovered.push(...read.result.couplings);
+      byTxId.set(read.txId, [...(byTxId.get(read.txId) ?? []), ...read.result.couplings]);
     } else {
       failures[read.txId] = read.result.error.kind;
     }
   }
+  const recovered = [...byTxId.values()].flat();
 
-  const bySpec = expected.map((spec) => findCoupling(recovered, spec.h, spec.hPrime));
-  const foundSeps = bySpec.filter((c) => c != null).map((c) => uint8ArrayToHex(c.domainSep));
-  const allFound = bySpec.every((c) => c != null) && new Set(foundSeps).size === expected.length;
+  const distinctBy = (items: Disclosure[], pick: (c: Disclosure) => Uint8Array) =>
+    new Set(items.map((c) => uint8ArrayToHex(pick(c)))).size === items.length;
 
-  const secrets = recovered.map((c) => `${uint8ArrayToHex(c.s)}:${uint8ArrayToHex(c.hsp)}`);
-  const allDistinct = new Set(secrets).size === recovered.length;
+  const bySpec = expected.flatMap((e) => e.couplings.map((c) => findCoupling(byTxId.get(e.txId) ?? [], c.h, c.hPrime)));
+  const found = bySpec.filter((c) => c != null);
+  const allFound = found.length === bySpec.length && distinctBy(found, (c) => c.domainSep);
+  const allDistinct = distinctBy(recovered, (c) => c.s) && distinctBy(recovered, (c) => c.hsp);
 
   return { recovered, bySpec, allFound, allDistinct, failures };
 }

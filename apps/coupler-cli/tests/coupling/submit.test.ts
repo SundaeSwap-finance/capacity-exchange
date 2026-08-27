@@ -6,18 +6,18 @@ import { Transaction, type SignatureEnabled, type Proof, type Binding } from '@m
 import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { hexToBytes, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { extractDisclosed } from '@sundaeswap/capacity-exchange-coupler/operations';
-import { runCouplings, type CouplingRunDeps } from '../src/couplingRun.js';
-import type { CouplingCommitment } from '../src/couplingOutcome.js';
+import { runCouplings, type CouplingRunDeps } from '../../src/coupling/submit.js';
+import type { CouplingCommitment } from '../../src/coupling/commitments.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixPath = join(here, '../../../packages/coupler/tests/fixtures/disclosureTxs.json');
+const fixPath = join(here, '../../../../packages/coupler/tests/fixtures/disclosureTxs.json');
 const fix = JSON.parse(readFileSync(fixPath, 'utf8'));
 
 const deserialize = (raw: string): Transaction<SignatureEnabled, Proof, Binding> =>
   Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hexToBytes(raw));
 
-function commitmentOf(raw: string): CouplingCommitment {
-  const result = extractDisclosed(deserialize(raw), fix.couplerAddress);
+function commitmentOf(entry: Fixture): CouplingCommitment {
+  const result = extractDisclosed(deserialize(entry.raw), entry.couplerAddress);
   if (!result.ok) {
     throw new Error(`fixture did not decode: ${result.error.kind}`);
   }
@@ -27,8 +27,10 @@ function commitmentOf(raw: string): CouplingCommitment {
 
 /** A chain that keeps whatever it was handed and reads disclosures back out of it, so a run can
  *  be driven end to end without a node. */
-function fakeChain(): CouplingRunDeps & { seen: Map<string, Transaction<SignatureEnabled, Proof, Binding>> } {
-  const seen = new Map<string, Transaction<SignatureEnabled, Proof, Binding>>();
+type Tx = Transaction<SignatureEnabled, Proof, Binding>;
+
+function fakeChain(couplerAddress: string): CouplingRunDeps & { seen: Map<string, Tx> } {
+  const seen = new Map<string, Tx>();
   return {
     seen,
     submitTx: async (tx) => {
@@ -42,7 +44,7 @@ function fakeChain(): CouplingRunDeps & { seen: Map<string, Transaction<Signatur
       if (tx == null) {
         return { ok: false, error: { kind: 'txUnavailable', detail: `no such tx ${txId}` } };
       }
-      return extractDisclosed(tx, fix.couplerAddress);
+      return extractDisclosed(tx, couplerAddress);
     },
   };
 }
@@ -50,8 +52,8 @@ function fakeChain(): CouplingRunDeps & { seen: Map<string, Transaction<Signatur
 /** A chain that will not serve a tx until its inclusion has been awaited, which is what a real
  *  indexer does. queryTxRaw treats zero rows as "not yet indexed", so a run that reads before
  *  waiting gets txUnavailable. The permissive fake above cannot see that ordering at all. */
-function inclusionGatedChain(): CouplingRunDeps & { included: Set<string> } {
-  const seen = new Map<string, Transaction<SignatureEnabled, Proof, Binding>>();
+function inclusionGatedChain(couplerAddress: string): CouplingRunDeps & { included: Set<string> } {
+  const seen = new Map<string, Tx>();
   const included = new Set<string>();
   return {
     included,
@@ -72,19 +74,36 @@ function inclusionGatedChain(): CouplingRunDeps & { included: Set<string> } {
       if (tx == null) {
         return { ok: false, error: { kind: 'txUnavailable', detail: `no such tx ${txId}` } };
       }
-      return extractDisclosed(tx, fix.couplerAddress);
+      return extractDisclosed(tx, couplerAddress);
     },
   };
 }
 
-const A = fix.couplings[0].raw;
-const B = fix.couplings[1].raw;
+type Fixture = { label: string; raw: string; couplerAddress: string };
+
+const byLabel = (label: string): Fixture => {
+  const found = fix.couplings.find((c: Fixture) => c.label === label);
+  if (found == null) {
+    throw new Error(`no fixture labelled ${label}`);
+  }
+  return found;
+};
+
+// A run drives the one coupler it deployed, so both couplings here come from a single one.
+const COUPLER = byLabel('coupling1').couplerAddress;
+const [A, B] = fix.couplings.filter((c: Fixture) => c.couplerAddress === COUPLER);
 const specs = (): CouplingCommitment[] => [commitmentOf(A), commitmentOf(B)];
+
+/** The production shape: one tx per coupling, each naming the coupling it carries. */
+const pair = (specs: CouplingCommitment[]) => [
+  { bound: deserialize(A.raw), expected: [specs[0]] },
+  { bound: deserialize(B.raw), expected: [specs[1]] },
+];
 
 describe('runCouplings submits, waits, then reads', () => {
   it('yields one tx and one read per coupling', async () => {
-    const chain = fakeChain();
-    const run = await runCouplings([deserialize(A), deserialize(B)], specs(), chain);
+    const chain = fakeChain(COUPLER);
+    const run = await runCouplings(pair(specs()), chain);
 
     expect(run.txIds).toHaveLength(2);
     expect(run.reads).toHaveLength(2);
@@ -95,12 +114,12 @@ describe('runCouplings submits, waits, then reads', () => {
   // Each expectation must resolve to its own coupling, so a caller holding one escrow reads
   // its own secret out of a tx that also settled somebody else's.
   it('resolves each funded commitment to its own coupling', async () => {
-    const chain = fakeChain();
+    const chain = fakeChain(COUPLER);
     const [specA, specB] = specs();
-    const run = await runCouplings([deserialize(A), deserialize(B)], [specA, specB], chain);
+    const run = await runCouplings(pair([specA, specB]), chain);
 
-    const soloA = extractDisclosed(deserialize(A), fix.couplerAddress);
-    const soloB = extractDisclosed(deserialize(B), fix.couplerAddress);
+    const soloA = extractDisclosed(deserialize(A.raw), A.couplerAddress);
+    const soloB = extractDisclosed(deserialize(B.raw), B.couplerAddress);
     if (!soloA.ok || !soloB.ok) {
       throw new Error('fixtures did not decode alone');
     }
@@ -111,8 +130,8 @@ describe('runCouplings submits, waits, then reads', () => {
   // Reads must happen AFTER inclusion. Confirmed against preview: submitting two couplings and
   // reading immediately leaves the second unreadable, because it has not been indexed yet.
   it('waits for inclusion before reading', async () => {
-    const chain = inclusionGatedChain();
-    const run = await runCouplings([deserialize(A), deserialize(B)], specs(), chain);
+    const chain = inclusionGatedChain(COUPLER);
+    const run = await runCouplings(pair(specs()), chain);
 
     expect(run.outcome.failures).toEqual({});
     expect(run.outcome.allFound).toBe(true);
@@ -120,16 +139,16 @@ describe('runCouplings submits, waits, then reads', () => {
   });
 
   it('reports what each submission finalized as', async () => {
-    const chain = inclusionGatedChain();
-    const run = await runCouplings([deserialize(A), deserialize(B)], specs(), chain);
+    const chain = inclusionGatedChain(COUPLER);
+    const run = await runCouplings(pair(specs()), chain);
 
     expect(run.finals).toHaveLength(2);
     expect(run.finals.every((f) => f?.status === 'SucceedEntirely')).toBe(true);
   });
 
   it('surfaces a failed read by tx id instead of throwing', async () => {
-    const chain = fakeChain();
-    const run = await runCouplings([deserialize(A)], [commitmentOf(A)], {
+    const chain = fakeChain(COUPLER);
+    const run = await runCouplings([{ bound: deserialize(A.raw), expected: [commitmentOf(A)] }], {
       ...chain,
       readDisclosure: async () => ({ ok: false, error: { kind: 'txUnavailable', detail: 'indexer down' } }),
     });

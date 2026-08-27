@@ -16,7 +16,7 @@ import {
   type CouplingRequest,
   type PricedCoupling,
 } from '@sundaeswap/capacity-exchange-coupler/operations';
-import { COUPLER_OUT_DIR } from './compiledContract.js';
+import { COUPLER_OUT_DIR } from '../chain/contract.js';
 
 const logger = createLogger(import.meta);
 
