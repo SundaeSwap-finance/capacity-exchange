@@ -124,8 +124,8 @@ export function buildIntent(legs: Leg[], ttl: Date, ledgerParameters: LedgerPara
   );
 }
 
-/** Builds an output for a non-contract recipient. Injected, since the assembler
- *  has no recipient encryption key (the coupler's burn policy supplies one). */
+/** Builds an output for a non-contract recipient. Injected, since the assembler has no
+ *  recipient encryption key and the caller's policy supplies one. */
 export type ForeignOutputBuilder = (output: Leg['zswapOutputs'][number], coin: ShieldedCoinInfo) => UnprovenOutput;
 
 /** Outputs split by transient-eligibility: contract-owned mints (keyed, pairable)
