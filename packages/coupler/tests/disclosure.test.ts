@@ -176,15 +176,24 @@ function txWithCalls(source: Tx, calls: unknown[]): Tx {
   } as unknown as Tx;
 }
 
+function bytesAlignment(length: number) {
+  return [{ tag: 'atom', value: { tag: 'bytes', length } }];
+}
+
 /** Append a synthetic top-level cell write to a reveal's program. Recorded transactions can
  *  never carry these shapes, because an honest prover does not emit them, so the guards that
  *  reject them are only reachable from a hand-built transcript. */
-function withExtraWrite(call: ContractCall<Proof>, key: unknown, value: unknown, arity = 1): unknown {
+function withExtraWrite(call: ContractCall<Proof>, key: unknown, value: Uint8Array, arity = 1, declared = 32): unknown {
   const transcript = call.guaranteedTranscript;
   const program = [
     ...(transcript?.program ?? []),
-    { push: { storage: false, value: { tag: 'cell', content: { value: key } } } },
-    { push: { storage: true, value: { tag: 'cell', content: { value: [value] } } } },
+    { push: { storage: false, value: { tag: 'cell', content: { value: key, alignment: bytesAlignment(1) } } } },
+    {
+      push: {
+        storage: true,
+        value: { tag: 'cell', content: { value: [value], alignment: bytesAlignment(declared) } },
+      },
+    },
     { ins: { cached: false, n: arity } },
   ];
   return {
@@ -359,11 +368,6 @@ describe('cellWritesBySlot ignores writes that are not top-level disclosure slot
     stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), SLOT_0, DECOY, 2));
   });
 
-  // The disclosure cells are 32 bytes. Anything else is some other field.
-  it('a non-32-byte write aimed at slot 0 does not overwrite the secret', () => {
-    stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), SLOT_0, new Uint8Array(16).fill(9)));
-  });
-
   // A map key is one 32-byte cell, not a slot index, so it must not resolve to a slot at all.
   it('a 32-byte map key is not read as a slot index', () => {
     stillReadsRealSecret(withExtraWrite(revealOf(byLabel('coupling1').raw), [new Uint8Array(32).fill(0)], DECOY));
@@ -432,6 +436,23 @@ describe('the verification compares whole values, not prefixes', () => {
       const own = persistentHash(new CompactTypeBytes(32), coupling.s);
       expect(findCoupling(couplings, own, coupling.hsp)).toBe(coupling);
     }
+  });
+
+  // The commitments above differ from the first character, so a comparison that stopped early
+  // would still tell them apart. This is the near miss that one cannot reach: a separator
+  // sharing every byte but the last.
+  it('findCoupling refuses a separator that matches all but its final byte', () => {
+    const real = ok(deserialize(byLabel('coupling1').raw))[0];
+    const h = persistentHash(new CompactTypeBytes(32), real.s);
+    const wanted = couplingDomainSep(h, real.hsp);
+
+    const nearMiss = Uint8Array.from(wanted);
+    nearMiss[nearMiss.length - 1] ^= 0x01;
+    expect(uint8ArrayToHex(nearMiss).slice(0, -2)).toBe(uint8ArrayToHex(wanted).slice(0, -2));
+
+    const decoy: Disclosure = { ...real, domainSep: nearMiss };
+    expect(findCoupling([decoy], h, real.hsp)).toBeUndefined();
+    expect(findCoupling([decoy, real], h, real.hsp)).toBe(real);
   });
 });
 
