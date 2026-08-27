@@ -47,7 +47,11 @@ describe('capturing a coupling for the offline tests', () => {
     const replayed = extractDisclosed(de(captured.raw), COUPLER);
 
     expect(replayed.ok && replayed.couplings[0]!.s).toEqual(captured.disclosure.s);
-    expect(captured.txId).toBe(`tx-${de(A.raw).serialize().reduce((h, b) => (h * 31 + b) % 1_000_000_007, 7)}`);
+    expect(captured.txId).toBe(
+      `tx-${de(A.raw)
+        .serialize()
+        .reduce((h, b) => (h * 31 + b) % 1_000_000_007, 7)}`
+    );
   });
 
   // Reads race indexing, so a read issued before the tx lands returns txUnavailable. Capturing

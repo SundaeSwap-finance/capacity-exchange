@@ -1,11 +1,6 @@
 import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
 import type { DisclosureResult } from '@sundaeswap/capacity-exchange-coupler/operations';
-import {
-  couplingOutcome,
-  type CouplingCommitment,
-  type CouplingOutcome,
-  type DisclosureRead,
-} from './commitments.js';
+import { couplingOutcome, type CouplingCommitment, type CouplingOutcome, type DisclosureRead } from './commitments.js';
 
 /** What a submitted tx finalized as, as far as the run needs to care. */
 export interface TxFinal {
@@ -42,10 +37,7 @@ export interface CouplingSubmission {
 /** One transaction carrying every coupling in the run. The coupler keeps only the latest coupling
  *  in its cells, so every earlier secret exists nowhere but the transaction, which is the whole
  *  reason the read is per tx rather than against live state. */
-export function oneTransaction(
-  bounds: FinalizedTransaction[],
-  expected: CouplingCommitment[]
-): CouplingSubmission[] {
+export function oneTransaction(bounds: FinalizedTransaction[], expected: CouplingCommitment[]): CouplingSubmission[] {
   if (bounds.length === 0) {
     throw new Error('oneTransaction: nothing to submit');
   }

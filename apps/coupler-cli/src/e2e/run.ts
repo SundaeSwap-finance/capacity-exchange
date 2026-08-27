@@ -58,14 +58,11 @@ async function submitCouplings(deps: E2eDeps, count: number) {
     throw new Error(`e2e: expected ${bounds.length} funded commitments, got ${funded.length}`);
   }
   const indexerUrl = deps.userApp.config.network.endpoints.indexerHttpUrl;
-  const run = await runCouplings(
-    oneTransaction(bounds, funded),
-    {
-      submitTx: (tx) => deps.userApp.midnightProvider.submitTx(tx),
-      awaitInclusion: (txId) => deps.userApp.publicDataProvider.watchForTxData(txId).catch(() => undefined),
-      readDisclosure: (txId) => readDisclosureAtTx(indexerUrl, deps.couplerAddress, txId),
-    }
-  );
+  const run = await runCouplings(oneTransaction(bounds, funded), {
+    submitTx: (tx) => deps.userApp.midnightProvider.submitTx(tx),
+    awaitInclusion: (txId) => deps.userApp.publicDataProvider.watchForTxData(txId).catch(() => undefined),
+    readDisclosure: (txId) => readDisclosureAtTx(indexerUrl, deps.couplerAddress, txId),
+  });
   logger.info(`Submitted ${run.txIds.join(' and ')}`);
   return run;
 }
