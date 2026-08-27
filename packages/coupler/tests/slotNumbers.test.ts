@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { Contract, ledger } from '../out/contract/index.js';
 import { createConstructorContext, createCircuitContext } from '@midnight-ntwrk/compact-runtime';
-import { cellWritesInProgram, S_SLOT, HSP_SLOT } from '../src/lib/disclosure.js';
+import { cellWritesInProgram } from '@sundaeswap/capacity-exchange-core';
+import { S_SLOT, HSP_SLOT } from '../src/lib/disclosure.js';
 
 const S = new Uint8Array(32).fill(0xaa);
 const S_PRIME = new Uint8Array(32).fill(0xbb);

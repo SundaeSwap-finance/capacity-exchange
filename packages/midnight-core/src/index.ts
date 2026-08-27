@@ -62,6 +62,9 @@ export {
   type EncodedInput,
 } from './leg.js';
 export { buildIntent, buildOffer, type ForeignOutputBuilder } from './combine.js';
+export { cellWritesInProgram, mergeCellWrites, type CellValue } from './cellWrites.js';
+export { callsTo, cellWritesBySlot, entryPointOf, mintedTokens, type FinalizedTransaction } from './contractCalls.js';
+
 export {
   buildFragmentTx,
   buildDustIntent,
