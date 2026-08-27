@@ -37,9 +37,7 @@ export interface WalletData {
 }
 
 export type WalletInfoState =
-  | { status: 'loading' }
-  | { status: 'error'; error: string; retry: () => void }
-  | { status: 'ready'; data: WalletData };
+  { status: 'loading' } | { status: 'error'; error: string; retry: () => void } | { status: 'ready'; data: WalletData };
 
 export interface SeedWalletConnection {
   type: 'seed';

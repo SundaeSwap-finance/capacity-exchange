@@ -1,6 +1,6 @@
 {
   "name": "@sundaeswap/capacity-exchange-providers",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Capacity Exchange providers for midnight transactions",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",

@@ -7,13 +7,7 @@ import type { NetworkConfig } from '../../config';
 import * as TokenMint from '../../../contracts/token-mint/out/contract/index.js';
 
 type TokenMintCircuitId =
-  | 'mint_test_tokens'
-  | 'own_balance'
-  | 'total_held'
-  | 'get_token_color'
-  | 'first_deposit'
-  | 'deposit'
-  | 'withdraw';
+  'mint_test_tokens' | 'own_balance' | 'total_held' | 'get_token_color' | 'first_deposit' | 'deposit' | 'withdraw';
 
 interface CircuitPrivateState {
   secret_key: Uint8Array;

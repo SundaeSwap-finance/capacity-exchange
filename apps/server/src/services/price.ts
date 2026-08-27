@@ -9,8 +9,7 @@ export interface Price {
 }
 
 export type GetPriceResult =
-  | { status: 'ok'; price: bigint; currency: Currency }
-  | { status: 'unsupported-currency' };
+  { status: 'ok'; price: bigint; currency: Currency } | { status: 'unsupported-currency' };
 
 export class PriceService {
   readonly #index: FormulaIndex;

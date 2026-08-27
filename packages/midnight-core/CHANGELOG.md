@@ -1,5 +1,15 @@
 # @sundaeswap/capacity-exchange-core
 
+## 2.0.0
+
+### Major Changes
+
+- b1d5ce6: BREAKING: resolveEndpoints and resolveWalletConfig now take an overrides object (Partial<NetworkEndpoints>) instead of a positional proofServerUrl string. Adds a NODE_URL env override for the Midnight node, exports redactUrl, and redacts node URLs in logs so an embedded API key is not exposed.
+
+### Patch Changes
+
+- f561665: Scope the extension approval guard to the wallets that need it. `connectMidnightExtension` now guards only Lace by default (`approvalGuard: 'auto'`), so other wallet extensions get their connector API back untouched. Pass `approvalGuard: true` to guard whatever wallet connected. `detectMidnightExtension` also reports the `globalThis.midnight` key the connector was injected under.
+
 ## 1.3.2
 
 ### Patch Changes

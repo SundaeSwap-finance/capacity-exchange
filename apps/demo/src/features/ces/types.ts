@@ -6,13 +6,7 @@ import type {
 } from '@sundaeswap/capacity-exchange-providers';
 
 export type CesFlowStatus =
-  | 'idle'
-  | 'building'
-  | 'selecting-currency'
-  | 'fetching-offers'
-  | 'submitting'
-  | 'success'
-  | 'error';
+  'idle' | 'building' | 'selecting-currency' | 'fetching-offers' | 'submitting' | 'success' | 'error';
 
 export interface CurrencySelectionState {
   prices: ExchangePrice[];
