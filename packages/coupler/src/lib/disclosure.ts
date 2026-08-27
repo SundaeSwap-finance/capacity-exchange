@@ -33,8 +33,8 @@ export function couplingDomainSep(h: Uint8Array, hPrime: Uint8Array): Uint8Array
   return persistentHash(VECTOR_2_BYTES_32, [h, hPrime]);
 }
 
-/** What one reveal made public: the secret, and the hash of the second secret. Seeing this
- *  means the reveal happened, not that the swap completed. */
+/** What one reveal made public: the secret, and the hash of the second secret. Read from an
+ *  indexed transaction, which is not the same as the transaction having applied. */
 export interface Disclosure {
   s: Uint8Array;
   hsp: Uint8Array;
@@ -42,8 +42,7 @@ export interface Disclosure {
   tokenColor: string;
 }
 
-/** Why a read produced nothing. Separated by kind so a caller can tell a temporary problem,
- *  like the tx not being indexed yet, from a permanent one. */
+/** Why a read produced nothing, named so a failure says which step gave up. */
 export type DisclosureError =
   | { kind: 'noMintReveal' }
   | { kind: 'unexpectedSlots'; slots: number[] }
@@ -71,21 +70,19 @@ function errorDetail(err: unknown): string {
 
 /** Reads the value out of an operation that pushes one onto the stack, or nothing if the
  *  operation does something else. */
-function pushedCell(op: Op<AlignedValue> | undefined): CellValue | undefined {
+function pushedCell(op: Op<AlignedValue>): CellValue | undefined {
   return pushedAligned(op)?.value;
 }
 
 /** The pushed cell with its alignment, which declares the field's real width. */
-function pushedAligned(op: Op<AlignedValue> | undefined): AlignedValue | undefined {
-  return op != null && typeof op === 'object' && 'push' in op && op.push.value.tag === 'cell'
-    ? op.push.value.content
-    : undefined;
+function pushedAligned(op: Op<AlignedValue>): AlignedValue | undefined {
+  return typeof op === 'object' && 'push' in op && op.push.value.tag === 'cell' ? op.push.value.content : undefined;
 }
 
-/** How deep an insert writes. One means it writes a whole field. Deeper means it writes
- *  inside a map or an array, which is not what we are looking for. */
-function insertArity(op: Op<AlignedValue> | undefined): number | undefined {
-  return op != null && typeof op === 'object' && 'ins' in op ? op.ins.n : undefined;
+/** Whether this operation writes a whole field. A deeper insert writes inside a map or an
+ *  array, which is not what we are looking for. */
+function writesWholeField(op: Op<AlignedValue>): boolean {
+  return typeof op === 'object' && 'ins' in op && op.ins.n === 1;
 }
 
 /** Which contract field a write is aimed at. Fields are numbered, and the number arrives as a
@@ -117,8 +114,8 @@ function transcriptsOf(call: ContractCall<Proof>): Transcript<AlignedValue>[] {
 /** The written value, as the 32 bytes the circuit used. A field-aligned value is trimmed of
  *  trailing zeros, so only the alignment says how wide the field really is. */
 function decodeBytes32(aligned: AlignedValue): Uint8Array | undefined {
-  const alignment = aligned.alignment;
-  const atom = alignment?.length === 1 ? alignment[0] : undefined;
+  const { alignment } = aligned;
+  const atom = alignment.length === 1 ? alignment[0] : undefined;
   if (atom?.tag !== 'atom' || atom.value.tag !== 'bytes' || atom.value.length !== 32) {
     return undefined;
   }
@@ -128,7 +125,7 @@ function decodeBytes32(aligned: AlignedValue): Uint8Array | undefined {
 export function cellWritesInProgram(program: Op<AlignedValue>[]): Map<number, Uint8Array> {
   const bySlot = new Map<number, Uint8Array>();
   for (let i = 2; i < program.length; i++) {
-    if (insertArity(program[i]) !== 1) {
+    if (!writesWholeField(program[i])) {
       continue;
     }
     const key = pushedCell(program[i - 2]);
