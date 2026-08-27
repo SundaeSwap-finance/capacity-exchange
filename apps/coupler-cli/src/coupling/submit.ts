@@ -39,6 +39,19 @@ export interface CouplingSubmission {
   expected: CouplingCommitment[];
 }
 
+/** One transaction carrying every coupling in the run. The coupler keeps only the latest coupling
+ *  in its cells, so every earlier secret exists nowhere but the transaction, which is the whole
+ *  reason the read is per tx rather than against live state. */
+export function oneTransaction(
+  bounds: FinalizedTransaction[],
+  expected: CouplingCommitment[]
+): CouplingSubmission[] {
+  if (bounds.length === 0) {
+    throw new Error('oneTransaction: nothing to submit');
+  }
+  return [{ bound: bounds.reduce((merged, next) => merged.merge(next)), expected }];
+}
+
 /** Submit every coupling, read back what each submission disclosed, and resolve the result
  *  against the commitments the caller funded. */
 export async function runCouplings(

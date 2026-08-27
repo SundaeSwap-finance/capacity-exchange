@@ -6,7 +6,7 @@ import { Transaction, type SignatureEnabled, type Proof, type Binding } from '@m
 import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { hexToBytes, uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { extractDisclosed } from '@sundaeswap/capacity-exchange-coupler/operations';
-import { runCouplings, type CouplingRunDeps } from '../../src/coupling/submit.js';
+import { runCouplings, oneTransaction, type CouplingRunDeps } from '../../src/coupling/submit.js';
 import type { CouplingCommitment } from '../../src/coupling/commitments.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -155,5 +155,37 @@ describe('runCouplings submits, waits, then reads', () => {
 
     expect(run.outcome.failures).toEqual({ tx1: 'txUnavailable' });
     expect(run.outcome.allFound).toBe(false);
+  });
+});
+
+// A run submits one transaction carrying every coupling, which preview accepts: two calls to the
+// same coupler in one tx land together and each secret still comes back out of that tx.
+describe('a run submits its couplings as one transaction', () => {
+  it('carries every coupling in a single submission', () => {
+    const [only] = oneTransaction([deserialize(A.raw), deserialize(B.raw)], specs());
+
+    expect(only.expected).toHaveLength(2);
+    const disclosed = extractDisclosed(only.bound, COUPLER);
+    expect(disclosed.ok && disclosed.couplings).toHaveLength(2);
+  });
+
+  it('leaves a single coupling untouched', () => {
+    const [only] = oneTransaction([deserialize(A.raw)], [commitmentOf(A)]);
+
+    const disclosed = extractDisclosed(only.bound, COUPLER);
+    expect(disclosed.ok && disclosed.couplings).toHaveLength(1);
+  });
+
+  it('resolves both couplings from the one tx it submitted', async () => {
+    const chain = fakeChain(COUPLER);
+    const run = await runCouplings(oneTransaction([deserialize(A.raw), deserialize(B.raw)], specs()), chain);
+
+    expect(run.txIds).toHaveLength(1);
+    expect(run.outcome.allFound).toBe(true);
+    expect(run.outcome.allDistinct).toBe(true);
+  });
+
+  it('refuses a run with nothing to submit', () => {
+    expect(() => oneTransaction([], [])).toThrow(/nothing to submit/);
   });
 });

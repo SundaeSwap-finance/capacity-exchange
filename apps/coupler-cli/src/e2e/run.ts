@@ -1,11 +1,9 @@
 import { firstValueFrom } from 'rxjs';
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
-import { writeFileSync } from 'fs';
 import { createEphemeralAppContext, createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { readDisclosureAtTx, dustUtxoId } from '@sundaeswap/capacity-exchange-coupler/operations';
-import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { failedAssertions } from './assertions.js';
-import { runCouplings, type CouplingRunResult } from '../coupling/submit.js';
+import { oneTransaction, runCouplings } from '../coupling/submit.js';
+import { SCENARIOS, type Scenario } from './scenarios.js';
 import { e2eReport } from './report.js';
 import { buildCounterIncrementTx, readCounterRound } from '../local/counter.js';
 import { prepareCoupling, type CouplingDeps } from '../coupling/prepare.js';
@@ -15,7 +13,6 @@ import {
   escrowCheckingCapacity,
   type EscrowCheckingCapacity,
 } from '../local/stubs.js';
-import { checkBinding } from './binding.js';
 
 const logger = createLogger(import.meta);
 
@@ -35,33 +32,34 @@ async function availableDustUtxos(app: AppContext): Promise<Set<string>> {
  * TEST HARNESS ONLY, not a protocol flow: one process plays both parties (a funded LP wallet and a
  * brand-new empty user wallet). The user drives the real WalletProvider: it builds a normal op and
  * passes it to `balanceTx`, which takes the bridgeless path (the only quoted currency is a fake
- * `cardano:` price) and runs the coupler, with the foreign escrow and LP stubbed. It runs TWO
- * couplings in one block to prove:
- *  1. each coupling lands as a bridgeless exchange (the LP funds the dust, the user spends none)
- *  2. per-tx extraction: sharing a block, each coupling's disclosed s and hsp are recovered by its
- *     own txId and are distinct (live-state would collapse them to one value)
- *  3. binding: a coupling whose capacity used the WRONG h' must fail
+ * `cardano:` price) and runs the coupler, with the foreign escrow and LP stubbed.
+ *
+ * Each scenario submits only what its own claims need, so a failure names the property that
+ * broke rather than the whole run.
  */
-/** The flow's dependencies, plus what only the harness needs: the LP's own context and the
- *  counter it increments. */
+/** The flow's dependencies, plus what only the harness needs: the LP's own context, the counter
+ *  it increments, and a capacity that keeps the books the e2e reads back. */
 interface E2eDeps extends CouplingDeps {
   /** The LP, funds the dust. The user's own wallet is CouplingDeps.userApp and funds nothing. */
   ctx: AppContext;
   counterAddress: string;
+  capacity: EscrowCheckingCapacity;
 }
 
-/** Two couplings prepared via balanceTx, one tx each so they land in the same block, which is
- *  what the per-tx read was built to exercise. */
-async function submitCouplings(deps: E2eDeps, capacity: EscrowCheckingCapacity) {
-  const userTx = () => buildCounterIncrementTx(deps.userApp, deps.counterAddress);
-  const bounds = [await prepareCoupling(deps, await userTx()), await prepareCoupling(deps, await userTx())];
-  const funded = capacity.fundedCommitments();
+/** Every coupling prepared via balanceTx and submitted as one transaction, which is what the
+ *  per-tx read was built to exercise: only the last coupling survives in the coupler's cells. */
+async function submitCouplings(deps: E2eDeps, count: number) {
+  const bounds = [];
+  for (let i = 0; i < count; i += 1) {
+    bounds.push(await prepareCoupling(deps, await buildCounterIncrementTx(deps.userApp, deps.counterAddress)));
+  }
+  const funded = deps.capacity.fundedCommitments();
   if (funded.length !== bounds.length) {
     throw new Error(`e2e: expected ${bounds.length} funded commitments, got ${funded.length}`);
   }
   const indexerUrl = deps.userApp.config.network.endpoints.indexerHttpUrl;
   const run = await runCouplings(
-    bounds.map((bound, i) => ({ bound, expected: [funded[i]] })),
+    oneTransaction(bounds, funded),
     {
       submitTx: (tx) => deps.userApp.midnightProvider.submitTx(tx),
       awaitInclusion: (txId) => deps.userApp.publicDataProvider.watchForTxData(txId).catch(() => undefined),
@@ -69,37 +67,18 @@ async function submitCouplings(deps: E2eDeps, capacity: EscrowCheckingCapacity) 
     }
   );
   logger.info(`Submitted ${run.txIds.join(' and ')}`);
-  return { bounds, run };
+  return run;
 }
 
-/** Regenerating the disclosure test fixtures needs the submitted bytes plus what each coupling
- *  disclosed. Both are here and nowhere else, so capture them when asked. */
-function captureFixtures(path: string, couplerAddress: string, bounds: FinalizedTransaction[], run: CouplingRunResult) {
-  const entries = bounds.map((bound, i) => {
-    const read = run.reads[i];
-    const coupling = read?.result.ok ? read.result.couplings[0] : undefined;
-    return {
-      label: `coupling${i + 1}`,
-      txId: run.txIds[i],
-      raw: uint8ArrayToHex(bound.serialize()),
-      expectedS: coupling ? uint8ArrayToHex(coupling.s) : undefined,
-      expectedHsp: coupling ? uint8ArrayToHex(coupling.hsp) : undefined,
-    };
-  });
-  writeFileSync(path, JSON.stringify({ couplerAddress, entries }, null, 2) + '\n');
-  logger.info(`Captured ${entries.length} transactions to ${path}`);
-}
-
-/** What the LP spent and what the user spent. The LP paid iff every dust UTxO it spent is gone
- *  from what it can still spend. A balance comparison cannot see this: dust regenerates
- *  continuously and swamps the fee. */
-async function readPayment(ctx: AppContext, userApp: AppContext, capacity: EscrowCheckingCapacity, at: Date) {
-  const lpDustSpent = capacity.usedDustUtxos();
-  const lpDustAvailable = await availableDustUtxos(ctx);
+/** What each side spent. The LP paid iff every dust UTxO it spent is gone from what it can still
+ *  spend. A balance comparison cannot see this: dust regenerates continuously and swamps the fee. */
+async function readSpend(deps: E2eDeps, asOf: Date) {
+  const lpDustSpent = deps.capacity.usedDustUtxos();
+  const lpDustAvailable = await availableDustUtxos(deps.ctx);
   return {
     lpDustSpent,
     lpPaid: lpDustSpent.length > 0 && lpDustSpent.every((id) => !lpDustAvailable.has(id)),
-    userDustAfter: await dustBalanceAt(userApp, at),
+    userDustAfter: await dustBalanceAt(deps.userApp, asOf),
   };
 }
 
@@ -107,13 +86,15 @@ export async function runE2e(
   ctx: AppContext,
   couplerAddress: string,
   counterAddress: string,
-  snapshotDir: string
+  snapshotDir: string,
+  scenario: Scenario
 ) {
   const userApp = await createEphemeralAppContext(ctx, snapshotDir);
   try {
-    const at = new Date();
-    const userDustBefore = await dustBalanceAt(userApp, at);
-    const capacity = escrowCheckingCapacity(ctx);
+    // Both dust readings are taken as of one instant, so continuous regeneration cancels and
+    // what is left is what the run actually spent.
+    const asOf = new Date();
+    const userDustBefore = await dustBalanceAt(userApp, asOf);
     const deps: E2eDeps = {
       ctx,
       userApp,
@@ -121,35 +102,29 @@ export async function runE2e(
       counterAddress,
       escrow: inMemoryEscrowLocker(),
       resolver: fakeCardanoResolver(),
-      capacity,
+      capacity: escrowCheckingCapacity(ctx),
     };
 
     const roundBefore = await readCounterRound(ctx, counterAddress);
-    const { bounds, run } = await submitCouplings(deps, capacity);
-
-    const capturePath = process.env.CAPTURE_FIXTURES;
-    if (capturePath) {
-      captureFixtures(capturePath, couplerAddress, bounds, run);
-    }
+    const run = await submitCouplings(deps, SCENARIOS[scenario].couplings);
 
     const roundAfter = await readCounterRound(ctx, counterAddress);
-    const binding = await checkBinding(ctx, userApp, couplerAddress);
-    const payment = await readPayment(ctx, userApp, capacity, at);
+    const spend = await readSpend(deps, asOf);
 
     const report = e2eReport({
+      scenario,
       couplerAddress,
       counterAddress,
       run,
       roundBefore,
       roundAfter,
       userDustBefore,
-      binding,
-      ...payment,
+      ...spend,
     });
 
-    const failed = failedAssertions(report);
+    const failed = failedAssertions(scenario, report);
     if (failed.length > 0) {
-      throw new Error(`e2e failed: ${failed.join(', ')}\n${JSON.stringify(report, null, 2)}`);
+      throw new Error(`e2e ${scenario} failed: ${failed.join(', ')}\n${JSON.stringify(report, null, 2)}`);
     }
     return report;
   } finally {

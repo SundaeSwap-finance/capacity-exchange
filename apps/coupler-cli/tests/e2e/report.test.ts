@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { e2eReport, type E2eFacts } from '../../src/e2e/report.js';
 
 const facts = (over: Partial<E2eFacts> = {}): E2eFacts => ({
+  scenario: 'recover-overwritten',
   couplerAddress: 'coupler',
   counterAddress: 'counter',
   run: {
@@ -16,7 +17,6 @@ const facts = (over: Partial<E2eFacts> = {}): E2eFacts => ({
   userDustAfter: 5n,
   lpDustSpent: ['a#1'],
   lpPaid: true,
-  binding: { bindingHolds: true, wrongHPrimeError: 'mismatch' },
   ...over,
 });
 
@@ -24,13 +24,19 @@ describe('the e2e report states what the run observed', () => {
   it('holds when every claim does', () => {
     const r = e2eReport(facts());
     expect(r.allLanded).toBe(true);
-    expect(r.incrementedTwice ?? r.counter.incrementedTwice).toBe(true);
     expect(r.userSpentNoDust).toBe(true);
   });
 
-  it('counts exactly two increments, not at least two', () => {
-    expect(e2eReport(facts({ roundAfter: 13n })).counter.incrementedTwice).toBe(false);
-    expect(e2eReport(facts({ roundAfter: 11n })).counter.incrementedTwice).toBe(false);
+  // The report states what happened and what the scenario asked for, and leaves the verdict
+  // to the claims, so the same numbers read differently under a one-coupling scenario.
+  it('reports the increment count against what the scenario submits', () => {
+    expect(e2eReport(facts()).counter).toMatchObject({ incrementedBy: 2, expected: 2 });
+    expect(e2eReport(facts({ scenario: 'bridgeless-exchange' })).counter).toMatchObject({ expected: 1 });
+  });
+
+  it('reports an increment that did not happen as the number it was', () => {
+    expect(e2eReport(facts({ roundAfter: 13n })).counter.incrementedBy).toBe(3);
+    expect(e2eReport(facts({ roundAfter: 10n })).counter.incrementedBy).toBe(0);
   });
 
   it('sees the user paying anything at all', () => {
