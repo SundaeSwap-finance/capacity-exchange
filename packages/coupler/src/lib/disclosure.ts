@@ -145,8 +145,21 @@ export function cellWritesInProgram(program: Op<AlignedValue>[]): Map<number, Ui
   return bySlot;
 }
 
+/** The cell writes of a call. Two programs, scanned apart so no write spans the join, and a
+ *  slot written in both resolves to the one that always applies. */
+export function mergeCellWrites(
+  guaranteed: Op<AlignedValue>[] | undefined,
+  fallible: Op<AlignedValue>[] | undefined
+): Map<number, Uint8Array> {
+  const writes = cellWritesInProgram(fallible ?? []);
+  for (const [slot, value] of cellWritesInProgram(guaranteed ?? [])) {
+    writes.set(slot, value);
+  }
+  return writes;
+}
+
 function cellWritesBySlot(call: ContractCall<Proof>): Map<number, Uint8Array> {
-  return cellWritesInProgram(transcriptsOf(call).flatMap((transcript) => transcript.program));
+  return mergeCellWrites(call.guaranteedTranscript?.program, call.fallibleTranscript?.program);
 }
 
 /** The coins a call created. */

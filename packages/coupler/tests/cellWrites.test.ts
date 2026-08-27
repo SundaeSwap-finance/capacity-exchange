@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cellWritesInProgram, S_SLOT } from '../src/lib/disclosure.js';
+import { cellWritesInProgram, mergeCellWrites, S_SLOT, HSP_SLOT } from '../src/lib/disclosure.js';
 
 const bytes32 = [{ tag: 'atom', value: { tag: 'bytes', length: 32 } }];
 const bytesN = (n: number) => [{ tag: 'atom', value: { tag: 'bytes', length: n } }];
@@ -68,5 +68,42 @@ describe('a disclosure cell is read by what its alignment declares', () => {
   // failure, not a cell to skip. Swallowing it resurfaces later as a missing slot with no reason.
   it('does not hide a value that declares 32 bytes but cannot decode', () => {
     expect(() => cellWritesInProgram(program(new Uint8Array(33).fill(9), bytes32))).toThrow(/Bytes\[32\]/);
+  });
+});
+
+// A call carries two programs, one that always applies and one the ledger can roll back. They
+// are separate instruction streams, so scanning their concatenation invents a boundary that
+// does not exist.
+describe('the two programs of a call are scanned apart', () => {
+  const key0 = push([new Uint8Array([])], bytesN(1));
+  const val = (fill: number) => push([new Uint8Array(32).fill(fill)], bytes32);
+
+  // Neither program contains a complete write. Glued, the pushes at the end of the first sit in
+  // front of the store at the start of the second, and a write appears that nothing performed.
+  it('does not invent a write across the join', () => {
+    const guaranteed = [key0, val(7)] as never;
+    const fallible = [ins()] as never;
+
+    expect(slots([...(guaranteed as never[]), ...(fallible as never[])] as never)).toEqual([S_SLOT]);
+    expect([...mergeCellWrites(guaranteed, fallible).keys()]).toEqual([]);
+  });
+
+  it('reads a write from each program', () => {
+    const guaranteed = [key0, val(1), ins()] as never;
+    const fallible = [push([new Uint8Array([1])], bytesN(1)), val(2), ins()] as never;
+    expect([...mergeCellWrites(guaranteed, fallible).keys()].sort()).toEqual([S_SLOT, HSP_SLOT]);
+  });
+
+  // The rollback-able program must not win a slot the always-applies one also wrote.
+  it('prefers the program that always applies when both write a slot', () => {
+    const guaranteed = [key0, val(1), ins()] as never;
+    const fallible = [key0, val(2), ins()] as never;
+    expect(mergeCellWrites(guaranteed, fallible).get(S_SLOT)).toEqual(new Uint8Array(32).fill(1));
+  });
+
+  it('handles a call with only one program', () => {
+    const guaranteed = [key0, val(1), ins()] as never;
+    expect([...mergeCellWrites(guaranteed, undefined).keys()]).toEqual([S_SLOT]);
+    expect([...mergeCellWrites(undefined, guaranteed).keys()]).toEqual([S_SLOT]);
   });
 });
