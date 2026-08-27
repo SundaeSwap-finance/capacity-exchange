@@ -8,9 +8,7 @@ export interface Quote {
 }
 
 export type GetQuoteResult =
-  | { status: 'ok'; quote: Quote }
-  | { status: 'invalid' }
-  | { status: 'expired' };
+  { status: 'ok'; quote: Quote } | { status: 'invalid' } | { status: 'expired' };
 
 interface QuotePayload {
   currency: 'DUST';

@@ -1,6 +1,5 @@
 export type IndexerStatus =
-  | { status: 'ok'; height: number }
-  | { status: 'ko'; error: string; details?: string };
+  { status: 'ok'; height: number } | { status: 'ko'; error: string; details?: string };
 
 export async function checkIndexer(url: string): Promise<IndexerStatus> {
   // TODO: Find an indexer sdk or roll our own client

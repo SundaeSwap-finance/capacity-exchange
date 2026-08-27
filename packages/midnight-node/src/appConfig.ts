@@ -22,8 +22,7 @@ export interface NetworkConfig {
  *  - `inMemory`: in-memory only. Optionally primed from a chain snapshot.
  *  - `onDisk`: disk-backed via `walletStateDir`. State loads from and saves to disk. */
 export type WalletStateSource =
-  | { kind: 'inMemory'; chainSnapshot?: ChainSnapshot }
-  | { kind: 'onDisk'; walletStateDir: string };
+  { kind: 'inMemory'; chainSnapshot?: ChainSnapshot } | { kind: 'onDisk'; walletStateDir: string };
 
 export interface WalletConfig {
   seed: Uint8Array;

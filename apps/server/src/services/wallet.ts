@@ -15,9 +15,7 @@ import {
 } from '@sundaeswap/capacity-exchange-core';
 
 export type WalletSyncState =
-  | { status: 'syncing' }
-  | { status: 'ok' }
-  | { status: 'ko'; error: string };
+  { status: 'syncing' } | { status: 'ok' } | { status: 'ko'; error: string };
 
 /**
  * Manages the lifecycle and sync'ing of a Midnight DUST wallet.

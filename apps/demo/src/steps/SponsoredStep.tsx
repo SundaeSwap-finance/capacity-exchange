@@ -220,9 +220,7 @@ function SponsoredMintAction({
     {
       label: effectiveStatus === 'submitting' ? submittingLabel : 'Sponsor DUST and submit',
       status: (effectiveStatus === 'submitting' ? 'active' : effectiveStatus === 'success' ? 'done' : 'waiting') as
-        | 'active'
-        | 'done'
-        | 'waiting',
+        'active' | 'done' | 'waiting',
     },
   ];
 

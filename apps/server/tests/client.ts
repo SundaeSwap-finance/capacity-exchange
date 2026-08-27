@@ -42,8 +42,7 @@ export class CapacityExchangeClient {
   ): Promise<ApiResponse<typeof PricesResponse.static | typeof ErrorResponse.static>> {
     const response = await fetch(`${this.baseUrl}/api/prices?currency=DUST&amount=${specks}`);
     const data = (await response.json()) as
-      | typeof PricesResponse.static
-      | typeof ErrorResponse.static;
+      typeof PricesResponse.static | typeof ErrorResponse.static;
     console.debug(`GET /api/prices?currency=DUST&amount=${specks} -> ${response.status}`, data);
     return { status: response.status, data };
   }
@@ -59,8 +58,7 @@ export class CapacityExchangeClient {
       body: JSON.stringify(request),
     });
     const data = (await response.json()) as
-      | typeof CreateOfferResponse.static
-      | typeof ErrorResponse.static;
+      typeof CreateOfferResponse.static | typeof ErrorResponse.static;
     console.debug(`POST /api/offers -> ${response.status}`, data);
     return { status: response.status, data };
   }
