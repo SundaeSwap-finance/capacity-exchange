@@ -1,0 +1,20 @@
+rules:
+  - id: underflowing-index
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      $ARR[$I - $N] reads before the start of the array when $I is below $N.
+      JS returns undefined rather than throwing, so the read is silent.
+      Start the loop at $N.
+    patterns:
+      - pattern: $ARR[$I - $N]
+      - pattern-inside: |
+          for (let $I = $START; ...; ...) { ... }
+      - metavariable-comparison:
+          comparison: $START < $N
+    paths:
+      exclude:
+        - '**/dist/**'
+        - '**/out/**'
+        - '**/generated/**'
+        - 'vendor/**'

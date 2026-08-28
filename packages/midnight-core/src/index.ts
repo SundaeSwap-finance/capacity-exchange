@@ -62,6 +62,9 @@ export {
   type EncodedInput,
 } from './leg.js';
 export { buildIntent, buildOffer, type ForeignOutputBuilder } from './combine.js';
+export { cellWritesInProgram, mergeCellWrites, type CellValue } from './cellWrites.js';
+export { callsTo, cellWritesBySlot, entryPointOf, mintedTokens, type FinalizedTransaction } from './contractCalls.js';
+
 export {
   buildFragmentTx,
   buildDustIntent,
@@ -73,6 +76,7 @@ export { getLatestBlockTimestamp } from './blockTime.js';
 export { DEFAULT_TTL_MS, sendShieldedTokens, sendUnshieldedTokens } from './sendTokens.js';
 export { getShieldedBalance } from './getShieldedBalance.js';
 export { getLedgerParameters } from './getLedgerParameters.js';
+export { queryTxRaw } from './txRaw.js';
 export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';

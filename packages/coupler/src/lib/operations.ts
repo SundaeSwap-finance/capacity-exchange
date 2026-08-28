@@ -11,3 +11,12 @@ export { createPrivateState, witnesses, type CircuitPrivateState } from './witne
 export { createDustSpend, dustUtxoId, type DustSpend } from './dust.js';
 export { buildAbsorbLeg } from './couplerLegs.js';
 export { assertFundsThisSwap, assertDustCoversFee } from './validateCapacity.js';
+export {
+  extractDisclosed,
+  readDisclosureAtTx,
+  couplingDomainSep,
+  findCoupling,
+  type Disclosure,
+  type DisclosureError,
+  type DisclosureResult,
+} from './disclosure.js';

@@ -16,7 +16,12 @@ export {
 export { createLogger } from './createLogger.js';
 export { checkWebSocket, checkProofServer, checkIndexerFreshness } from './connectivity.js';
 export { createPrivateStateProvider } from './levelPrivateStateProvider.js';
-export { type AppContext, createAppContext, createPublicDataProvider } from './appContext.js';
+export {
+  type AppContext,
+  createAppContext,
+  createEphemeralAppContext,
+  createPublicDataProvider,
+} from './appContext.js';
 export { type WalletContext, createWalletContext } from './walletContext.js';
 export { loadChainSnapshot, writeChainSnapshot, exportChainSnapshot } from './chainSnapshot.js';
 export {
