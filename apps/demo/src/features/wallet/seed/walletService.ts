@@ -141,7 +141,8 @@ export async function connectSeedWallet(
   shieldedSub.unsubscribe();
   unshieldedSub.unsubscribe();
 
-  // Save shielded only — unshielded serializeState would hang, and DUST state is empty by design
+  // Save shielded only: the demo never reads unshielded balances, and the inert DUST wallet's state
+  // is empty by design, so neither is worth persisting.
   store.saveShielded(connection.walletFacade).catch((err) => {
     console.warn('[WalletService] Failed to save wallet state:', err);
   });
