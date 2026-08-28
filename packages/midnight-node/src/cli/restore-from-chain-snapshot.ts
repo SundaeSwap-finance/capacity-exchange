@@ -49,7 +49,6 @@ async function main() {
   fs.mkdirSync(stateDir, { recursive: true });
   fs.writeFileSync(path.join(stateDir, `${prefix}-shielded.data`), saved.savedShieldedState!);
   fs.writeFileSync(path.join(stateDir, `${prefix}-unshielded.data`), saved.savedUnshieldedState!);
-  // loadChainSnapshot requires all three files, so DUST is present here; guarded for the type.
   if (saved.savedDustState) {
     fs.writeFileSync(path.join(stateDir, `${prefix}-dust.data`), saved.savedDustState);
   }
