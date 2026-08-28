@@ -117,7 +117,6 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
           setSeedStatus('connected');
           setSyncProgress({
             shielded: { appliedIndex: 0n, targetIndex: 200n, done: false },
-            dust: { appliedIndex: 0n, targetIndex: 150n, done: false },
             unshielded: false,
           });
         }, 800)
@@ -150,40 +149,14 @@ export function useMockDemoState(networkId: string, _config: NetworkConfig): Moc
         );
       }
 
-      // Phase 3: animate dust progress (starts a bit after shielded, finishes around same time)
-      const dustSteps = [
-        { delay: 2800, applied: 20n },
-        { delay: 4500, applied: 60n },
-        { delay: 6000, applied: 105n },
-        { delay: 7500, applied: 150n },
-      ];
-
-      for (const step of dustSteps) {
-        timers.push(
-          window.setTimeout(() => {
-            setSyncProgress(
-              (prev) =>
-                prev && {
-                  ...prev,
-                  dust: {
-                    appliedIndex: step.applied,
-                    targetIndex: 150n,
-                    done: step.applied >= 150n,
-                  },
-                }
-            );
-          }, step.delay)
-        );
-      }
-
-      // Phase 4: unshielded done
+      // Phase 3: unshielded done
       timers.push(
         window.setTimeout(() => {
           setSyncProgress((prev) => prev && { ...prev, unshielded: true });
         }, 9000)
       );
 
-      // Phase 5: mark wallet fully synced
+      // Phase 4: mark wallet fully synced
       timers.push(
         window.setTimeout(() => {
           setWalletInfoStatus('ready');

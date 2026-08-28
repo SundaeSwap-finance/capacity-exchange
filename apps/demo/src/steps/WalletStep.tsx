@@ -192,7 +192,6 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
             {sp ? (
               <div className="ces-section-stack px-2">
                 <SyncBar label="Shielded" progress={sp.shielded} />
-                <SyncBar label="Dust" progress={sp.dust} />
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2">
