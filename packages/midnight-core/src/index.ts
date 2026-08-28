@@ -13,7 +13,7 @@ export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';
 export { resolveWalletConfig, type WalletConfig } from './walletConfig.js';
-export { createWallet, type CreateWalletOptions, type WalletConnection } from './walletFacade.js';
+export { createWallet, type CreateWalletOptions, type DustMode, type WalletConnection } from './walletFacade.js';
 export {
   startAndSyncWallet,
   createAndSyncWallet,

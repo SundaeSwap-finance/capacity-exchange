@@ -5,7 +5,8 @@ import type { SavedWalletState } from './walletStateStore.js';
 
 export interface ChainSnapshot {
   shielded: { state: string; offset: string; protocolVersion: string };
-  dust: { state: string; offset: string; protocolVersion: string };
+  /** Omitted for wallets created with dustMode 'none', which never sync DUST. */
+  dust?: { state: string; offset: string; protocolVersion: string };
   unshielded: { appliedId: string; protocolVersion: string };
 }
 
@@ -27,13 +28,15 @@ export function buildSyntheticWalletState(
     coinHashes: {},
   });
 
-  const savedDustState = JSON.stringify({
-    publicKey: { publicKey: keys.dustSecretKey.publicKey.toString() },
-    state: snapshot.dust.state,
-    protocolVersion: snapshot.dust.protocolVersion,
-    networkId,
-    offset: snapshot.dust.offset,
-  });
+  const savedDustState = snapshot.dust
+    ? JSON.stringify({
+        publicKey: { publicKey: keys.dustSecretKey.publicKey.toString() },
+        state: snapshot.dust.state,
+        protocolVersion: snapshot.dust.protocolVersion,
+        networkId,
+        offset: snapshot.dust.offset,
+      })
+    : undefined;
 
   const unshieldedPub = PublicKey.fromKeyStore(keys.unshieldedKeystore);
   const savedUnshieldedState = JSON.stringify({

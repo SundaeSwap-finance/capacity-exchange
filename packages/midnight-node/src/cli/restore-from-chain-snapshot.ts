@@ -48,8 +48,10 @@ async function main() {
 
   fs.mkdirSync(stateDir, { recursive: true });
   fs.writeFileSync(path.join(stateDir, `${prefix}-shielded.data`), saved.savedShieldedState!);
-  fs.writeFileSync(path.join(stateDir, `${prefix}-dust.data`), saved.savedDustState!);
   fs.writeFileSync(path.join(stateDir, `${prefix}-unshielded.data`), saved.savedUnshieldedState!);
+  if (saved.savedDustState) {
+    fs.writeFileSync(path.join(stateDir, `${prefix}-dust.data`), saved.savedDustState);
+  }
 
   logger.info(
     `Restored wallet state files for ${prefix} in ${stateDir} from chain snapshot at shielded offset ${snapshot.shielded.offset}`

@@ -79,13 +79,14 @@ export class WalletStateStore {
     );
   }
 
-  /** Save only shielded + dust state, skipping unshielded. */
-  async saveShieldedAndDust(facade: WalletFacade): Promise<void> {
-    const [shieldedState, dustState] = await Promise.all([
-      facade.shielded.serializeState(),
-      facade.dust.serializeState(),
-    ]);
-    await Promise.all([this.#store.save('shielded', shieldedState), this.#store.save('dust', dustState)]);
+  /** Save only shielded state. Use for wallets created with dustMode 'none'. */
+  async saveShielded(facade: WalletFacade): Promise<void> {
+    await this.#store.save('shielded', await facade.shielded.serializeState());
+  }
+
+  /** Drop only the persisted DUST state. */
+  async clearDust(): Promise<void> {
+    await this.#store.clear('dust');
   }
 
   async clearAll(): Promise<void> {

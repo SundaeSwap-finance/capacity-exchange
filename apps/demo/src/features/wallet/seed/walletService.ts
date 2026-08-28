@@ -24,7 +24,6 @@ export interface SubWalletProgress {
 
 export interface SyncProgressInfo {
   shielded: SubWalletProgress;
-  dust: SubWalletProgress;
   unshielded: boolean;
 }
 
@@ -36,6 +35,10 @@ export type SyncProgressCallback = (progress: SyncProgressInfo) => void;
  * For new wallets (isNewWallet=true), attempts to use pre-synced chain state
  * snapshots so the wallet only needs to catch up from the snapshot offset
  * instead of scanning the entire blockchain from genesis.
+ *
+ * The wallet is created with dustMode 'none': every transaction in the demo has its fees paid by a
+ * capacity exchange, so the DUST sub-wallet would sync tens of megabytes of chain state only to
+ * report a balance of zero. Its address stays readable; it just never syncs.
  */
 export async function connectSeedWallet(
   seedHex: string,
@@ -65,6 +68,10 @@ export async function connectSeedWallet(
   const baseStore = new LocalStorageStateStore();
   const store = new WalletStateStore(baseStore, String(walletConfig.networkId), keys.shieldedSecretKeys.coinPublicKey);
 
+  // Reclaim the multi-megabyte DUST state written by earlier versions; it is never read again, and
+  // leaving it in place can keep localStorage over quota so shielded state fails to save.
+  await store.clearDust().catch(() => {});
+
   // For new wallets, try to use pre-synced snapshots to skip most of the sync
   let saved = await store.loadWalletState();
   if (isNewWallet && !saved.savedShieldedState) {
@@ -80,7 +87,7 @@ export async function connectSeedWallet(
     }
   }
 
-  const fullOptions = { seedHex, walletConfig, ...saved };
+  const fullOptions = { seedHex, walletConfig, dustMode: 'none' as const, ...saved };
 
   let connection: WalletConnection;
   try {
@@ -90,16 +97,15 @@ export async function connectSeedWallet(
   } catch (err) {
     console.warn('[WalletService] Restore failed, starting fresh:', err);
     await store.clearAll();
-    connection = await createWallet({ seedHex, walletConfig });
+    connection = await createWallet({ seedHex, walletConfig, dustMode: 'none' });
     console.debug('[WalletService] Wallet created (fresh fallback)');
   }
 
   const { walletFacade } = connection;
 
-  // Track sync progress from all three sub-wallets
+  // Track sync progress from the sub-wallets that actually sync
   const progress: SyncProgressInfo = {
     shielded: { appliedIndex: 0n, targetIndex: 0n, done: false },
-    dust: { appliedIndex: 0n, targetIndex: 0n, done: false },
     unshielded: false,
   };
 
@@ -109,18 +115,6 @@ export async function connectSeedWallet(
     next: (state) => {
       const p = state.progress;
       progress.shielded = {
-        appliedIndex: p.appliedIndex,
-        targetIndex: p.highestRelevantWalletIndex,
-        done: p.isStrictlyComplete(),
-      };
-      emitProgress();
-    },
-  });
-
-  const dustSub = walletFacade.dust.state.subscribe({
-    next: (state) => {
-      const p = state.progress;
-      progress.dust = {
         appliedIndex: p.appliedIndex,
         targetIndex: p.highestRelevantWalletIndex,
         done: p.isStrictlyComplete(),
@@ -140,19 +134,18 @@ export async function connectSeedWallet(
   console.debug('[WalletService] Calling walletFacade.start()...');
   await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
   console.debug('[WalletService] Wallet started, waiting for sync...');
-  await Promise.all([
-    walletFacade.shielded.waitForSyncedState().then(() => console.debug('[WalletService] Shielded synced')),
-    walletFacade.dust.waitForSyncedState().then(() => console.debug('[WalletService] Dust synced')),
-    // Skip unshielded — we don't use unshielded balances in the demo
-  ]);
-  console.debug('[WalletService] All synced');
+  // Skip unshielded — we don't use unshielded balances in the demo — and DUST, which never syncs
+  await walletFacade.shielded.waitForSyncedState();
+  console.debug('[WalletService] Shielded synced');
 
   shieldedSub.unsubscribe();
-  dustSub.unsubscribe();
   unshieldedSub.unsubscribe();
 
-  // Save shielded + dust only — unshielded serializeState would hang
-  store.saveShieldedAndDust(connection.walletFacade).catch(() => {});
+  // Save shielded only: the demo never reads unshielded balances, and the inert DUST wallet's state
+  // is empty by design, so neither is worth persisting.
+  store.saveShielded(connection.walletFacade).catch((err) => {
+    console.warn('[WalletService] Failed to save wallet state:', err);
+  });
 
   console.log('[WalletService] Returning connection');
   return { walletFacade: connection.walletFacade, keys: connection.keys, networkId: config.networkId };

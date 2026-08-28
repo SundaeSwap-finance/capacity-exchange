@@ -36,9 +36,13 @@ export function loadChainSnapshot(networkId: string, snapshotDir: string): Chain
 export function writeChainSnapshot(networkId: string, snapshotDir: string, snapshot: ChainSnapshot): void {
   fs.mkdirSync(snapshotDir, { recursive: true });
   for (const kind of KINDS) {
+    const contents = snapshot[kind];
+    if (!contents) {
+      continue;
+    }
     const target = snapshotPath(networkId, snapshotDir, kind);
     const tmp = `${target}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(snapshot[kind]));
+    fs.writeFileSync(tmp, JSON.stringify(contents));
     fs.renameSync(tmp, target);
   }
 }
