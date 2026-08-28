@@ -51,8 +51,7 @@ export type DisclosureError =
 /** The outcome of reading one transaction. A success carries every reveal that could be read,
  *  and a reason for each that could not, so one bad reveal does not hide the rest. */
 export type DisclosureResult =
-  | { ok: true; couplings: Disclosure[]; skipped: DisclosureError[] }
-  | { ok: false; error: DisclosureError };
+  { ok: true; couplings: Disclosure[]; skipped: DisclosureError[] } | { ok: false; error: DisclosureError };
 
 /** Picks out the coupling that settles a particular escrow, given the two commitments its
  *  owner holds. Returns nothing if this transaction does not settle it. */
