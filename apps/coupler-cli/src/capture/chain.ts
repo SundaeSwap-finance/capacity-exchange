@@ -33,7 +33,12 @@ export async function runCapture(
     const captured = await captureCoupling({
       prepareOne: async () => prepareCoupling(deps, await buildCounterIncrementTx(userApp, counterAddress)),
       submitTx: (tx) => userApp.midnightProvider.submitTx(tx),
-      awaitInclusion: (txId) => userApp.publicDataProvider.watchForTxData(txId).catch(() => undefined),
+      // A failed wait does not mean the tx is missing, so say so and let the read decide.
+      awaitInclusion: (txId) =>
+        userApp.publicDataProvider.watchForTxData(txId).catch((err) => {
+          logger.warn({ err: err instanceof Error ? err : String(err) }, `Waiting for ${txId} failed, reading anyway`);
+          return undefined;
+        }),
       readDisclosure: (txId) => readDisclosureAtTx(indexerUrl, couplerAddress, txId),
     });
 
