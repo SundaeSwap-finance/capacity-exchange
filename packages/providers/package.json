@@ -10,10 +10,14 @@
     ".": {
       "bun": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./testing": {
+      "bun": "./src/wallet/testing.ts"
     }
   },
   "files": [
     "dist",
+    "!dist/wallet/testing.*",
     "LICENSE.md"
   ],
   "publishConfig": {

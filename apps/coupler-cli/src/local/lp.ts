@@ -1,0 +1,96 @@
+import { firstValueFrom } from 'rxjs';
+import { AppContext, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import {
+  getLatestBlockTimestamp,
+  getLedgerParameters,
+  buildFragmentTx,
+  type DustAttachment,
+} from '@sundaeswap/capacity-exchange-core';
+import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
+import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
+import {
+  createDustSpend,
+  buildAbsorbLeg,
+  type CapacityFragment,
+  type CapacityProvider,
+  type CouplingRequest,
+  type PricedCoupling,
+} from '@sundaeswap/capacity-exchange-coupler/operations';
+import { COUPLER_OUT_DIR } from '../chain/contract.js';
+
+const logger = createLogger(import.meta);
+
+/** How long the LP's dust stays committed. Covers this fragment's capacity proof,
+ *  submit, and inclusion, with margin over the observed expiry floor. */
+const COUPLING_TTL_MS = 5 * 60_000;
+
+/**
+ * LP side. Fix the LP-owned terms (ttl, chain params) over the request, then build
+ * and prove the capacity fragment: absorb and the supplied dust payment, sealed in
+ * one intent so the dust can't be lifted onto another tx. The dust spend is passed
+ * in, not selected here, so the caller that owns the dust UTXOs and their in-use
+ * tracking decides which to spend. The LP never sees the user's tx.
+ */
+export async function buildCapacityFragment(
+  ctx: AppContext,
+  couplerAddress: string,
+  request: CouplingRequest,
+  dust: DustAttachment
+): Promise<CapacityFragment> {
+  const ledgerParameters = await getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl);
+  const priced: PricedCoupling = {
+    ...request,
+    ttl: new Date(Date.now() + COUPLING_TTL_MS),
+    ledgerParameters,
+  };
+
+  const absorbLeg = await buildAbsorbLeg(
+    ctx.walletContext.walletProvider,
+    ctx.publicDataProvider,
+    couplerAddress,
+    priced.h,
+    priced.hPrime,
+    priced.nonce
+  );
+
+  const fragment = buildFragmentTx([absorbLeg], priced.ttl, ledgerParameters, { dust });
+  logger.info(`Proving capacity fragment (absorb and ${priced.vFeeSpecks} specks dust)...`);
+  const proofProvider = httpClientProofProvider(
+    ctx.config.network.endpoints.proofServerUrl,
+    new NodeZkConfigProvider<string>(COUPLER_OUT_DIR)
+  );
+  const proven = await proofProvider.proveTx(fragment);
+  return { proven, priced };
+}
+
+/** A CapacityProvider that also reports which dust it spent, so the harness can assert
+ *  the LP really paid. Reporting is the test's own affair, off the provider port. */
+export interface LocalCapacityProvider extends CapacityProvider {
+  usedDustUtxos(): string[];
+}
+
+/** Local LP: selects a dust UTXO in this process, then builds the fragment. Keeps
+ *  the UTXOs it has already used out of later selections, since a spend stays in the
+ *  wallet's available set until it settles and the harness builds both couplings
+ *  before submitting either. The real CES server tracks that against its own usage.
+ *  Swap for a CES-server impl without touching the user side. */
+export function localCapacityProvider(ctx: AppContext): LocalCapacityProvider {
+  const used = new Set<string>();
+  return {
+    usedDustUtxos: () => [...used],
+    requestCapacity: async (couplerAddress, request) => {
+      const ctime = await getLatestBlockTimestamp(ctx.config.network.endpoints.indexerHttpUrl);
+      const dustState = (await firstValueFrom(ctx.walletContext.walletFacade.state())).dust;
+      const { spend, utxoId } = createDustSpend(
+        dustState,
+        ctx.walletContext.keys.dustSecretKey,
+        request.vFeeSpecks,
+        ctime,
+        used
+      );
+      used.add(utxoId);
+      logger.info(`LP dust UTXO ${utxoId} (${used.size} used so far)`);
+      return buildCapacityFragment(ctx, couplerAddress, request, { spend, ctime });
+    },
+  };
+}

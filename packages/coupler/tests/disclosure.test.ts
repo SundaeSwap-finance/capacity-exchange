@@ -427,11 +427,11 @@ describe('the verification compares whole values, not prefixes', () => {
     const couplings = ok(mergeAll(pair.map((t: { raw: string }) => t.raw)));
     const other = ok(deserialize(byLabel('coupling1').raw))[0];
 
-    // The single fixture's coupling is real, and absent from the sameBlock merge.
+    // couplings[0] is a real coupling, and it is not one of the two that were merged.
     const h = persistentHash(new CompactTypeBytes(32), other.s);
     expect(findCoupling(couplings, h, other.hsp)).toBeUndefined();
 
-    // ... and each sameBlock coupling still resolves to itself, so the miss is not blanket.
+    // ... and each merged coupling still resolves to itself, so the miss is not blanket.
     for (const coupling of couplings) {
       const own = persistentHash(new CompactTypeBytes(32), coupling.s);
       expect(findCoupling(couplings, own, coupling.hsp)).toBe(coupling);
