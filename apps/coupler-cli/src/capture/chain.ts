@@ -4,6 +4,7 @@ import { readDisclosureAtTx } from '@sundaeswap/capacity-exchange-coupler/operat
 import { buildCounterIncrementTx } from '../local/counter.js';
 import { fakeCardanoResolver, inMemoryEscrowLocker, escrowCheckingCapacity } from '../local/stubs.js';
 import { prepareCoupling } from '../coupling/prepare.js';
+import { awaitInclusion } from '../chain/awaitInclusion.js';
 import { captureCoupling } from './run.js';
 import { buildFixture, mergeFixture, type DisclosureFixture } from './fixtures.js';
 
@@ -33,12 +34,16 @@ export async function runCapture(
     const captured = await captureCoupling({
       prepareOne: async () => prepareCoupling(deps, await buildCounterIncrementTx(userApp, counterAddress)),
       submitTx: (tx) => userApp.midnightProvider.submitTx(tx),
-      // A failed wait does not mean the tx is missing, so say so and let the read decide.
-      awaitInclusion: (txId) =>
-        userApp.publicDataProvider.watchForTxData(txId).catch((err) => {
-          logger.warn({ err: err instanceof Error ? err : String(err) }, `Waiting for ${txId} failed, reading anyway`);
+      // A capture records whatever landed, so neither a failed wait nor an expired one is fatal:
+      // say so and let the read decide.
+      awaitInclusion: async (txId) => {
+        try {
+          return await awaitInclusion(userApp, txId, (reason) => logger.warn(`${reason}, reading anyway`));
+        } catch (err) {
+          logger.warn(`${err instanceof Error ? err.message : String(err)}, reading anyway`);
           return undefined;
-        }),
+        }
+      },
       readDisclosure: (txId) => readDisclosureAtTx(indexerUrl, couplerAddress, txId),
     });
 
