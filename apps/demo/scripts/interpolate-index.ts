@@ -8,6 +8,7 @@ import { chmodSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } 
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
+import { SUPPORTED_NETWORK_IDS } from '@sundaeswap/capacity-exchange-core';
 import { createLogger, runCli } from '@sundaeswap/capacity-exchange-nodejs';
 import { APP_CONFIG_PLACEHOLDER, fillAppConfig } from './fill-app-config';
 
@@ -15,8 +16,8 @@ const logger = createLogger(import.meta);
 
 const DEMO_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 
-// The networks the app accepts, so a bad id fails here rather than in the browser.
-const NETWORK_IDS = ['undeployed', 'preview', 'preprod', 'mainnet'] as const;
+// One list, so this cannot drift from what the browser accepts.
+const NETWORK_IDS = SUPPORTED_NETWORK_IDS;
 
 interface CliOpts {
   networkId: string;
@@ -51,7 +52,7 @@ function writeAtomically(file: string, contents: string): void {
 
 async function main(): Promise<{ networkId: string; indexFile: string }> {
   const { networkId, dist } = parseArgs(process.argv);
-  if (!(NETWORK_IDS as readonly string[]).includes(networkId)) {
+  if (!NETWORK_IDS.includes(networkId)) {
     throw new Error(`unknown network id '${networkId}'. Known networks: ${NETWORK_IDS.join(' ')}`);
   }
 
@@ -59,8 +60,11 @@ async function main(): Promise<{ networkId: string; indexFile: string }> {
   let html: string;
   try {
     html = readFileSync(indexFile, 'utf-8');
-  } catch {
-    throw new Error(`missing index file '${indexFile}'`);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(`missing index file '${indexFile}'`);
+    }
+    throw err;
   }
 
   try {

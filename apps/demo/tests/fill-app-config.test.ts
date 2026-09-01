@@ -99,4 +99,13 @@ describe('fillAppConfig', () => {
     const filled: string = fillAppConfig(PAGE, { networkId: 'preview', capacityExchangeUrl: '<>&\u2028\u2029' });
     expect(inlinedText(filled)).toContain('\\u003c\\u003e\\u0026\\u2028\\u2029');
   });
+
+  // JSON.stringify hands back undefined for these.
+  it.each([
+    ['undefined', undefined],
+    ['a function', () => 1],
+    ['a symbol', Symbol('x')],
+  ])('refuses a config that is %s rather than throwing an opaque TypeError', (_label, value) => {
+    expect(() => fillAppConfig(PAGE, value)).toThrow(/cannot be serialized to JSON/);
+  });
 });

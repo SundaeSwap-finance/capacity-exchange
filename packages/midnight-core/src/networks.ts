@@ -8,6 +8,9 @@ const NETWORK_ID_MAP: Record<string, NetworkId.NetworkId> = {
   mainnet: NetworkId.NetworkId.MainNet,
 };
 
+/** The network ids this project supports. */
+export const SUPPORTED_NETWORK_IDS = Object.keys(NETWORK_ID_MAP) as readonly string[];
+
 export function toNetworkIdEnum(networkId: string): NetworkId.NetworkId {
   const enumValue = NETWORK_ID_MAP[networkId];
   if (!enumValue) {

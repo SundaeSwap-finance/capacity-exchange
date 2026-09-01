@@ -34,6 +34,7 @@ export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js'
 export {
   resolveEndpoints,
   redactUrl,
+  SUPPORTED_NETWORK_IDS,
   toNetworkIdEnum,
   defaultCapacityExchangeUrls,
   type NetworkEndpoints,

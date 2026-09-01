@@ -50,9 +50,7 @@ function inlined(index: string): unknown {
   return JSON.parse(match[1]);
 }
 
-// The four ids the browser's parseAppConfig accepts. Kept here as a literal and
-// pinned against src/config/appConfig.ts below, so a network added in one place
-// and not the other is a red test rather than a deploy the browser rejects.
+// Restated so the cases are static. The drift test at the end holds it to the CLI.
 const NETWORK_IDS = ['undeployed', 'preview', 'preprod', 'mainnet'];
 
 describe('interpolate-index.ts', () => {
@@ -111,6 +109,16 @@ describe('interpolate-index.ts', () => {
     expect(readdirSync(r.dist)).toEqual(['index.html']);
   });
 
+  // A directory where index.html should be reads as EISDIR, not ENOENT.
+  it('reports a read failure as itself rather than as a missing file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'interpolate-index-'));
+    mkdirSync(join(dir, 'dist'));
+    mkdirSync(join(dir, 'dist', 'index.html'));
+    const r = spawnSync(SCRIPT, ['--network-id', 'preview', '--dist', join(dir, 'dist')], { encoding: 'utf-8' });
+    expect(r.status).not.toBe(0);
+    expect(r.stderr).not.toMatch(/missing index file/);
+  });
+
   it('fails loud when the placeholder is already gone', () => {
     const r = run('preview', '<script>window.__APP_CONFIG__ = {};</script>\n');
     expect(r.status).not.toBe(0);
@@ -161,5 +169,16 @@ describe('interpolate-index.ts', () => {
     expect(r.status).not.toBe(0);
     expect(r.stderr).toMatch(/error: (unknown option|option .* argument missing)/);
     expect(readFileSync(laid.indexPath, 'utf-8')).toContain('@@APP_CONFIG@@');
+  });
+
+  // Reads the accepted set out of the CLI and holds the cases above to it.
+  it('accepts exactly the networks it reports, and the cases above cover them', () => {
+    const laid = dist();
+    const r = spawnSync(SCRIPT, ['--network-id', 'nope', '--dist', laid.dist], { encoding: 'utf-8' });
+    const reported = r.stderr
+      .match(/Known networks: ([a-z ]+)/)?.[1]
+      .trim()
+      .split(' ');
+    expect(reported).toEqual(NETWORK_IDS);
   });
 });

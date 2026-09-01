@@ -9,7 +9,11 @@ export const APP_CONFIG_PLACEHOLDER = '@@APP_CONFIG@@';
 const HTML_UNSAFE = /[<>&\u2028\u2029]/g;
 
 function htmlSafeJson(value: unknown): string {
-  return JSON.stringify(value).replace(HTML_UNSAFE, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+  const json = JSON.stringify(value);
+  if (json === undefined) {
+    throw new Error(`config of type ${typeof value} cannot be serialized to JSON.`);
+  }
+  return json.replace(HTML_UNSAFE, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
 }
 
 /** Inlines `config` into `html`'s placeholder. Throws when the placeholder is absent. */
