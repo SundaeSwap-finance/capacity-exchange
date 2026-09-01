@@ -31,7 +31,13 @@ export {
 export { WalletStateStore, type SavedWalletState } from './walletStateStore.js';
 export type { Logger } from './logger.js';
 export { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
-export { resolveEndpoints, redactUrl, toNetworkIdEnum, type NetworkEndpoints } from './networks.js';
+export {
+  resolveEndpoints,
+  redactUrl,
+  toNetworkIdEnum,
+  defaultCapacityExchangeUrls,
+  type NetworkEndpoints,
+} from './networks.js';
 export { parseSeedHex, parseMnemonic, generateMnemonic, mnemonicToSeedHex } from './seed.js';
 export { parsePositiveNumber } from './parseNumber.js';
 export {

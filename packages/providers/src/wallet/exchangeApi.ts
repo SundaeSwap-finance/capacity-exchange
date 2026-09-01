@@ -1,4 +1,5 @@
 import { Configuration, DefaultApi, ResponseError } from '@sundaeswap/capacity-exchange-client';
+import { defaultCapacityExchangeUrls } from '@sundaeswap/capacity-exchange-core';
 import { CapacityExchangeServerError } from './errors.js';
 
 export interface CesApi {
@@ -37,12 +38,6 @@ class WrappedDefaultApi extends DefaultApi {
   }
 }
 
-const DEFAULT_CAPACITY_EXCHANGE_SERVERS: Record<string, string[] | undefined> = {
-  preview: ['https://capacity-exchange.preview.sundae.fi'],
-  preprod: ['https://capacity-exchange.preprod.sundae.fi'],
-  mainnet: ['https://capacity-exchange.sundae.fi'],
-};
-
 export { getDefaultRegistryAddress } from '@sundaeswap/capacity-exchange-registry';
 
 export function resolveCesUrls(
@@ -50,7 +45,7 @@ export function resolveCesUrls(
   additionalCapacityExchangeUrls: string[],
   registryUrls: string[] = []
 ): string[] {
-  const servers = [...(DEFAULT_CAPACITY_EXCHANGE_SERVERS[networkId] ?? [])];
+  const servers = defaultCapacityExchangeUrls(networkId);
   for (const url of [...additionalCapacityExchangeUrls, ...registryUrls]) {
     if (!servers.includes(url)) {
       servers.push(url);
