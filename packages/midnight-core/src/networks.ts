@@ -21,6 +21,7 @@ export interface NetworkEndpoints {
   proofServerUrl: string;
   indexerHttpUrl: string;
   indexerWsUrl: string;
+  capacityExchangeUrl?: string;
 }
 
 interface NetworkDefaults {
@@ -28,6 +29,7 @@ interface NetworkDefaults {
   proofServerUrl?: string;
   indexerHttpUrl: string;
   indexerWsUrl: string;
+  capacityExchangeUrl?: string;
 }
 
 const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
@@ -47,6 +49,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
       proofServerUrl: 'https://proof.capacity-exchange.preview.sundae.fi',
       indexerHttpUrl: 'https://indexer.preview.midnight.network/api/v3/graphql',
       indexerWsUrl: 'wss://indexer.preview.midnight.network/api/v3/graphql/ws',
+      capacityExchangeUrl: 'https://capacity-exchange.preview.sundae.fi',
     },
   ],
   [
@@ -56,6 +59,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
       proofServerUrl: 'https://proof.capacity-exchange.preprod.sundae.fi',
       indexerHttpUrl: 'https://indexer.preprod.midnight.network/api/v3/graphql',
       indexerWsUrl: 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
+      capacityExchangeUrl: 'https://capacity-exchange.preprod.sundae.fi',
     },
   ],
   [
@@ -65,6 +69,7 @@ const NETWORK_DEFAULTS = new Map<NetworkId.NetworkId, NetworkDefaults>([
       indexerHttpUrl: 'https://indexer.mainnet.midnight.network/api/v3/graphql',
       proofServerUrl: 'https://proof.capacity-exchange.sundae.fi',
       indexerWsUrl: 'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
+      capacityExchangeUrl: 'https://capacity-exchange.sundae.fi',
     },
   ],
 ]);
@@ -86,7 +91,15 @@ export function resolveEndpoints(
     proofServerUrl,
     indexerHttpUrl: overrides.indexerHttpUrl ?? defaults.indexerHttpUrl,
     indexerWsUrl: overrides.indexerWsUrl ?? defaults.indexerWsUrl,
+    capacityExchangeUrl: overrides.capacityExchangeUrl ?? defaults.capacityExchangeUrl,
   };
+}
+
+/** The hosted capacity exchanges to try for a network. Empty for an unknown or unhosted one. */
+export function defaultCapacityExchangeUrls(networkId: string): string[] {
+  const enumValue = NETWORK_ID_MAP[networkId];
+  const url = enumValue === undefined ? undefined : NETWORK_DEFAULTS.get(enumValue)?.capacityExchangeUrl;
+  return url ? [url] : [];
 }
 
 /** Returns scheme://host for logging, dropping the path, query, and credentials. A secret in
