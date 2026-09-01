@@ -1,6 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { createEphemeralAppContext, createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { readDisclosureAtTx, dustUtxoId } from '@sundaeswap/capacity-exchange-coupler/operations';
+import { awaitInclusion } from '../chain/awaitInclusion.js';
 import { failedAssertions } from './assertions.js';
 import { oneTransaction, runCouplings } from '../coupling/submit.js';
 import { SCENARIOS, type Scenario } from './scenarios.js';
@@ -60,7 +61,7 @@ async function submitCouplings(deps: E2eDeps, count: number) {
   const indexerUrl = deps.userApp.config.network.endpoints.indexerHttpUrl;
   const run = await runCouplings(oneTransaction(bounds, funded), {
     submitTx: (tx) => deps.userApp.midnightProvider.submitTx(tx),
-    awaitInclusion: (txId) => deps.userApp.publicDataProvider.watchForTxData(txId).catch(() => undefined),
+    awaitInclusion: (txId) => awaitInclusion(deps.userApp, txId, (reason: string) => logger.warn(reason)),
     readDisclosure: (txId) => readDisclosureAtTx(indexerUrl, deps.couplerAddress, txId),
   });
   logger.info(`Submitted ${run.txIds.join(' and ')}`);
