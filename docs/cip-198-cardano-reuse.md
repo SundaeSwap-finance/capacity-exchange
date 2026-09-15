@@ -41,8 +41,9 @@ It isn't a batching/merge service in the CIP-198 sense on the Cardano side:
 - **Not reusable, needs a rewrite:** `services/tx.ts`, the UTXO lock/spend
   logic in `services/utxo.ts`, and the wallet/transaction-building code in
   `packages/providers/src/wallet/*` are built end to end on Midnight's
-  proof/binding/intent/nullifier ledger model, which has no structural
-  analog in Cardano's transparent-UTXO/balanced-transaction model. A real
+  proof/binding/intent ledger model (shielded UTXOs, generation-tree state),
+  which has no structural analog in Cardano's transparent-UTXO/balanced-
+  transaction model. A real
   Cardano CIP-198 service would need new transaction-building code (e.g. via
   Lucid, MeshJS, or cardano-serialization-lib) implementing CIP-198's own
   sub-transaction/merge rules once ratified. Likewise, `packages/registry`'s
