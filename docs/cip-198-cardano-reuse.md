@@ -1,82 +1,157 @@
-# Could Capacity Exchange's code be repurposed for a Cardano CIP-198 service?
+# Could Capacity Exchange's code be reused for a Cardano CIP-198 service?
 
 CIP-198 ([cardano-foundation/CIPs#1257](https://github.com/cardano-foundation/CIPs/pull/1257))
-is a Cardano proposal, not a Midnight one — it builds on CIP-118's "babel fee
-offer": a sub-transaction that doesn't balance on its own (e.g. more of a
-token in the inputs than the outputs, and vice versa for ADA), which some
-other party then folds into a fully valid top-level transaction. This spawns
-a natural question: could Capacity Exchange's *code* — not just the
-concept — be reused to build a real Cardano-side implementation of CIP-198?
+is a Cardano proposal, not a Midnight one. It builds on CIP-118's "babel fee
+offer" idea: a sub-transaction that doesn't balance on its own (say, it has
+more of a token in it than it needs, and is short the ADA to pay its own
+fee). Some other party then folds that sub-transaction into one valid,
+complete transaction. Since Capacity Exchange does a similar job for
+Midnight, it's worth asking: could its *code* — not just the idea — be
+reused to build a real Cardano version of CIP-198?
 
-Short answer: mostly not, once you get past the API/business layer.
+Short answer: mostly no, once you get past the API layer.
 
-## What Capacity Exchange actually does today
+## What Capacity Exchange does today
 
-It isn't a batching/merge service in the CIP-198 sense on the Cardano side:
+It isn't a batching service in the CIP-198 sense on the Cardano side:
 
 - **Sponsor flow** (`apps/server/src/routes/sponsor.ts` →
-  `services/sponsor.ts` → `services/tx.ts`) does merge a server-built
-  fee-paying piece with a user's transaction — conceptually close to
-  CIP-198's merge idea — but entirely on Midnight's `ledger-v8` primitives
-  (`Intent`, `DustActions`, `dustTx.merge(userTx)`, proof/binding stages,
-  shielded `ZswapOffer`).
+  `services/sponsor.ts` → `services/tx.ts`) does combine a server-built
+  fee-paying piece with a user's transaction — kind of close to CIP-198's
+  idea — but it's built entirely on Midnight's `ledger-v8` tools (`Intent`,
+  `DustActions`, `dustTx.merge(userTx)`, proof/binding steps, shielded
+  `ZswapOffer`).
 - **Offer flow** (`routes/offers.ts`, `routes/adaOffers.ts`,
-  `services/cardano.ts`) touches Cardano today, but only as a payment rail —
-  verifying a lovelace UTXO via Blockfrost in exchange for a Midnight DUST
-  UTXO. Neither flow implements CIP-198's actual sub-transaction/merge
-  semantics for Cardano.
+  `services/cardano.ts`) does touch Cardano today, but only to check
+  payment — it verifies a lovelace UTXO through Blockfrost, then hands back
+  a Midnight DUST UTXO in exchange. Neither flow actually does what CIP-198
+  describes (merging sub-transactions) on the Cardano side.
 
-## Reuse breakdown
+## What could actually be reused
 
-- **Reusable close to as-is:** the non-ledger scaffolding — Fastify
-  routes/API validation, the pricing/quote/formula engine
+- **Mostly reusable as-is:** everything that isn't ledger code — the
+  Fastify routes/API validation, the pricing/quote engine
   (`services/price.ts`, `services/formulaIndex.ts`, `services/quote.ts`),
-  metrics/observability, config loading, and the peer-discovery HTTP protocol
-  used to fall back between sponsor servers.
-- **Reusable with a thin adapter:** the high-level control flow in
-  `sponsor.ts`/`offer.ts` — eligibility checks, UTXO locking, caching,
-  error-result handling. The *shape* ("lock → build fee-covering piece →
-  merge → submit") carries over conceptually even though the object being
-  locked/merged/submitted would have to become a Cardano-native type.
-- **Not reusable, needs a rewrite:** `services/tx.ts`, the UTXO lock/spend
-  logic in `services/utxo.ts`, and the wallet/transaction-building code in
-  `packages/providers/src/wallet/*` are built end to end on Midnight's
-  proof/binding/intent ledger model (shielded UTXOs, generation-tree state),
-  which has no structural analog in Cardano's transparent-UTXO/balanced-
-  transaction model. A real
-  Cardano CIP-198 service would need new transaction-building code (e.g. via
-  Lucid, MeshJS, or cardano-serialization-lib) implementing CIP-198's own
-  sub-transaction/merge rules once ratified. Likewise, `packages/registry`'s
-  on-chain directory is a Midnight `.compact` contract — the concept (a
-  discoverable, collateralized registry of services) is reusable, but the
-  implementation would need a Plutus/Aiken rewrite.
+  metrics, config loading, and the peer-discovery protocol used to fall back
+  between sponsor servers.
+- **Reusable with some rework:** the high-level flow in
+  `sponsor.ts`/`offer.ts` — check eligibility, lock a UTXO, cache, handle
+  errors. The overall shape ("lock something → build the fee-covering
+  piece → merge → submit") still makes sense, even though the actual
+  object being locked/merged/submitted would need to be a Cardano type
+  instead of a Midnight one.
+- **Not reusable, needs to be rewritten:** `services/tx.ts`, the UTXO
+  lock/spend code in `services/utxo.ts`, and the wallet/transaction code in
+  `packages/providers/src/wallet/*` are all built on Midnight's model
+  (proofs, binding steps, intents, shielded UTXOs). Cardano's model is
+  plain, transparent UTXOs with balanced transactions — nothing to port
+  here. A real Cardano version would need new transaction-building code
+  (via Lucid, MeshJS, or cardano-serialization-lib) once CIP-198's rules
+  are finalized. Same story for `packages/registry` — it's a Midnight
+  `.compact` contract. The idea (a discoverable registry with a deposit) is
+  reusable; the contract itself would need to be rewritten in Plutus or
+  Aiken.
 
-## Conclusion
+## Bottom line
 
-The API layer, pricing engine, and orchestration pattern are worth carrying
-over as a template; the actual transaction-building and on-chain registry
-contract are not portable and would need to be built fresh against CIP-198's
-real (still-unratified) sub-transaction semantics.
+Keep the API layer, the pricing engine, and the overall flow as a template.
+The actual transaction-building and the on-chain registry would need to be
+built from scratch, once CIP-198's rules are finalized.
+
+## Things CIP-198 itself hasn't figured out yet, and how they relate to us
+
+The CIP-198 spec ([full diff](https://github.com/cardano-foundation/CIPs/pull/1257/files))
+still has some open or shaky parts. Most of them line up with problems
+Capacity Exchange already has, so they're worth keeping an eye on:
+
+- **The main batching part can't be built yet — it's waiting on a ledger
+  change nicknamed "Dijkstra."** The CIP says (in its "Work blocked on
+  prerequisites" and "Path to Active" sections) that the exact byte format,
+  fee math, and collateral handling are all "blocked on the final
+  CIP-0118/Dijkstra ledger interface," and its own launch checklist needs
+  "CIP-0118 is Active and the Dijkstra CDDL is final on a public network."
+  It's still marked `Proposed`.
+
+  **If that ledger change were ready**, the real questions for us would be:
+  - Which Cardano library (Lucid, MeshJS, cardano-serialization-lib)
+    supports the finished sub-transaction format first?
+  - Would we run this as a CIP-198 **service** (holding ADA, building and
+    paying for batches) or more like a **relay** (just forwarding offers,
+    no money at risk)?
+  - How would our current eligibility check (an allowlist of
+    contracts/circuits) map onto the CIP's service profile — as a public
+    filter, or kept as a private rule like today?
+  - Could `services/quote.ts`'s signed quote be reused as the CIP's
+    non-binding "price hint," or does the CIP's format need something new?
+  - Would we run our own on-chain registry, or just register with whatever
+    shared registry the ecosystem ends up using?
+  - How much ADA/collateral would we need to hold, and how would that be
+    funded and topped up?
+- **The CIP's rules about holding funds point at a bug we already have.**
+  The CIP says a service must keep a UTXO locked "until that build finishes
+  or gives up," and keep collateral fully separate — basically, don't let
+  two things spend the same money. Our
+  [`UtxoService.lockUtxo`](../apps/server/src/services/utxo.ts) only keeps
+  its locks in memory (there's already a `TODO` about this in the code), so
+  a restart mid-request can lose a lock and risk a double-spend. This is
+  exactly the problem the CIP is warning about.
+- **Handling rolled-back blocks.** The CIP explains what a service should
+  do if a block it already submitted gets reverted — treat the offer as
+  not-yet-included again, not as done. We don't handle this at all today.
+  The CIP treats it as required, not optional.
+- **The CIP's registry does a lot more than ours.** CIP-198's registry
+  isn't just a URL — it's an on-chain record (an NFT) with a
+  deposit-weighted random pick for who talks to whom, a published profile
+  of what a service accepts, budget limits, and separate price hints served
+  over plain HTTP. `packages/registry` today only stores a domain name.
+- **Price hints — this one's actually good news.** The CIP keeps prices
+  off-chain and non-binding on purpose ("a rate that moves faster than a
+  block shouldn't be fixed on-chain"). That's basically what
+  [`services/quote.ts`](../apps/server/src/services/quote.ts) already
+  does — a signed, time-limited quote instead of an on-chain price. We're
+  already doing this part the way the CIP recommends.
+- **Most of the security section doesn't apply to us, but two bits do.**
+  Things like fake registry entries, front-running over a gossip network,
+  or fake price hints all assume a network of strangers, which we don't
+  have (one client talks to one server directly). Two things are still
+  worth a look even so:
+  - **Silently dropped requests.** The CIP suggests occasionally sending
+    fake "test" requests through a peer to check it isn't silently
+    swallowing traffic. Since we can fall back to a peer server
+    ([`sponsor.ts:90-119`](../apps/server/src/services/sponsor.ts#L90)),
+    something similar might be worth doing there.
+  - **Checking again right before submitting.** The CIP says a service
+    must re-check every input it's about to spend right before sending the
+    transaction, not just when it first locked it. Worth confirming our
+    lock-then-build flow actually does this final check right before
+    submit, not only at lock time.
 
 ## TODO
 
-- [ ] Stand up a new Cardano transaction-building layer (via Lucid, MeshJS,
-      or cardano-serialization-lib) implementing CIP-118/CIP-198's
-      sub-transaction construction and merge rules — this replaces
-      `services/tx.ts` and the UTXO lock/spend logic in `services/utxo.ts`
-      wholesale, not incrementally.
-- [ ] Design a Plutus/Aiken registry contract covering the same concept as
-      `packages/registry` (discoverable, collateralized service directory)
-      — the Midnight `.compact` contract itself isn't portable.
-- [ ] Extract the chain-agnostic pieces into something explicitly reusable
-      rather than copy-pasting: the pricing/quote/formula engine
+- [ ] Build a new Cardano transaction-building layer (via Lucid, MeshJS, or
+      cardano-serialization-lib) for CIP-118/CIP-198's sub-transaction and
+      merge rules — this replaces `services/tx.ts` and the lock/spend logic
+      in `services/utxo.ts` entirely, not piece by piece.
+- [ ] Design a Plutus/Aiken registry contract with the same idea as
+      `packages/registry` (a discoverable registry backed by a deposit) —
+      the Midnight `.compact` contract itself can't be reused.
+- [ ] Pull out the chain-agnostic parts as something explicitly shared
+      instead of copy-pasting: the pricing/quote engine
       (`services/price.ts`, `services/formulaIndex.ts`, `services/quote.ts`),
-      metrics/observability stack, config loading, and the peer-discovery
-      HTTP protocol.
-- [ ] Re-shape the high-level control flow from `sponsor.ts`/`offer.ts`
-      (eligibility checks, locking, caching, error-result handling) around a
-      Cardano-native transaction/UTXO type, using it as a template rather
-      than attempting a direct port.
-- [ ] Decide whether this lives as a new package/service alongside the
-      Midnight one, or a genuinely separate repo — the two would share
+      metrics, config loading, and the peer-discovery protocol.
+- [ ] Rework the high-level flow from `sponsor.ts`/`offer.ts` (eligibility
+      checks, locking, caching, error handling) around a Cardano-native
+      transaction/UTXO type, using it as a template rather than a direct
+      copy.
+- [ ] Decide whether this lives as a new package/service next to the
+      Midnight one, or a separate repo entirely — the two would share
       almost nothing below the API layer.
+- [ ] Check whether Capacity Exchange's *current* (Midnight) sponsor flow
+      re-checks a locked UTXO against live chain state right before
+      submitting, not only when it's first locked — this matters today,
+      not just for a future Cardano version.
+- [ ] Consider a test-request check on the peer-fallback path
+      (`sponsor.ts:90-119`) to catch a peer server silently dropping
+      requests instead of erroring — same idea as CIP-198's mitigation for
+      silently dropped traffic, and useful now regardless of any Cardano
+      work.
