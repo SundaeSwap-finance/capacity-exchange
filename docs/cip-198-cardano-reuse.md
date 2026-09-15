@@ -128,30 +128,83 @@ Capacity Exchange already has, so they're worth keeping an eye on:
 
 ## TODO
 
-- [ ] Build a new Cardano transaction-building layer (via Lucid, MeshJS, or
-      cardano-serialization-lib) for CIP-118/CIP-198's sub-transaction and
-      merge rules — this replaces `services/tx.ts` and the lock/spend logic
-      in `services/utxo.ts` entirely, not piece by piece.
+The real batch-construction mechanic (the actual point of CIP-198) is blocked
+on Dijkstra/CIP-118 landing on a public network — see the section above. That
+work is someone else's timeline, not ours, so it's left out of these lists
+entirely. Everything below is buildable and testable *today*, without it.
+
+### 1. Off-chain protocol pieces (no ledger dependency at all)
+
+These mirror the parts of CIP-198's own Implementation Plan that are already
+checked off *because* they don't need a live Dijkstra network — pure format
+and algorithm work we could build and unit-test against the CIP's published
+test vectors right now, ahead of having anywhere real to submit a batch to.
+
+- [ ] Envelope wire format: encoder/decoder for `[envelope_version, era_tag,
+      subtx_bytes]`, checked against CIP-198's published byte-level test
+      vectors.
+- [ ] Constraint-language (DSL) encoder/decoder: the `PaidAtLeast` / `Guards`
+      / `All` / `AnyOf` / `True` PlutusData encoding — pure serialization,
+      testable without any chain.
+- [ ] v1 selection/packing algorithm (greedy value density): implement and
+      unit-test against synthetic offer sets, independent of what an actual
+      sub-transaction looks like under Dijkstra.
+- [ ] Stateless offer checks (the ones that don't need chain state): shape
+      caps (`MAX_CONSTRAINT_DEPTH`, `MAX_CONSTRAINT_NODES`,
+      `MAX_BACKTRACKING_BUDGET`), envelope well-formedness, dedup-key
+      derivation.
+- [ ] A minimal relay: forward what passes the stateless checks, dedupe,
+      rate-limit — CIP-198 calls this the "obligation floor" and it's
+      explicitly transport-independent, so it doesn't need real sub-txs to
+      exist yet.
+
+### 2. Registry (chain-specific, but not Dijkstra-dependent)
+
 - [ ] Design a Plutus/Aiken registry contract with the same idea as
-      `packages/registry` (a discoverable registry backed by a deposit) —
-      the Midnight `.compact` contract itself can't be reused.
+      `packages/registry` (on-chain NFT registration, deposit-backed,
+      expiring) — the Midnight `.compact` contract can't be reused, but
+      nothing about a registry needs CIP-118/Dijkstra. Buildable and
+      deployable on preview/preprod now.
+- [ ] Decide whether to publish a CIP-198-shaped "service profile" (accept/
+      reject filter keys, budgets, constraint versions) from day one, even
+      before there's a real batching service behind it.
+
+### 3. Reuse from the current (Midnight) codebase
+
 - [ ] Pull out the chain-agnostic parts as something explicitly shared
       instead of copy-pasting: the pricing/quote engine
       (`services/price.ts`, `services/formulaIndex.ts`, `services/quote.ts`),
       metrics, config loading, and the peer-discovery protocol.
-- [ ] Rework the high-level flow from `sponsor.ts`/`offer.ts` (eligibility
-      checks, locking, caching, error handling) around a Cardano-native
-      transaction/UTXO type, using it as a template rather than a direct
-      copy.
+- [ ] Sketch the high-level flow from `sponsor.ts`/`offer.ts` (eligibility
+      checks, locking, caching, error handling) as a template against a
+      Cardano-native UTXO/transaction type — a design sketch, not a working
+      implementation, since the real transaction-building layer still has
+      nowhere to plug into until Dijkstra ships.
 - [ ] Decide whether this lives as a new package/service next to the
-      Midnight one, or a separate repo entirely — the two would share
-      almost nothing below the API layer.
+      Midnight one, or a separate repo entirely.
+
+### 4. Findings from this review worth fixing now, regardless of Cardano
+
+Not CIP-198 work at all — just things this comparison surfaced in the
+existing Midnight-side code, independent of any Dijkstra timeline:
+
 - [ ] Check whether Capacity Exchange's *current* (Midnight) sponsor flow
       re-checks a locked UTXO against live chain state right before
-      submitting, not only when it's first locked — this matters today,
-      not just for a future Cardano version.
+      submitting, not only when it's first locked.
 - [ ] Consider a test-request check on the peer-fallback path
       (`sponsor.ts:90-119`) to catch a peer server silently dropping
-      requests instead of erroring — same idea as CIP-198's mitigation for
-      silently dropped traffic, and useful now regardless of any Cardano
-      work.
+      requests instead of erroring.
+- [ ] Persist `UtxoService.lockUtxo`'s lock state (currently in-memory only,
+      `apps/server/src/services/utxo.ts`) so a restart can't lose a lock and
+      risk a double-spend.
+
+### Explicitly deferred (do not start until Dijkstra ships)
+
+- Any real sub-transaction/batch transaction-building layer (replaces
+  `services/tx.ts` and the lock/spend logic in `services/utxo.ts` for a
+  Cardano version).
+- Anything requiring `field-23` encoding, compositional minimum-fee
+  calculation, collateral accounting, or execution-unit accounting for a
+  batch.
+- The devnet interoperability demonstration CIP-198's own acceptance
+  criteria calls for.
