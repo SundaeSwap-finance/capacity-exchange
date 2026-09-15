@@ -28,17 +28,100 @@ back in the same response. Introducing a batching/pooling window would mean
 making that response wait for other unrelated requests — trading latency for
 savings on DUST cost.
 
-- [ ] Decide if batching is worth it at all before designing it. Measure how
+- [x] Decide if batching is worth it at all before designing it. Measure how
       much of a sponsored/offer transaction's DUST cost is actually
       per-request overhead vs. work the batching couldn't shrink anyway.
-- [ ] If it is worth it: only for a case where a short delay is acceptable
-      (e.g. a background top-up), not for real-time sponsor/offer requests.
-- [ ] If pursued, borrow CIP-198's approach: rank pending requests by a
-      value/cost score, take them greedily until a size or execution-unit
-      budget is hit, skip anything that would reuse an input already claimed.
-- [ ] Whatever gets batched still needs a final re-check against the current
-      chain state right before submitting (CIP-198 calls this
-      "re-simulate against the tip") — a request can go stale while it waits.
+
+      **Findings (checked against `@midnight-ntwrk/ledger-v8`'s actual cost
+      model, not guesswork):** Midnight doesn't price transactions the
+      Cardano way ("flat fee + per-byte"). It prices resource usage — read
+      time, compute time, bytes written, block usage — through a VM-style
+      opcode cost table. The one true flat charge is `baselineCost`
+      (`transactionCostModel.baselineCost`): a fixed ~100μs of compute time,
+      charged once per **transaction**, not once per intent inside it.
+
+      (To be precise: Midnight *does* have a flat per-transaction charge —
+      `baselineCost` — same as Cardano's flat fee in kind. The difference is
+      size, not existence: it's measured below at ~1% of a transaction's
+      total modeled cost, vs. being effectively the whole cost model on
+      Cardano.)
+
+      That matters because `SponsorService` already merges the user's intent
+      and the server's dust intent into one transaction before submitting
+      (`dustTx.merge(userTx)` in
+      [sponsor.ts:128-134](../apps/server/src/services/sponsor.ts#L128), via
+      `buildDustIntent` in
+      [tx.ts:56-65](../apps/server/src/services/tx.ts#L56)) — so a single
+      sponsored request is *not* paying a duplicated flat fee today.
+
+      What batching would actually save: each `POST /sponsor` call currently
+      builds its own separate transaction, so each one pays its own ~100μs
+      baseline charge. Pooling N requests into one transaction would collapse
+      that to a single baseline charge — a real, quantifiable saving.
+      (`DustActions`'s constructor already takes an array of spends, so
+      bundling several dust spends into one intent isn't a new mechanism to
+      invent — it's already supported.)
+
+      What batching would *not* save: each user's own DUST UTXO spend still
+      needs its own nullifier write and generation-tree update. That cost
+      scales with the number of spends regardless of batching — it's real
+      work, not overhead.
+
+      **Live measurement (2026-09-14, preview network).** Requested a real
+      offer from the hosted preview server
+      (`https://capacity-exchange.preview.sundae.fi/api/offers` — public
+      endpoint, no wallet/secrets needed), which returns an actually-proven
+      transaction from the real preview proof server. Deserialized it locally
+      and called `.fees()`/`.cost()` on it using the network's **live**
+      protocol parameters (fetched straight from the preview indexer via
+      `getLedgerParameters`, not the SDK's baked-in initial defaults, which
+      turned out to be very different — see caveat below):
+
+      | Cost dimension | This tx's actual value | Fixed baseline (`baselineCost`) | Baseline's share |
+      |---|---|---|---|
+      | compute time | 5,897,252,736 ps | 100,000,000 ps | ~1.7% |
+      | read time | 2,635,000,000 ps | 0 | 0% |
+      | bytes written | 288 | 0 | 0% |
+
+      Weighting all dimensions by the live `feePrices` factors, the fixed
+      per-transaction baseline works out to **roughly 1% of this
+      transaction's total modeled cost** — the other ~99% is the dust
+      action's own read/write work (looking up and updating DUST UTXO state),
+      which batching cannot shrink, plus the shielded output itself.
+
+      **This answers the original question directly: batching is not worth
+      building for its own sake.** The thing batching amortizes (one flat
+      charge instead of N) is a rounding error next to the real per-spend
+      work each request already does. Don't build it to save DUST cost;
+      only consider it if a future case independently needs request pooling
+      for some other reason (e.g. throughput under load), and even then treat
+      any fee savings as a minor side benefit, not the justification.
+
+      **Caveat:** at the moment of this measurement, preview's actual fee
+      price was near-zero (`feePrices.overallPrice ≈ 5.4e-18`, driving the
+      whole transaction's fee down to `1` speck) — Midnight's fee price
+      appears to adjust dynamically with network demand, and preview is
+      presumably near-idle. The proportions above (baseline vs. real work)
+      are price-independent since they come from the *resource cost*, not
+      the specks total, so they should hold regardless of price — but the
+      absolute DUST cost of a request is not a fixed number and will rise
+      with network demand. Re-measuring occasionally (or against mainnet
+      once live) would confirm the proportion holds under real load.
+
+**Not pursuing batching now** — the finding above closes this item for DUST
+cost savings. The notes below are kept only as a reference in case a
+*different* justification for request pooling shows up later (e.g.
+throughput under load), not as active work:
+
+- If it ever becomes worth it: only for a case where a short delay is
+  acceptable (e.g. a background top-up), not for real-time sponsor/offer
+  requests.
+- If pursued, borrow CIP-198's approach: rank pending requests by a
+  value/cost score, take them greedily until a size or execution-unit
+  budget is hit, skip anything that would reuse an input already claimed.
+- Whatever gets batched would still need a final re-check against the
+  current chain state right before submitting (CIP-198 calls this
+  "re-simulate against the tip") — a request can go stale while it waits.
 
 ## 2. Letting a client attach conditions to their request
 
