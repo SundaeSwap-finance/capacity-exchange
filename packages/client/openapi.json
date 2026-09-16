@@ -434,9 +434,19 @@
           },
           {
             "schema": {
-              "type": "string",
-              "enum": [
-                "DUST"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "DUST"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "ADA"
+                  ]
+                }
               ]
             },
             "in": "query",

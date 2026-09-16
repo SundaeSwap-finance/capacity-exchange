@@ -15,6 +15,8 @@
 
 import * as runtime from '../runtime.js';
 import type {
+  &#39;ADA&#39;,
+  &#39;DUST&#39;,
   ApiAdaOffersPostRequest,
   ApiMetricsGet200Response,
   ApiOffersPost201Response,
@@ -28,6 +30,10 @@ import type {
   HealthReadyGet200Response,
 } from '../models/index.js';
 import {
+    &#39;ADA&#39;FromJSON,
+    &#39;ADA&#39;ToJSON,
+    &#39;DUST&#39;FromJSON,
+    &#39;DUST&#39;ToJSON,
     ApiAdaOffersPostRequestFromJSON,
     ApiAdaOffersPostRequestToJSON,
     ApiMetricsGet200ResponseFromJSON,
@@ -348,6 +354,7 @@ export class DefaultApi extends runtime.BaseAPI {
  * @export
  */
 export const ApiPricesGetCurrencyEnum = {
-    Dust: 'DUST'
+    Dust: 'DUST',
+    Ada: 'ADA'
 } as const;
 export type ApiPricesGetCurrencyEnum = typeof ApiPricesGetCurrencyEnum[keyof typeof ApiPricesGetCurrencyEnum];
