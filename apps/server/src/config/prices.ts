@@ -2,18 +2,20 @@ import { Value } from '@sinclair/typebox/value';
 import { Type, type Static } from '@sinclair/typebox';
 import { readFileOrError } from './files.js';
 
+/** Every member of {@link CapacityAssetSchema}, for iterating. Typed so a typo won't compile. */
+export const CAPACITY_ASSETS = ['DUST', 'ADA'] as const;
+export type CapacityAsset = (typeof CAPACITY_ASSETS)[number];
+
 /**
  * A capacity asset is what a server sells: the thing a caller needs in order to get their
  * transaction on-chain. `DUST` pays Midnight fees; `ADA` pays Cardano fees.
  *
  * The same identifier is the key in `priceFormulas` and the value of `/api/prices?currency=`,
  * so an operator's config and the wire agree by construction.
+ *
+ * Weird definition is a workaround for a bug with openapi-generator
  */
-export const CapacityAssetSchema = Type.Union([Type.Literal('DUST'), Type.Literal('ADA')]);
-export type CapacityAsset = Static<typeof CapacityAssetSchema>;
-
-/** Every member of {@link CapacityAssetSchema}, for iterating. Typed so a typo won't compile. */
-export const CAPACITY_ASSETS: readonly CapacityAsset[] = ['DUST', 'ADA'];
+export const CapacityAssetSchema = { ...Type.String(), enum: CAPACITY_ASSETS };
 
 const RawCurrencySchema = Type.Object({
   type: Type.Union([
