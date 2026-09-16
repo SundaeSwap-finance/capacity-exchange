@@ -14,7 +14,7 @@
     "ADA": [
       {
         "currency": {
-          "type": "cardano",
+          "type": "cardano:native",
           "rawId": "<policy-id><hex-asset-name>"
         },
         "basePrice": "1000000",

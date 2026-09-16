@@ -33,7 +33,7 @@ async function availableDustUtxos(app: AppContext): Promise<Set<string>> {
  * TEST HARNESS ONLY, not a protocol flow: one process plays both parties (a funded LP wallet and a
  * brand-new empty user wallet). The user drives the real WalletProvider: it builds a normal op and
  * passes it to `balanceTx`, which takes the bridgeless path (the only quoted currency is a fake
- * `cardano:` price) and runs the coupler, with the foreign escrow and LP stubbed.
+ * `cardano:ada` price) and runs the coupler, with the foreign escrow and LP stubbed.
  *
  * Each scenario submits only what its own claims need, so a failure names the property that
  * broke rather than the whole run.

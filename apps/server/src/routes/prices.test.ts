@@ -18,7 +18,7 @@ const priceService = new PriceService({
   ],
   ADA: [
     {
-      currency: { type: 'cardano', rawId: 'deadbeef' },
+      currency: { type: 'cardano:native', rawId: 'deadbeef' },
       basePrice: '500',
       rateNumerator: '2',
       rateDenominator: '1',
@@ -78,7 +78,10 @@ describe('GET /api/prices', () => {
     const body = res.json();
     // 500 + 1000 * 2/1 = 2500, whereas the DUST formula would give 2000.
     expect(body.prices).toEqual([
-      { amount: '2500', currency: { id: 'cardano:deadbeef', type: 'cardano', rawId: 'deadbeef' } },
+      {
+        amount: '2500',
+        currency: { id: 'cardano:native:deadbeef', type: 'cardano:native', rawId: 'deadbeef' },
+      },
     ]);
   });
 

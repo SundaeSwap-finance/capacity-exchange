@@ -19,7 +19,10 @@ const RawCurrencySchema = Type.Object({
   type: Type.Union([
     Type.Literal('midnight:shielded'),
     Type.Literal('midnight:unshielded'),
-    Type.Literal('cardano'),
+    // ADA itself carries no rawId, so its id is the bare `cardano:ada:`. A native asset's
+    // rawId is its unit (policy id followed by the hex asset name).
+    Type.Literal('cardano:ada'),
+    Type.Literal('cardano:native'),
   ]),
   rawId: Type.String(),
 });

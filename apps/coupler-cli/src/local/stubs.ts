@@ -10,7 +10,7 @@ import {
   type ForeignCapacity,
 } from '@sundaeswap/capacity-exchange-coupler/operations';
 import { localCapacityProvider } from './lp.js';
-import { CARDANO } from '../coupling/prepare.js';
+import { CARDANO_ADA } from '../coupling/prepare.js';
 import type { CouplingCommitment } from '../coupling/commitments.js';
 
 const QUOTED_LOVELACE = '1000000';
@@ -21,13 +21,13 @@ interface StubEscrowRef {
   h: Uint8Array;
 }
 
-/** A fake cap-ex exchange quoting ADA. The only thing the e2e fakes: it feeds a `cardano:` price
+/** A fake cap-ex exchange quoting ADA. The only thing the e2e fakes: it feeds a `cardano:ada` price
  *  through the real balanceTx selection path so the bridgeless payer runs. */
 export function fakeCardanoResolver(): CesApiResolver {
   const api = {
     apiPricesGet: async () => ({
       quoteId: crypto.randomUUID(),
-      prices: [{ amount: QUOTED_LOVELACE, currency: { id: 'ada', type: CARDANO, rawId: '' } }],
+      prices: [{ amount: QUOTED_LOVELACE, currency: { id: `${CARDANO_ADA}:`, type: CARDANO_ADA, rawId: '' } }],
     }),
   } as unknown as CesApi['api'];
   const cesApi: CesApi = { url: 'fake://cardano-exchange', api };

@@ -161,7 +161,7 @@ export interface CapacityExchangeConfig {
    */
   confirmOffer: ConfirmOffer;
   /**
-   * Optional: foreign-currency payers keyed by currency type (`cardano:`). A selected foreign
+   * Optional: foreign-currency payers keyed by currency type (`cardano:ada`). A selected foreign
    * currency with no payer throws `CapacityExchangeUnsupportedCurrencyError`.
    */
   bridgelessPayers?: BridgelessPayers;
