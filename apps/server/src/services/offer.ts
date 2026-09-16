@@ -154,6 +154,12 @@ export class OfferService {
     if (getPriceResult.status === 'unsupported-currency') {
       return { status: 'unsupported-currency', currency: request.offerCurrency };
     }
+    if (
+      getPriceResult.currency.type !== 'midnight:shielded' &&
+      getPriceResult.currency.type !== 'midnight:unshielded'
+    ) {
+      return { status: 'unsupported-currency', currency: request.offerCurrency };
+    }
     const lockResult = this.utxoService.lockUtxo(request.specks);
     if (lockResult.status !== 'ok') {
       return lockResult;
