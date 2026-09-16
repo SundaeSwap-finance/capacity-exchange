@@ -39,29 +39,29 @@ export class FormulaIndex {
   }
 
   /** Evaluate the formula keyed by the given currency id. */
-  evaluateById(id: string, specks: bigint): EvaluatedPrice | undefined {
+  evaluateById(id: string, amount: bigint): EvaluatedPrice | undefined {
     const formula = this.#byId.get(id);
     if (!formula) {
       return undefined;
     }
-    return { price: evaluateFormula(formula, specks), currency: formula.currency };
+    return { price: evaluateFormula(formula, amount), currency: formula.currency };
   }
 
   /** Evaluate every indexed formula. Order follows insertion order. */
-  evaluateAll(specks: bigint): EvaluatedPrice[] {
+  evaluateAll(amount: bigint): EvaluatedPrice[] {
     return [...this.#byId.values()].map((formula) => ({
-      price: evaluateFormula(formula, specks),
+      price: evaluateFormula(formula, amount),
       currency: formula.currency,
     }));
   }
 }
 
-// price = basePrice + specks * (rateNumerator / rateDenominator)
-// All arithmetic is bigint to avoid precision loss on large speck values.
-function evaluateFormula(formula: IndexedFormula, specks: bigint): bigint {
+// price = basePrice + amount * (rateNumerator / rateDenominator)
+// All arithmetic is bigint to avoid precision loss on large amounts.
+function evaluateFormula(formula: IndexedFormula, amount: bigint): bigint {
   return (
     BigInt(formula.basePrice) +
-    (specks * BigInt(formula.rateNumerator)) / BigInt(formula.rateDenominator)
+    (amount * BigInt(formula.rateNumerator)) / BigInt(formula.rateDenominator)
   );
 }
 
