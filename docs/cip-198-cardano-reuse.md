@@ -1,15 +1,25 @@
 # Could Capacity Exchange's code be reused for a Cardano CIP-198 service?
 
 CIP-198 ([cardano-foundation/CIPs#1257](https://github.com/cardano-foundation/CIPs/pull/1257))
-is a Cardano proposal, not a Midnight one. It builds on CIP-118's "babel fee
-offer" idea: a sub-transaction that doesn't balance on its own (say, it has
-more of a token in it than it needs, and is short the ADA to pay its own
-fee). Some other party then folds that sub-transaction into one valid,
-complete transaction. Since Capacity Exchange does a similar job for
-Midnight, it's worth asking: could its *code* — not just the idea — be
-reused to build a real Cardano version of CIP-198?
+is still an actively-edited, `Proposed` draft — treat this doc as a snapshot,
+and the PR itself as the source of truth if anything here seems out of date.
 
-Short answer: mostly no, once you get past the API layer.
+**In the simplest terms:**  A separate ledger change (CIP-118) will let someone build an unfinished,
+lopsided "sub-transaction" — it spends your non-ADA token but since it doesn't cover its own
+ADA fee, it can't be posted on its own. **CIP-198 is the rulebook for how
+some other party finds that unfinished piece, completes it (supplying the
+missing ADA in exchange for your token), and posts the whole thing as one
+real transaction** — how you'd broadcast the unfinished piece, how a
+completing party advertises what it accepts and at what price, and how it
+stitches several people's pieces together into one transaction. CIP-118 makes
+the unfinished piece legal; CIP-198 is how it actually gets finished and
+posted, by someone else, for a fee.
+
+Short answer: mostly no. Even where the underlying approach transfers (the
+API shape, the pricing engine, config/metrics patterns), that's a case for
+reusing the *design*, not the TypeScript — TS was forced on Capacity
+Exchange by Midnight's SDK, and nothing forces it for a Cardano
+implementation.
 
 ## What Capacity Exchange does today
 
@@ -29,17 +39,53 @@ It isn't a batching service in the CIP-198 sense on the Cardano side:
 
 ## What could actually be reused
 
-- **Mostly reusable as-is:** everything that isn't ledger code — the
-  Fastify routes/API validation, the pricing/quote engine
+- **Reusable as a design, not necessarily as TypeScript code** (correction —
+  an earlier version of this doc conflated the two): the *approach* behind
+  the Fastify routes/API validation, the pricing/quote engine
   (`services/price.ts`, `services/formulaIndex.ts`, `services/quote.ts`),
-  metrics, config loading, and the peer-discovery protocol used to fall back
-  between sponsor servers.
-- **Reusable with some rework:** the high-level flow in
-  `sponsor.ts`/`offer.ts` — check eligibility, lock a UTXO, cache, handle
-  errors. The overall shape ("lock something → build the fee-covering
-  piece → merge → submit") still makes sense, even though the actual
-  object being locked/merged/submitted would need to be a Cardano type
-  instead of a Midnight one.
+  metrics, config loading, and the peer-discovery fallback protocol all
+  transfer as ideas. Whether the actual TS code is worth carrying over is a
+  separate question. Cardano's tooling splits across non-TS languages: `cardano-ledger` is
+  Haskell, and so — verified directly, not assumed — is `dmq-node`, the
+  actual prior art CIP-198 itself cites for its gossip layer (`IntersectMBO/dmq-node`,
+  built on Ouroboros-Network). Newer performance-oriented tooling (Pallas,
+  the Amaru node) is Rust. Neither camp is TypeScript. CIP-198's own
+  acceptance criteria requires *"two implementations
+  built independently interoperate"* on the wire format, so matching
+  whatever language the reference implementation actually ends up in may
+  matter more than reusing our TS. Treat this bullet's contents as "designs
+  worth copying," not "modules worth importing."
+- **Reusable as a concept, not as a shape** (correction — an earlier version
+  of this doc overstated this): CES's `sponsor.ts`/`offer.ts` flow is
+  "lock a UTXO → build a fee-covering piece → merge two built transactions →
+  submit," and that shape is actually a poor match for CIP-198, not a rework
+  candidate. CIP-198's service is asynchronous and batch-oriented, and each
+  step differs for a structural reason, not just a type difference:
+  - **No per-request lock.** CIP-198 pushes toward funding a batch from an
+    *account* rather than discrete UTXOs specifically to avoid a per-payment
+    floor — an account isn't subdivided into lockable pieces at all. CES's
+    `UtxoService.lockUtxo` exists because CES answers one synchronous caller
+    at a time; CIP-198's service never does that.
+  - **No response cache.** CES caches the built offer response because a
+    caller might retry a synchronous call and needs the same answer back.
+    CIP-198 offers arrive into a pool asynchronously with no meaningful
+    reply — the publisher is expected to watch the chain itself; `GET
+    /offers/{id}` is explicitly *not* a reliable "did it land" answer. What
+    CIP-198 needs instead is offer-*state* tracking (received → verified →
+    included in batch → submitted → confirmed), a different mechanism from
+    an HTTP response cache.
+  - **No merge.** CES's `dustTx.merge(userTx)` combines two independently
+    built Midnight `Transaction`/`Intent` objects via the SDK's own
+    multi-intent structure. CIP-198 doesn't merge peer transactions — it
+    nests sub-transaction bytes verbatim inside one enclosing transaction
+    (CIP-118's field-23 encoding), and the service's job is just to supply
+    that one outer transaction's own balancing inputs/outputs, fee, and
+    collateral. "Nest N sub-txs into one tx" and "merge two txs together"
+    are different operations, not the same shape wearing different types.
+
+  What *does* carry over is only the idea of "check eligibility, then build,
+  then handle errors" as a design principle — not the concrete
+  lock/cache/merge mechanics.
 - **Not reusable, needs to be rewritten:** `services/tx.ts`, the UTXO
   lock/spend code in `services/utxo.ts`, and the wallet/transaction code in
   `packages/providers/src/wallet/*` are all built on Midnight's model
@@ -54,14 +100,20 @@ It isn't a batching service in the CIP-198 sense on the Cardano side:
 
 ## Bottom line
 
-Keep the API layer, the pricing engine, and the overall flow as a template.
-The actual transaction-building and the on-chain registry would need to be
-built from scratch, once CIP-198's rules are finalized.
+The API shape and the pricing engine's *design* are genuinely
+chain-agnostic — reimplement them, in whatever language a Cardano version
+actually settles on, rather than assuming they get imported as TS. Don't
+carry over CES's request/response flow shape (lock → build → merge →
+respond) at all: CIP-198's service is asynchronous and batch-oriented at a
+structural level, not just a different transaction type wearing the same
+shape. The transaction-building layer, the batching/pooling logic, and the
+on-chain registry all need to be built from scratch, once CIP-198's rules
+are finalized.
 
-## Things CIP-198 itself hasn't figured out yet, and how they relate to us
+## Questions for CIP-198
 
 The CIP-198 spec ([full diff](https://github.com/cardano-foundation/CIPs/pull/1257/files))
-still has some open or shaky parts. Most of them line up with problems
+still has some open parts. Most of them line up with problems
 Capacity Exchange already has, so they're worth keeping an eye on:
 
 - **The main batching part can't be built yet — it's waiting on a ledger
@@ -88,25 +140,35 @@ Capacity Exchange already has, so they're worth keeping an eye on:
   - How much ADA/collateral would we need to hold, and how would that be
     funded and topped up?
 - **The CIP's rules about holding funds point at a bug we already have.**
-  The CIP says a service must keep a UTXO locked "until that build finishes
-  or gives up," and keep collateral fully separate — basically, don't let
+  The CIP says an input chosen for a batch "must be held out of selection
+  until that build finishes or abandons," and keep collateral fully separate — basically, don't let
   two things spend the same money. Our
   [`UtxoService.lockUtxo`](../apps/server/src/services/utxo.ts) only keeps
   its locks in memory (there's already a `TODO` about this in the code), so
   a restart mid-request can lose a lock and risk a double-spend. This is
   exactly the problem the CIP is warning about.
-- **Handling rolled-back blocks.** The CIP explains what a service should
-  do if a block it already submitted gets reverted — treat the offer as
-  not-yet-included again, not as done. We don't handle this at all today.
-  The CIP treats it as required, not optional.
+- **Handling rolled-back blocks — a Cardano requirement, not necessarily a
+  Midnight one.** The CIP explains what a service should do if a block it
+  already submitted gets reverted — treat the offer as not-yet-included
+  again, not as done. CES doesn't handle this at all today, but whether
+  that's actually a gap depends on which chain: Midnight's finality is fast
+  and comparatively reliable, so this may be a low-priority "confirm it's
+  even possible" item on our current codebase, not an urgent fix. On
+  Cardano it's not optional at all — rollbacks are routine, ordinary
+  behavior there (they happen "even in toy projects," per review feedback on
+  this doc), so any real Cardano implementation has to treat rollback
+  handling as table stakes from day one, not a CIP-198-specific nicety.
 - **The CIP's registry does a lot more than ours.** CIP-198's registry
   isn't just a URL — it's an on-chain record (an NFT) with a
   deposit-weighted random pick for who talks to whom, a published profile
   of what a service accepts, budget limits, and separate price hints served
   over plain HTTP. `packages/registry` today only stores a domain name.
-- **Price hints — this one's actually good news.** The CIP keeps prices
-  off-chain and non-binding on purpose ("a rate that moves faster than a
-  block shouldn't be fixed on-chain"). That's basically what
+- **Price hints — this one's actually good news.** The CIP deliberately
+  keeps a service's rates off-chain, HTTP-served, and non-registered — *"A
+  hint is served over HTTP and never registered: it carries a number, and
+  numbers move"* — and explicitly non-binding: *"A service that publishes a
+  rate has promised nothing and may decline any offer quoted against it."*
+  That's basically what
   [`services/quote.ts`](../apps/server/src/services/quote.ts) already
   does — a signed, time-limited quote instead of an on-chain price. We're
   already doing this part the way the CIP recommends.
@@ -115,9 +177,11 @@ Capacity Exchange already has, so they're worth keeping an eye on:
   or fake price hints all assume a network of strangers, which we don't
   have (one client talks to one server directly). Two things are still
   worth a look even so:
-  - **Silently dropped requests.** The CIP suggests occasionally sending
-    fake "test" requests through a peer to check it isn't silently
-    swallowing traffic. Since we can fall back to a peer server
+  - **Silently dropped requests.** The CIP's mitigation is *canaries*:
+    offers indistinguishable from real ones, sent through a peer and
+    watched for — if genuinely processed, a canary is posted on-chain and
+    pays real fees like any other offer, it isn't a disposable test ping.
+    Since we can fall back to a peer server
     ([`sponsor.ts:90-119`](../apps/server/src/services/sponsor.ts#L90)),
     something similar might be worth doing there.
   - **Checking again right before submitting.** The CIP says a service
@@ -129,9 +193,8 @@ Capacity Exchange already has, so they're worth keeping an eye on:
 ## TODO
 
 The real batch-construction mechanic (the actual point of CIP-198) is blocked
-on Dijkstra/CIP-118 landing on a public network — see the section above. That
-work is someone else's timeline, not ours, so it's left out of these lists
-entirely. Everything below is buildable and testable *today*, without it.
+on Dijkstra/CIP-118 landing on a public network — see the section above. 
+Everything below is buildable and testable *today*, without it.
 
 ### 1. Off-chain protocol pieces (no ledger dependency at all)
 
@@ -171,32 +234,21 @@ test vectors right now, ahead of having anywhere real to submit a batch to.
 
 ### 3. Reuse from the current (Midnight) codebase
 
-- [ ] Pull out the chain-agnostic parts as something explicitly shared
-      instead of copy-pasting: the pricing/quote engine
-      (`services/price.ts`, `services/formulaIndex.ts`, `services/quote.ts`),
-      metrics, config loading, and the peer-discovery protocol.
-- [ ] Sketch the high-level flow from `sponsor.ts`/`offer.ts` (eligibility
-      checks, locking, caching, error handling) as a template against a
-      Cardano-native UTXO/transaction type — a design sketch, not a working
-      implementation, since the real transaction-building layer still has
-      nowhere to plug into until Dijkstra ships.
+- [ ] Decide the language/stack for a Cardano implementation *before*
+      planning any coding. Nothing forces TS for Cardano the way 
+      Midnight's SDK forces it here, and CIP-198's own
+      cited prior art (`dmq-node`) is Haskell, not TS.
+- [ ] Only if that lands on TS too: extract the genuinely chain-agnostic
+      *designs* (pricing/quote engine, metrics, config loading, peer
+      discovery) as references to reimplement against, not modules to
+      import wholesale — port the approach, not the file.
+- [ ] Do not use `sponsor.ts`/`offer.ts`'s lock → build → merge → respond
+      shape as a template. It's a poor structural fit for CIP-198's
+      asynchronous, batch/pool-oriented model (see the correction above) —
+      the only thing worth carrying over is "check eligibility, then build,
+      then handle errors" as a principle, not the flow itself.
 - [ ] Decide whether this lives as a new package/service next to the
       Midnight one, or a separate repo entirely.
-
-### 4. Findings from this review worth fixing now, regardless of Cardano
-
-Not CIP-198 work at all — just things this comparison surfaced in the
-existing Midnight-side code, independent of any Dijkstra timeline:
-
-- [ ] Check whether Capacity Exchange's *current* (Midnight) sponsor flow
-      re-checks a locked UTXO against live chain state right before
-      submitting, not only when it's first locked.
-- [ ] Consider a test-request check on the peer-fallback path
-      (`sponsor.ts:90-119`) to catch a peer server silently dropping
-      requests instead of erroring.
-- [ ] Persist `UtxoService.lockUtxo`'s lock state (currently in-memory only,
-      `apps/server/src/services/utxo.ts`) so a restart can't lose a lock and
-      risk a double-spend.
 
 ### Explicitly deferred (do not start until Dijkstra ships)
 
