@@ -3,12 +3,17 @@ import { PricesSchema } from '../models/prices.js';
 
 const priceRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.get('/prices', PricesSchema, async (request, reply) => {
-    if (request.query.currency !== 'DUST') {
-      return reply.badRequest('Invalid currency (must request DUST)');
+    const asset = request.query.currency;
+    const amount = BigInt(request.query.amount);
+
+    const prices = fastify.priceService.listPrices(asset, amount);
+    if (!prices) {
+      return reply.badRequest(
+        `This server does not sell ${asset} capacity (available: ${fastify.priceService.listAssets().join(', ')})`,
+      );
     }
-    const specks = BigInt(request.query.amount);
-    const prices = fastify.priceService.listPrices(specks);
-    const quoteId = fastify.quoteService.createQuote(specks, prices);
+
+    const quoteId = fastify.quoteService.createQuote(asset, amount, prices);
     return reply.status(200).send({ quoteId, prices });
   });
 };

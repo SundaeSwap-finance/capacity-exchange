@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { CapacityAssetSchema } from '../config/prices.js';
 import { Currency, ErrorResponse } from './common.js';
 
 const Price = Type.Object({
@@ -14,7 +15,9 @@ export const PricesResponse = Type.Object({
 const PricesRequestQuery = Type.Object({
   // Enforce the string to be one or more digits
   amount: Type.String({ pattern: '^\\d+$' }),
-  currency: Type.Literal('DUST'),
+  // The capacity asset being bought. Every asset the software knows about is accepted
+  // here; whether this particular server sells it is a runtime 400.
+  currency: CapacityAssetSchema,
 });
 
 // For /api/prices

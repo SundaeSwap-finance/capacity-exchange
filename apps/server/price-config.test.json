@@ -1,24 +1,26 @@
 {
-  "priceFormulas": [
-    {
-      "currency": {
-        "type": "midnight:shielded",
-        "rawId": "1337133713371337133713371337133713371337133713371337133713371337"
+  "priceFormulas": {
+    "DUST": [
+      {
+        "currency": {
+          "type": "midnight:shielded",
+          "rawId": "1337133713371337133713371337133713371337133713371337133713371337"
+        },
+        "basePrice": "101",
+        "rateNumerator": "11",
+        "rateDenominator": "1000"
       },
-      "basePrice": "101",
-      "rateNumerator": "11",
-      "rateDenominator": "1000"
-    },
-    {
-      "currency": {
-        "type": "midnight:unshielded",
-        "rawId": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
-      },
-      "basePrice": "101",
-      "rateNumerator": "11",
-      "rateDenominator": "1000"
-    }
-  ],
+      {
+        "currency": {
+          "type": "midnight:unshielded",
+          "rawId": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        },
+        "basePrice": "101",
+        "rateNumerator": "11",
+        "rateDenominator": "1000"
+      }
+    ]
+  },
   "sponsorAll": false,
   "sponsoredContracts": []
 }

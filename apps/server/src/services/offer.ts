@@ -2,6 +2,7 @@ import { FastifyBaseLogger } from 'fastify';
 import { UtxoService, type WalletUnavailableResult } from './utxo.js';
 import { TxService } from './tx.js';
 import { Currency, PriceService } from './price.js';
+import type { CapacityAsset } from '../config/prices.js';
 import { MetricsService } from './metrics.js';
 import { LRUCache } from 'lru-cache';
 import { recordDuration, recordCounters } from '../decorators/record-metrics.js';
@@ -9,6 +10,8 @@ import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 
 export interface CreateOfferRequest {
   quoteId: string;
+  /** The capacity asset the quote was for. Offers only settle DUST today. */
+  capacityAsset: CapacityAsset;
   specks: bigint;
   offerCurrency: string;
 }
@@ -31,6 +34,7 @@ export type CreateOfferResult =
     }
   | { status: 'ok'; source: 'cached' | 'coalesced'; offer: OfferResponse }
   | { status: 'unsupported-currency'; currency: string }
+  | { status: 'unsupported-asset'; asset: CapacityAsset }
   | WalletUnavailableResult;
 
 /**
@@ -139,7 +143,14 @@ export class OfferService {
       'Building offer',
     );
 
-    const getPriceResult = this.priceService.getPrice(request.offerCurrency, request.specks);
+    const getPriceResult = this.priceService.getPrice(
+      request.capacityAsset,
+      request.offerCurrency,
+      request.specks,
+    );
+    if (getPriceResult.status === 'unsupported-asset') {
+      return { status: 'unsupported-asset', asset: request.capacityAsset };
+    }
     if (getPriceResult.status === 'unsupported-currency') {
       return { status: 'unsupported-currency', currency: request.offerCurrency };
     }

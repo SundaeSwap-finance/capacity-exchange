@@ -18,6 +18,8 @@ export function replyWithOfferResult(reply: FastifyReply, result: CreateOfferRes
       );
     case 'unsupported-currency':
       return reply.badRequest(`Unsupported currency: ${result.currency}`);
+    case 'unsupported-asset':
+      return reply.badRequest(`Unsupported capacity asset: ${result.asset}`);
     case 'illegal-state':
       return reply.internalServerError('Service is in an illegal state.', result.error);
   }

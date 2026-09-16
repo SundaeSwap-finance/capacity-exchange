@@ -84,10 +84,9 @@ describe('createAutoSelectCurrency', () => {
   it('picks the offer with the lowest offered/max ratio across currencies', async () => {
     // BTC: offered 1 vs max 1 -> ratio 1/1
     // ADA: offered 2 vs max 1000 -> ratio 2/1000 (far better)
-    const peerPriceService = new PeerPriceService([
-      makeFormula('btc', '1', '0', '1'),
-      makeFormula('ada', '1000', '0', '1'),
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [makeFormula('btc', '1', '0', '1'), makeFormula('ada', '1000', '0', '1')],
+    });
     const walletService = makeWalletService({ btc: 100n, ada: 100n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -108,7 +107,7 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('rejects offers that exceed the configured max', async () => {
-    const peerPriceService = new PeerPriceService([makeFormula('ada', '100', '0', '1')]);
+    const peerPriceService = new PeerPriceService({ DUST: [makeFormula('ada', '100', '0', '1')] });
     const walletService = makeWalletService({ ada: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -119,7 +118,7 @@ describe('createAutoSelectCurrency', () => {
 
   it('skips currencies not allowlisted in peer.maxPrices', async () => {
     // Only ada has a max configured; btc is not allowlisted, even if offer is cheap.
-    const peerPriceService = new PeerPriceService([makeFormula('ada', '1000', '0', '1')]);
+    const peerPriceService = new PeerPriceService({ DUST: [makeFormula('ada', '1000', '0', '1')] });
     const walletService = makeWalletService({ btc: 10_000n, ada: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -135,10 +134,9 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('skips currencies with insufficient balance', async () => {
-    const peerPriceService = new PeerPriceService([
-      makeFormula('btc', '1000', '0', '1'),
-      makeFormula('ada', '1000', '0', '1'),
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [makeFormula('btc', '1000', '0', '1'), makeFormula('ada', '1000', '0', '1')],
+    });
     // Server can't afford the btc offer but can afford ada.
     const walletService = makeWalletService({ btc: 0n, ada: 1_000_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
@@ -155,7 +153,7 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('returns no-eligible when no candidate meets criteria', async () => {
-    const peerPriceService = new PeerPriceService([makeFormula('ada', '100', '0', '1')]);
+    const peerPriceService = new PeerPriceService({ DUST: [makeFormula('ada', '100', '0', '1')] });
     const walletService = makeWalletService({ ada: 10n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -166,7 +164,7 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('returns no-eligible when given zero prices', async () => {
-    const peerPriceService = new PeerPriceService([]);
+    const peerPriceService = new PeerPriceService({ DUST: [] });
     const walletService = makeWalletService({});
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -175,10 +173,9 @@ describe('createAutoSelectCurrency', () => {
 
   it('breaks ratio ties deterministically by rawId lex order', async () => {
     // Two offers with identical ratios (1/100 each); 'aaa' < 'bbb' lex.
-    const peerPriceService = new PeerPriceService([
-      makeFormula('aaa', '100', '0', '1'),
-      makeFormula('bbb', '100', '0', '1'),
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [makeFormula('aaa', '100', '0', '1'), makeFormula('bbb', '100', '0', '1')],
+    });
     const walletService = makeWalletService({ aaa: 10_000n, bbb: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -194,9 +191,9 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('selects an unshielded offer when the server has sufficient unshielded balance', async () => {
-    const peerPriceService = new PeerPriceService([
-      makeUnshieldedFormula('tusdm', '1000', '0', '1'),
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [makeUnshieldedFormula('tusdm', '1000', '0', '1')],
+    });
     const walletService = makeWalletService({}, { tusdm: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -208,9 +205,9 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('skips unshielded offer when unshielded balance is insufficient', async () => {
-    const peerPriceService = new PeerPriceService([
-      makeUnshieldedFormula('tusdm', '1000', '0', '1'),
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [makeUnshieldedFormula('tusdm', '1000', '0', '1')],
+    });
     const walletService = makeWalletService({}, { tusdm: 0n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 
@@ -224,9 +221,9 @@ describe('createAutoSelectCurrency', () => {
   it('selects unshielded offer when rawId has network prefix (e.g. unshielded-preview<hex>)', async () => {
     const bareHex = 'a'.repeat(64);
     const prefixedRawId = `unshielded-preview${bareHex}`;
-    const peerPriceService = new PeerPriceService([
-      makeUnshieldedFormula(prefixedRawId, '1000', '0', '1'),
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [makeUnshieldedFormula(prefixedRawId, '1000', '0', '1')],
+    });
     // Wallet balances keyed by bare hex (no prefix), as the Midnight SDK returns them
     const walletService = makeWalletService({}, { [bareHex]: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
@@ -239,10 +236,12 @@ describe('createAutoSelectCurrency', () => {
   });
 
   it('picks shielded over unshielded when shielded has a better ratio', async () => {
-    const peerPriceService = new PeerPriceService([
-      makeFormula('ada', '1000', '0', '1'), // shielded max 1000
-      makeUnshieldedFormula('tusdm', '10', '0', '1'), // unshielded max 10
-    ]);
+    const peerPriceService = new PeerPriceService({
+      DUST: [
+        makeFormula('ada', '1000', '0', '1'), // shielded max 1000
+        makeUnshieldedFormula('tusdm', '10', '0', '1'), // unshielded max 10
+      ],
+    });
     // ada offered 2 vs max 1000 (ratio 0.002); tusdm offered 9 vs max 10 (ratio 0.9)
     const walletService = makeWalletService({ ada: 10_000n }, { tusdm: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
@@ -260,7 +259,7 @@ describe('createAutoSelectCurrency', () => {
 
   it('includes the linear rate component in the max', async () => {
     // max = 10 + specks * 1 = 10 + 100 = 110 at DUST_REQUIRED=100
-    const peerPriceService = new PeerPriceService([makeFormula('ada', '10', '1', '1')]);
+    const peerPriceService = new PeerPriceService({ DUST: [makeFormula('ada', '10', '1', '1')] });
     const walletService = makeWalletService({ ada: 10_000n });
     const select = createAutoSelectCurrency(silentLogger, walletService, peerPriceService);
 

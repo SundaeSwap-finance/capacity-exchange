@@ -14,5 +14,6 @@ export default fp((fastify: FastifyInstance) => {
   // TODO: Enforce that the price formulas have hex-strings that identify the
   // midnight-contract-minted token
   const priceService = new PriceService(priceFormulas);
+  fastify.log.info({ assets: priceService.listAssets() }, 'Capacity assets priced by this server');
   fastify.decorate('priceService', priceService);
 });

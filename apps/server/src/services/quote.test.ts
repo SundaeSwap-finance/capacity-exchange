@@ -18,7 +18,7 @@ describe('QuoteService', () => {
         },
       },
     ];
-    const token = service.createQuote(500n, prices);
+    const token = service.createQuote('DUST', 500n, prices);
     const result = service.getQuote(token);
 
     expect(result.status).toBe('ok');
@@ -35,7 +35,7 @@ describe('QuoteService', () => {
   });
 
   it('returns invalid for tampered token', () => {
-    const token = service.createQuote(500n, []);
+    const token = service.createQuote('DUST', 500n, []);
     const tampered = token.slice(0, -1) + (token.at(-1) === 'A' ? 'B' : 'A');
     expect(service.getQuote(tampered)).toEqual({ status: 'invalid' });
   });
@@ -43,7 +43,7 @@ describe('QuoteService', () => {
   it('returns expired for expired token', () => {
     vi.useFakeTimers();
     try {
-      const token = service.createQuote(500n, []);
+      const token = service.createQuote('DUST', 500n, []);
       vi.advanceTimersByTime(11_000);
       expect(service.getQuote(token)).toEqual({ status: 'expired' });
     } finally {
@@ -53,7 +53,7 @@ describe('QuoteService', () => {
 
   it('returns invalid for tokens signed with a different secret', () => {
     const otherService = new QuoteService(10, randomBytes(32));
-    const token = otherService.createQuote(500n, []);
+    const token = otherService.createQuote('DUST', 500n, []);
     expect(service.getQuote(token)).toEqual({ status: 'invalid' });
   });
 });

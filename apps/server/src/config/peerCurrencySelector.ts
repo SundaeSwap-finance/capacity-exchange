@@ -102,7 +102,7 @@ function filterCandidates(
   const candidates: Candidate[] = [];
   for (const price of prices) {
     const offered = BigInt(price.price.amount);
-    const max = peerPriceService.getMaxPrice(price.price.currency, dustRequired);
+    const max = peerPriceService.getMaxPrice('DUST', price.price.currency, dustRequired);
     if (max === undefined) {
       log.debug(
         { currency: price.price.currency },

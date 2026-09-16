@@ -14,12 +14,15 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     if (quoteResult.status === 'expired') {
       return reply.gone('Quote has expired. Please request a new price quote.');
     }
+    // Offers settle by building a Midnight tx, so this route sells DUST capacity only.
+    // Other capacity assets are quotable but have no offer path yet.
     if (quoteResult.quote.currency !== 'DUST') {
       return reply.badRequest('Invalid currency');
     }
 
     const result = await fastify.offerService.createOffer({
       quoteId: request.body.quoteId,
+      capacityAsset: quoteResult.quote.currency,
       specks: quoteResult.quote.amount,
       offerCurrency: request.body.offerCurrency,
     });

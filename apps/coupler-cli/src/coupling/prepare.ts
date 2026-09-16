@@ -40,7 +40,7 @@ export function couplerContextFromAppContext(
 }
 
 /** The currency type a bridgeless coupling pays in, so balanceTx takes the bridgeless path. */
-export const CARDANO = 'cardano:';
+export const CARDANO = 'cardano';
 
 /** What preparing a coupling needs. The escrow, the capacity, and the exchange are injected: an
  *  e2e supplies stubs to hold the LP constant, and a real run supplies a live CES. */
