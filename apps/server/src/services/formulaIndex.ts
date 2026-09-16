@@ -27,6 +27,10 @@ export class FormulaIndex {
     this.#byId = new Map();
     for (const formula of formulas) {
       const id = computeCurrencyId(formula.currency);
+      // Last-write-wins here would silently apply one currency's rate to another's config.
+      if (this.#byId.has(id)) {
+        throw new Error(`Duplicate price formula for currency ${id}`);
+      }
       this.#byId.set(id, {
         ...formula,
         currency: { ...formula.currency, id },
