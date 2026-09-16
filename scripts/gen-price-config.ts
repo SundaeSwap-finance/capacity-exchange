@@ -42,12 +42,16 @@ const unshieldedFormula = {
   rateDenominator: '1000',
 };
 
-const priceFormulas: unknown[] = [shieldedFormula];
+const dustFormulas: unknown[] = [shieldedFormula];
 
 // add unshielded formula if requested
 if (unshieldedTokenColor) {
-  priceFormulas.push(unshieldedFormula);
+  dustFormulas.push(unshieldedFormula);
 }
+
+// Formulas are grouped by the capacity asset they price. This generator only wires up the
+// Midnight demo, so it emits DUST formulas only.
+const priceFormulas = { DUST: dustFormulas };
 
 const config: Record<string, unknown> = {
   priceFormulas,
