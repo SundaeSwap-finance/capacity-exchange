@@ -4,7 +4,7 @@ import { packageName, packageVersion } from '../packageInfo.js';
 
 const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.get('/metrics', MetricsSchema, async (_request, _reply) => {
-    const walletSyncState = fastify.walletService.syncState;
+    const walletSyncState = fastify.walletService?.syncState ?? { status: 'disabled' as const };
 
     const businessMetrics = fastify.metricsService.getMetrics();
 
@@ -13,7 +13,7 @@ const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
         name: packageName,
         version: packageVersion,
         uptime: process.uptime(),
-        network: fastify.config.networkId,
+        network: fastify.config.networkId ?? null,
       },
       health: {
         wallet: walletSyncState,

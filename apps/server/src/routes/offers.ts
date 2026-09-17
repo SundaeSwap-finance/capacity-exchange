@@ -7,6 +7,10 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     Body: typeof CreateOfferRequest.static;
     Reply: typeof OfferReply.static;
   }>('/offers', OfferSchema, async (request, reply) => {
+    if (!fastify.offerService) {
+      return reply.notImplemented('DUST offers are not configured on this server');
+    }
+
     const quoteResult = fastify.quoteService.getQuote(request.body.quoteId);
     if (quoteResult.status === 'invalid') {
       return reply.badRequest('Invalid quote ID');

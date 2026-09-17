@@ -25,7 +25,8 @@ export const MetricsResponse = Type.Object({
     name: Type.String(),
     version: Type.String(),
     uptime: Type.Number(),
-    network: Type.String(),
+    // Null when no Midnight network is configured (e.g. an ADA-only server).
+    network: Type.Union([Type.String(), Type.Null()]),
   }),
   health: Type.Object({
     wallet: WalletStatus,

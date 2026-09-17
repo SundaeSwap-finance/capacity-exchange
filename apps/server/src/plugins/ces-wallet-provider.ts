@@ -12,8 +12,10 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.walletService) {
-    throw new Error("CesWalletProviderPlugin requires WalletService to be init'd first");
+  if (!fastify.walletService || !fastify.config.networkId || !fastify.config.endpoints) {
+    fastify.decorate('cesWalletProvider', null);
+    fastify.log.debug('CES wallet provider not configured (no Midnight network configured)');
+    return;
   }
 
   if (!fastify.peerPriceService) {

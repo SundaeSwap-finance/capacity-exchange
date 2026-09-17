@@ -33,6 +33,12 @@ async function resolveWalletSeedHex(
       `Only one wallet source allowed, but multiple were set: ${specified.join(', ')}`,
     );
   }
+  // Only called from createWalletResources, which loadConfig.ts only invokes once
+  // MIDNIGHT_NETWORK is confirmed present.
+  if (!env.MIDNIGHT_NETWORK) {
+    throw new Error('MIDNIGHT_NETWORK is required to resolve a wallet seed');
+  }
+  const network = env.MIDNIGHT_NETWORK;
   const secretId = env.WALLET_MNEMONIC_ARN ?? env.WALLET_MNEMONIC_SECRET_NAME;
   if (secretId) {
     log.info('Loading wallet mnemonic from AWS Secrets Manager');
@@ -53,13 +59,13 @@ async function resolveWalletSeedHex(
     parseSeedHex(seedStr);
     return seedStr.trim();
   }
-  if (env.MIDNIGHT_NETWORK.toLowerCase() === 'mainnet') {
+  if (network.toLowerCase() === 'mainnet') {
     throw new Error(
       'WALLET_MNEMONIC_FILE, WALLET_SEED_FILE, WALLET_MNEMONIC_ARN, or WALLET_MNEMONIC_SECRET_NAME is required on mainnet',
     );
   }
   log.info(`Loading wallet via convention file (walk-up from cwd)`);
-  return uint8ArrayToHex(loadWalletSeed(env.MIDNIGHT_NETWORK));
+  return uint8ArrayToHex(loadWalletSeed(network));
 }
 
 export interface WalletResources {
@@ -73,6 +79,11 @@ export async function createWalletResources(
   networkId: NetworkId.NetworkId,
   logger: pino.Logger,
 ): Promise<WalletResources> {
+  // Only called from loadConfig.ts, which requires WALLET_STATE_DIR whenever DUST is
+  // priced (the only case this function is invoked in).
+  if (!env.WALLET_STATE_DIR) {
+    throw new Error('WALLET_STATE_DIR is required to create wallet resources');
+  }
   const walletSeed = await resolveWalletSeedHex(env, logger);
   const keys = deriveWalletKeys(walletSeed, networkId);
 
