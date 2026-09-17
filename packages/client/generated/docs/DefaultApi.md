@@ -236,7 +236,7 @@ async function example() {
   const body = {
     // string
     amount: amount_example,
-    // 'DUST'
+    // 'DUST' | 'ADA'
     currency: currency_example,
   } satisfies ApiPricesGetRequest;
 
@@ -258,7 +258,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **amount** | `string` |  | [Defaults to `undefined`] |
-| **currency** | `DUST` |  | [Defaults to `undefined`] [Enum: DUST] |
+| **currency** | `DUST`, `ADA` |  | [Defaults to `undefined`] [Enum: DUST, ADA] |
 
 ### Return type
 

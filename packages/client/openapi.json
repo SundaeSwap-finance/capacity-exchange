@@ -436,7 +436,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "DUST"
+                "DUST",
+                "ADA"
               ]
             },
             "in": "query",

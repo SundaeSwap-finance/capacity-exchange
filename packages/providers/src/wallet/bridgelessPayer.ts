@@ -18,7 +18,7 @@ export interface BridgelessQuote {
   quoteId: string;
   /** Amount to escrow, in the currency's smallest denomination. */
   amount: string;
-  /** The foreign currency type being paid, e.g. `cardano:`. */
+  /** The foreign currency type being paid, e.g. `cardano:ada`. */
   currencyType: string;
   /** The server that issued the quote. */
   exchange: ExchangeRef;
@@ -40,5 +40,5 @@ export interface BridgelessPayer {
   pay(userTx: UnboundTransaction, quote: BridgelessQuote, dustSpecks: bigint): Promise<FinalizedTransaction>;
 }
 
-/** Payers keyed by currency type (e.g. `cardano:`). */
+/** Payers keyed by currency type (e.g. `cardano:ada`). */
 export type BridgelessPayers = Record<string, BridgelessPayer>;

@@ -73,6 +73,7 @@ describe('OfferService', () => {
 
     const request = {
       quoteId: 'q1',
+      capacityAsset: 'DUST' as const,
       specks: 1000n,
       offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
     };
@@ -111,6 +112,7 @@ describe('OfferService', () => {
 
     const request = {
       quoteId: 'q-coal',
+      capacityAsset: 'DUST' as const,
       specks: 1000n,
       offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
     };
@@ -154,6 +156,7 @@ describe('OfferService', () => {
 
     const request = {
       quoteId: 'q-unshielded',
+      capacityAsset: 'DUST' as const,
       specks: 1000n,
       offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
     };
@@ -185,6 +188,7 @@ describe('OfferService', () => {
 
     const request = {
       quoteId: 'q2',
+      capacityAsset: 'DUST' as const,
       specks: 1000n,
       offerCurrency: '0fac6767295957138e27f92bddd129519e6ab8d72891454af474e41ab835dcd0',
     };

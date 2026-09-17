@@ -1,22 +1,27 @@
-import type { RawPriceFormula } from '../config/prices.js';
-import { FormulaIndex, computeCurrencyId } from './formulaIndex.js';
+import type { CapacityAsset, CapacityFormulas } from '../config/prices.js';
+import { FormulaIndex, computeCurrencyId, indexByAsset } from './formulaIndex.js';
 
 /**
- * Max prices, keyed per currency, this server will pay peer exchanges for DUST
- * during sponsor fallback. Counterpart to {@link PriceService}, which prices
- * DUST this server sells.
+ * Max prices, keyed per capacity asset and then per currency, this server will pay peer
+ * exchanges. Mirrors `PriceService`, but bounds what this server buys rather than
+ * quoting what it sells.
  */
 export class PeerPriceService {
-  readonly #index: FormulaIndex;
-  constructor(maxPrices: RawPriceFormula[]) {
-    this.#index = new FormulaIndex(maxPrices);
+  readonly #byAsset: Map<CapacityAsset, FormulaIndex>;
+
+  constructor(maxPrices: CapacityFormulas) {
+    this.#byAsset = indexByAsset(maxPrices);
   }
 
   /**
-   * Max amount this server will pay a peer for `specks` DUST in the given
-   * currency, or `undefined` if the currency is not allowlisted.
+   * Max amount this server will pay a peer for `amount` of `asset` in the given currency,
+   * or `undefined` if the asset or currency isn't allowlisted.
    */
-  getMaxPrice(currency: { type: string; rawId: string }, specks: bigint): bigint | undefined {
-    return this.#index.evaluateById(computeCurrencyId(currency), specks)?.price;
+  getMaxPrice(
+    asset: CapacityAsset,
+    currency: { type: string; rawId: string },
+    amount: bigint,
+  ): bigint | undefined {
+    return this.#byAsset.get(asset)?.evaluateById(computeCurrencyId(currency), amount)?.price;
   }
 }

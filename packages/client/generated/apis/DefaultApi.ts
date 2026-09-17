@@ -348,6 +348,7 @@ export class DefaultApi extends runtime.BaseAPI {
  * @export
  */
 export const ApiPricesGetCurrencyEnum = {
-    Dust: 'DUST'
+    Dust: 'DUST',
+    Ada: 'ADA'
 } as const;
 export type ApiPricesGetCurrencyEnum = typeof ApiPricesGetCurrencyEnum[keyof typeof ApiPricesGetCurrencyEnum];

@@ -66,7 +66,7 @@ describe('POST /api/ada/offers', () => {
 
     it('returns 201 when UTXO exists', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -78,7 +78,7 @@ describe('POST /api/ada/offers', () => {
 
     it('returns 404 when Cardano UTXO does not exist', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -89,7 +89,7 @@ describe('POST /api/ada/offers', () => {
 
     it('calls verifyUtxoExists with txHash, senderAddress, and sentValue', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -108,7 +108,7 @@ describe('POST /api/ada/offers', () => {
 
     it('returns 404 when sender address does not match any input', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -119,7 +119,7 @@ describe('POST /api/ada/offers', () => {
 
     it('passes expectedValue to verifyUtxoExists as bigint', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(MOCK_UTXO_RESPONSE);
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -132,7 +132,7 @@ describe('POST /api/ada/offers', () => {
 
     it('returns 404 when UTXO value is below the expected minimum', async () => {
       vi.mocked(cardanoStub.verifyUtxoExists).mockResolvedValueOnce(null);
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -151,7 +151,7 @@ describe('POST /api/ada/offers', () => {
     });
 
     it('returns 400 when utxoTxHash is wrong length', async () => {
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',
@@ -161,7 +161,7 @@ describe('POST /api/ada/offers', () => {
     });
 
     it('returns 410 for expired quote', async () => {
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const realDateNow = Date.now;
       Date.now = () => realDateNow() + 11_000;
       try {
@@ -184,7 +184,7 @@ describe('POST /api/ada/offers', () => {
     });
 
     it('returns 501 when not configured', async () => {
-      const quoteId = quoteService.createQuote(1000n, []);
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
       const res = await app.get().inject({
         method: 'POST',
         url: '/api/ada/offers',

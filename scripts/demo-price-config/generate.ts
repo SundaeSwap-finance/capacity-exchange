@@ -18,10 +18,12 @@ export function generate(networkId: string): void {
   const example = readJsonFile(priceConfigExamplePath());
 
   const config = {
-    priceFormulas: example.priceFormulas.map((pf: Record<string, string>) => ({
-      ...pf,
-      currency: { type: 'midnight:shielded', rawId: contracts.tokenMint.derivedTokenColor },
-    })),
+    priceFormulas: {
+      DUST: (example.priceFormulas.DUST ?? []).map((pf: Record<string, string>) => ({
+        ...pf,
+        currency: { type: 'midnight:shielded', rawId: contracts.tokenMint.derivedTokenColor },
+      })),
+    },
     sponsorAll: example.sponsorAll ?? false,
     sponsoredContracts: [
       {

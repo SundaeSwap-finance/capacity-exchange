@@ -39,8 +39,9 @@ export function couplerContextFromAppContext(
   };
 }
 
-/** The currency type a bridgeless coupling pays in, so balanceTx takes the bridgeless path. */
-export const CARDANO = 'cardano:';
+/** The currency type a bridgeless coupling pays in, so balanceTx takes the bridgeless path.
+ *  Native assets would pay under `cardano:native` and need their own payer. */
+export const CARDANO_ADA = 'cardano:ada';
 
 /** What preparing a coupling needs. The escrow, the capacity, and the exchange are injected: an
  *  e2e supplies stubs to hold the LP constant, and a real run supplies a live CES. */
@@ -80,11 +81,11 @@ function buildWalletProvider(deps: CouplingDeps) {
     },
     chainStateProvider: indexerChainStateProvider(endpoints.indexerHttpUrl, endpoints.indexerWsUrl),
     promptForCurrency: async (prices): Promise<CurrencySelectionResult> => {
-      const ada = prices.find((p) => p.price.currency.type === CARDANO);
+      const ada = prices.find((p) => p.price.currency.type === CARDANO_ADA);
       return ada ? { status: 'selected', exchangePrice: ada } : { status: 'no-eligible' };
     },
     confirmOffer: async () => ({ status: 'confirmed' }),
-    bridgelessPayers: { [CARDANO]: payer },
+    bridgelessPayers: { [CARDANO_ADA]: payer },
   };
   return createCapacityExchangeWalletProvider(config, deps.resolver);
 }

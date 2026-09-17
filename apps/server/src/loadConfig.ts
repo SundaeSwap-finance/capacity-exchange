@@ -10,8 +10,8 @@ import {
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import {
   loadPriceConfig,
+  type CapacityFormulas,
   type PeerConfig,
-  type RawPriceFormula,
   type SponsoredContract,
 } from './config/prices.js';
 import { parseAppEnv } from './config/env.js';
@@ -27,7 +27,7 @@ export interface AppConfig {
   otelEndpoint?: string;
   otelMetricExportIntervalMs?: number;
   endpoints: NetworkEndpoints;
-  priceFormulas: RawPriceFormula[];
+  priceFormulas: CapacityFormulas;
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
   peer?: PeerConfig;

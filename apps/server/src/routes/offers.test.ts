@@ -33,7 +33,7 @@ describe('POST /api/offers', () => {
   });
 
   it('returns 201 with a valid quote', async () => {
-    const quoteId = quoteService.createQuote(1000n, [
+    const quoteId = quoteService.createQuote('DUST', 1000n, [
       {
         amount: '100',
         currency: {
@@ -71,7 +71,7 @@ describe('POST /api/offers', () => {
   });
 
   it('rejects empty offerCurrency', async () => {
-    const quoteId = quoteService.createQuote(1000n, []);
+    const quoteId = quoteService.createQuote('DUST', 1000n, []);
     const res = await app.get().inject({
       method: 'POST',
       url: '/api/offers',
@@ -81,7 +81,7 @@ describe('POST /api/offers', () => {
   });
 
   it('returns 410 for expired quoteId', async () => {
-    const quoteId = quoteService.createQuote(1000n, []);
+    const quoteId = quoteService.createQuote('DUST', 1000n, []);
     const realDateNow = Date.now;
     Date.now = () => realDateNow() + 11_000;
     try {
