@@ -10,6 +10,7 @@ import {
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import {
   loadPriceConfig,
+  pricedAssets,
   type CapacityFormulas,
   type PeerConfig,
   type SponsoredContract,
@@ -19,21 +20,23 @@ import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
 
 export interface AppConfig {
-  networkId: NetworkId.NetworkId;
+  // Midnight-side fields are only present when `priceFormulas.DUST` is configured
+  // (see loadConfig.ts) — a server that only sells ADA capacity needs none of them.
+  networkId?: NetworkId.NetworkId;
   port: number;
   quoteTtlSeconds: number;
   offerTtlSeconds: number;
   otelServiceName?: string;
   otelEndpoint?: string;
   otelMetricExportIntervalMs?: number;
-  endpoints: NetworkEndpoints;
+  endpoints?: NetworkEndpoints;
   priceFormulas: CapacityFormulas;
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
   peer?: PeerConfig;
   quoteSecretFile: string;
-  walletConnection: WalletConnection;
-  walletStateStore: WalletStateStore;
+  walletConnection?: WalletConnection;
+  walletStateStore?: WalletStateStore;
   capacityExchangeUrls: string[];
   blockfrostApiKey?: string;
   blockfrostBaseUrl?: string;
@@ -50,11 +53,30 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   loadDotenv({ path: process.env.DOTENV_CONFIG_PATH });
   const logger = createServerLogger();
   const env = parseAppEnv();
-  const networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
-  const endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL });
-
   const priceConfig = loadPriceConfig(env.PRICE_CONFIG_FILE);
-  const wallet = await createWalletResources(env, networkId, logger);
+
+  // DUST is the only capacity asset this server can actually build/settle offers for
+  // today (see OfferService.buildOffer), so Midnight wallet setup is only required
+  // when a server prices DUST at all.
+  const dustPriced = pricedAssets(priceConfig.priceFormulas).includes('DUST');
+  if (dustPriced && !env.MIDNIGHT_NETWORK) {
+    throw new Error('MIDNIGHT_NETWORK is required because priceFormulas.DUST is configured');
+  }
+  if (dustPriced && !env.WALLET_STATE_DIR) {
+    throw new Error('WALLET_STATE_DIR is required because priceFormulas.DUST is configured');
+  }
+
+  let networkId: NetworkId.NetworkId | undefined;
+  let endpoints: NetworkEndpoints | undefined;
+  let wallet:
+    { walletConnection: WalletConnection; walletStateStore: WalletStateStore } | undefined;
+  // Gated on `dustPriced`, not just MIDNIGHT_NETWORK's presence, so an ADA-only
+  // server never needs a wallet even if that var happens to be set.
+  if (dustPriced && env.MIDNIGHT_NETWORK) {
+    networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
+    endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL });
+    wallet = await createWalletResources(env, networkId, logger);
+  }
 
   const config: AppConfig = {
     networkId,
@@ -70,8 +92,8 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,
     peer: priceConfig.peer,
-    walletConnection: wallet.walletConnection,
-    walletStateStore: wallet.walletStateStore,
+    walletConnection: wallet?.walletConnection,
+    walletStateStore: wallet?.walletStateStore,
     blockfrostApiKey: env.BLOCKFROST_API_KEY,
     blockfrostBaseUrl: env.BLOCKFROST_BASE_URL,
     cardanoServerAddress: env.CARDANO_SERVER_ADDRESS,
