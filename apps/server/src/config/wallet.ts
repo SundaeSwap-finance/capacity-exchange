@@ -35,10 +35,12 @@ async function resolveWalletSeedHex(
   }
   // Only called from createWalletResources, which loadConfig.ts only invokes once
   // MIDNIGHT_NETWORK is confirmed present.
-  if (!env.MIDNIGHT_NETWORK) {
+  const network = env.MIDNIGHT_NETWORK;
+
+  if (!network) {
     throw new Error('MIDNIGHT_NETWORK is required to resolve a wallet seed');
   }
-  const network = env.MIDNIGHT_NETWORK;
+
   const secretId = env.WALLET_MNEMONIC_ARN ?? env.WALLET_MNEMONIC_SECRET_NAME;
   if (secretId) {
     log.info('Loading wallet mnemonic from AWS Secrets Manager');
