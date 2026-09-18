@@ -108,4 +108,22 @@ describe('loadConfig — optional Midnight configuration', () => {
     expect(config.endpoints).toBeDefined();
     expect(createWalletResources).toHaveBeenCalledOnce();
   });
+
+  it(
+    'does not attempt wallet setup for an ADA-only server even if MIDNIGHT_NETWORK ' +
+      'happens to be set, and does not require WALLET_STATE_DIR in that case',
+    async () => {
+      // Regression: was gated on env.MIDNIGHT_NETWORK alone, so this used to throw.
+      process.env.MIDNIGHT_NETWORK = 'undeployed';
+      vi.mocked(loadPriceConfig).mockReturnValue(ADA_ONLY);
+
+      const { config } = await loadConfig();
+
+      expect(config.networkId).toBeUndefined();
+      expect(config.endpoints).toBeUndefined();
+      expect(config.walletConnection).toBeUndefined();
+      expect(config.walletStateStore).toBeUndefined();
+      expect(createWalletResources).not.toHaveBeenCalled();
+    },
+  );
 });

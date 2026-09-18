@@ -70,7 +70,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   let endpoints: NetworkEndpoints | undefined;
   let wallet:
     { walletConnection: WalletConnection; walletStateStore: WalletStateStore } | undefined;
-  if (env.MIDNIGHT_NETWORK) {
+  // Gated on `dustPriced`, not just MIDNIGHT_NETWORK's presence, so an ADA-only
+  // server never needs a wallet even if that var happens to be set.
+  if (dustPriced && env.MIDNIGHT_NETWORK) {
     networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
     endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL });
     wallet = await createWalletResources(env, networkId, logger);
