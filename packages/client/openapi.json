@@ -41,22 +41,64 @@
                       ],
                       "properties": {
                         "network": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "node_url": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "node_ws_url": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "indexer_url": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "indexer_ws_url": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "proof_server_url": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       }
                     }
@@ -161,6 +203,12 @@
                               "enum": [
                                 "ko"
                               ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
+                              ]
                             }
                           ]
                         },
@@ -187,6 +235,12 @@
                               "type": "string",
                               "enum": [
                                 "ko"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
                               ]
                             }
                           ]
@@ -266,6 +320,12 @@
                               "enum": [
                                 "ko"
                               ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
+                              ]
                             }
                           ]
                         },
@@ -292,6 +352,12 @@
                               "type": "string",
                               "enum": [
                                 "ko"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
                               ]
                             }
                           ]
@@ -371,6 +437,12 @@
                               "enum": [
                                 "ko"
                               ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
+                              ]
                             }
                           ]
                         },
@@ -397,6 +469,12 @@
                               "type": "string",
                               "enum": [
                                 "ko"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
                               ]
                             }
                           ]
@@ -1189,7 +1267,14 @@
                           "type": "number"
                         },
                         "network": {
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       }
                     },
@@ -1223,6 +1308,12 @@
                                   "type": "string",
                                   "enum": [
                                     "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
                                   ]
                                 }
                               ]
