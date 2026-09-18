@@ -1,0 +1,17 @@
+# Wallets. `init` and `mint` write real signing keys and a minting policy here.
+# Matched by extension as well as by directory, since --caller-wallet and
+# --simulated-ces-wallet can point anywhere.
+*.skey
+*.vkey
+*.addr
+policy.script
+caller/
+simulated-ces/
+recipient/
+
+# Work directory: drafts, quotes, offers, protocol params, signed transactions.
+.ces-fund/
+*.draft.tx
+*.nested.tx
+*.signed.tx
+*.nested.tx.signed
