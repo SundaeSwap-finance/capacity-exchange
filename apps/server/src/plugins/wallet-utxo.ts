@@ -17,9 +17,7 @@ export default fp(async (fastify: FastifyInstance) => {
   if (!walletConnection || !walletStateStore) {
     fastify.decorate('walletService', null);
     fastify.decorate('utxoService', null);
-    fastify.log.debug(
-      'WalletService/UtxoService not configured (no Midnight network configured)',
-    );
+    fastify.log.debug('WalletService/UtxoService not configured (no Midnight network configured)');
     return;
   }
 

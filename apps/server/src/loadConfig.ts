@@ -68,7 +68,8 @@ export async function loadConfig(): Promise<ServerBootstrap> {
 
   let networkId: NetworkId.NetworkId | undefined;
   let endpoints: NetworkEndpoints | undefined;
-  let wallet: { walletConnection: WalletConnection; walletStateStore: WalletStateStore } | undefined;
+  let wallet:
+    { walletConnection: WalletConnection; walletStateStore: WalletStateStore } | undefined;
   if (env.MIDNIGHT_NETWORK) {
     networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
     endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL });
