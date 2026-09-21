@@ -182,8 +182,13 @@ export interface SpliceResult {
   declaredReferenceInputs: TxInput[];
 }
 
-/** A vkey witness is a 32-byte key plus a 64-byte signature, with CBOR overhead. */
-const VKEY_WITNESS_BYTES = 102;
+/** Bytes vkey witnesses add to an unwitnessed tx: 101 each, plus 5 once for the set wrapper. */
+const VKEY_WITNESS_BYTES = 101;
+const VKEY_WITNESS_SET_BYTES = 5;
+
+export function vkeyWitnessBytes(witnessCount: number): number {
+  return witnessCount === 0 ? 0 : witnessCount * VKEY_WITNESS_BYTES + VKEY_WITNESS_SET_BYTES;
+}
 
 export function spliceOffer(params: SpliceParams): SpliceResult {
   const { parent, sub, price, resolve, txFeeFixed, txFeePerByte, witnessCount } = params;
@@ -207,7 +212,7 @@ export function spliceOffer(params: SpliceParams): SpliceResult {
     throw new Error('Bundle does not balance after splicing; refusing to continue');
   }
 
-  const signedSizeBytes = encode(parent.items).length + witnessCount * VKEY_WITNESS_BYTES;
+  const signedSizeBytes = encode(parent.items).length + vkeyWitnessBytes(witnessCount);
   const minFee = minFeeFor(signedSizeBytes, txFeeFixed, txFeePerByte);
   if (fee < minFee) {
     throw new Error(

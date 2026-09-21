@@ -20,7 +20,7 @@ import {
   toBigInt,
 } from './codec.js';
 import { buildSubTransaction, hashBody, minUtxoLovelace } from './subtx.js';
-import { deductPrice, spliceOffer, verifyOffer } from './splice.js';
+import { deductPrice, spliceOffer, verifyOffer, vkeyWitnessBytes } from './splice.js';
 import { decodeBech32Address } from '../ces/simulate.js';
 import { assertExactlyOneMode } from '../commands/offer.js';
 import { unitToCliAsset } from '../cardano/value.js';
@@ -215,6 +215,21 @@ describe('splice', () => {
     });
     // Tag 258 is the set wrapper; d9 0102 is its CBOR head.
     expect(encodeTx(result.parent)).toContain('17d9010281');
+  });
+
+  it('counts the bytes a vkey witness really adds, so the fee covers the signed size', () => {
+    // Measured against cbor2 rather than assumed: an under-count here silently produces a
+    // bundle the node rejects for too low a fee.
+    const witness = [new Uint8Array(32).fill(1), new Uint8Array(64).fill(2)];
+    const size = (n: number) => {
+      const wits = n === 0 ? new Map() : new Map([[0, asSet(Array.from({ length: n }, () => witness))]]);
+      return encode([parentDraft().body, wits, null]).length;
+    };
+    const unwitnessed = size(0);
+    expect(vkeyWitnessBytes(0)).toBe(0);
+    for (const n of [1, 2, 3, 5]) {
+      expect(vkeyWitnessBytes(n)).toBe(size(n) - unwitnessed);
+    }
   });
 
   it('refuses when the exchange under-pads and the fee falls short', () => {
