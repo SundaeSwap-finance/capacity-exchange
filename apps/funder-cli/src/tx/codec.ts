@@ -149,7 +149,10 @@ export interface TxOutput {
   /** Raw address bytes, kept as-is so we never re-encode bech32 we did not parse. */
   address: Uint8Array;
   value: Value;
-  /** Anything beyond address+value (datum, script ref) is preserved verbatim. */
+  /**
+   * Anything beyond address+value (datum, script ref) is preserved verbatim: the trailing
+   * items of an array output, or the whole map of a Babbage map output.
+   */
   rest?: unknown;
 }
 
@@ -204,8 +207,19 @@ export function decodeOutput(raw: unknown): TxOutput {
   return { address: address as Uint8Array, value: decodeValue(value), rest: rest.length ? rest : undefined };
 }
 
-/** Emits the Alonzo-style array form, which is what cardano-cli produces for simple outputs. */
+/**
+ * Re-emits an output in the form it was decoded from: a map output keeps its map (so its
+ * datum, script ref and key ordering survive), and anything else becomes the Alonzo-style
+ * array, which is what cardano-cli produces for simple outputs.
+ */
 export function encodeOutput(output: TxOutput): unknown {
+  if (output.rest instanceof Map) {
+    // Copying preserves key order, and re-setting 0 and 1 keeps them in their original slots.
+    const map = new Map(output.rest as Map<number, unknown>);
+    map.set(0, output.address);
+    map.set(1, encodeValue(output.value));
+    return map;
+  }
   const base = [output.address, encodeValue(output.value)];
   return Array.isArray(output.rest) ? [...base, ...output.rest] : base;
 }

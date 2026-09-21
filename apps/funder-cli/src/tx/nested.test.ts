@@ -11,6 +11,7 @@ import {
   BODY_SUB_TRANSACTIONS,
   bytesToHex,
   type CborMap,
+  decodeOutput,
   decodeTx,
   encodeInput,
   encodeOutput,
@@ -71,6 +72,25 @@ describe('codec', () => {
     const hex = encodeTx(parentDraft());
     expect(encodeTx(decodeTx(hex))).toBe(hex);
     expect(() => assertRoundTrip(hex)).not.toThrow();
+  });
+
+  it('re-emits a Babbage map output as a map, keeping its datum and script ref', () => {
+    // A map output carrying a multiasset value (1), an inline datum (2) and a script ref (3).
+    const raw = new Map<number, unknown>([
+      [0, ADDR],
+      [
+        1,
+        [
+          1_180_000n,
+          new Map([[hexToBytes(POLICY), new Map([[hexToBytes(Buffer.from('tokenA').toString('hex')), 100_000_000n]])]]),
+        ],
+      ],
+      [2, [1, new Tag(24, hexToBytes('d87980'))]],
+      [3, new Tag(24, hexToBytes('820158200102'))],
+    ]);
+    const reencoded = encodeOutput(decodeOutput(raw));
+    expect(reencoded).toBeInstanceOf(Map);
+    expect(bytesToHex(encode(reencoded))).toBe(bytesToHex(encode(raw)));
   });
 
   it('normalises CBOR integers that decode as number', () => {
