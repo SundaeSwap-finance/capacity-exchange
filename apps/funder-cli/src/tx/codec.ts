@@ -10,13 +10,31 @@ export const BODY_MINT = 9;
 export const BODY_REFERENCE_INPUTS = 18;
 export const BODY_SUB_TRANSACTIONS = 23;
 
-/** Body keys a funding sub-transaction has no business using. */
+/**
+ * Body keys a funding sub-transaction has no business using, per `sub_transaction_body` in
+ * eras/dijkstra/impl/cddl/data/dijkstra.cddl. Donation (22) and direct deposits (25) matter
+ * most: both move lovelace where `computeBalance` cannot see it. The validity interval (3, 8)
+ * is allowed on purpose — it is how an exchange expires an offer rather than hogging its UTxO.
+ */
 export const FORBIDDEN_SUB_TX_KEYS: Array<[number, string]> = [
+  [2, 'a fee'],
   [4, 'certificates'],
   [5, 'withdrawals'],
   [9, 'mint'],
+  [11, 'a script data hash'],
+  [13, 'collateral inputs'],
+  [14, 'guards'],
+  [16, 'a collateral return'],
+  [17, 'total collateral'],
   [19, 'voting procedures'],
   [20, 'proposal procedures'],
+  [21, 'a treasury value'],
+  [22, 'a treasury donation'],
+  [23, 'nested sub-transactions'],
+  [24, 'required top-level guards'],
+  [25, 'direct deposits'],
+  [26, 'account balance intervals'],
+  [27, 'starting account balance intervals'],
 ];
 
 export type CborMap = Map<number, unknown>;

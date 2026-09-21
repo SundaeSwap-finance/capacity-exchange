@@ -182,6 +182,36 @@ describe('verifyOffer', () => {
     sub.body.set(5, new Map()); // withdrawals
     expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(/withdrawals/);
   });
+
+  const REWARD_ACCOUNT = new Uint8Array(29).fill(4);
+  const CREDENTIAL = [0, new Uint8Array(28).fill(3)];
+
+  it.each([
+    [2, 'a fee', 0n],
+    [13, 'collateral inputs', asSet([encodeInput(CES_IN)])],
+    [14, 'guards', asSet([new Uint8Array(28).fill(3)])],
+    [23, 'nested sub-transactions', asSet([offer().items])],
+    // The three below are what `sub_transaction_body` actually permits and `computeBalance`
+    // cannot see: 22 and 25 move lovelace without touching an output, and 24 constrains the
+    // caller's own transaction.
+    [22, 'a treasury donation', 1_000_000n],
+    [24, 'required top-level guards', new Map([[CREDENTIAL, null]])],
+    [25, 'direct deposits', new Map([[REWARD_ACCOUNT, 1_000_000n]])],
+    [26, 'account balance intervals', new Map([[REWARD_ACCOUNT, [0n, null]]])],
+  ])('rejects an offer carrying body key %i (%s)', (key, label, value) => {
+    const sub = offer();
+    sub.body.set(key as number, value);
+    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(String(label));
+  });
+
+  it.each([
+    [3, 'a time-to-live'],
+    [8, 'a validity interval start'],
+  ])('accepts an offer bounded by body key %i (%s), which is how an offer expires', (key) => {
+    const sub = offer();
+    sub.body.set(key, 100n);
+    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).not.toThrow();
+  });
 });
 
 describe('splice', () => {
