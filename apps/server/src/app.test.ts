@@ -4,11 +4,8 @@ import { buildApp } from './app.js';
 import type { AppConfig } from './loadConfig.js';
 
 /**
- * A server config with every Midnight-side field absent — no `networkId`,
- * `endpoints`, `walletConnection`, or `walletStateStore` — the shape `loadConfig()`
- * now produces when `MIDNIGHT_NETWORK` isn't set and only `ADA` is priced. This
- * builds the *real* app (no mocks) to prove the whole plugin chain tolerates it,
- * not just the pieces this branch touched directly.
+ * No `midnight` field — this is what a real ADA-only server looks like. Builds
+ * the actual app, no mocks, to prove the whole plugin chain handles it.
  */
 const ADA_ONLY_CONFIG: AppConfig = {
   port: 0,

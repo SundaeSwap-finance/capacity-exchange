@@ -12,9 +12,9 @@ declare module 'fastify' {
 
 // TODO: Wrt wallet and offer, we can split-up this plugin later
 export default fp(async (fastify: FastifyInstance) => {
-  const { walletConnection, walletStateStore, offerTtlSeconds } = fastify.config;
+  const { midnight, offerTtlSeconds } = fastify.config;
 
-  if (!walletConnection || !walletStateStore) {
+  if (!midnight) {
     fastify.decorate('walletService', null);
     fastify.decorate('utxoService', null);
     fastify.log.debug('WalletService/UtxoService not configured (no Midnight network configured)');
@@ -25,7 +25,11 @@ export default fp(async (fastify: FastifyInstance) => {
     throw new Error("UtxoService requires ChainStateService to be init'd first");
   }
 
-  const walletService = new WalletService(walletConnection, fastify.log, walletStateStore);
+  const walletService = new WalletService(
+    midnight.walletConnection,
+    fastify.log,
+    midnight.walletStateStore,
+  );
   await walletService.start();
 
   const utxoService = new UtxoService(

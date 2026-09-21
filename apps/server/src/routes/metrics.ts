@@ -33,7 +33,7 @@ const metricsRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
         name: packageName,
         version: packageVersion,
         uptime: process.uptime(),
-        network: fastify.config.networkId ?? null,
+        network: fastify.config.midnight?.networkId ?? null,
       },
       health: {
         wallet: walletSyncState,

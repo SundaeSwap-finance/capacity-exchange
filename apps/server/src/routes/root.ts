@@ -8,12 +8,12 @@ const rootRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       name: packageName,
       version: packageVersion,
       env: {
-        network: fastify.config.networkId ?? null,
-        node_url: fastify.config.endpoints?.nodeUrl ?? null,
-        node_ws_url: fastify.config.endpoints?.nodeUrl ?? null,
-        indexer_url: fastify.config.endpoints?.indexerHttpUrl ?? null,
-        indexer_ws_url: fastify.config.endpoints?.indexerWsUrl ?? null,
-        proof_server_url: fastify.config.endpoints?.proofServerUrl ?? null,
+        network: fastify.config.midnight?.networkId ?? null,
+        node_url: fastify.config.midnight?.endpoints.nodeUrl ?? null,
+        node_ws_url: fastify.config.midnight?.endpoints.nodeUrl ?? null,
+        indexer_url: fastify.config.midnight?.endpoints.indexerHttpUrl ?? null,
+        indexer_ws_url: fastify.config.midnight?.endpoints.indexerWsUrl ?? null,
+        proof_server_url: fastify.config.midnight?.endpoints.proofServerUrl ?? null,
       },
     };
   });

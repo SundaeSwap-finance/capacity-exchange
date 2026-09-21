@@ -77,10 +77,7 @@ describe('loadConfig — optional Midnight configuration', () => {
 
     const { config } = await loadConfig();
 
-    expect(config.networkId).toBeUndefined();
-    expect(config.endpoints).toBeUndefined();
-    expect(config.walletConnection).toBeUndefined();
-    expect(config.walletStateStore).toBeUndefined();
+    expect(config.midnight).toBeUndefined();
     expect(createWalletResources).not.toHaveBeenCalled();
   });
 
@@ -104,8 +101,8 @@ describe('loadConfig — optional Midnight configuration', () => {
 
     const { config } = await loadConfig();
 
-    expect(config.networkId).toBeDefined();
-    expect(config.endpoints).toBeDefined();
+    expect(config.midnight?.networkId).toBeDefined();
+    expect(config.midnight?.endpoints).toBeDefined();
     expect(createWalletResources).toHaveBeenCalledOnce();
   });
 
@@ -119,10 +116,7 @@ describe('loadConfig — optional Midnight configuration', () => {
 
       const { config } = await loadConfig();
 
-      expect(config.networkId).toBeUndefined();
-      expect(config.endpoints).toBeUndefined();
-      expect(config.walletConnection).toBeUndefined();
-      expect(config.walletStateStore).toBeUndefined();
+      expect(config.midnight).toBeUndefined();
       expect(createWalletResources).not.toHaveBeenCalled();
     },
   );

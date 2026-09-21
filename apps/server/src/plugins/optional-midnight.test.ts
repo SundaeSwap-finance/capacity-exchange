@@ -10,11 +10,9 @@ import offerPlugin from './offer.js';
 import type { AppConfig } from '../loadConfig.js';
 
 /**
- * Every field below is deliberately absent (no `networkId`, `endpoints`,
- * `walletConnection`, `walletStateStore`) — the shape `loadConfig()` produces
- * when `MIDNIGHT_NETWORK` isn't set. Each plugin here is expected to decorate
- * its service as `null` and continue, not throw, so the rest of `buildApp()`
- * still boots (see `app.test.ts` for the end-to-end version of this).
+ * No `midnight` field, same as when `MIDNIGHT_NETWORK` isn't set. Each plugin
+ * should set its service to `null` and move on, not throw, so `buildApp()`
+ * still boots (see `app.test.ts` for the full end-to-end check).
  */
 const NO_MIDNIGHT_CONFIG: AppConfig = {
   port: 0,

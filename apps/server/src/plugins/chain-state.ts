@@ -9,13 +9,16 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.config.endpoints) {
+  if (!fastify.config.midnight) {
     fastify.decorate('chainStateService', null);
     fastify.log.debug('ChainStateService not configured (no Midnight network configured)');
     return;
   }
 
-  const service = new ChainStateService(fastify.config.endpoints.indexerHttpUrl, fastify.log);
+  const service = new ChainStateService(
+    fastify.config.midnight.endpoints.indexerHttpUrl,
+    fastify.log,
+  );
   await service.start();
 
   fastify.decorate('chainStateService', service);
