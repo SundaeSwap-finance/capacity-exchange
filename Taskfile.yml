@@ -240,6 +240,12 @@ tasks:
     cmds:
       - bun run check-client
 
+  check-release:
+    desc: Check that changes to published packages come with a changeset
+    deps: [_build:install]
+    cmds:
+      - bun run check-release
+
   regenerate-client:
     desc: Regenerate client with latest schema from server
     deps: [_build:install, _build:server]
