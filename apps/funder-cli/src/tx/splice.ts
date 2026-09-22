@@ -9,6 +9,7 @@ import {
   BODY_OUTPUTS,
   BODY_REFERENCE_INPUTS,
   BODY_SUB_TRANSACTIONS,
+  bytesToHex,
   type DecodedTx,
   decodeInput,
   encodeInput,
@@ -104,15 +105,27 @@ function formatAssets(value: Value): string {
 }
 
 /**
- * Deducts the price from a parent output. The demo caller forwards everything in a single
- * output, so the payment necessarily comes out of what they were sending.
+ * Deducts the price from the caller's own change output. Matching on the address is the whole
+ * point: an output that merely happens to hold enough of the asset may belong to whoever the
+ * caller is paying, and billing them instead would be silent theft.
  */
-export function deductPrice(outputs: TxOutput[], price: Map<string, bigint>): { outputs: TxOutput[]; index: number } {
-  const index = outputs.findLastIndex((output) =>
-    [...price].every(([unit, qty]) => (output.value.assets.get(unit) ?? 0n) >= qty)
-  );
+export function deductPrice(
+  outputs: TxOutput[],
+  price: Map<string, bigint>,
+  callerAddress: Uint8Array
+): { outputs: TxOutput[]; index: number } {
+  const caller = bytesToHex(callerAddress);
+  const covers = (output: TxOutput): boolean =>
+    [...price].every(([unit, qty]) => (output.value.assets.get(unit) ?? 0n) >= qty);
+  const index = outputs.findLastIndex((output) => bytesToHex(output.address) === caller && covers(output));
   if (index < 0) {
-    throw new Error('No parent output holds enough of the payment asset to cover the price');
+    const elsewhere = outputs.some(covers);
+    throw new Error(
+      elsewhere
+        ? 'No output belonging to the caller holds enough of the payment asset. The only output that ' +
+            'does belongs to someone else, and paying the exchange out of it would spend their tokens.'
+        : 'No parent output holds enough of the payment asset to cover the price'
+    );
   }
   const updated = outputs.map((output, i) =>
     i === index ? { ...output, value: subValue(output.value, { lovelace: 0n, assets: price }) } : output
@@ -167,6 +180,8 @@ export interface SpliceParams {
   txFeePerByte: bigint;
   /** Bytes each expected vkey witness adds, so the fee covers the signed size. */
   witnessCount: number;
+  /** Raw address bytes of the caller, so the price comes out of their change and no one else's. */
+  callerAddress: Uint8Array;
 }
 
 export interface SpliceResult {
@@ -191,12 +206,12 @@ export function vkeyWitnessBytes(witnessCount: number): number {
 }
 
 export function spliceOffer(params: SpliceParams): SpliceResult {
-  const { parent, sub, price, resolve, txFeeFixed, txFeePerByte, witnessCount } = params;
+  const { parent, sub, price, resolve, txFeeFixed, txFeePerByte, witnessCount, callerAddress } = params;
 
   const parentInputs = readInputs(parent.body, BODY_INPUTS);
   const { released, taken } = verifyOffer(sub, price, parentInputs, resolve);
 
-  const { outputs, index } = deductPrice(readOutputs(parent.body, BODY_OUTPUTS), price);
+  const { outputs, index } = deductPrice(readOutputs(parent.body, BODY_OUTPUTS), price, callerAddress);
   parent.body.set(BODY_OUTPUTS, outputs.map(encodeOutput));
   parent.body.set(BODY_SUB_TRANSACTIONS, asSet([sub.items]));
   const declaredReferenceInputs = declareSubTransactionInputs(parent, [sub]);

@@ -15,9 +15,18 @@ import {
   type TxInput,
   writeEnvelope,
 } from '../tx/codec.js';
+import { decodeBech32Address } from '../ces/simulate.js';
 import { spliceOffer } from '../tx/splice.js';
 import { decodeSubTransaction } from '../tx/subtx.js';
-import { ARTIFACTS, readJson, type StoredOffer, type StoredQuote, withOfferSource, workPath } from './state.js';
+import {
+  ARTIFACTS,
+  readJson,
+  type Selection,
+  type StoredOffer,
+  type StoredQuote,
+  withOfferSource,
+  workPath,
+} from './state.js';
 
 /**
  * Merges the exchange's partial transaction into the caller's, balances the bundle, and
@@ -27,12 +36,14 @@ export interface SpliceOptions {
   draft: string;
   quote: string;
   offer: string;
+  selection: string;
 }
 
 export function runSplice(config: Config, options: SpliceOptions): void {
   const cli = new CardanoCli(config);
   const quote = readJson<StoredQuote>(options.quote, 'quote');
   const offer = readJson<StoredOffer>(options.offer, 'offer');
+  const selection = readJson<Selection>(options.selection, 'UTxO selection');
 
   const draftPath = options.draft;
   const envelope = readEnvelope(draftPath);
@@ -75,6 +86,7 @@ export function runSplice(config: Config, options: SpliceOptions): void {
     txFeeFixed: pp.txFeeFixed,
     txFeePerByte: pp.txFeePerByte,
     witnessCount: 1,
+    callerAddress: decodeBech32Address(selection.address),
   });
 
   check(
@@ -84,7 +96,7 @@ export function runSplice(config: Config, options: SpliceOptions): void {
   check('splice', 'no sub-transaction input belongs to the caller');
   check('splice', 'no certs, withdrawals, mint, votes or proposals');
   step('splice', `released = ${formatAda(result.released)} ADA`);
-  step('splice', `rebuilt caller output #${result.paymentOutputIndex} to pay the price`);
+  step('splice', `rebuilt caller change output #${result.paymentOutputIndex} to pay the price`);
   step('splice', 'inserted sub-transaction at body key 23');
   if (result.declaredReferenceInputs.length > 0) {
     const refs = result.declaredReferenceInputs.map((i) => `${i.txHash.slice(0, 6)}\u2026#${i.index}`);

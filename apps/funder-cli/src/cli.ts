@@ -92,6 +92,7 @@ program
   .requiredOption('--draft <path>', 'parent.draft.tx written by `build`')
   .requiredOption('--quote <path>', 'quote.json written by `quote`')
   .requiredOption('--offer <path>', 'offer.json written by `offer`')
+  .requiredOption('--selection <path>', 'selection.json, for the address the price is paid from')
   .action((opts) => runSplice(config(), opts));
 
 program

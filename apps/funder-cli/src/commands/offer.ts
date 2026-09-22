@@ -59,7 +59,12 @@ export async function runOffer(config: Config, quotePath: string, options: Offer
   writeJson(offerPath, { ...response, source } satisfies StoredOffer);
   wrote('offer', offerPath);
   const draftPath = workPath(config, ARTIFACTS.draft);
-  step('offer', `next: ces-fund splice --draft ${draftPath} --quote ${quotePath} --offer ${offerPath}`);
+  const selectionPath = workPath(config, ARTIFACTS.selection);
+  step(
+    'offer',
+    `next: ces-fund splice --draft ${draftPath} --quote ${quotePath} --offer ${offerPath} ` +
+      `--selection ${selectionPath}`
+  );
 }
 
 function runSimulated(config: Config, options: OfferOptions, quote: StoredQuote): OfferResponse {

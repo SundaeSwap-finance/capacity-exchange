@@ -32,6 +32,14 @@ const UNIT = `${POLICY}${Buffer.from('tokenA').toString('hex')}`;
 const CALLER_IN = { txHash: 'a1'.repeat(32), index: 0 };
 const CES_IN = { txHash: '3f'.repeat(32), index: 0 };
 const ADDR = hexToBytes('60cd20fc2b914b2c395d53e13c36799bce3d40fc5a8092ee3064065042');
+/** The caller and the party they are paying are different people, and must be different keys. */
+const CALLER_ADDR = hexToBytes(`60${'ab'.repeat(28)}`);
+const RECIPIENT_ADDR = hexToBytes(`60${'cd'.repeat(28)}`);
+const SENT = 98_000_000n;
+const CHANGE_TOKENS = 2_000_000n;
+const CHANGE_LOVELACE = 1_025_780n;
+/** Comfortably over the minimum for the two-output draft, which is 183,585. */
+const FEE = 184_000n;
 const SIGNING_KEY = new Uint8Array(32).fill(7);
 const UTXO_COST_PER_BYTE = 4310n;
 const TX_FEE_FIXED = 155_381n;
@@ -44,19 +52,31 @@ const chain = new Map<string, Value>([
 const resolve = (i: { txHash: string; index: number }): Value =>
   chain.get(`${i.txHash}#${i.index}`) ?? { lovelace: 0n, assets: new Map() };
 
+/**
+ * What `build` now produces: the recipient's output carrying the caller's own lovelace, and a
+ * change output back to the caller whose lovelace the exchange has yet to release. It does not
+ * balance on its own, and is not meant to.
+ */
 function parentDraft() {
   const body: CborMap = new Map<number, unknown>([
     [BODY_INPUTS, asSet([encodeInput(CALLER_IN)])],
     [
       BODY_OUTPUTS,
-      [encodeOutput({ address: ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) } })],
+      [
+        encodeOutput({ address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, SENT]]) } }),
+        encodeOutput({
+          address: CALLER_ADDR,
+          value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS]]) },
+        }),
+      ],
     ],
     [BODY_FEE, 0n],
   ]);
   return { items: [body, new Map(), null], body };
 }
 
-function offer(released = 181_381n, price = new Map([[UNIT, 1_001_995n]])) {
+/** The release must now cover the fee *and* the change output the caller could not fund. */
+function offer(released = FEE + CHANGE_LOVELACE, price = new Map([[UNIT, 1_001_995n]])) {
   return buildSubTransaction({
     input: CES_IN,
     inputValue: resolve(CES_IN),
@@ -135,6 +155,22 @@ describe('sub-transaction', () => {
     expect(resolve(CES_IN).lovelace - produced).toBe(181_381n);
   });
 
+  it('balances the bundle once the change output it funds is accounted for', () => {
+    const result = spliceOffer({
+      parent: parentDraft(),
+      sub: offer(),
+      price: new Map([[UNIT, 1_001_995n]]),
+      resolve,
+      txFeeFixed: TX_FEE_FIXED,
+      txFeePerByte: TX_FEE_PER_BYTE,
+      witnessCount: 1,
+      callerAddress: CALLER_ADDR,
+    });
+    // released = fee + the caller's unfunded change output
+    expect(result.released).toBe(result.fee + CHANGE_LOVELACE);
+    expect(result.balance.balances).toBe(true);
+  });
+
   it('refuses to build when the exchange UTxO is too small', () => {
     expect(() =>
       buildSubTransaction({
@@ -164,7 +200,7 @@ describe('verifyOffer', () => {
 
   it('accepts a well-formed offer', () => {
     const result = verifyOffer(offer(), price, [CALLER_IN], resolve);
-    expect(result.released).toBe(181_381n);
+    expect(result.released).toBe(FEE + CHANGE_LOVELACE);
   });
 
   it('rejects an offer that takes more than the quoted price', () => {
@@ -227,9 +263,11 @@ describe('splice', () => {
       txFeeFixed: TX_FEE_FIXED,
       txFeePerByte: TX_FEE_PER_BYTE,
       witnessCount: 1,
+      callerAddress: CALLER_ADDR,
     });
     expect(result.balance.balances).toBe(true);
-    expect(result.fee).toBe(181_381n);
+    // The release covers the fee *and* the change output the caller could not fund.
+    expect(result.fee).toBe(FEE);
     expect(result.parent.body.get(BODY_SUB_TRANSACTIONS)).toBeInstanceOf(Tag);
     expect(result.surplus).toBeGreaterThanOrEqual(0n);
   });
@@ -243,6 +281,7 @@ describe('splice', () => {
       txFeeFixed: TX_FEE_FIXED,
       txFeePerByte: TX_FEE_PER_BYTE,
       witnessCount: 1,
+      callerAddress: CALLER_ADDR,
     });
     // Tag 258 is the set wrapper; d9 0102 is its CBOR head.
     expect(encodeTx(result.parent)).toContain('17d9010281');
@@ -273,20 +312,34 @@ describe('splice', () => {
         txFeeFixed: TX_FEE_FIXED,
         txFeePerByte: TX_FEE_PER_BYTE,
         witnessCount: 1,
+        callerAddress: CALLER_ADDR,
       })
     ).toThrow(/below the .* minimum/);
   });
 
-  it('takes the price out of an output that holds the asset', () => {
-    const outputs = [{ address: ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) } }];
-    const { outputs: updated, index } = deductPrice(outputs, price);
-    expect(index).toBe(0);
-    expect(updated[0].value.assets.get(UNIT)).toBe(98_998_005n);
+  it("takes the price out of the caller's change, not the recipient's output", () => {
+    const outputs = [
+      { address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, SENT]]) } },
+      { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS]]) } },
+    ];
+    const { outputs: updated, index } = deductPrice(outputs, price, CALLER_ADDR);
+    expect(index).toBe(1);
+    expect(updated[1].value.assets.get(UNIT)).toBe(CHANGE_TOKENS - 1_001_995n);
+    // The person being paid is untouched.
+    expect(updated[0].value.assets.get(UNIT)).toBe(SENT);
+  });
+
+  it("refuses rather than billing the recipient when the caller's change cannot cover the price", () => {
+    const outputs = [
+      { address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) } },
+      { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, 1n]]) } },
+    ];
+    expect(() => deductPrice(outputs, price, CALLER_ADDR)).toThrow(/belongs to someone else/);
   });
 
   it('refuses when no output holds enough of the payment asset', () => {
-    const outputs = [{ address: ADDR, value: { lovelace: 1_180_000n, assets: new Map() } }];
-    expect(() => deductPrice(outputs, price)).toThrow(/No parent output/);
+    const outputs = [{ address: CALLER_ADDR, value: { lovelace: 1_180_000n, assets: new Map() } }];
+    expect(() => deductPrice(outputs, price, CALLER_ADDR)).toThrow(/No parent output/);
   });
 });
 

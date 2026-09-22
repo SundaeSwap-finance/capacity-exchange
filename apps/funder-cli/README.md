@@ -56,16 +56,20 @@ bun src/cli.ts mint --caller-wallet ./caller \
 # 3. show that the caller cannot pay a fee                    -> selection.json
 bun src/cli.ts balance --caller-wallet ./caller
 
-# 4. build the unbalanced parent and estimate its fee         -> parent.draft.tx
+# 4. build the unbalanced parent and work out the capacity    -> parent.draft.tx
+#    Send less than the whole holding: the exchange is paid in this token out of the
+#    caller's own change, so some has to stay behind.
 bun src/cli.ts build --caller-wallet ./caller \
   --selection .ces-fund/selection.json \
-  --send 100000000:<policyid><hexname> \
+  --send 98000000:<policyid><hexname> \
   --to $(cat ./recipient/payment.addr)
 
 # 5. price discovery across exchanges — a real HTTP call      -> quote.json
+#    The capacity asked for covers the fee AND the change output's minimum lovelace,
+#    which the caller cannot fund either.
 bun src/cli.ts quote --selection .ces-fund/selection.json \
   --ces-url https://ces-a.example --ces-url https://ces-b.example \
-  --fee-estimate <from step 4>
+  --fee-estimate <capacity from step 4>
 
 # 6. obtain the funding sub-transaction                       -> offer.json
 bun src/cli.ts offer .ces-fund/quote.json --simulate-ces \
@@ -74,7 +78,8 @@ bun src/cli.ts offer .ces-fund/quote.json --simulate-ces \
 # 7. verify, merge, balance                                   -> parent.nested.tx
 bun src/cli.ts splice --draft .ces-fund/parent.draft.tx \
   --quote .ces-fund/quote.json \
-  --offer .ces-fund/offer.json
+  --offer .ces-fund/offer.json \
+  --selection .ces-fund/selection.json
 
 # 8. sign, submit, confirm                             -> parent.nested.tx.signed
 bun src/cli.ts sign .ces-fund/parent.nested.tx --caller-wallet ./caller
@@ -123,6 +128,13 @@ The cryptography is real even in simulation, because it has to be: the node reje
 sub-transaction whose signature does not verify against its own body hash.
 
 ## How it works
+
+The caller's draft has two outputs: what they are sending, and change back to themselves.
+The price is always taken from that change output, matched by address, so paying the exchange
+never touches the tokens the recipient was promised. The caller cannot afford the change
+output's minimum lovelace either, so the draft leaves it unfunded and the exchange releases it
+alongside the fee. `build-raw` is given UTxO references rather than values, so it cannot object;
+the bundle is balanced once, by `splice`.
 
 A Dijkstra transaction body may carry `sub_transactions` at key 23, each one
 `[sub_transaction_body, witness_set, auxiliary_data/nil]`. A sub-transaction body has no fee
