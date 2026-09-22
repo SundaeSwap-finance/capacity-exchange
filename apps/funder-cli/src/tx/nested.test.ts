@@ -23,6 +23,7 @@ import { buildSubTransaction, hashBody, minUtxoLovelace } from './subtx.js';
 import { deductPrice, spliceOffer, verifyOffer, vkeyWitnessBytes } from './splice.js';
 import { decodeBech32Address } from '../ces/simulate.js';
 import { assertExactlyOneMode } from '../commands/offer.js';
+import { offerSourceLabel, parseOfferSource, signingKeyPath, walletDir, withOfferSource } from '../commands/state.js';
 import { unitToCliAsset } from '../cardano/value.js';
 import type { Value } from '../cardano/value.js';
 
@@ -286,6 +287,45 @@ describe('splice', () => {
   it('refuses when no output holds enough of the payment asset', () => {
     const outputs = [{ address: ADDR, value: { lovelace: 1_180_000n, assets: new Map() } }];
     expect(() => deductPrice(outputs, price)).toThrow(/No parent output/);
+  });
+});
+
+describe('wallet paths', () => {
+  it('resolves a wallet given either as a directory or as the key file itself', () => {
+    expect(signingKeyPath('wallets/caller')).toBe('wallets/caller/payment.skey');
+    expect(signingKeyPath('wallets/caller/payment.skey')).toBe('wallets/caller/payment.skey');
+    expect(walletDir('wallets/caller')).toBe('wallets/caller');
+    expect(walletDir('wallets/caller/payment.skey')).toBe('wallets/caller');
+  });
+
+  it('treats a bare key file as living in the current directory, not a truncated one', () => {
+    expect(walletDir('payment.skey')).toBe('.');
+  });
+});
+
+describe('offer provenance', () => {
+  it('round-trips a simulated offer through the envelope description', () => {
+    const description = withOfferSource('Ledger Cddl Format', { simulated: true });
+    expect(parseOfferSource(description)).toEqual({ simulated: true });
+    expect(offerSourceLabel(parseOfferSource(description))).toBe('[simulated CES]');
+  });
+
+  it('round-trips a real exchange, and never calls it simulated', () => {
+    const description = withOfferSource('Ledger Cddl Format', { simulated: false, url: 'https://ces.example' });
+    expect(parseOfferSource(description)).toEqual({ simulated: false, url: 'https://ces.example' });
+    expect(offerSourceLabel(parseOfferSource(description))).toBe('[CES https://ces.example]');
+  });
+
+  it('keeps whatever the description already said', () => {
+    expect(withOfferSource('Ledger Cddl Format', { simulated: true })).toContain('Ledger Cddl Format');
+    expect(withOfferSource('', { simulated: true })).toBe('offer from simulated CES');
+  });
+
+  it('says nothing when no source was recorded, rather than assuming one', () => {
+    expect(parseOfferSource('Ledger Cddl Format')).toBeUndefined();
+    expect(parseOfferSource(undefined)).toBeUndefined();
+    expect(withOfferSource('Ledger Cddl Format', undefined)).toBe('Ledger Cddl Format');
+    expect(offerSourceLabel(undefined)).toBeUndefined();
   });
 });
 

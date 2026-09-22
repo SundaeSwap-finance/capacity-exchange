@@ -13,6 +13,7 @@ import {
 } from '../tx/codec.js';
 import { showTransaction } from '../tx/show.js';
 import { decodeSubTransaction } from '../tx/subtx.js';
+import { offerSourceLabel, parseOfferSource } from './state.js';
 
 export interface ShowOptions {
   offline?: boolean;
@@ -20,10 +21,14 @@ export interface ShowOptions {
 
 /** Renders a nested transaction, including the sub-transactions stock tooling hides. */
 export function runShow(config: Config, file: string, options: ShowOptions): void {
-  const tx = decodeTx(readEnvelope(file).cborHex);
+  const envelope = readEnvelope(file);
+  const tx = decodeTx(envelope.cborHex);
+  // Whether an exchange was really contacted is recorded by `offer` and carried here by
+  // `splice`. If it is missing, say nothing rather than guess.
+  const subLabel = offerSourceLabel(parseOfferSource(envelope.description));
 
   if (options.offline) {
-    showTransaction(tx, undefined, { simulated: true });
+    showTransaction(tx, undefined, { subLabel });
     return;
   }
 
@@ -54,7 +59,7 @@ export function runShow(config: Config, file: string, options: ShowOptions): voi
   }
   showTransaction(tx, refs.every((r) => resolved.has(r)) ? resolve : undefined, {
     addresses,
-    simulated: true,
+    subLabel,
   });
 }
 

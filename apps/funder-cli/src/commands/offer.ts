@@ -4,7 +4,17 @@ import { CardanoCli, utxoRef } from '../cardano/cli.js';
 import type { Config } from '../config.js';
 import { assetLabel } from '../cardano/value.js';
 import { banner, formatAda, plain, step, wrote } from '../log.js';
-import { ARTIFACTS, readJson, signingKeyPath, type StoredQuote, walletDir, workPath, writeJson } from './state.js';
+import {
+  ARTIFACTS,
+  type OfferSource,
+  readJson,
+  signingKeyPath,
+  type StoredOffer,
+  type StoredQuote,
+  walletDir,
+  workPath,
+  writeJson,
+} from './state.js';
 
 export interface OfferOptions {
   simulateCes?: boolean;
@@ -43,7 +53,10 @@ export async function runOffer(config: Config, quotePath: string, options: Offer
   plain('response (shape matches CreateOfferResponse):');
   plain(JSON.stringify({ ...response, serializedTx: `${response.serializedTx.slice(0, 24)}…` }, null, 2));
   const offerPath = workPath(config, ARTIFACTS.offer);
-  writeJson(offerPath, response);
+  // The printout above is the response verbatim; `source` is our own note, so that later steps
+  // can say which mode produced this offer instead of assuming one.
+  const source: OfferSource = options.simulateCes ? { simulated: true } : { simulated: false, url: options.cesUrl! };
+  writeJson(offerPath, { ...response, source } satisfies StoredOffer);
   wrote('offer', offerPath);
   const draftPath = workPath(config, ARTIFACTS.draft);
   step('offer', `next: ces-fund splice --draft ${draftPath} --quote ${quotePath} --offer ${offerPath}`);

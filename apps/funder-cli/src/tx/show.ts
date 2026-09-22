@@ -21,8 +21,8 @@ import { decodeSubTransaction, type SubTransaction, subTransactionSigners } from
 export interface ShowLabels {
   /** Address bytes (hex) -> a human label such as "caller" or "CES". */
   addresses?: Map<string, string>;
-  /** Marks the sub-transaction as produced by the local stand-in rather than a real exchange. */
-  simulated?: boolean;
+  /** Provenance tag for each sub-transaction. Omitted when the source was never recorded. */
+  subLabel?: string;
 }
 
 function labelFor(address: Uint8Array, labels?: Map<string, string>): string {
@@ -72,7 +72,7 @@ export function showTransaction(tx: DecodedTx, resolve: ResolveInput | undefined
 
   subs.forEach((sub: SubTransaction, i: number) => {
     const signers = subTransactionSigners(sub.items).map((k) => short(k, 4));
-    const tag = labels.simulated ? '   [simulated CES]' : '';
+    const tag = labels.subLabel ? `   ${labels.subLabel}` : '';
     plain('');
     plain(
       `SUB-TRANSACTION ${i + 1}/${subs.length}        body ${short(sub.bodyHash, 6)}    ` +

@@ -3,7 +3,6 @@ import { CardanoCli } from '../cardano/cli.js';
 import type { Value } from '../cardano/value.js';
 import { assetLabel, emptyValue } from '../cardano/value.js';
 import type { Config } from '../config.js';
-import type { OfferResponse } from '../ces/client.js';
 import { check, formatAda, formatAsset, step, wrote } from '../log.js';
 import {
   assertRoundTrip,
@@ -18,7 +17,7 @@ import {
 } from '../tx/codec.js';
 import { spliceOffer } from '../tx/splice.js';
 import { decodeSubTransaction } from '../tx/subtx.js';
-import { ARTIFACTS, readJson, type StoredQuote, workPath } from './state.js';
+import { ARTIFACTS, readJson, type StoredOffer, type StoredQuote, withOfferSource, workPath } from './state.js';
 
 /**
  * Merges the exchange's partial transaction into the caller's, balances the bundle, and
@@ -33,7 +32,7 @@ export interface SpliceOptions {
 export function runSplice(config: Config, options: SpliceOptions): void {
   const cli = new CardanoCli(config);
   const quote = readJson<StoredQuote>(options.quote, 'quote');
-  const offer = readJson<OfferResponse>(options.offer, 'offer');
+  const offer = readJson<StoredOffer>(options.offer, 'offer');
 
   const draftPath = options.draft;
   const envelope = readEnvelope(draftPath);
@@ -95,7 +94,11 @@ export function runSplice(config: Config, options: SpliceOptions): void {
   check('splice', `min fee ${result.minFee} ≤ ${result.fee}  — padding sufficient (${result.surplus} surplus)`);
 
   const nestedPath = workPath(config, ARTIFACTS.nested);
-  writeEnvelope(nestedPath, { ...envelope, cborHex: encodeTx(result.parent) });
+  writeEnvelope(nestedPath, {
+    ...envelope,
+    description: withOfferSource(envelope.description, offer.source),
+    cborHex: encodeTx(result.parent),
+  });
   const bytes = Buffer.from(encodeTx(result.parent), 'hex').length;
   step('splice', `${bytes} bytes unsigned, ~${result.signedSizeBytes} signed`);
   wrote('splice', nestedPath);
