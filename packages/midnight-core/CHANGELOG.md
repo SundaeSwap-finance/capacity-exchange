@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-core
 
+## 2.1.0
+
+### Minor Changes
+
+- 22ea004: Support "inert" DUST wallets which contain no DUST and do no work. Useful for demos or tests.
+
 ## 2.0.0
 
 ### Major Changes
