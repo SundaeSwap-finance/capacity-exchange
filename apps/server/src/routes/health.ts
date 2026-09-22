@@ -14,8 +14,13 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     '/ready',
     ReadinessSchema,
     async (_request, reply): Promise<typeof ReadyResponse.static> => {
+      if (!fastify.config.midnight || !fastify.walletService) {
+        const disabled = { status: 'disabled' as const };
+        return { status: 'ok' as const, wallet: disabled, indexer: disabled };
+      }
+
       // Check that we can reach the config'd indexer
-      const indexerStatus = await checkIndexer(fastify.config.endpoints.indexerHttpUrl);
+      const indexerStatus = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
 
       // Check wallet sync status
       const walletStatus = fastify.walletService.syncState;

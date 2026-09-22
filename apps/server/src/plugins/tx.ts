@@ -4,17 +4,23 @@ import { TxService } from '../services/tx.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    txService: TxService;
+    txService: TxService | null;
   }
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  const { networkId, endpoints, walletConnection } = fastify.config;
+  const { midnight } = fastify.config;
+  if (!midnight) {
+    fastify.decorate('txService', null);
+    fastify.log.debug('TxService not configured (no Midnight network configured)');
+    return;
+  }
+
   const txService = new TxService(
-    networkId,
-    walletConnection.keys.shieldedSecretKeys,
-    walletConnection.keys.unshieldedKeystore.getAddress(),
-    endpoints.proofServerUrl,
+    midnight.networkId,
+    midnight.walletConnection.keys.shieldedSecretKeys,
+    midnight.walletConnection.keys.unshieldedKeystore.getAddress(),
+    midnight.endpoints.proofServerUrl,
   );
   fastify.decorate('txService', txService);
 });

@@ -7,6 +7,10 @@ const sponsorRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     Body: typeof SponsorRequest.static;
     Reply: typeof SponsorReply.static;
   }>('/sponsor', SponsorSchema, async (request, reply) => {
+    if (!fastify.sponsorService) {
+      return reply.notImplemented('Sponsorship is not configured on this server');
+    }
+
     const userTx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
       'signature',
       'proof',

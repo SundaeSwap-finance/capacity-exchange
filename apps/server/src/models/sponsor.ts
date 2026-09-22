@@ -17,6 +17,9 @@ export const SponsorSchema = {
     response: {
       200: SponsorResponse,
       422: ErrorResponse,
+      // Returned when sponsorship isn't configured on this server — e.g. an
+      // ADA-only server with no Midnight network.
+      501: ErrorResponse,
       500: ErrorResponse,
       503: ErrorResponse,
     },

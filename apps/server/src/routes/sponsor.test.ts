@@ -41,3 +41,19 @@ describe('POST /api/sponsor - input validation', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('POST /api/sponsor - without sponsorService configured', () => {
+  const app = useRouteTestApp({
+    decorations: { sponsorService: null },
+    routes: { plugin: sponsorRoutes, prefix: '/api' },
+  });
+
+  it('returns 501 when Midnight is not configured on this server', async () => {
+    const res = await app.get().inject({
+      method: 'POST',
+      url: '/api/sponsor',
+      payload: { provenTx: 'aa' },
+    });
+    expect(res.statusCode).toBe(501);
+  });
+});

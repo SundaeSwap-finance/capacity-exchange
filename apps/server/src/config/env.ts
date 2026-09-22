@@ -2,7 +2,8 @@ import { Value } from '@sinclair/typebox/value';
 import { Type, type Static } from '@sinclair/typebox';
 
 const AppEnvSchema = Type.Object({
-  MIDNIGHT_NETWORK: Type.String(),
+  // Required only if `priceFormulas.DUST` is configured; see loadConfig.ts.
+  MIDNIGHT_NETWORK: Type.Optional(Type.String()),
   WALLET_SEED_FILE: Type.Optional(Type.String()),
   WALLET_MNEMONIC_FILE: Type.Optional(Type.String()),
   WALLET_MNEMONIC_ARN: Type.Optional(Type.String()),
@@ -14,7 +15,8 @@ const AppEnvSchema = Type.Object({
   QUOTE_SECRET_FILE: Type.String(),
   OFFER_TTL_SECONDS: Type.Number(),
   PROOF_SERVER_URL: Type.Optional(Type.String()),
-  WALLET_STATE_DIR: Type.String(),
+  // Required only if `priceFormulas.DUST` is configured; see loadConfig.ts.
+  WALLET_STATE_DIR: Type.Optional(Type.String()),
   OTEL_SERVICE_NAME: Type.Optional(Type.String()),
   OTEL_EXPORTER_OTLP_ENDPOINT: Type.Optional(Type.String()),
   OTEL_METRIC_EXPORT_INTERVAL_MS: Type.Optional(Type.Number()),
