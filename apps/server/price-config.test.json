@@ -19,6 +19,17 @@
         "rateNumerator": "11",
         "rateDenominator": "1000"
       }
+    ],
+    "ADA": [
+      {
+        "currency": {
+          "type": "cardano:native",
+          "rawId": "ca301e55320b20409a1b0c554230d5b251d8490fcca870bdf52d654e746f6b656e41"
+        },
+        "basePrice": "101",
+        "rateNumerator": "11",
+        "rateDenominator": "1000"
+      }
     ]
   },
   "sponsorAll": false,

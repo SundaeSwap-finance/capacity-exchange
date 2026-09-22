@@ -1,0 +1,392 @@
+import { describe, expect, it } from 'vitest';
+import { encode, Tag } from 'cbor2';
+import { ed25519 } from '@noble/curves/ed25519.js';
+import {
+  asArray,
+  asSet,
+  assertRoundTrip,
+  BODY_FEE,
+  BODY_INPUTS,
+  BODY_OUTPUTS,
+  BODY_SUB_TRANSACTIONS,
+  bytesToHex,
+  type CborMap,
+  decodeOutput,
+  decodeTx,
+  encodeInput,
+  encodeOutput,
+  encodeTx,
+  hexToBytes,
+  toBigInt,
+} from './codec.js';
+import { buildSubTransaction, hashBody, minUtxoLovelace } from './subtx.js';
+import { deductPrice, spliceOffer, verifyOffer, vkeyWitnessBytes } from './splice.js';
+import { decodeBech32Address } from '../ces/simulate.js';
+import { assertExactlyOneMode } from '../commands/offer.js';
+import { offerSourceLabel, parseOfferSource, signingKeyPath, walletDir, withOfferSource } from '../commands/state.js';
+import { unitToCliAsset } from '../cardano/value.js';
+import type { Value } from '../cardano/value.js';
+
+const POLICY = '7a3f9c2e4b81d05f6a92c7e310bd48f2c95a6e07d31b8f4a2c6e9053';
+const UNIT = `${POLICY}${Buffer.from('tokenA').toString('hex')}`;
+const CALLER_IN = { txHash: 'a1'.repeat(32), index: 0 };
+const CES_IN = { txHash: '3f'.repeat(32), index: 0 };
+const ADDR = hexToBytes('60cd20fc2b914b2c395d53e13c36799bce3d40fc5a8092ee3064065042');
+/** The caller and the party they are paying are different people, and must be different keys. */
+const CALLER_ADDR = hexToBytes(`60${'ab'.repeat(28)}`);
+const RECIPIENT_ADDR = hexToBytes(`60${'cd'.repeat(28)}`);
+const SENT = 98_000_000n;
+const CHANGE_TOKENS = 2_000_000n;
+const CHANGE_LOVELACE = 1_025_780n;
+/** Comfortably over the minimum for the two-output draft, which is 183,585. */
+const FEE = 184_000n;
+const SIGNING_KEY = new Uint8Array(32).fill(7);
+const UTXO_COST_PER_BYTE = 4310n;
+const TX_FEE_FIXED = 155_381n;
+const TX_FEE_PER_BYTE = 44n;
+
+const chain = new Map<string, Value>([
+  [`${CALLER_IN.txHash}#0`, { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) }],
+  [`${CES_IN.txHash}#0`, { lovelace: 12_400_000n, assets: new Map() }],
+]);
+const resolve = (i: { txHash: string; index: number }): Value =>
+  chain.get(`${i.txHash}#${i.index}`) ?? { lovelace: 0n, assets: new Map() };
+
+/**
+ * What `build` now produces: the recipient's output carrying the caller's own lovelace, and a
+ * change output back to the caller whose lovelace the exchange has yet to release. It does not
+ * balance on its own, and is not meant to.
+ */
+function parentDraft() {
+  const body: CborMap = new Map<number, unknown>([
+    [BODY_INPUTS, asSet([encodeInput(CALLER_IN)])],
+    [
+      BODY_OUTPUTS,
+      [
+        encodeOutput({ address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, SENT]]) } }),
+        encodeOutput({
+          address: CALLER_ADDR,
+          value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS]]) },
+        }),
+      ],
+    ],
+    [BODY_FEE, 0n],
+  ]);
+  return { items: [body, new Map(), null], body };
+}
+
+/** The release must now cover the fee *and* the change output the caller could not fund. */
+function offer(released = FEE + CHANGE_LOVELACE, price = new Map([[UNIT, 1_001_995n]])) {
+  return buildSubTransaction({
+    input: CES_IN,
+    inputValue: resolve(CES_IN),
+    address: ADDR,
+    price,
+    released,
+    utxoCostPerByte: UTXO_COST_PER_BYTE,
+    signingKey: SIGNING_KEY,
+  });
+}
+
+describe('codec', () => {
+  it('round-trips a transaction byte for byte', () => {
+    const hex = encodeTx(parentDraft());
+    expect(encodeTx(decodeTx(hex))).toBe(hex);
+    expect(() => assertRoundTrip(hex)).not.toThrow();
+  });
+
+  it('re-emits a Babbage map output as a map, keeping its datum and script ref', () => {
+    // A map output carrying a multiasset value (1), an inline datum (2) and a script ref (3).
+    const raw = new Map<number, unknown>([
+      [0, ADDR],
+      [
+        1,
+        [
+          1_180_000n,
+          new Map([[hexToBytes(POLICY), new Map([[hexToBytes(Buffer.from('tokenA').toString('hex')), 100_000_000n]])]]),
+        ],
+      ],
+      [2, [1, new Tag(24, hexToBytes('d87980'))]],
+      [3, new Tag(24, hexToBytes('820158200102'))],
+    ]);
+    const reencoded = encodeOutput(decodeOutput(raw));
+    expect(reencoded).toBeInstanceOf(Map);
+    expect(bytesToHex(encode(reencoded))).toBe(bytesToHex(encode(raw)));
+  });
+
+  it('normalises CBOR integers that decode as number', () => {
+    expect(toBigInt(5)).toBe(5n);
+    expect(toBigInt(5n)).toBe(5n);
+    expect(toBigInt(undefined)).toBe(0n);
+  });
+
+  it('spells assets for --tx-out with a dot, unlike the concatenated UTxO form', () => {
+    expect(unitToCliAsset(UNIT)).toBe(`${POLICY}.${Buffer.from('tokenA').toString('hex')}`);
+    expect(unitToCliAsset(POLICY)).toBe(POLICY);
+  });
+
+  it('decodes a bech32 address to its raw payload', () => {
+    expect(bytesToHex(decodeBech32Address('addr_test1vrxjplptj99jcw2a20sncdnen08r6s8ut2qf9m3svsr9qssy6kvq6'))).toBe(
+      '60cd20fc2b914b2c395d53e13c36799bce3d40fc5a8092ee3064065042'
+    );
+  });
+});
+
+describe('sub-transaction', () => {
+  it('signs its own body hash, not the parent transaction', () => {
+    const sub = offer();
+    const [, wits] = sub.items as [unknown, Map<number, unknown>, unknown];
+    // Freshly built witnesses are a Tag(258); only decoding turns one into a Set.
+    const [[vkey, signature]] = asArray(wits.get(0)) as Uint8Array[][];
+    expect(ed25519.verify(signature, hashBody(sub.body), vkey)).toBe(true);
+    expect(bytesToHex(vkey)).toBe(bytesToHex(ed25519.getPublicKey(SIGNING_KEY)));
+  });
+
+  it('carries no fee or collateral field, so it cannot balance alone', () => {
+    const sub = offer();
+    for (const forbidden of [2, 13, 16, 17]) {
+      expect(sub.body.has(forbidden)).toBe(false);
+    }
+  });
+
+  it('releases exactly the lovelace it was asked to', () => {
+    const sub = offer(181_381n);
+    const produced = sub.outputs.reduce((total, o) => total + o.value.lovelace, 0n);
+    expect(resolve(CES_IN).lovelace - produced).toBe(181_381n);
+  });
+
+  it('balances the bundle once the change output it funds is accounted for', () => {
+    const result = spliceOffer({
+      parent: parentDraft(),
+      sub: offer(),
+      price: new Map([[UNIT, 1_001_995n]]),
+      resolve,
+      txFeeFixed: TX_FEE_FIXED,
+      txFeePerByte: TX_FEE_PER_BYTE,
+      witnessCount: 1,
+      callerAddress: CALLER_ADDR,
+    });
+    // released = fee + the caller's unfunded change output
+    expect(result.released).toBe(result.fee + CHANGE_LOVELACE);
+    expect(result.balance.balances).toBe(true);
+  });
+
+  it('refuses to build when the exchange UTxO is too small', () => {
+    expect(() =>
+      buildSubTransaction({
+        input: CES_IN,
+        inputValue: { lovelace: 1_200_000n, assets: new Map() },
+        address: ADDR,
+        price: new Map([[UNIT, 1n]]),
+        released: 181_381n,
+        utxoCostPerByte: UTXO_COST_PER_BYTE,
+        signingKey: SIGNING_KEY,
+      })
+    ).toThrow(/too small/);
+  });
+
+  it('gives a token-bearing output more than a bare ada one', () => {
+    const bare = minUtxoLovelace({ address: ADDR, value: { lovelace: 0n, assets: new Map() } }, UTXO_COST_PER_BYTE);
+    const withToken = minUtxoLovelace(
+      { address: ADDR, value: { lovelace: 0n, assets: new Map([[UNIT, 1n]]) } },
+      UTXO_COST_PER_BYTE
+    );
+    expect(withToken).toBeGreaterThan(bare);
+  });
+});
+
+describe('verifyOffer', () => {
+  const price = new Map([[UNIT, 1_001_995n]]);
+
+  it('accepts a well-formed offer', () => {
+    const result = verifyOffer(offer(), price, [CALLER_IN], resolve);
+    expect(result.released).toBe(FEE + CHANGE_LOVELACE);
+  });
+
+  it('rejects an offer that takes more than the quoted price', () => {
+    const greedy = offer(181_381n, new Map([[UNIT, 2_000_000n]]));
+    expect(() => verifyOffer(greedy, price, [CALLER_IN], resolve)).toThrow(/quoted price/);
+  });
+
+  it("rejects an offer that spends the caller's own UTxO", () => {
+    const sub = offer();
+    sub.inputs = [CALLER_IN];
+    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(/caller's own UTxO/);
+  });
+
+  it('rejects an offer that does anything but move value', () => {
+    const sub = offer();
+    sub.body.set(5, new Map()); // withdrawals
+    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(/withdrawals/);
+  });
+
+  const REWARD_ACCOUNT = new Uint8Array(29).fill(4);
+  const CREDENTIAL = [0, new Uint8Array(28).fill(3)];
+
+  it.each([
+    [2, 'a fee', 0n],
+    [13, 'collateral inputs', asSet([encodeInput(CES_IN)])],
+    [14, 'guards', asSet([new Uint8Array(28).fill(3)])],
+    [23, 'nested sub-transactions', asSet([offer().items])],
+    // The three below are what `sub_transaction_body` actually permits and `computeBalance`
+    // cannot see: 22 and 25 move lovelace without touching an output, and 24 constrains the
+    // caller's own transaction.
+    [22, 'a treasury donation', 1_000_000n],
+    [24, 'required top-level guards', new Map([[CREDENTIAL, null]])],
+    [25, 'direct deposits', new Map([[REWARD_ACCOUNT, 1_000_000n]])],
+    [26, 'account balance intervals', new Map([[REWARD_ACCOUNT, [0n, null]]])],
+  ])('rejects an offer carrying body key %i (%s)', (key, label, value) => {
+    const sub = offer();
+    sub.body.set(key as number, value);
+    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(String(label));
+  });
+
+  it.each([
+    [3, 'a time-to-live'],
+    [8, 'a validity interval start'],
+  ])('accepts an offer bounded by body key %i (%s), which is how an offer expires', (key) => {
+    const sub = offer();
+    sub.body.set(key, 100n);
+    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).not.toThrow();
+  });
+});
+
+describe('splice', () => {
+  const price = new Map([[UNIT, 1_001_995n]]);
+
+  it('produces a balanced bundle with the sub-transaction at key 23', () => {
+    const result = spliceOffer({
+      parent: parentDraft(),
+      sub: offer(),
+      price,
+      resolve,
+      txFeeFixed: TX_FEE_FIXED,
+      txFeePerByte: TX_FEE_PER_BYTE,
+      witnessCount: 1,
+      callerAddress: CALLER_ADDR,
+    });
+    expect(result.balance.balances).toBe(true);
+    // The release covers the fee *and* the change output the caller could not fund.
+    expect(result.fee).toBe(FEE);
+    expect(result.parent.body.get(BODY_SUB_TRANSACTIONS)).toBeInstanceOf(Tag);
+    expect(result.surplus).toBeGreaterThanOrEqual(0n);
+  });
+
+  it('encodes sub_transactions as a CBOR set, as the ledger requires', () => {
+    const result = spliceOffer({
+      parent: parentDraft(),
+      sub: offer(),
+      price,
+      resolve,
+      txFeeFixed: TX_FEE_FIXED,
+      txFeePerByte: TX_FEE_PER_BYTE,
+      witnessCount: 1,
+      callerAddress: CALLER_ADDR,
+    });
+    // Tag 258 is the set wrapper; d9 0102 is its CBOR head.
+    expect(encodeTx(result.parent)).toContain('17d9010281');
+  });
+
+  it('counts the bytes a vkey witness really adds, so the fee covers the signed size', () => {
+    // Measured against cbor2 rather than assumed: an under-count here silently produces a
+    // bundle the node rejects for too low a fee.
+    const witness = [new Uint8Array(32).fill(1), new Uint8Array(64).fill(2)];
+    const size = (n: number) => {
+      const wits = n === 0 ? new Map() : new Map([[0, asSet(Array.from({ length: n }, () => witness))]]);
+      return encode([parentDraft().body, wits, null]).length;
+    };
+    const unwitnessed = size(0);
+    expect(vkeyWitnessBytes(0)).toBe(0);
+    for (const n of [1, 2, 3, 5]) {
+      expect(vkeyWitnessBytes(n)).toBe(size(n) - unwitnessed);
+    }
+  });
+
+  it('refuses when the exchange under-pads and the fee falls short', () => {
+    expect(() =>
+      spliceOffer({
+        parent: parentDraft(),
+        sub: offer(1000n),
+        price,
+        resolve,
+        txFeeFixed: TX_FEE_FIXED,
+        txFeePerByte: TX_FEE_PER_BYTE,
+        witnessCount: 1,
+        callerAddress: CALLER_ADDR,
+      })
+    ).toThrow(/below the .* minimum/);
+  });
+
+  it("takes the price out of the caller's change, not the recipient's output", () => {
+    const outputs = [
+      { address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, SENT]]) } },
+      { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS]]) } },
+    ];
+    const { outputs: updated, index } = deductPrice(outputs, price, CALLER_ADDR);
+    expect(index).toBe(1);
+    expect(updated[1].value.assets.get(UNIT)).toBe(CHANGE_TOKENS - 1_001_995n);
+    // The person being paid is untouched.
+    expect(updated[0].value.assets.get(UNIT)).toBe(SENT);
+  });
+
+  it("refuses rather than billing the recipient when the caller's change cannot cover the price", () => {
+    const outputs = [
+      { address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) } },
+      { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, 1n]]) } },
+    ];
+    expect(() => deductPrice(outputs, price, CALLER_ADDR)).toThrow(/belongs to someone else/);
+  });
+
+  it('refuses when no output holds enough of the payment asset', () => {
+    const outputs = [{ address: CALLER_ADDR, value: { lovelace: 1_180_000n, assets: new Map() } }];
+    expect(() => deductPrice(outputs, price, CALLER_ADDR)).toThrow(/No parent output/);
+  });
+});
+
+describe('wallet paths', () => {
+  it('resolves a wallet given either as a directory or as the key file itself', () => {
+    expect(signingKeyPath('wallets/caller')).toBe('wallets/caller/payment.skey');
+    expect(signingKeyPath('wallets/caller/payment.skey')).toBe('wallets/caller/payment.skey');
+    expect(walletDir('wallets/caller')).toBe('wallets/caller');
+    expect(walletDir('wallets/caller/payment.skey')).toBe('wallets/caller');
+  });
+
+  it('treats a bare key file as living in the current directory, not a truncated one', () => {
+    expect(walletDir('payment.skey')).toBe('.');
+  });
+});
+
+describe('offer provenance', () => {
+  it('round-trips a simulated offer through the envelope description', () => {
+    const description = withOfferSource('Ledger Cddl Format', { simulated: true });
+    expect(parseOfferSource(description)).toEqual({ simulated: true });
+    expect(offerSourceLabel(parseOfferSource(description))).toBe('[simulated CES]');
+  });
+
+  it('round-trips a real exchange, and never calls it simulated', () => {
+    const description = withOfferSource('Ledger Cddl Format', { simulated: false, url: 'https://ces.example' });
+    expect(parseOfferSource(description)).toEqual({ simulated: false, url: 'https://ces.example' });
+    expect(offerSourceLabel(parseOfferSource(description))).toBe('[CES https://ces.example]');
+  });
+
+  it('keeps whatever the description already said', () => {
+    expect(withOfferSource('Ledger Cddl Format', { simulated: true })).toContain('Ledger Cddl Format');
+    expect(withOfferSource('', { simulated: true })).toBe('offer from simulated CES');
+  });
+
+  it('says nothing when no source was recorded, rather than assuming one', () => {
+    expect(parseOfferSource('Ledger Cddl Format')).toBeUndefined();
+    expect(parseOfferSource(undefined)).toBeUndefined();
+    expect(withOfferSource('Ledger Cddl Format', undefined)).toBe('Ledger Cddl Format');
+    expect(offerSourceLabel(undefined)).toBeUndefined();
+  });
+});
+
+describe('offer mode', () => {
+  it('requires exactly one mode, so a run can never silently simulate', () => {
+    expect(() => assertExactlyOneMode({})).toThrow(/exactly one/);
+    expect(() => assertExactlyOneMode({ simulateCes: true, cesUrl: 'https://x' })).toThrow(/exactly one/);
+    expect(() => assertExactlyOneMode({ simulateCes: true })).not.toThrow();
+    expect(() => assertExactlyOneMode({ cesUrl: 'https://x' })).not.toThrow();
+  });
+});
