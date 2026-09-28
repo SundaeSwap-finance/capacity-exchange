@@ -4,6 +4,7 @@ import { Type, type Static } from '@sinclair/typebox';
 const AppEnvSchema = Type.Object({
   // Required only if `priceFormulas.DUST` is configured; see loadConfig.ts.
   MIDNIGHT_NETWORK: Type.Optional(Type.String()),
+  // TODO: we should rename these (server will need a cardano wallet too)
   WALLET_SEED_FILE: Type.Optional(Type.String()),
   WALLET_MNEMONIC_FILE: Type.Optional(Type.String()),
   WALLET_MNEMONIC_ARN: Type.Optional(Type.String()),
