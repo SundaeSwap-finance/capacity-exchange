@@ -4,18 +4,27 @@ import { ChainStateService } from '../services/chain-state.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    chainStateService: ChainStateService;
+    chainStateService: ChainStateService | null;
   }
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  const service = new ChainStateService(fastify.config.endpoints.indexerHttpUrl, fastify.log);
+  if (!fastify.config.midnight) {
+    fastify.decorate('chainStateService', null);
+    fastify.log.debug('ChainStateService not configured (no Midnight network configured)');
+    return;
+  }
+
+  const service = new ChainStateService(
+    fastify.config.midnight.endpoints.indexerHttpUrl,
+    fastify.log,
+  );
   await service.start();
 
   fastify.decorate('chainStateService', service);
 
   fastify.addHook('onClose', (instance, done) => {
-    instance.chainStateService.stop();
+    instance.chainStateService?.stop();
     done();
   });
 

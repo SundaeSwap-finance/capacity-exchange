@@ -21,6 +21,9 @@ const commonOfferResponse = {
   400: ErrorResponse,
   409: ErrorResponse,
   410: ErrorResponse,
+  // Returned when the capacity asset this route settles (DUST) isn't configured
+  // on this server — e.g. an ADA-only server with no Midnight network.
+  501: ErrorResponse,
   500: ErrorResponse,
   503: ErrorResponse,
 };
@@ -60,8 +63,9 @@ export const AdaOfferSchema = {
     body: AdaCreateOfferRequest,
     response: {
       ...commonOfferResponse,
+      // Returned when Cardano payment verification (not just DUST offers) isn't
+      // configured on this server — see commonOfferResponse's 501 for that case.
       404: ErrorResponse,
-      501: ErrorResponse,
     },
   },
 };

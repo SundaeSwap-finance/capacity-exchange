@@ -4,16 +4,15 @@ import { SponsorService } from '../services/sponsor.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    sponsorService: SponsorService;
+    sponsorService: SponsorService | null;
   }
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.utxoService) {
-    throw new Error("SponsorService requires UtxoService to be init'd first");
-  }
-  if (!fastify.txService) {
-    throw new Error("SponsorService requires TxService to be init'd first");
+  if (!fastify.utxoService || !fastify.txService) {
+    fastify.decorate('sponsorService', null);
+    fastify.log.debug('SponsorService not configured (no Midnight network configured)');
+    return;
   }
   if (!fastify.metricsService) {
     throw new Error("SponsorService requires MetricsService to be init'd first");

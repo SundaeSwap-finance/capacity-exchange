@@ -96,3 +96,19 @@ describe('POST /api/offers', () => {
     }
   });
 });
+
+describe('POST /api/offers - without offerService configured', () => {
+  const app = useRouteTestApp({
+    decorations: { offerService: null },
+    routes: { plugin: offerRoutes, prefix: '/api' },
+  });
+
+  it('returns 501 when Midnight is not configured on this server', async () => {
+    const res = await app.get().inject({
+      method: 'POST',
+      url: '/api/offers',
+      payload: { quoteId: 'anything', offerCurrency: 'lovelace' },
+    });
+    expect(res.statusCode).toBe(501);
+  });
+});

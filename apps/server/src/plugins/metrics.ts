@@ -4,16 +4,15 @@ import { MetricsService } from '../services/metrics.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    metricsService: MetricsService;
+    metricsService: MetricsService | null;
   }
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.utxoService) {
-    throw new Error("MetricsService requires UtxoService to be init'd first");
-  }
-  if (!fastify.walletService) {
-    throw new Error("MetricsService requires WalletService to be init'd first");
+  if (!fastify.utxoService || !fastify.walletService) {
+    fastify.decorate('metricsService', null);
+    fastify.log.debug('MetricsService not configured (no Midnight network configured)');
+    return;
   }
 
   const service = new MetricsService(fastify.utxoService, fastify.walletService);

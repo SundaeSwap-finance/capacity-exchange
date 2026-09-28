@@ -18,14 +18,20 @@ export const HealthSchema = {
 // the union of its success and error states--union'ing objects breaks OpenAPI
 // spec generation
 export const IndexerStatus = Type.Object({
-  status: Type.Union([Type.Literal('ok'), Type.Literal('ko')]),
+  // 'disabled' means no Midnight network is configured on this server (e.g. ADA-only).
+  status: Type.Union([Type.Literal('ok'), Type.Literal('ko'), Type.Literal('disabled')]),
   height: Type.Optional(Type.Number()),
   error: Type.Optional(Type.String()),
   details: Type.Optional(Type.String()),
 });
 
 export const WalletStatus = Type.Object({
-  status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
+  status: Type.Union([
+    Type.Literal('syncing'),
+    Type.Literal('ok'),
+    Type.Literal('ko'),
+    Type.Literal('disabled'),
+  ]),
   error: Type.Optional(Type.String()),
 });
 

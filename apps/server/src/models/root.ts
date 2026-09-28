@@ -3,13 +3,14 @@ import { Type } from '@sinclair/typebox';
 export const RootResponse = Type.Object({
   name: Type.String(),
   version: Type.String(),
+  // Null when no Midnight network is configured (e.g. an ADA-only server).
   env: Type.Object({
-    network: Type.String(),
-    node_url: Type.String(),
-    node_ws_url: Type.String(),
-    indexer_url: Type.String(),
-    indexer_ws_url: Type.String(),
-    proof_server_url: Type.String(),
+    network: Type.Union([Type.String(), Type.Null()]),
+    node_url: Type.Union([Type.String(), Type.Null()]),
+    node_ws_url: Type.Union([Type.String(), Type.Null()]),
+    indexer_url: Type.Union([Type.String(), Type.Null()]),
+    indexer_ws_url: Type.Union([Type.String(), Type.Null()]),
+    proof_server_url: Type.Union([Type.String(), Type.Null()]),
   }),
 });
 

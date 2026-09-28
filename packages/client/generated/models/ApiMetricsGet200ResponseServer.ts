@@ -42,7 +42,7 @@ export interface ApiMetricsGet200ResponseServer {
      * @type {string}
      * @memberof ApiMetricsGet200ResponseServer
      */
-    network: string;
+    network: string | null;
 }
 
 /**

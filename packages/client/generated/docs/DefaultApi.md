@@ -209,6 +209,7 @@ No authorization required
 | **409** | Default Response |  -  |
 | **410** | Default Response |  -  |
 | **500** | Default Response |  -  |
+| **501** | Default Response |  -  |
 | **503** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
@@ -347,6 +348,7 @@ No authorization required
 | **200** | Default Response |  -  |
 | **422** | Default Response |  -  |
 | **500** | Default Response |  -  |
+| **501** | Default Response |  -  |
 | **503** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

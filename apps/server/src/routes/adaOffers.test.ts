@@ -199,4 +199,27 @@ describe('POST /api/ada/offers', () => {
       expect(res.statusCode).toBe(501);
     });
   });
+
+  describe('without offerService configured (no Midnight network)', () => {
+    const app = useRouteTestApp({
+      decorations: { offerService: null, quoteService, cardanoService: cardanoStub },
+      routes: { plugin: adaOfferRoutes, prefix: '/api' },
+    });
+
+    it('returns 501, even though ADA payment verification is configured', async () => {
+      const quoteId = quoteService.createQuote('DUST', 1000n, []);
+      const res = await app.get().inject({
+        method: 'POST',
+        url: '/api/ada/offers',
+        payload: {
+          quoteId,
+          offerCurrency: 'midnight:shielded:lovelace',
+          utxoTxHash: VALID_TX_HASH,
+          senderAddress: 'addr_test1_sender',
+          expectedValue: '5000000',
+        },
+      });
+      expect(res.statusCode).toBe(501);
+    });
+  });
 });

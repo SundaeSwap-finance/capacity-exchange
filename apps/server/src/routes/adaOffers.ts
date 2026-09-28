@@ -10,6 +10,9 @@ const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     if (!fastify.cardanoService) {
       return reply.notImplemented('ADA offers are not configured on this server');
     }
+    if (!fastify.offerService) {
+      return reply.notImplemented('DUST offers are not configured on this server');
+    }
 
     const quoteResult = fastify.quoteService.getQuote(request.body.quoteId);
     if (quoteResult.status === 'invalid') {

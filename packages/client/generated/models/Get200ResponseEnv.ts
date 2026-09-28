@@ -24,37 +24,37 @@ export interface Get200ResponseEnv {
      * @type {string}
      * @memberof Get200ResponseEnv
      */
-    network: string;
+    network: string | null;
     /**
      * 
      * @type {string}
      * @memberof Get200ResponseEnv
      */
-    nodeUrl: string;
+    nodeUrl: string | null;
     /**
      * 
      * @type {string}
      * @memberof Get200ResponseEnv
      */
-    nodeWsUrl: string;
+    nodeWsUrl: string | null;
     /**
      * 
      * @type {string}
      * @memberof Get200ResponseEnv
      */
-    indexerUrl: string;
+    indexerUrl: string | null;
     /**
      * 
      * @type {string}
      * @memberof Get200ResponseEnv
      */
-    indexerWsUrl: string;
+    indexerWsUrl: string | null;
     /**
      * 
      * @type {string}
      * @memberof Get200ResponseEnv
      */
-    proofServerUrl: string;
+    proofServerUrl: string | null;
 }
 
 /**

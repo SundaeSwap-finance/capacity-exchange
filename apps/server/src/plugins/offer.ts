@@ -4,16 +4,15 @@ import { OfferService } from '../services/offer.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    offerService: OfferService;
+    offerService: OfferService | null;
   }
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.utxoService) {
-    throw new Error("OfferService requires UtxoService to be init'd first");
-  }
-  if (!fastify.txService) {
-    throw new Error("OfferService requires TxService to be init'd first");
+  if (!fastify.utxoService || !fastify.txService) {
+    fastify.decorate('offerService', null);
+    fastify.log.debug('OfferService not configured (no Midnight network configured)');
+    return;
   }
   if (!fastify.priceService) {
     throw new Error("OfferService requires PriceService to be init'd first");
