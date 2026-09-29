@@ -1,4 +1,12 @@
 import { ApiPricesGetCurrencyEnum, Configuration, DefaultApi } from '@sundaeswap/capacity-exchange-client';
+import {
+  OFFERS_PATH,
+  OfferRejected,
+  type OfferStatus,
+  type Rejection,
+  type SubmitOfferAccepted,
+  type SubmitOfferRequest,
+} from './protocol.js';
 
 export interface Currency {
   id: string;
@@ -23,8 +31,12 @@ export interface QuoteFailure {
   message: string;
 }
 
+function base(url: string): string {
+  return url.replace(/\/$/, '');
+}
+
 function apiFor(url: string): DefaultApi {
-  return new DefaultApi(new Configuration({ basePath: url.replace(/\/$/, '') }));
+  return new DefaultApi(new Configuration({ basePath: base(url) }));
 }
 
 /** Asks one exchange what it would charge for `amount` lovelace of ADA capacity. */
@@ -58,33 +70,43 @@ export async function fetchAllPrices(
   return { quotes, failures };
 }
 
-/** The offer payload, shaped exactly like the server's CreateOfferResponse. */
-export interface OfferResponse {
-  offerId: string;
-  offerAmount: string;
-  offerCurrency: Currency;
-  /** Hex-encoded `[sub_transaction_body, witness_set, auxiliary_data/nil]`. */
-  serializedTx: string;
-  expiresAt: string;
+async function rejectionFrom(response: Response): Promise<OfferRejected> {
+  const text = await response.text();
+  try {
+    const body = JSON.parse(text) as Partial<Rejection>;
+    if (body.code) {
+      return new OfferRejected(body.code, body.message ?? '');
+    }
+  } catch {
+    // Not a CIP-0198 refusal; fall through and report it as received.
+  }
+  // A refusal without a recognised code is treated as `not-interested`, as CIP-0198 directs.
+  return new OfferRejected('not-interested', `${response.status} ${text}`);
 }
 
 /**
- * Requests an offer from a real exchange. The ADA-capacity offer route does not exist on the
- * server yet, which is why `--simulate-ces` exists; this is the path it will replace.
+ * Submits an offer. A `202` means accepted for verification and nothing more; a refusal from
+ * the stateless checks comes back instead of it, carrying a CIP-0198 reason.
  */
-export async function requestOffer(
-  url: string,
-  body: { quoteId: string; offerCurrency: string }
-): Promise<OfferResponse> {
-  const response = await fetch(`${url.replace(/\/$/, '')}/api/ada/capacity/offers`, {
+export async function submitOffer(url: string, body: SubmitOfferRequest): Promise<SubmitOfferAccepted> {
+  const response = await fetch(`${base(url)}${OFFERS_PATH}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!response.ok) {
-    throw new Error(`Offer request to ${url} failed: ${response.status} ${await response.text()}`);
+  if (response.status !== 202) {
+    throw await rejectionFrom(response);
   }
-  return (await response.json()) as OfferResponse;
+  return (await response.json()) as SubmitOfferAccepted;
+}
+
+/** The service's own view of an offer. Not authoritative about inclusion; the chain is. */
+export async function getOfferStatus(url: string, offerId: string): Promise<OfferStatus> {
+  const response = await fetch(`${base(url)}${OFFERS_PATH}/${offerId}`);
+  if (!response.ok) {
+    throw new Error(`Status request to ${url} failed: ${response.status} ${await response.text()}`);
+  }
+  return (await response.json()) as OfferStatus;
 }
 
 /** A price is only useful if the caller actually holds the currency it is denominated in. */

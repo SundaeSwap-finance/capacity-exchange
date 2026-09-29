@@ -1,22 +1,26 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Config } from '../config.js';
-import type { OfferResponse } from '../ces/client.js';
+import type { OfferState } from '../ces/protocol.js';
 
 /** Files the commands hand to one another, all under the work directory. */
 export const ARTIFACTS = {
   protocolParams: 'protocol-params.json',
-  draft: 'parent.draft.tx',
+  selection: 'selection.json',
+  draft: 'offer.draft.json',
   quote: 'quote.json',
   offer: 'offer.json',
-  nested: 'parent.nested.tx',
-  signed: 'parent.nested.tx.signed',
-  selection: 'selection.json',
+  submission: 'submission.json',
+  /** The stand-in exchange's own files. A real exchange keeps these to itself. */
+  batchDraft: 'simulated-ces/batch.draft.tx',
+  batch: 'simulated-ces/batch.tx',
+  batchSigned: 'simulated-ces/batch.tx.signed',
 } as const;
 
 export function workPath(config: Config, name: string): string {
-  mkdirSync(config.workDir, { recursive: true });
-  return join(config.workDir, name);
+  const path = join(config.workDir, name);
+  mkdirSync(dirname(path), { recursive: true });
+  return path;
 }
 
 export function readJson<T>(path: string, what: string): T {
@@ -40,23 +44,20 @@ export function walletDir(wallet: string): string {
 }
 
 /**
- * Where an offer came from. Nothing in the transaction says whether a real exchange was
- * contacted, so it is recorded when the offer is obtained and carried in the nested
- * transaction's envelope description, which travels with the file.
+ * Who built a batch. Nothing in the transaction says whether a real exchange was involved, so
+ * it is recorded when the batch is built and carried in its envelope description, which
+ * travels with the file.
  */
-export type OfferSource = { simulated: true } | { simulated: false; url: string };
+export type BatchSource = { simulated: true } | { simulated: false; url: string };
 
-/** `offer.json`: the exchange's response verbatim, plus our own note of where it came from. */
-export type StoredOffer = OfferResponse & { source?: OfferSource };
-
-const SOURCE_PREFIX = 'offer from ';
+const SOURCE_PREFIX = 'batch built by ';
 const SOURCE_SEPARATOR = ' · ';
 
-export function describeOfferSource(source: OfferSource): string {
+export function describeBatchSource(source: BatchSource): string {
   return `${SOURCE_PREFIX}${source.simulated ? 'simulated CES' : source.url}`;
 }
 
-export function parseOfferSource(description: string | undefined): OfferSource | undefined {
+export function parseBatchSource(description: string | undefined): BatchSource | undefined {
   const part = description?.split(SOURCE_SEPARATOR).find((p) => p.startsWith(SOURCE_PREFIX));
   if (!part) {
     return undefined;
@@ -66,12 +67,12 @@ export function parseOfferSource(description: string | undefined): OfferSource |
 }
 
 /** Appends the provenance note to an envelope description without discarding what was there. */
-export function withOfferSource(description: string, source: OfferSource | undefined): string {
-  return source ? [description, describeOfferSource(source)].filter(Boolean).join(SOURCE_SEPARATOR) : description;
+export function withBatchSource(description: string, source: BatchSource | undefined): string {
+  return source ? [description, describeBatchSource(source)].filter(Boolean).join(SOURCE_SEPARATOR) : description;
 }
 
-/** The tag `show` prints beside a sub-transaction. Absent when provenance was never recorded. */
-export function offerSourceLabel(source: OfferSource | undefined): string | undefined {
+/** The tag `show` prints beside the top-level transaction. Absent when provenance was never recorded. */
+export function batchSourceLabel(source: BatchSource | undefined): string | undefined {
   if (!source) {
     return undefined;
   }
@@ -87,10 +88,37 @@ export interface Selection {
   assets: Record<string, string>;
 }
 
+/** `offer.draft.json`: the caller's unsigned offer, before the price is known. */
+export interface StoredDraft {
+  /** Hex CBOR of the unsigned sub-transaction body. */
+  body: string;
+  /** Bech32 address the change goes back to, and so the one the price comes out of. */
+  callerAddress: string;
+  /** Lovelace asked for: the change output's minimum plus the offer's own share of the fee. */
+  capacity: string;
+}
+
+/** `offer.json`: the signed offer, as it goes on the wire. */
+export interface StoredOffer {
+  /** The sub-transaction's TxId, which is also how the chain will know it. */
+  offerId: string;
+  /** Hex of the CIP-0198 envelope. */
+  envelope: string;
+}
+
+/** `submission.json`: what `fund` learned, so `status` can pick up where it left off. */
+export interface StoredSubmission {
+  offerId: string;
+  source: BatchSource;
+  state: OfferState;
+  batchTxId?: string;
+}
+
 export interface StoredQuote {
   url: string;
   quoteId: string;
-  feeEstimate: string;
+  /** The lovelace the price was quoted for. */
+  capacity: string;
   priceAmount: string;
   priceUnit: string;
   currency: { id: string; type: string; rawId: string };

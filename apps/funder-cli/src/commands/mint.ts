@@ -5,7 +5,7 @@ import { unitToCliAsset } from '../cardano/value.js';
 import type { Config } from '../config.js';
 import { formatAda, formatAsset, step, warn } from '../log.js';
 import { minUtxoLovelace } from '../tx/subtx.js';
-import { decodeBech32Address } from '../ces/simulate.js';
+import { decodeBech32Address } from '../cardano/address.js';
 import { ARTIFACTS, signingKeyPath, walletDir, workPath } from './state.js';
 
 export interface MintOptions {

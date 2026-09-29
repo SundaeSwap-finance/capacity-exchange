@@ -6,10 +6,8 @@ import { runBalance } from './commands/balance.js';
 import { runMint } from './commands/mint.js';
 import { runBuild } from './commands/build.js';
 import { runQuote } from './commands/quote.js';
-import { runOffer } from './commands/offer.js';
-import { runSplice } from './commands/splice.js';
 import { runSign } from './commands/sign.js';
-import { runSubmit } from './commands/submit.js';
+import { runFund } from './commands/fund.js';
 import { runShow } from './commands/show.js';
 import { runStatus } from './commands/status.js';
 
@@ -18,9 +16,9 @@ const program = new Command();
 program
   .name('ces-fund')
   .description(
-    'Funds a Cardano transaction with ADA bought from a Capacity Exchange, using a Dijkstra ' +
-      'nested transaction. Wraps cardano-cli for everything except assembling the nested ' +
-      'transaction, which cardano-cli cannot do.'
+    'Funds a Cardano transfer with ADA bought from a Capacity Exchange. The caller signs a ' +
+      'Dijkstra sub-transaction offer; the exchange carries it in a batch it pays for and ' +
+      'submits. Wraps cardano-cli for everything except sub-transactions, which it cannot build.'
   )
   .addOption(new Option('--cardano-cli <path>', 'path to the cardano-cli binary').env('CARDANO_CLI'))
   .addOption(new Option('--socket-path <path>', 'cardano-node socket').env('CARDANO_NODE_SOCKET_PATH'))
@@ -60,8 +58,7 @@ program
 
 program
   .command('build')
-  .description('build the unbalanced parent transaction and estimate its fee')
-  .requiredOption('--caller-wallet <dir>')
+  .description("build the caller's unsigned offer and work out the capacity it needs")
   .requiredOption('--selection <path>', 'selection.json written by `balance`')
   .requiredOption('--send <quantity:unit>', 'native asset to send')
   .requiredOption('--to <address>', 'recipient address')
@@ -69,61 +66,47 @@ program
 
 program
   .command('quote')
-  .description('ask one or more exchanges what they charge to cover the fee')
+  .description('ask one or more exchanges what they charge for that capacity')
   .requiredOption('--ces-url <url...>', 'exchange base URL (repeatable)')
-  .requiredOption('--fee-estimate <lovelace>')
+  .requiredOption('--capacity <lovelace>', 'the capacity `build` printed')
   .requiredOption('--selection <path>', 'selection.json written by `balance`')
   .action((opts) => runQuote(config(), opts));
 
 program
-  .command('offer')
-  .description('obtain the funding sub-transaction (exactly one mode must be chosen)')
-  .argument('<quote>', 'quote.json written by `quote`')
-  .option('--simulate-ces', 'build the offer locally instead of calling an exchange')
-  .option('--simulated-ces-signing-key <file>', 'stand-in exchange signing key')
-  .option('--ces-url <url>', 'exchange to request a real offer from')
-  .option('--margin <lovelace>', 'safety margin the stand-in adds on top of its computed pad', '2000')
-  .option('--offer-ttl <seconds>', 'how long the simulated offer claims to be valid', '60')
-  .action((quote, opts) => runOffer(config(), quote, opts));
-
-program
-  .command('splice')
-  .description('verify the offer, merge it into the parent, and balance the bundle')
-  .requiredOption('--draft <path>', 'parent.draft.tx written by `build`')
-  .requiredOption('--quote <path>', 'quote.json written by `quote`')
-  .requiredOption('--offer <path>', 'offer.json written by `offer`')
-  .requiredOption('--selection <path>', 'selection.json, for the address the price is paid from')
-  .action((opts) => runSplice(config(), opts));
-
-program
   .command('sign')
-  .description("sign the parent with the caller's key")
-  .argument('<tx>', 'parent.nested.tx written by `splice`')
+  .description("take the price out of the caller's change and sign the offer")
+  .requiredOption('--draft <path>', 'offer.draft.json written by `build`')
+  .requiredOption('--quote <path>', 'quote.json written by `quote`')
   .requiredOption('--caller-wallet <dir>')
-  .action((tx, opts) => runSign(config(), tx, opts));
+  .action((opts) => runSign(config(), opts));
 
 program
-  .command('submit')
-  .description('submit the bundle (acceptance is not inclusion)')
-  .argument('<tx>', 'signed transaction written by `sign`')
-  .option('--wait', 'poll until the transaction is included')
-  .option('--timeout <seconds>', 'how long --wait polls before giving up', '3600')
+  .command('fund')
+  .description('hand the offer to an exchange, which batches and submits it (exactly one mode must be chosen)')
+  .argument('<offer>', 'offer.json written by `sign`')
+  .requiredOption('--quote <path>', 'quote.json written by `quote`')
+  .option('--simulate-ces', 'run the exchange side locally instead of calling one')
+  .option('--simulated-ces-wallet <dir>', 'stand-in exchange wallet')
+  .option('--ces-url <url>', 'exchange to submit the offer to')
+  .option('--wait', 'then follow the chain until the offer is included')
+  .option('--timeout <seconds>', 'how long polling runs before giving up', '3600')
   .option('--poll-interval <seconds>', 'seconds between polls', '10')
-  .action((tx, opts) => runSubmit(config(), tx, opts));
+  .action((offer, opts) => runFund(config(), offer, opts));
 
 program
   .command('show')
-  .description('render a nested transaction, including sub-transactions')
+  .description('render a batch, including the sub-transactions stock tooling hides')
   .argument('<file>', 'transaction file')
   .option('--offline', 'skip resolving inputs (no balance proof)')
   .action((file, opts) => runShow(config(), file, opts));
 
 program
   .command('status')
-  .description('show what addresses hold, and/or whether a transaction has been included')
+  .description('show what addresses hold, and/or whether a transaction or offer has been included')
   .option('--address <addr...>', 'addresses to report on')
   .option('--txid <txid>', 'transaction to check for inclusion')
-  .option('--wait', 'poll until that transaction is included')
+  .option('--offer <id>', 'offer to follow on chain, by the id `sign` printed')
+  .option('--wait', 'poll until it is included')
   .option('--timeout <seconds>', 'how long --wait polls before giving up', '3600')
   .option('--poll-interval <seconds>', 'seconds between polls', '10')
   .action((opts) => runStatus(config(), opts));

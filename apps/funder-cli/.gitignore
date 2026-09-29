@@ -12,6 +12,5 @@ recipient/
 # Work directory: drafts, quotes, offers, protocol params, signed transactions.
 .ces-fund/
 *.draft.tx
-*.nested.tx
 *.signed.tx
-*.nested.tx.signed
+*.tx.signed

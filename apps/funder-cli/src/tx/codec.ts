@@ -1,4 +1,4 @@
-import { decode, encode, Tag } from 'cbor2';
+import { decode, encode, Tag, type Writer } from 'cbor2';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { emptyValue, type Value } from '../cardano/value.js';
 
@@ -11,10 +11,12 @@ export const BODY_REFERENCE_INPUTS = 18;
 export const BODY_SUB_TRANSACTIONS = 23;
 
 /**
- * Body keys a funding sub-transaction has no business using, per `sub_transaction_body` in
- * eras/dijkstra/impl/cddl/data/dijkstra.cddl. Donation (22) and direct deposits (25) matter
- * most: both move lovelace where `computeBalance` cannot see it. The validity interval (3, 8)
- * is allowed on purpose — it is how an exchange expires an offer rather than hogging its UTxO.
+ * Body keys the stand-in exchange refuses in an offer, per `sub_transaction_body` in
+ * eras/dijkstra/impl/cddl/data/dijkstra.cddl. It only carries offers that move value, and
+ * derives each offer's imbalance from inputs and outputs alone, so anything else that moves
+ * value would be mispriced. Donation (22) and direct deposits (25) matter most: both move
+ * lovelace where `computeBalance` cannot see it. The validity interval (3, 8) is allowed on
+ * purpose — it is how a caller bounds how long their UTxO stays committed to an offer.
  */
 export const FORBIDDEN_SUB_TX_KEYS: Array<[number, string]> = [
   [2, 'a fee'],
@@ -118,6 +120,56 @@ export function assertRoundTrip(cborHex: string): void {
         'because doing so would change the transaction id.'
     );
   }
+}
+
+/**
+ * Bytes that are already CBOR, written out exactly as given. A sub-transaction goes into a
+ * batch this way: its witnesses sign the hash of its body *as encoded*, so re-encoding it,
+ * even into something equivalent, can invalidate a signature the batch builder cannot redo.
+ */
+export class RawCbor {
+  constructor(readonly bytes: Uint8Array) {}
+
+  toCBOR(w: Writer): undefined {
+    w.write(this.bytes);
+    return undefined;
+  }
+}
+
+// --- CIP-0198 offer envelope ---
+
+/** `envelope_version`: the first revision of CIP-0198. */
+export const ENVELOPE_VERSION = 1;
+
+/**
+ * `era_tag` is still TBD in CIP-0198. This is Dijkstra's index in the hard-fork combinator
+ * (Byron 0 … Conway 6), which is the obvious candidate but not yet a published value.
+ */
+export const DIJKSTRA_ERA_TAG = 7;
+
+/** `[envelope_version, era_tag, #6.24(bytes .cbor subtx)]`, carrying the sub-transaction verbatim. */
+export function encodeEnvelope(subTxBytes: Uint8Array): Uint8Array {
+  return encode([ENVELOPE_VERSION, DIJKSTRA_ERA_TAG, new Tag(24, subTxBytes)]);
+}
+
+export function decodeEnvelope(bytes: Uint8Array): Uint8Array {
+  const envelope = decode(bytes) as unknown;
+  if (!Array.isArray(envelope) || envelope.length !== 3) {
+    throw new Error('Offer envelope is not a 3-element array');
+  }
+  const [version, eraTag, wrapped] = envelope as [unknown, unknown, unknown];
+  if (Number(version) !== ENVELOPE_VERSION) {
+    throw new Error(`Unsupported envelope version ${String(version)}`);
+  }
+  if (Number(eraTag) !== DIJKSTRA_ERA_TAG) {
+    throw new Error(`Unsupported era tag ${String(eraTag)}`);
+  }
+  // cbor2 unwraps tag 24 on decode unless told otherwise, so accept either form.
+  const payload = wrapped instanceof Tag ? wrapped.contents : wrapped;
+  if (!(payload instanceof Uint8Array)) {
+    throw new Error('Offer envelope does not carry sub-transaction bytes');
+  }
+  return payload;
 }
 
 // --- sets ---

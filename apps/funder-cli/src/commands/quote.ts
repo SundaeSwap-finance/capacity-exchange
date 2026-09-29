@@ -6,16 +6,17 @@ import { ARTIFACTS, readJson, type Selection, type StoredQuote, workPath, writeJ
 
 export interface QuoteOptions {
   cesUrl: string[];
-  feeEstimate: string;
+  capacity: string;
   selection: string;
 }
 
 /**
- * Asks every configured exchange what it would charge to cover the estimated fee, and keeps
- * the cheapest price the caller can actually pay. This is a real call against a real endpoint.
+ * Asks every configured exchange what it would charge for the capacity the offer needs, and
+ * keeps the cheapest price the caller can actually pay. This is a real call against a real
+ * endpoint: the lovelace was worked out from the ledger, and this converts it into a token.
  */
 export async function runQuote(config: Config, options: QuoteOptions): Promise<void> {
-  const amount = BigInt(options.feeEstimate);
+  const amount = BigInt(options.capacity);
   const selection = readJson<Selection>(options.selection, 'UTxO selection');
   const held = new Set(Object.keys(selection.assets));
 
@@ -63,7 +64,7 @@ export async function runQuote(config: Config, options: QuoteOptions): Promise<v
   const stored: StoredQuote = {
     url: best.url,
     quoteId: best.quoteId,
-    feeEstimate: amount.toString(),
+    capacity: amount.toString(),
     priceAmount: best.price.amount,
     priceUnit: best.price.currency.rawId,
     currency: best.price.currency,
@@ -71,5 +72,6 @@ export async function runQuote(config: Config, options: QuoteOptions): Promise<v
   const quotePath = workPath(config, ARTIFACTS.quote);
   writeJson(quotePath, stored);
   wrote('quote', quotePath);
-  step('quote', `next: ces-fund offer ${quotePath} --simulate-ces --simulated-ces-signing-key <key>`);
+  const draftPath = workPath(config, ARTIFACTS.draft);
+  step('quote', `next: ces-fund sign --draft ${draftPath} --quote ${quotePath} --caller-wallet <dir>`);
 }

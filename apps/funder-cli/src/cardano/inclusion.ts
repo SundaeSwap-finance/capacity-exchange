@@ -14,19 +14,26 @@ const PROBE_OUTPUTS = 8;
 /**
  * Works out whether a transaction has been included.
  *
+ * `txid` is whatever its outputs are keyed by. For a sub-transaction that is its own TxId,
+ * since the ledger adds a sub-transaction's outputs under the sub-transaction's id (SUBUTXO
+ * runs the same UTxO update over the sub-transaction body). The mempool only knows top-level
+ * transactions, though, so `mempoolTxid` names the batch carrying it when that is known.
+ *
  * `unknown` covers two cases that look identical from the UTxO set: the transaction was never
  * accepted, and it was included but every output has since been spent. Neither applies to a
  * transaction this tool just submitted, so callers treat it as "not yet".
  */
-export function checkInclusion(cli: CardanoCli, txid: string): InclusionResult {
+export function checkInclusion(cli: CardanoCli, txid: string, mempoolTxid = txid): InclusionResult {
   const refs = Array.from({ length: PROBE_OUTPUTS }, (_, i) => `${txid}#${i}`);
   if (cli.queryUtxoByRefs(refs).length > 0) {
     return { state: 'included' };
   }
-  return { state: cli.txMempoolExists(txid) ? 'pending' : 'unknown' };
+  return { state: cli.txMempoolExists(mempoolTxid) ? 'pending' : 'unknown' };
 }
 
 export interface WaitOptions {
+  /** See `checkInclusion`. */
+  mempoolTxid?: string;
   timeoutSeconds: number;
   pollSeconds: number;
   /** Called on each poll so the caller can report progress. */
@@ -44,7 +51,7 @@ export async function waitForInclusion(cli: CardanoCli, txid: string, options: W
   const started = Date.now();
   for (;;) {
     const elapsed = Math.round((Date.now() - started) / 1000);
-    const result = checkInclusion(cli, txid);
+    const result = checkInclusion(cli, txid, options.mempoolTxid ?? txid);
     if (result.state === 'included') {
       return { state: 'included', waitedSeconds: elapsed };
     }

@@ -4,31 +4,32 @@ import type { Config } from '../config.js';
 import {
   asArray,
   BODY_INPUTS,
+  BODY_OUTPUTS,
   BODY_SUB_TRANSACTIONS,
   bytesToHex,
   decodeTx,
   readEnvelope,
   readInputs,
+  readOutputs,
   type TxInput,
 } from '../tx/codec.js';
 import { showTransaction } from '../tx/show.js';
 import { decodeSubTransaction } from '../tx/subtx.js';
-import { offerSourceLabel, parseOfferSource } from './state.js';
+import { batchSourceLabel, parseBatchSource } from './state.js';
 
 export interface ShowOptions {
   offline?: boolean;
 }
 
-/** Renders a nested transaction, including the sub-transactions stock tooling hides. */
+/** Renders a batch, including the sub-transactions stock tooling hides. */
 export function runShow(config: Config, file: string, options: ShowOptions): void {
   const envelope = readEnvelope(file);
   const tx = decodeTx(envelope.cborHex);
-  // Whether an exchange was really contacted is recorded by `offer` and carried here by
-  // `splice`. If it is missing, say nothing rather than guess.
-  const subLabel = offerSourceLabel(parseOfferSource(envelope.description));
+  // Who built the batch is recorded by `fund`. If it is missing, say nothing rather than guess.
+  const batchLabel = batchSourceLabel(parseBatchSource(envelope.description));
 
   if (options.offline) {
-    showTransaction(tx, undefined, { subLabel });
+    showTransaction(tx, undefined, { batchLabel });
     return;
   }
 
@@ -50,16 +51,15 @@ export function runShow(config: Config, file: string, options: ShowOptions): voi
     return value;
   };
 
-  // Label the outputs by address so the printout says who gets what.
+  // The top-level outputs are the exchange's. An offer's outputs go wherever its signer chose,
+  // which the transaction does not say, so they are left unlabelled rather than guessed at.
   const addresses = new Map<string, string>();
-  for (const sub of subs) {
-    for (const output of sub.outputs) {
-      addresses.set(bytesToHex(output.address), 'CES');
-    }
+  for (const output of readOutputs(tx.body, BODY_OUTPUTS)) {
+    addresses.set(bytesToHex(output.address), 'CES');
   }
   showTransaction(tx, refs.every((r) => resolved.has(r)) ? resolve : undefined, {
     addresses,
-    subLabel,
+    batchLabel,
   });
 }
 

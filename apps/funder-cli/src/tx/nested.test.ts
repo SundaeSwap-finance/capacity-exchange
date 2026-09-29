@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { encode, Tag } from 'cbor2';
+import { decode, encode, Tag } from 'cbor2';
+import { blake2b } from '@noble/hashes/blake2.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
 import {
   asArray,
@@ -8,22 +9,39 @@ import {
   BODY_FEE,
   BODY_INPUTS,
   BODY_OUTPUTS,
+  BODY_REFERENCE_INPUTS,
   BODY_SUB_TRANSACTIONS,
   bytesToHex,
   type CborMap,
+  decodeEnvelope,
+  decodeInput,
   decodeOutput,
   decodeTx,
+  encodeEnvelope,
   encodeInput,
   encodeOutput,
   encodeTx,
   hexToBytes,
+  RawCbor,
   toBigInt,
 } from './codec.js';
-import { buildSubTransaction, hashBody, minUtxoLovelace } from './subtx.js';
-import { deductPrice, spliceOffer, verifyOffer, vkeyWitnessBytes } from './splice.js';
-import { decodeBech32Address } from '../ces/simulate.js';
-import { assertExactlyOneMode } from '../commands/offer.js';
-import { offerSourceLabel, parseOfferSource, signingKeyPath, walletDir, withOfferSource } from '../commands/state.js';
+import {
+  buildOfferBody,
+  decodeSubTransaction,
+  decodeSubTransactionBytes,
+  hashBody,
+  imbalance,
+  minUtxoLovelace,
+  signSubTransaction,
+  type SubTransaction,
+  verifyWitnesses,
+} from './subtx.js';
+import { assembleBatch, deductPrice, minFeeFor, offerFee, vkeyWitnessBytes } from './batch.js';
+import { decodeBech32Address } from '../cardano/address.js';
+import { receiveOffer, verifyOffer } from '../ces/service.js';
+import { OfferRejected, stopsPolling } from '../ces/protocol.js';
+import { assertExactlyOneMode } from '../commands/fund.js';
+import { batchSourceLabel, parseBatchSource, signingKeyPath, walletDir, withBatchSource } from '../commands/state.js';
 import { unitToCliAsset } from '../cardano/value.js';
 import type { Value } from '../cardano/value.js';
 
@@ -31,66 +49,116 @@ const POLICY = '7a3f9c2e4b81d05f6a92c7e310bd48f2c95a6e07d31b8f4a2c6e9053';
 const UNIT = `${POLICY}${Buffer.from('tokenA').toString('hex')}`;
 const CALLER_IN = { txHash: 'a1'.repeat(32), index: 0 };
 const CES_IN = { txHash: '3f'.repeat(32), index: 0 };
-const ADDR = hexToBytes('60cd20fc2b914b2c395d53e13c36799bce3d40fc5a8092ee3064065042');
+const CES_ADDR = hexToBytes('60cd20fc2b914b2c395d53e13c36799bce3d40fc5a8092ee3064065042');
 /** The caller and the party they are paying are different people, and must be different keys. */
 const CALLER_ADDR = hexToBytes(`60${'ab'.repeat(28)}`);
 const RECIPIENT_ADDR = hexToBytes(`60${'cd'.repeat(28)}`);
+const CALLER_LOVELACE = 1_180_000n;
+const HELD = 100_000_000n;
 const SENT = 98_000_000n;
-const CHANGE_TOKENS = 2_000_000n;
+const CHANGE_TOKENS = HELD - SENT;
 const CHANGE_LOVELACE = 1_025_780n;
-/** Comfortably over the minimum for the two-output draft, which is 183,585. */
-const FEE = 184_000n;
-const SIGNING_KEY = new Uint8Array(32).fill(7);
+const PRICE_AMOUNT = 1_001_995n;
+const PRICE = new Map([[UNIT, PRICE_AMOUNT]]);
+/** The change output's minimum, plus comfortably more than the offer's share of the fee. */
+const CAPACITY = CHANGE_LOVELACE + 200_000n;
+const CALLER_KEY = new Uint8Array(32).fill(7);
 const UTXO_COST_PER_BYTE = 4310n;
 const TX_FEE_FIXED = 155_381n;
 const TX_FEE_PER_BYTE = 44n;
+const PP = { txFeeFixed: TX_FEE_FIXED, txFeePerByte: TX_FEE_PER_BYTE };
+const QUOTE = { capacity: CAPACITY, priceUnit: UNIT, priceAmount: PRICE_AMOUNT };
 
 const chain = new Map<string, Value>([
-  [`${CALLER_IN.txHash}#0`, { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) }],
+  [`${CALLER_IN.txHash}#0`, { lovelace: CALLER_LOVELACE, assets: new Map([[UNIT, HELD]]) }],
   [`${CES_IN.txHash}#0`, { lovelace: 12_400_000n, assets: new Map() }],
 ]);
-const resolve = (i: { txHash: string; index: number }): Value =>
-  chain.get(`${i.txHash}#${i.index}`) ?? { lovelace: 0n, assets: new Map() };
+const lookup = (i: { txHash: string; index: number }): Value | undefined => chain.get(`${i.txHash}#${i.index}`);
+const resolve = (i: { txHash: string; index: number }): Value => lookup(i) ?? { lovelace: 0n, assets: new Map() };
 
 /**
- * What `build` now produces: the recipient's output carrying the caller's own lovelace, and a
- * change output back to the caller whose lovelace the exchange has yet to release. It does not
- * balance on its own, and is not meant to.
+ * What `build` produces and `sign` completes: the recipient's output carrying the caller's own
+ * lovelace, and change back to the caller that is short the price in tokens and needs lovelace
+ * the caller does not have. It does not balance on its own, and is not meant to.
  */
-function parentDraft() {
+function offerBody(price = PRICE_AMOUNT): CborMap {
+  return buildOfferBody(
+    [CALLER_IN],
+    [
+      { address: RECIPIENT_ADDR, value: { lovelace: CALLER_LOVELACE, assets: new Map([[UNIT, SENT]]) } },
+      { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS - price]]) } },
+    ]
+  );
+}
+
+function offer(body = offerBody(), key = CALLER_KEY): SubTransaction {
+  return signSubTransaction(body, key);
+}
+
+/** An offer as it arrives at an exchange: bytes in a CIP-0198 envelope. */
+function envelopeOf(sub: SubTransaction): string {
+  return bytesToHex(encodeEnvelope(sub.bytes));
+}
+
+/**
+ * What `build-raw` gives the exchange: its funding input, and a change output that already
+ * gives up the lovelace the offer needs and takes in the tokens it pays, at a fee of zero.
+ */
+function cesDraft(funding = resolve(CES_IN).lovelace) {
   const body: CborMap = new Map<number, unknown>([
-    [BODY_INPUTS, asSet([encodeInput(CALLER_IN)])],
+    [BODY_INPUTS, asSet([encodeInput(CES_IN)])],
     [
       BODY_OUTPUTS,
-      [
-        encodeOutput({ address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, SENT]]) } }),
-        encodeOutput({
-          address: CALLER_ADDR,
-          value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS]]) },
-        }),
-      ],
+      [encodeOutput({ address: CES_ADDR, value: { lovelace: funding - CHANGE_LOVELACE, assets: new Map(PRICE) } })],
     ],
     [BODY_FEE, 0n],
   ]);
   return { items: [body, new Map(), null], body };
 }
 
-/** The release must now cover the fee *and* the change output the caller could not fund. */
-function offer(released = FEE + CHANGE_LOVELACE, price = new Map([[UNIT, 1_001_995n]])) {
-  return buildSubTransaction({
-    input: CES_IN,
-    inputValue: resolve(CES_IN),
-    address: ADDR,
-    price,
-    released,
+function assemble(subs: SubTransaction[], draft = cesDraft(), res = resolve) {
+  return assembleBatch({
+    draft,
+    changeIndex: 0,
+    subs,
+    resolve: res,
+    txFeeFixed: TX_FEE_FIXED,
+    txFeePerByte: TX_FEE_PER_BYTE,
     utxoCostPerByte: UTXO_COST_PER_BYTE,
-    signingKey: SIGNING_KEY,
+    witnessCount: 1,
   });
+}
+
+/**
+ * An offer whose body was encoded in a way cbor2 never would: the inputs key written as the
+ * two-byte `18 00` rather than `00`. Valid CBOR, a different hash — which is exactly the case
+ * where a batch builder that re-encodes breaks the author's signature.
+ */
+function nonCanonicalOffer(): { bytes: Uint8Array; bodyBytes: Uint8Array } {
+  const canonical = encode(offerBody());
+  expect(canonical[0]).toBe(0xa2); // a two-entry map, whose first key is 0
+  expect(canonical[1]).toBe(0x00);
+  const bodyBytes = Uint8Array.from([0xa2, 0x18, 0x00, ...canonical.slice(2)]);
+  const hash = blake2b(bodyBytes, { dkLen: 32 });
+  const wits = encode(new Map([[0, asSet([[ed25519.getPublicKey(CALLER_KEY), ed25519.sign(hash, CALLER_KEY)]])]]));
+  return { bytes: Uint8Array.from([0x83, ...bodyBytes, ...wits, 0xf6]), bodyBytes };
+}
+
+function rejection(fn: () => unknown): OfferRejected {
+  try {
+    fn();
+  } catch (err) {
+    if (err instanceof OfferRejected) {
+      return err;
+    }
+    throw err;
+  }
+  throw new Error('expected a rejection');
 }
 
 describe('codec', () => {
   it('round-trips a transaction byte for byte', () => {
-    const hex = encodeTx(parentDraft());
+    const hex = encodeTx(cesDraft());
     expect(encodeTx(decodeTx(hex))).toBe(hex);
     expect(() => assertRoundTrip(hex)).not.toThrow();
   });
@@ -98,7 +166,7 @@ describe('codec', () => {
   it('re-emits a Babbage map output as a map, keeping its datum and script ref', () => {
     // A map output carrying a multiasset value (1), an inline datum (2) and a script ref (3).
     const raw = new Map<number, unknown>([
-      [0, ADDR],
+      [0, CES_ADDR],
       [
         1,
         [
@@ -130,16 +198,37 @@ describe('codec', () => {
       '60cd20fc2b914b2c395d53e13c36799bce3d40fc5a8092ee3064065042'
     );
   });
+
+  it('writes pre-encoded bytes verbatim, even when cbor2 would encode them differently', () => {
+    const odd = Uint8Array.from([0x82, 0x18, 0x05, 0x01]); // [5, 1] with 5 in two bytes
+    expect(bytesToHex(encode([new RawCbor(odd)]))).toBe('81821805' + '01');
+  });
 });
 
-describe('sub-transaction', () => {
-  it('signs its own body hash, not the parent transaction', () => {
+describe('offer envelope', () => {
+  it('carries the sub-transaction verbatim under tag 24', () => {
+    const { bytes } = nonCanonicalOffer();
+    const envelope = encodeEnvelope(bytes);
+    // [1, 7, 24(bytes)]: d818 is tag 24's head.
+    expect(bytesToHex(envelope).startsWith('8301' + '07' + 'd818')).toBe(true);
+    expect(bytesToHex(decodeEnvelope(envelope))).toBe(bytesToHex(bytes));
+  });
+
+  it('refuses an envelope version or era it does not know', () => {
+    const bytes = offer().bytes;
+    expect(() => decodeEnvelope(encode([2, 7, new Tag(24, bytes)]))).toThrow(/Unsupported envelope version/);
+    expect(() => decodeEnvelope(encode([1, 6, new Tag(24, bytes)]))).toThrow(/Unsupported era tag/);
+  });
+});
+
+describe('offer', () => {
+  it("signs its own body hash with the caller's key, not any batch", () => {
     const sub = offer();
     const [, wits] = sub.items as [unknown, Map<number, unknown>, unknown];
-    // Freshly built witnesses are a Tag(258); only decoding turns one into a Set.
     const [[vkey, signature]] = asArray(wits.get(0)) as Uint8Array[][];
     expect(ed25519.verify(signature, hashBody(sub.body), vkey)).toBe(true);
-    expect(bytesToHex(vkey)).toBe(bytesToHex(ed25519.getPublicKey(SIGNING_KEY)));
+    expect(bytesToHex(vkey)).toBe(bytesToHex(ed25519.getPublicKey(CALLER_KEY)));
+    expect(sub.bodyHash).toBe(bytesToHex(hashBody(sub.body)));
   });
 
   it('carries no fee or collateral field, so it cannot balance alone', () => {
@@ -149,151 +238,183 @@ describe('sub-transaction', () => {
     }
   });
 
-  it('releases exactly the lovelace it was asked to', () => {
-    const sub = offer(181_381n);
-    const produced = sub.outputs.reduce((total, o) => total + o.value.lovelace, 0n);
-    expect(resolve(CES_IN).lovelace - produced).toBe(181_381n);
+  it('offers exactly the price in tokens and needs exactly the change lovelace', () => {
+    const delta = imbalance(offer(), resolve);
+    expect(delta.assets.get(UNIT)).toBe(PRICE_AMOUNT);
+    expect(delta.lovelace).toBe(-CHANGE_LOVELACE);
   });
 
-  it('balances the bundle once the change output it funds is accounted for', () => {
-    const result = spliceOffer({
-      parent: parentDraft(),
-      sub: offer(),
-      price: new Map([[UNIT, 1_001_995n]]),
-      resolve,
-      txFeeFixed: TX_FEE_FIXED,
-      txFeePerByte: TX_FEE_PER_BYTE,
-      witnessCount: 1,
-      callerAddress: CALLER_ADDR,
-    });
-    // released = fee + the caller's unfunded change output
-    expect(result.released).toBe(result.fee + CHANGE_LOVELACE);
-    expect(result.balance.balances).toBe(true);
+  it('hashes an arriving offer as it was encoded, not as cbor2 would re-encode it', () => {
+    const { bytes, bodyBytes } = nonCanonicalOffer();
+    const sub = decodeSubTransactionBytes(bytes);
+    expect(sub.bodyHash).toBe(bytesToHex(blake2b(bodyBytes, { dkLen: 32 })));
+    expect(() => verifyWitnesses(sub)).not.toThrow();
+    // A plain decode forgets the encoding, so re-encoding produces a different hash and a
+    // signature that no longer verifies.
+    const reencoded = decodeSubTransaction(decode(bytes) as unknown[]);
+    expect(reencoded.bodyHash).not.toBe(sub.bodyHash);
+    expect(() => verifyWitnesses(reencoded)).toThrow(/does not verify/);
   });
 
-  it('refuses to build when the exchange UTxO is too small', () => {
-    expect(() =>
-      buildSubTransaction({
-        input: CES_IN,
-        inputValue: { lovelace: 1_200_000n, assets: new Map() },
-        address: ADDR,
-        price: new Map([[UNIT, 1n]]),
-        released: 181_381n,
-        utxoCostPerByte: UTXO_COST_PER_BYTE,
-        signingKey: SIGNING_KEY,
-      })
-    ).toThrow(/too small/);
+  it('refuses an offer with no witnesses', () => {
+    const sub = decodeSubTransactionBytes(encode([offerBody(), new Map(), null]));
+    expect(() => verifyWitnesses(sub)).toThrow(/no vkey witnesses/);
   });
 
   it('gives a token-bearing output more than a bare ada one', () => {
-    const bare = minUtxoLovelace({ address: ADDR, value: { lovelace: 0n, assets: new Map() } }, UTXO_COST_PER_BYTE);
+    const bare = minUtxoLovelace({ address: CES_ADDR, value: { lovelace: 0n, assets: new Map() } }, UTXO_COST_PER_BYTE);
     const withToken = minUtxoLovelace(
-      { address: ADDR, value: { lovelace: 0n, assets: new Map([[UNIT, 1n]]) } },
+      { address: CES_ADDR, value: { lovelace: 0n, assets: new Map([[UNIT, 1n]]) } },
       UTXO_COST_PER_BYTE
     );
     expect(withToken).toBeGreaterThan(bare);
   });
 });
 
-describe('verifyOffer', () => {
-  const price = new Map([[UNIT, 1_001_995n]]);
-
-  it('accepts a well-formed offer', () => {
-    const result = verifyOffer(offer(), price, [CALLER_IN], resolve);
-    expect(result.released).toBe(FEE + CHANGE_LOVELACE);
-  });
-
-  it('rejects an offer that takes more than the quoted price', () => {
-    const greedy = offer(181_381n, new Map([[UNIT, 2_000_000n]]));
-    expect(() => verifyOffer(greedy, price, [CALLER_IN], resolve)).toThrow(/quoted price/);
-  });
-
-  it("rejects an offer that spends the caller's own UTxO", () => {
+describe('receiveOffer (stateless checks)', () => {
+  it('accepts a well-formed offer and names who signed it', () => {
     const sub = offer();
-    sub.inputs = [CALLER_IN];
-    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(/caller's own UTxO/);
+    const { sub: received, signers } = receiveOffer(envelopeOf(sub));
+    expect(received.bodyHash).toBe(sub.bodyHash);
+    expect(signers).toEqual([bytesToHex(ed25519.getPublicKey(CALLER_KEY))]);
   });
 
-  it('rejects an offer that does anything but move value', () => {
-    const sub = offer();
-    sub.body.set(5, new Map()); // withdrawals
-    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(/withdrawals/);
+  it('refuses bytes that are not an envelope as malformed', () => {
+    expect(rejection(() => receiveOffer('deadbeef')).code).toBe('malformed');
+  });
+
+  it('refuses an envelope version it does not know as unsupported-version', () => {
+    const hex = bytesToHex(encode([2, 7, new Tag(24, offer().bytes)]));
+    expect(rejection(() => receiveOffer(hex)).code).toBe('unsupported-version');
+  });
+
+  it('refuses a witness that does not sign the body it arrived with', () => {
+    const signed = offer();
+    const tampered = encode([offerBody(1n), signed.items[1], null]);
+    const err = rejection(() => receiveOffer(bytesToHex(encodeEnvelope(tampered))));
+    expect(err.code).toBe('malformed');
+    expect(err.message).toMatch(/does not verify/);
   });
 
   const REWARD_ACCOUNT = new Uint8Array(29).fill(4);
   const CREDENTIAL = [0, new Uint8Array(28).fill(3)];
 
   it.each([
-    [2, 'a fee', 0n],
-    [13, 'collateral inputs', asSet([encodeInput(CES_IN)])],
+    [4, 'certificates', []],
+    [5, 'withdrawals', new Map()],
+    [9, 'mint', new Map()],
     [14, 'guards', asSet([new Uint8Array(28).fill(3)])],
     [23, 'nested sub-transactions', asSet([offer().items])],
     // The three below are what `sub_transaction_body` actually permits and `computeBalance`
     // cannot see: 22 and 25 move lovelace without touching an output, and 24 constrains the
-    // caller's own transaction.
+    // batch that carries the offer.
     [22, 'a treasury donation', 1_000_000n],
     [24, 'required top-level guards', new Map([[CREDENTIAL, null]])],
     [25, 'direct deposits', new Map([[REWARD_ACCOUNT, 1_000_000n]])],
     [26, 'account balance intervals', new Map([[REWARD_ACCOUNT, [0n, null]]])],
-  ])('rejects an offer carrying body key %i (%s)', (key, label, value) => {
-    const sub = offer();
-    sub.body.set(key as number, value);
-    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).toThrow(String(label));
+  ])('is not interested in an offer carrying body key %i (%s)', (key, label, value) => {
+    const body = offerBody();
+    body.set(key as number, value);
+    const err = rejection(() => receiveOffer(envelopeOf(offer(body))));
+    expect(err.code).toBe('not-interested');
+    expect(err.message).toContain(String(label));
   });
 
   it.each([
     [3, 'a time-to-live'],
     [8, 'a validity interval start'],
   ])('accepts an offer bounded by body key %i (%s), which is how an offer expires', (key) => {
-    const sub = offer();
-    sub.body.set(key, 100n);
-    expect(() => verifyOffer(sub, price, [CALLER_IN], resolve)).not.toThrow();
+    const body = offerBody();
+    body.set(key, 100n);
+    expect(() => receiveOffer(envelopeOf(offer(body)))).not.toThrow();
   });
 });
 
-describe('splice', () => {
-  const price = new Map([[UNIT, 1_001_995n]]);
+describe('verifyOffer (chain-state checks)', () => {
+  it('accepts an offer that pays the quote for what it needs', () => {
+    const sub = offer();
+    const verified = verifyOffer(sub, lookup, QUOTE, PP);
+    expect(verified.lovelaceNeeded).toBe(CHANGE_LOVELACE);
+    expect(verified.offered.get(UNIT)).toBe(PRICE_AMOUNT);
+    expect(verified.feeShare).toBe(offerFee(sub.bytes.length, TX_FEE_FIXED, TX_FEE_PER_BYTE));
+  });
 
-  it('produces a balanced bundle with the sub-transaction at key 23', () => {
-    const result = spliceOffer({
-      parent: parentDraft(),
-      sub: offer(),
-      price,
-      resolve,
-      txFeeFixed: TX_FEE_FIXED,
-      txFeePerByte: TX_FEE_PER_BYTE,
-      witnessCount: 1,
-      callerAddress: CALLER_ADDR,
-    });
+  it('marks an offer whose input is already spent as invalidated', () => {
+    const gone = () => undefined;
+    expect(rejection(() => verifyOffer(offer(), gone, QUOTE, PP)).code).toBe('invalidated');
+  });
+
+  it('is not interested in an offer that pays less than the quote', () => {
+    const cheap = offer(offerBody(PRICE_AMOUNT - 1n));
+    const err = rejection(() => verifyOffer(cheap, lookup, QUOTE, PP));
+    expect(err.code).toBe('not-interested');
+    expect(err.message).toMatch(/quote was for/);
+  });
+
+  it('is not interested in an offer that needs more lovelace than was quoted for', () => {
+    const err = rejection(() => verifyOffer(offer(), lookup, { ...QUOTE, capacity: CHANGE_LOVELACE }, PP));
+    expect(err.code).toBe('not-interested');
+    expect(err.message).toMatch(/more than the/);
+  });
+
+  it("is not interested in an offer that spends the service's own UTxO", () => {
+    const body = buildOfferBody(
+      [CES_IN],
+      [{ address: CALLER_ADDR, value: { lovelace: 1_000_000n, assets: new Map() } }]
+    );
+    const err = rejection(() => verifyOffer(offer(body), lookup, QUOTE, PP, [CES_IN]));
+    expect(err.message).toMatch(/belongs to this service/);
+  });
+
+  it('is not interested in an offer that needs tokens from its batch', () => {
+    const body = buildOfferBody(
+      [CALLER_IN],
+      [{ address: RECIPIENT_ADDR, value: { lovelace: CALLER_LOVELACE, assets: new Map([[UNIT, HELD + 1n]]) } }]
+    );
+    expect(rejection(() => verifyOffer(offer(body), lookup, QUOTE, PP)).message).toMatch(/only supplies ADA/);
+  });
+});
+
+describe('assembleBatch', () => {
+  it('produces a balanced batch carrying the offer at key 23', () => {
+    const sub = offer();
+    const result = assemble([sub]);
     expect(result.balance.balances).toBe(true);
-    // The release covers the fee *and* the change output the caller could not fund.
-    expect(result.fee).toBe(FEE);
     expect(result.parent.body.get(BODY_SUB_TRANSACTIONS)).toBeInstanceOf(Tag);
-    expect(result.surplus).toBeGreaterThanOrEqual(0n);
+    expect(result.fee).toBe(minFeeFor(result.signedSizeBytes, TX_FEE_FIXED, TX_FEE_PER_BYTE));
+    // The exchange paid the fee out of its own change.
+    const change = decodeOutput(asArray(result.parent.body.get(BODY_OUTPUTS))[0]);
+    expect(change.value.lovelace).toBe(resolve(CES_IN).lovelace - CHANGE_LOVELACE - result.fee);
+    expect(change.value.assets.get(UNIT)).toBe(PRICE_AMOUNT);
   });
 
   it('encodes sub_transactions as a CBOR set, as the ledger requires', () => {
-    const result = spliceOffer({
-      parent: parentDraft(),
-      sub: offer(),
-      price,
-      resolve,
-      txFeeFixed: TX_FEE_FIXED,
-      txFeePerByte: TX_FEE_PER_BYTE,
-      witnessCount: 1,
-      callerAddress: CALLER_ADDR,
-    });
-    // Tag 258 is the set wrapper; d9 0102 is its CBOR head.
-    expect(encodeTx(result.parent)).toContain('17d9010281');
+    // Tag 258 is the set wrapper; d9 0102 is its CBOR head. The CDDL has
+    // `sub_transactions = nonempty_oset<sub_transaction>`: a list on the wire, even though the
+    // ledger holds it in memory as a map keyed by TxId.
+    expect(encodeTx(assemble([offer()]).parent)).toContain('17d9010281');
+  });
+
+  it('inserts the offer verbatim, so a signature over an unusual encoding survives', () => {
+    const { bytes } = nonCanonicalOffer();
+    const sub = decodeSubTransactionBytes(bytes);
+    expect(encodeTx(assemble([sub]).parent)).toContain(bytesToHex(bytes));
+  });
+
+  it("declares the offer's inputs as reference inputs so the node resolves them", () => {
+    const result = assemble([offer()]);
+    const refs = asArray(result.parent.body.get(BODY_REFERENCE_INPUTS)).map(decodeInput);
+    expect(refs).toEqual([CALLER_IN]);
+    expect(result.declaredReferenceInputs).toEqual([CALLER_IN]);
   });
 
   it('counts the bytes a vkey witness really adds, so the fee covers the signed size', () => {
     // Measured against cbor2 rather than assumed: an under-count here silently produces a
-    // bundle the node rejects for too low a fee.
+    // batch the node rejects for too low a fee.
     const witness = [new Uint8Array(32).fill(1), new Uint8Array(64).fill(2)];
     const size = (n: number) => {
       const wits = n === 0 ? new Map() : new Map([[0, asSet(Array.from({ length: n }, () => witness))]]);
-      return encode([parentDraft().body, wits, null]).length;
+      return encode([cesDraft().body, wits, null]).length;
     };
     const unwitnessed = size(0);
     expect(vkeyWitnessBytes(0)).toBe(0);
@@ -302,29 +423,27 @@ describe('splice', () => {
     }
   });
 
-  it('refuses when the exchange under-pads and the fee falls short', () => {
-    expect(() =>
-      spliceOffer({
-        parent: parentDraft(),
-        sub: offer(1000n),
-        price,
-        resolve,
-        txFeeFixed: TX_FEE_FIXED,
-        txFeePerByte: TX_FEE_PER_BYTE,
-        witnessCount: 1,
-        callerAddress: CALLER_ADDR,
-      })
-    ).toThrow(/below the .* minimum/);
+  it('refuses two offers that spend the same input', () => {
+    expect(() => assemble([offer(), offer(offerBody(PRICE_AMOUNT + 1n))])).toThrow(/same input/);
   });
 
+  it("refuses when the exchange's change would fall below its minimum", () => {
+    const small = new Map(chain);
+    small.set(`${CES_IN.txHash}#0`, { lovelace: 1_500_000n, assets: new Map() });
+    const res = (i: { txHash: string; index: number }) => small.get(`${i.txHash}#${i.index}`)!;
+    expect(() => assemble([offer()], cesDraft(1_500_000n), res)).toThrow(/below its .* minimum/);
+  });
+});
+
+describe('deductPrice', () => {
   it("takes the price out of the caller's change, not the recipient's output", () => {
     const outputs = [
       { address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, SENT]]) } },
       { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, CHANGE_TOKENS]]) } },
     ];
-    const { outputs: updated, index } = deductPrice(outputs, price, CALLER_ADDR);
+    const { outputs: updated, index } = deductPrice(outputs, PRICE, CALLER_ADDR);
     expect(index).toBe(1);
-    expect(updated[1].value.assets.get(UNIT)).toBe(CHANGE_TOKENS - 1_001_995n);
+    expect(updated[1].value.assets.get(UNIT)).toBe(CHANGE_TOKENS - PRICE_AMOUNT);
     // The person being paid is untouched.
     expect(updated[0].value.assets.get(UNIT)).toBe(SENT);
   });
@@ -334,12 +453,12 @@ describe('splice', () => {
       { address: RECIPIENT_ADDR, value: { lovelace: 1_180_000n, assets: new Map([[UNIT, 100_000_000n]]) } },
       { address: CALLER_ADDR, value: { lovelace: CHANGE_LOVELACE, assets: new Map([[UNIT, 1n]]) } },
     ];
-    expect(() => deductPrice(outputs, price, CALLER_ADDR)).toThrow(/belongs to someone else/);
+    expect(() => deductPrice(outputs, PRICE, CALLER_ADDR)).toThrow(/belongs to someone else/);
   });
 
   it('refuses when no output holds enough of the payment asset', () => {
     const outputs = [{ address: CALLER_ADDR, value: { lovelace: 1_180_000n, assets: new Map() } }];
-    expect(() => deductPrice(outputs, price, CALLER_ADDR)).toThrow(/No parent output/);
+    expect(() => deductPrice(outputs, PRICE, CALLER_ADDR)).toThrow(/No output holds/);
   });
 });
 
@@ -356,37 +475,46 @@ describe('wallet paths', () => {
   });
 });
 
-describe('offer provenance', () => {
-  it('round-trips a simulated offer through the envelope description', () => {
-    const description = withOfferSource('Ledger Cddl Format', { simulated: true });
-    expect(parseOfferSource(description)).toEqual({ simulated: true });
-    expect(offerSourceLabel(parseOfferSource(description))).toBe('[simulated CES]');
+describe('batch provenance', () => {
+  it('round-trips a simulated batch through the envelope description', () => {
+    const description = withBatchSource('Ledger Cddl Format', { simulated: true });
+    expect(parseBatchSource(description)).toEqual({ simulated: true });
+    expect(batchSourceLabel(parseBatchSource(description))).toBe('[simulated CES]');
   });
 
   it('round-trips a real exchange, and never calls it simulated', () => {
-    const description = withOfferSource('Ledger Cddl Format', { simulated: false, url: 'https://ces.example' });
-    expect(parseOfferSource(description)).toEqual({ simulated: false, url: 'https://ces.example' });
-    expect(offerSourceLabel(parseOfferSource(description))).toBe('[CES https://ces.example]');
+    const description = withBatchSource('Ledger Cddl Format', { simulated: false, url: 'https://ces.example' });
+    expect(parseBatchSource(description)).toEqual({ simulated: false, url: 'https://ces.example' });
+    expect(batchSourceLabel(parseBatchSource(description))).toBe('[CES https://ces.example]');
   });
 
   it('keeps whatever the description already said', () => {
-    expect(withOfferSource('Ledger Cddl Format', { simulated: true })).toContain('Ledger Cddl Format');
-    expect(withOfferSource('', { simulated: true })).toBe('offer from simulated CES');
+    expect(withBatchSource('Ledger Cddl Format', { simulated: true })).toContain('Ledger Cddl Format');
+    expect(withBatchSource('', { simulated: true })).toBe('batch built by simulated CES');
   });
 
   it('says nothing when no source was recorded, rather than assuming one', () => {
-    expect(parseOfferSource('Ledger Cddl Format')).toBeUndefined();
-    expect(parseOfferSource(undefined)).toBeUndefined();
-    expect(withOfferSource('Ledger Cddl Format', undefined)).toBe('Ledger Cddl Format');
-    expect(offerSourceLabel(undefined)).toBeUndefined();
+    expect(parseBatchSource('Ledger Cddl Format')).toBeUndefined();
+    expect(parseBatchSource(undefined)).toBeUndefined();
+    expect(withBatchSource('Ledger Cddl Format', undefined)).toBe('Ledger Cddl Format');
+    expect(batchSourceLabel(undefined)).toBeUndefined();
   });
 });
 
-describe('offer mode', () => {
+describe('fund', () => {
   it('requires exactly one mode, so a run can never silently simulate', () => {
     expect(() => assertExactlyOneMode({})).toThrow(/exactly one/);
     expect(() => assertExactlyOneMode({ simulateCes: true, cesUrl: 'https://x' })).toThrow(/exactly one/);
     expect(() => assertExactlyOneMode({ simulateCes: true })).not.toThrow();
     expect(() => assertExactlyOneMode({ cesUrl: 'https://x' })).not.toThrow();
+  });
+
+  it('keeps asking the exchange until the batch is submitted, then turns to the chain', () => {
+    for (const state of ['received', 'verified', 'included-in-batch'] as const) {
+      expect(stopsPolling(state)).toBe(false);
+    }
+    for (const state of ['submitted', 'rejected', 'confirmed', 'expired', 'invalidated'] as const) {
+      expect(stopsPolling(state)).toBe(true);
+    }
   });
 });

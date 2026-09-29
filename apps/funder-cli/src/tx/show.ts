@@ -15,14 +15,14 @@ import {
   type TxInput,
   type TxOutput,
 } from './codec.js';
-import { computeBalance, type ResolveInput } from './splice.js';
+import { computeBalance, type ResolveInput } from './batch.js';
 import { decodeSubTransaction, type SubTransaction, subTransactionSigners } from './subtx.js';
 
 export interface ShowLabels {
   /** Address bytes (hex) -> a human label such as "caller" or "CES". */
   addresses?: Map<string, string>;
-  /** Provenance tag for each sub-transaction. Omitted when the source was never recorded. */
-  subLabel?: string;
+  /** Who built the batch. Omitted when the source was never recorded. */
+  batchLabel?: string;
 }
 
 function labelFor(address: Uint8Array, labels?: Map<string, string>): string {
@@ -59,10 +59,10 @@ export function showTransaction(tx: DecodedTx, resolve: ResolveInput | undefined
     }
   };
 
-  plain('TOP-LEVEL');
+  plain(`TOP-LEVEL${labels.batchLabel ? `   ${labels.batchLabel}` : ''}`);
   plain('  inputs');
   for (const input of inputs) {
-    plain(inputLine(input, resolveOrUndefined(input), labels.addresses, 'caller'));
+    plain(inputLine(input, resolveOrUndefined(input), labels.addresses, 'CES'));
   }
   plain('  outputs');
   for (const output of outputs) {
@@ -72,15 +72,14 @@ export function showTransaction(tx: DecodedTx, resolve: ResolveInput | undefined
 
   subs.forEach((sub: SubTransaction, i: number) => {
     const signers = subTransactionSigners(sub.items).map((k) => short(k, 4));
-    const tag = labels.subLabel ? `   ${labels.subLabel}` : '';
     plain('');
     plain(
-      `SUB-TRANSACTION ${i + 1}/${subs.length}        body ${short(sub.bodyHash, 6)}    ` +
-        `signed by ${signers.join(', ') || '(none)'}${tag}`
+      `SUB-TRANSACTION ${i + 1}/${subs.length}   offer ${short(sub.bodyHash, 6)}    ` +
+        `signed by ${signers.join(', ') || '(none)'}`
     );
     plain('  inputs');
     for (const input of sub.inputs) {
-      plain(inputLine(input, resolveOrUndefined(input), labels.addresses, 'CES'));
+      plain(inputLine(input, resolveOrUndefined(input), labels.addresses, 'caller'));
     }
     plain('  outputs');
     for (const output of sub.outputs) {
@@ -94,6 +93,6 @@ export function showTransaction(tx: DecodedTx, resolve: ResolveInput | undefined
     plain('BALANCE');
     plain(`  consumed        ${formatValue(balance.consumed)}`);
     plain(`  produced        ${formatValue(balance.produced)}`);
-    plain(balance.balances ? '  ✓ bundle balances' : '  ✗ BUNDLE DOES NOT BALANCE');
+    plain(balance.balances ? '  ✓ batch balances' : '  ✗ BATCH DOES NOT BALANCE');
   }
 }

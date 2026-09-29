@@ -3,7 +3,7 @@ import type { Config } from '../config.js';
 import { formatValue } from '../cardano/value.js';
 import { formatAda, plain, step, warn, wrote } from '../log.js';
 import { minUtxoLovelace } from '../tx/subtx.js';
-import { decodeBech32Address } from '../ces/simulate.js';
+import { decodeBech32Address } from '../cardano/address.js';
 import { signingKeyPath, walletDir, workPath, writeJson, ARTIFACTS, type Selection } from './state.js';
 
 export interface BalanceOptions {

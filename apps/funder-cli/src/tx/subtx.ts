@@ -1,9 +1,9 @@
 import { blake2b } from '@noble/hashes/blake2.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
-import { decode, encode } from 'cbor2';
+import { decode, encode, getEncoded } from 'cbor2';
 import { readFileSync } from 'node:fs';
 import type { Value } from '../cardano/value.js';
-import { emptyValue, subValue, sumValues } from '../cardano/value.js';
+import { subValue, sumValues } from '../cardano/value.js';
 import {
   asArray,
   asSet,
@@ -11,6 +11,7 @@ import {
   BODY_OUTPUTS,
   bytesToHex,
   type CborMap,
+  decodeInput,
   decodeOutput,
   encodeInput,
   encodeOutput,
@@ -28,7 +29,13 @@ const MIN_UTXO_OVERHEAD = 160n;
 export interface SubTransaction {
   /** `[sub_transaction_body, witness_set, auxiliary_data/nil]`. */
   items: unknown[];
+  /**
+   * The sub-transaction exactly as its author encoded it. This, not `items`, is what goes into
+   * a batch: the author's witnesses sign the hash of these body bytes.
+   */
+  bytes: Uint8Array;
   body: CborMap;
+  /** Hash of the body as encoded, which is also the sub-transaction's TxId and offer id. */
   bodyHash: string;
   inputs: TxInput[];
   outputs: TxOutput[];
@@ -52,8 +59,8 @@ export function readSigningKey(path: string): Uint8Array {
 
 /**
  * The hash a witness signs. For a sub-transaction this is the hash of the *sub*-transaction's
- * own body, not the parent's, which is what lets the exchange sign an offer without knowing
- * the transaction that will eventually carry it.
+ * own body, not the batch's, which is what lets the caller sign an offer before anyone has
+ * built the transaction that will carry it.
  */
 export function hashBody(body: CborMap): Uint8Array {
   return blake2b(encode(body), { dkLen: 32 });
@@ -72,68 +79,60 @@ export function minUtxoLovelace(output: TxOutput, utxoCostPerByte: bigint): bigi
   return result;
 }
 
-export interface BuildSubTxParams {
-  /** The exchange's own UTxO, funding the release. */
-  input: TxInput;
-  inputValue: Value;
-  /** Where the exchange wants its payment and change sent. */
-  address: Uint8Array;
-  /** What the caller pays, as unit -> quantity. */
-  price: Map<string, bigint>;
-  /** Lovelace this sub-transaction releases into the bundle to cover the parent's fee. */
-  released: bigint;
-  utxoCostPerByte: bigint;
-  signingKey: Uint8Array;
+/**
+ * The body of the caller's offer: their own UTxO in, and the outputs they want out.
+ *
+ * It deliberately does not balance. The outputs carry more lovelace than the input — the
+ * change output's minimum, which the caller cannot fund — and fewer tokens, the difference
+ * being the price. The ledger only checks conservation across the whole batch, so whoever
+ * carries the offer makes up the lovelace and keeps the tokens.
+ */
+export function buildOfferBody(inputs: TxInput[], outputs: TxOutput[]): CborMap {
+  return new Map<number, unknown>([
+    [BODY_INPUTS, asSet(inputs.map(encodeInput))],
+    [BODY_OUTPUTS, outputs.map(encodeOutput)],
+  ]);
 }
 
-/**
- * Builds and signs the partial transaction an exchange hands back for an offer.
- *
- * It spends one of the exchange's ADA UTxOs and produces two outputs back to the exchange:
- * the payment (the caller's tokens, which come from the parent transaction's value pool) and
- * the ADA change. It deliberately does not balance on its own — the shortfall is exactly the
- * lovelace it releases, and the ledger only checks conservation across the whole bundle.
- */
-export function buildSubTransaction(params: BuildSubTxParams): SubTransaction {
-  const { input, inputValue, address, price, released, utxoCostPerByte, signingKey } = params;
-
-  const paymentValue: Value = { lovelace: 0n, assets: new Map(price) };
-  const paymentOutput: TxOutput = { address, value: paymentValue };
-  paymentValue.lovelace = minUtxoLovelace(paymentOutput, utxoCostPerByte);
-
-  const changeLovelace = inputValue.lovelace - paymentValue.lovelace - released;
-  const changeOutput: TxOutput = { address, value: { lovelace: changeLovelace, assets: new Map() } };
-  const minChange = minUtxoLovelace(changeOutput, utxoCostPerByte);
-  if (changeLovelace < minChange) {
-    throw new Error(
-      `Exchange UTxO of ${inputValue.lovelace} lovelace is too small: after a ${paymentValue.lovelace} ` +
-        `lovelace payment output and releasing ${released}, the ${changeLovelace} lovelace change is ` +
-        `below the ${minChange} lovelace minimum.`
-    );
-  }
-
-  const body: CborMap = new Map<number, unknown>([
-    [BODY_INPUTS, asSet([encodeInput(input)])],
-    [BODY_OUTPUTS, [encodeOutput(paymentOutput), encodeOutput(changeOutput)]],
-  ]);
-
+/** Signs a sub-transaction body and returns it in the form that travels in an envelope. */
+export function signSubTransaction(body: CborMap, signingKey: Uint8Array): SubTransaction {
   const bodyHash = hashBody(body);
   const publicKey = ed25519.getPublicKey(signingKey);
   const signature = ed25519.sign(bodyHash, signingKey);
   const witnesses = new Map<number, unknown>([[WITS_VKEY, asSet([[publicKey, signature]])]]);
-
   const items = [body, witnesses, null];
-
   return {
     items,
+    bytes: encode(items),
     body,
     bodyHash: bytesToHex(bodyHash),
-    inputs: [input],
-    outputs: [paymentOutput, changeOutput],
+    inputs: asArray(body.get(BODY_INPUTS)).map(decodeInput),
+    outputs: asArray(body.get(BODY_OUTPUTS)).map(decodeOutput),
   };
 }
 
-/** Parses a sub-transaction that arrived from an exchange. */
+/**
+ * Parses a sub-transaction that arrived as bytes, hashing the body as it was actually encoded
+ * rather than as cbor2 would re-encode it. The two agree for anything this tool built; they
+ * need not for an offer built elsewhere.
+ */
+export function decodeSubTransactionBytes(bytes: Uint8Array): SubTransaction {
+  const items = decode(bytes, { saveOriginal: true }) as unknown;
+  if (!Array.isArray(items) || items.length !== 3) {
+    throw new Error('Sub-transaction is not a [body, witnesses, auxiliary_data] array');
+  }
+  const sub = decodeSubTransaction(items);
+  const original = getEncoded(sub.body);
+  if (!original) {
+    throw new Error('Could not recover the original encoding of the sub-transaction body');
+  }
+  return { ...sub, bytes, bodyHash: bytesToHex(blake2b(original, { dkLen: 32 })) };
+}
+
+/**
+ * Parses a sub-transaction already decoded as part of a larger transaction. Its hash is taken
+ * over a re-encoding, which is fine for display but not for verifying signatures.
+ */
 export function decodeSubTransaction(items: unknown[]): SubTransaction {
   const [body, ,] = items;
   if (!(body instanceof Map)) {
@@ -142,12 +141,10 @@ export function decodeSubTransaction(items: unknown[]): SubTransaction {
   const map = body as CborMap;
   return {
     items,
+    bytes: encode(items),
     body: map,
     bodyHash: bytesToHex(hashBody(map)),
-    inputs: asArray(map.get(BODY_INPUTS)).map((raw) => {
-      const [hash, index] = raw as [Uint8Array, number];
-      return { txHash: bytesToHex(hash), index: Number(index) };
-    }),
+    inputs: asArray(map.get(BODY_INPUTS)).map(decodeInput),
     outputs: asArray(map.get(BODY_OUTPUTS)).map(decodeOutput),
   };
 }
@@ -162,25 +159,32 @@ export function subTransactionSigners(items: unknown[]): string[] {
 }
 
 /**
- * Lovelace a sub-transaction contributes to the bundle: what it spends, less what it
- * re-creates. This is the number that ends up covering the parent's fee.
+ * Checks every vkey witness against the body hash, returning the signing keys. An offer with
+ * no witnesses at all is refused: it would be carried on nobody's authority.
  */
-export function releasedLovelace(sub: SubTransaction, resolveInput: (input: TxInput) => Value): bigint {
-  const consumed = sumValues(sub.inputs.map(resolveInput));
-  const produced = sumValues(sub.outputs.map((o) => o.value));
-  return subValue(consumed, produced).lovelace;
+export function verifyWitnesses(sub: SubTransaction): string[] {
+  const wits = sub.items[1];
+  const vkeys = wits instanceof Map ? asArray(wits.get(WITS_VKEY)) : [];
+  if (vkeys.length === 0) {
+    throw new Error('Sub-transaction carries no vkey witnesses');
+  }
+  const message = hexToBytes(sub.bodyHash);
+  return vkeys.map((w) => {
+    const [vkey, signature] = w as Uint8Array[];
+    if (!ed25519.verify(signature, message, vkey)) {
+      throw new Error(`Witness from ${bytesToHex(vkey).slice(0, 8)}… does not verify against the body hash`);
+    }
+    return bytesToHex(vkey);
+  });
 }
 
-/** Tokens a sub-transaction takes out of the bundle, i.e. what the caller is paying. */
-export function tokensTaken(sub: SubTransaction, resolveInput: (input: TxInput) => Value): Value {
+/**
+ * CIP-0198's imbalance: `consumed − produced`, per asset. A positive entry is what the
+ * sub-transaction offers its batch, a negative one what it needs from it. For a babel-fee
+ * offer the tokens come out positive and the lovelace negative.
+ */
+export function imbalance(sub: SubTransaction, resolveInput: (input: TxInput) => Value): Value {
   const consumed = sumValues(sub.inputs.map(resolveInput));
   const produced = sumValues(sub.outputs.map((o) => o.value));
-  const delta = subValue(produced, consumed);
-  const taken = emptyValue();
-  for (const [unit, quantity] of delta.assets) {
-    if (quantity > 0n) {
-      taken.assets.set(unit, quantity);
-    }
-  }
-  return taken;
+  return subValue(consumed, produced);
 }
