@@ -1,6 +1,6 @@
 import type { CardanoCli, ProtocolParams, Utxo } from '../cardano/cli.js';
 import { utxoRef } from '../cardano/cli.js';
-import { emptyValue, sumValues, unitToCliAsset, type Value } from '../cardano/value.js';
+import { addValue, emptyValue, sumValues, unitToCliAsset, type Value } from '../cardano/value.js';
 import { assembleBatch, type AssembleResult, offerFee } from '../tx/batch.js';
 import {
   assertRoundTrip,
@@ -137,13 +137,15 @@ export function verifyOffer(
   return { sub, imbalance: delta, lovelaceNeeded, offered, feeShare };
 }
 
-/** The exchange's largest ADA-only UTxO: the most room for the lovelace a batch gives away. */
+/**
+ * The exchange's UTxO with the most lovelace: the most room for what a batch gives away. It is
+ * paid in tokens, so its UTxOs carry them; whatever this one holds rides along into the change.
+ */
 export function selectFunding(utxos: Utxo[], address: string): Utxo {
-  const adaOnly = utxos.filter((u) => u.value.assets.size === 0);
-  if (adaOnly.length === 0) {
-    throw new Error(`Simulated exchange wallet ${address} has no ADA-only UTxO to fund a batch with`);
+  if (utxos.length === 0) {
+    throw new Error(`Simulated exchange wallet ${address} has no UTxO to fund a batch with`);
   }
-  return adaOnly.reduce((a, b) => (b.value.lovelace > a.value.lovelace ? b : a));
+  return utxos.reduce((a, b) => (b.value.lovelace > a.value.lovelace ? b : a));
 }
 
 export interface BuildBatchParams {
@@ -182,7 +184,9 @@ export function buildBatch(params: BuildBatchParams): BuiltBatch {
   }
 
   // No shell is involved, so the multi-asset part carries no quotes of its own.
-  const assets = [...earned.assets].map(([unit, qty]) => `+${qty} ${unitToCliAsset(unit)}`).join('');
+  // The change keeps whatever tokens the funding UTxO already held, plus what the offers pay.
+  const changeAssets = addValue({ lovelace: 0n, assets: funding.value.assets }, earned);
+  const assets = [...changeAssets.assets].map(([unit, qty]) => `+${qty} ${unitToCliAsset(unit)}`).join('');
   cli.buildRaw([
     '--tx-in',
     utxoRef(funding),

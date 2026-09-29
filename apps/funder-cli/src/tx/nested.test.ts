@@ -38,7 +38,7 @@ import {
 } from './subtx.js';
 import { assembleBatch, deductPrice, minFeeFor, offerFee, vkeyWitnessBytes } from './batch.js';
 import { decodeBech32Address } from '../cardano/address.js';
-import { receiveOffer, verifyOffer } from '../ces/service.js';
+import { receiveOffer, selectFunding, verifyOffer } from '../ces/service.js';
 import { OfferRejected, stopsPolling } from '../ces/protocol.js';
 import { assertExactlyOneMode } from '../commands/fund.js';
 import { batchSourceLabel, parseBatchSource, signingKeyPath, walletDir, withBatchSource } from '../commands/state.js';
@@ -372,6 +372,18 @@ describe('verifyOffer (chain-state checks)', () => {
       [{ address: RECIPIENT_ADDR, value: { lovelace: CALLER_LOVELACE, assets: new Map([[UNIT, HELD + 1n]]) } }]
     );
     expect(rejection(() => verifyOffer(offer(body), lookup, QUOTE, PP)).message).toMatch(/only supplies ADA/);
+  });
+});
+
+describe('selectFunding', () => {
+  it('funds from the UTxO with the most lovelace, even one holding tokens it was paid', () => {
+    const paid = { txHash: 'b2'.repeat(32), index: 0, value: { lovelace: 9_000_000n, assets: new Map(PRICE) } };
+    const bare = { txHash: 'c3'.repeat(32), index: 0, value: { lovelace: 2_000_000n, assets: new Map() } };
+    expect(selectFunding([bare, paid], 'addr')).toBe(paid);
+  });
+
+  it('refuses a wallet with nothing in it', () => {
+    expect(() => selectFunding([], 'addr')).toThrow(/no UTxO/);
   });
 });
 
