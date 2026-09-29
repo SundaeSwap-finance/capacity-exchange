@@ -6,7 +6,7 @@ import { runBalance } from './commands/balance.js';
 import { runMint } from './commands/mint.js';
 import { runBuild } from './commands/build.js';
 import { runQuote } from './commands/quote.js';
-import { runSign } from './commands/sign.js';
+import { runCommit } from './commands/commit.js';
 import { runFund } from './commands/fund.js';
 import { runShow } from './commands/show.js';
 import { runStatus } from './commands/status.js';
@@ -73,17 +73,17 @@ program
   .action((opts) => runQuote(config(), opts));
 
 program
-  .command('sign')
-  .description("take the price out of the caller's change and sign the offer")
+  .command('commit')
+  .description("commit the draft to a quote: take the price out of the caller's change and sign the offer")
   .requiredOption('--draft <path>', 'offer.draft.json written by `build`')
   .requiredOption('--quote <path>', 'quote.json written by `quote`')
   .requiredOption('--caller-wallet <dir>')
-  .action((opts) => runSign(config(), opts));
+  .action((opts) => runCommit(config(), opts));
 
 program
   .command('fund')
   .description('hand the offer to an exchange, which batches and submits it (exactly one mode must be chosen)')
-  .argument('<offer>', 'offer.json written by `sign`')
+  .argument('<offer>', 'offer.json written by `commit`')
   .requiredOption('--quote <path>', 'quote.json written by `quote`')
   .option('--simulate-ces', 'run the exchange side locally instead of calling one')
   .option('--simulated-ces-wallet <dir>', 'stand-in exchange wallet')
@@ -105,7 +105,7 @@ program
   .description('show what addresses hold, and/or whether a transaction or offer has been included')
   .option('--address <addr...>', 'addresses to report on')
   .option('--txid <txid>', 'transaction to check for inclusion')
-  .option('--offer <id>', 'offer to follow on chain, by the id `sign` printed')
+  .option('--offer <id>', 'offer to follow on chain, by the id `commit` printed')
   .option('--wait', 'poll until it is included')
   .option('--timeout <seconds>', 'how long --wait polls before giving up', '3600')
   .option('--poll-interval <seconds>', 'seconds between polls', '10')

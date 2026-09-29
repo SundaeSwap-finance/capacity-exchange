@@ -43,7 +43,7 @@ bun src/cli.ts quote --selection .ces-fund/selection.json --ces-url <url> --capa
 
 # 6. put the price into the offer (it comes out of the change),  -> offer.json
 #    then sign; only now is the offer final
-bun src/cli.ts sign --draft .ces-fund/offer.draft.json --quote .ces-fund/quote.json --caller-wallet ./caller
+bun src/cli.ts commit --draft .ces-fund/offer.draft.json --quote .ces-fund/quote.json --caller-wallet ./caller
 
 # 7. hand the offer to the exchange, which batches and submits   -> submission.json
 bun src/cli.ts fund .ces-fund/offer.json --quote .ces-fund/quote.json \
@@ -76,7 +76,7 @@ The offer route doesn't exist on the server yet, so `fund` requires exactly one 
 ## How it works
 
 - **The offer doesn't balance.** It sends more tokens in than out (the price) and more lovelace out than in (the change output's minimum, which the caller can't fund). Dijkstra only checks conservation over the whole batch, so the exchange's input covers the lovelace and its change output collects the tokens.
-- **The price goes in after the capacity is worked out.** The price only lowers the token amount in the change output, which can't make the offer bigger, so the ADA worked out from the draft still covers the signed offer. `sign` checks this before signing.
+- **The price goes in after the capacity is worked out.** The price only lowers the token amount in the change output, which can't make the offer bigger, so the ADA worked out from the draft still covers the signed offer. `commit` checks this before signing.
 - **Capacity is the caller's own arithmetic:** the change output's minimum plus the ledger fee formula applied to the offer's signed size. The exchange covers the rest of the batch's fee from its margin, and `fund` prints the split.
 - **The offer goes into the batch verbatim.** The caller's witness signs the offer's own body hash, so the exchange can build and sign the batch without breaking it, but re-encoding the offer could change that hash.
 - **The batch lists the offer's inputs as reference inputs**, because the node only fetches UTxOs named at the top level.

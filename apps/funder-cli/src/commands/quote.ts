@@ -73,5 +73,5 @@ export async function runQuote(config: Config, options: QuoteOptions): Promise<v
   writeJson(quotePath, stored);
   wrote('quote', quotePath);
   const draftPath = workPath(config, ARTIFACTS.draft);
-  step('quote', `next: ces-fund sign --draft ${draftPath} --quote ${quotePath} --caller-wallet <dir>`);
+  step('quote', `next: ces-fund commit --draft ${draftPath} --quote ${quotePath} --caller-wallet <dir>`);
 }

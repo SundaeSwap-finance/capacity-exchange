@@ -77,7 +77,7 @@ const lookup = (i: { txHash: string; index: number }): Value | undefined => chai
 const resolve = (i: { txHash: string; index: number }): Value => lookup(i) ?? { lovelace: 0n, assets: new Map() };
 
 /**
- * What `build` produces and `sign` completes: the recipient's output carrying the caller's own
+ * What `build` produces and `commit` completes: the recipient's output carrying the caller's own
  * lovelace, and change back to the caller that is short the price in tokens and needs lovelace
  * the caller does not have. It does not balance on its own, and is not meant to.
  */

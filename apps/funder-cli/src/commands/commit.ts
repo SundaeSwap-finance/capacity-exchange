@@ -28,7 +28,7 @@ import {
   writeJson,
 } from './state.js';
 
-export interface SignOptions {
+export interface CommitOptions {
   draft: string;
   quote: string;
   callerWallet: string;
@@ -42,7 +42,7 @@ export interface SignOptions {
  * it leaves on the table. From here on the offer is a bearer instrument: anyone holding it can
  * complete it, until the caller spends the input it commits.
  */
-export function runSign(config: Config, options: SignOptions): void {
+export function runCommit(config: Config, options: CommitOptions): void {
   const draft = readJson<StoredDraft>(options.draft, 'offer draft');
   const quote = readJson<StoredQuote>(options.quote, 'quote');
   if (quote.capacity !== draft.capacity) {
@@ -58,7 +58,7 @@ export function runSign(config: Config, options: SignOptions): void {
   const { outputs, index } = deductPrice(readOutputs(body, BODY_OUTPUTS), price, callerAddress);
   body.set(BODY_OUTPUTS, outputs.map(encodeOutput));
   step(
-    'sign',
+    'commit',
     `price ${formatAsset(BigInt(quote.priceAmount))} ${assetLabel(quote.priceUnit)} left out of change output #${index}`
   );
 
@@ -81,14 +81,17 @@ export function runSign(config: Config, options: SignOptions): void {
     );
   }
 
-  step('sign', `offer ${sub.bodyHash}  (${sub.bytes.length} bytes, signed by the caller's key)`);
-  step('sign', 'the offer id is its TxId: its outputs will appear on chain under it');
+  step('commit', `offer ${sub.bodyHash}  (${sub.bytes.length} bytes, signed by the caller's key)`);
+  step('commit', 'the offer id is its TxId: its outputs will appear on chain under it');
 
   const offerPath = workPath(config, ARTIFACTS.offer);
   const offer: StoredOffer = { offerId: sub.bodyHash, envelope: bytesToHex(encodeEnvelope(sub.bytes)) };
   writeJson(offerPath, offer);
-  wrote('sign', offerPath);
-  step('sign', `next: ces-fund fund ${offerPath} --quote ${options.quote} --simulate-ces --simulated-ces-wallet <dir>`);
+  wrote('commit', offerPath);
+  step(
+    'commit',
+    `next: ces-fund fund ${offerPath} --quote ${options.quote} --simulate-ces --simulated-ces-wallet <dir>`
+  );
 }
 
 /**
