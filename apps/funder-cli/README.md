@@ -39,7 +39,7 @@ bun src/cli.ts build --selection .ces-fund/selection.json \
   --send 900000:<policyid><hexname> --to $(cat ./recipient/payment.addr)
 
 # 5. price that ADA in tokens — a real call to GET /api/prices   -> quote.json
-bun src/cli.ts quote --selection .ces-fund/selection.json --ces-url <url> --capacity <from step 4>
+bun src/cli.ts quote --selection .ces-fund/selection.json --ces-url <url> --capacity <lovelace, from step 4>
 
 # 6. put the price into the offer (it comes out of the change),  -> offer.json
 #    then sign; only now is the offer final
@@ -54,6 +54,8 @@ bun src/cli.ts status --address $(cat ./recipient/payment.addr) --address $(cat 
 ```
 
 Quotes expire (the server's `QUOTE_TTL_SECONDS`, 300 by default), so run steps 5–7 back to back.
+
+`show-offer .ces-fund/offer.draft.json` (after step 4) or `show-offer .ces-fund/offer.json` (after step 6) renders the offer and its imbalance: what it leaves for the batch, and the ADA it needs from it. For the draft it also splits the capacity into the ADA needed and the fee share.
 
 `show .ces-fund/simulated-ces/batch.tx.signed` renders the batch, including the sub-transaction that `cardano-cli debug transaction view` omits. Run it before the batch lands; afterwards its inputs are spent and can't be resolved.
 

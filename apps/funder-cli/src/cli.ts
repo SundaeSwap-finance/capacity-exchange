@@ -9,6 +9,7 @@ import { runQuote } from './commands/quote.js';
 import { runCommit } from './commands/commit.js';
 import { runFund } from './commands/fund.js';
 import { runShow } from './commands/show.js';
+import { runShowOffer } from './commands/showOffer.js';
 import { runStatus } from './commands/status.js';
 
 const program = new Command();
@@ -99,6 +100,13 @@ program
   .argument('<file>', 'transaction file')
   .option('--offline', 'skip resolving inputs (no balance proof)')
   .action((file, opts) => runShow(config(), file, opts));
+
+program
+  .command('show-offer')
+  .description('render the offer, drafted by `build` or signed by `commit`, and what it offers and needs')
+  .argument('<file>', 'offer.draft.json or offer.json')
+  .option('--offline', 'skip resolving inputs (no imbalance)')
+  .action((file, opts) => runShowOffer(config(), file, opts));
 
 program
   .command('status')
