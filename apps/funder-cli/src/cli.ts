@@ -58,7 +58,7 @@ program
 
 program
   .command('build')
-  .description("build the caller's unsigned offer and work out the capacity it needs")
+  .description("draft the caller's offer, before the price is known, and work out the ADA it needs")
   .requiredOption('--selection <path>', 'selection.json written by `balance`')
   .requiredOption('--send <quantity:unit>', 'native asset to send')
   .requiredOption('--to <address>', 'recipient address')

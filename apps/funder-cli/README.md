@@ -33,18 +33,19 @@ bun src/cli.ts mint --caller-wallet ./caller --sweep-to $(cat ./simulated-ces/pa
 # 3. show the caller can't pay a fee                            -> selection.json
 bun src/cli.ts balance --caller-wallet ./caller
 
-# 4. build the unsigned offer; prints the capacity to ask for   -> offer.draft.json
-#    (send less than the full holding: the price comes out of the change)
+# 4. draft the offer, before the price is known; prints the ADA  -> offer.draft.json
+#    it needs (send less than the full holding: the price comes out of the change)
 bun src/cli.ts build --selection .ces-fund/selection.json \
   --send 900000:<policyid><hexname> --to $(cat ./recipient/payment.addr)
 
-# 5. price discovery — a real call to GET /api/prices           -> quote.json
+# 5. price that ADA in tokens — a real call to GET /api/prices   -> quote.json
 bun src/cli.ts quote --selection .ces-fund/selection.json --ces-url <url> --capacity <from step 4>
 
-# 6. take the price out of the change and sign                  -> offer.json
+# 6. put the price into the offer (it comes out of the change),  -> offer.json
+#    then sign; only now is the offer final
 bun src/cli.ts sign --draft .ces-fund/offer.draft.json --quote .ces-fund/quote.json --caller-wallet ./caller
 
-# 7. hand the offer to the exchange, which batches and submits  -> submission.json
+# 7. hand the offer to the exchange, which batches and submits   -> submission.json
 bun src/cli.ts fund .ces-fund/offer.json --quote .ces-fund/quote.json \
   --simulate-ces --simulated-ces-wallet ./simulated-ces --wait
 
@@ -75,6 +76,7 @@ The offer route doesn't exist on the server yet, so `fund` requires exactly one 
 ## How it works
 
 - **The offer doesn't balance.** It sends more tokens in than out (the price) and more lovelace out than in (the change output's minimum, which the caller can't fund). Dijkstra only checks conservation over the whole batch, so the exchange's input covers the lovelace and its change output collects the tokens.
+- **The price goes in after the capacity is worked out.** The price only lowers the token amount in the change output, which can't make the offer bigger, so the ADA worked out from the draft still covers the signed offer. `sign` checks this before signing.
 - **Capacity is the caller's own arithmetic:** the change output's minimum plus the ledger fee formula applied to the offer's signed size. The exchange covers the rest of the batch's fee from its margin, and `fund` prints the split.
 - **The offer goes into the batch verbatim.** The caller's witness signs the offer's own body hash, so the exchange can build and sign the batch without breaking it, but re-encoding the offer could change that hash.
 - **The batch lists the offer's inputs as reference inputs**, because the node only fetches UTxOs named at the top level.
