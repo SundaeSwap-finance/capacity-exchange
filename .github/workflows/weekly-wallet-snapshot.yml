@@ -17,6 +17,7 @@ on:
 jobs:
   wallet-snapshot:
     name: Refresh wallet snapshots
+    if: github.repository == 'SundaeSwap-finance/capacity-exchange'
     runs-on: ubuntu-latest
     # Networks sync sequentially in a single job; a fresh mainnet genesis sync
     # can take hours, so give the whole job plenty of headroom.

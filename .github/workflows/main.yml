@@ -11,6 +11,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.repository == 'SundaeSwap-finance/capacity-exchange'
     permissions:
       id-token: write
       contents: write
