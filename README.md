@@ -4,6 +4,10 @@ Client and server packages for the Capacity Exchange Service on the Midnight net
 
 **For dApp developers**: See [packages/react-sdk/](packages/react-sdk/) or [packages/providers/](packages/providers/) to learn how to integrate this into your dApp.
 
+## Preview: Cardano Babel Fees
+
+[![Babel Fees demo](https://img.youtube.com/vi/0aJOSRo-n5g/maxresdefault.jpg)](https://youtu.be/0aJOSRo-n5g)
+
 ## Local Dev Prerequisites
 
 - [bun](https://bun.sh) (>= 1.1.0)
