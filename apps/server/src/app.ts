@@ -1,5 +1,5 @@
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
+import Fastify, { FastifyInstance, FastifyPluginAsync, FastifyServerOptions } from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
@@ -58,6 +58,17 @@ export async function buildApp(
   return app;
 }
 
+// TODO: remove once clients have moved to /api/midnight. Serves the Midnight routes at their
+// old /api paths too, hidden from the OpenAPI spec.
+const legacyMidnightRoutes: FastifyPluginAsync = async (app) => {
+  app.addHook('onRoute', (route) => {
+    route.schema = { ...route.schema, hide: true };
+  });
+  await app.register(offerRoutes);
+  await app.register(adaOfferRoutes);
+  await app.register(sponsorRoutes);
+};
+
 export async function registerRoutes(app: FastifyInstance) {
   await app.register(swagger, {
     openapi: {
@@ -76,5 +87,6 @@ export async function registerRoutes(app: FastifyInstance) {
   app.register(offerRoutes, { prefix: '/api/midnight' });
   app.register(adaOfferRoutes, { prefix: '/api/midnight' });
   app.register(sponsorRoutes, { prefix: '/api/midnight' });
+  app.register(legacyMidnightRoutes, { prefix: '/api' });
   app.register(metricsRoutes, { prefix: '/api' });
 }

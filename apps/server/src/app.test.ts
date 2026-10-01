@@ -100,4 +100,12 @@ describe('buildApp — ADA-only server (no Midnight configuration)', () => {
     });
     expect(res.statusCode).toBe(501);
   });
+
+  it.each(['/api/offers', '/api/ada/offers', '/api/sponsor'])(
+    'still serves the Midnight route at its old path %s',
+    async (url) => {
+      const res = await app.inject({ method: 'POST', url, payload: {} });
+      expect(res.statusCode).not.toBe(404);
+    },
+  );
 });
