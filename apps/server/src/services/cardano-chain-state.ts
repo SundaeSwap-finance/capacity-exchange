@@ -35,7 +35,7 @@ export interface Rational {
   denominator: bigint;
 }
 
-/** The protocol parameters the server prices and builds Cardano transactions with. */
+/** The protocol parameters needed to price and size a Cardano transaction. */
 export interface CardanoProtocolParams {
   minFeeCoefficient: bigint;
   minFeeConstant: bigint;

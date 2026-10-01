@@ -24,7 +24,6 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
         wallet = fastify.walletService.syncState;
       }
 
-      // Any failed check is a 500; otherwise anything still syncing is a 503.
       const statuses = [indexer.status, wallet.status, cardano.status];
       if (statuses.includes('ko')) {
         reply.status(500);

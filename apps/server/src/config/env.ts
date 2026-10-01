@@ -25,7 +25,6 @@ const AppEnvSchema = Type.Object({
   BLOCKFROST_API_KEY: Type.Optional(Type.String()),
   BLOCKFROST_BASE_URL: Type.Optional(Type.String()),
   CARDANO_SERVER_ADDRESS: Type.Optional(Type.String()),
-  // UTxO RPC endpoint (e.g. Dolos) the server follows the Cardano tip through.
   CARDANO_UTXORPC_URL: Type.Optional(Type.String()),
 });
 
