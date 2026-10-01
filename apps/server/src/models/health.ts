@@ -36,7 +36,7 @@ export const WalletStatus = Type.Object({
 });
 
 export const ChainStatus = Type.Object({
-  // 'syncing' means the chain source is reachable but its tip is stale.
+  // 'syncing' means no failure is known, but the tip is stale or not known yet.
   status: Type.Union([
     Type.Literal('syncing'),
     Type.Literal('ok'),

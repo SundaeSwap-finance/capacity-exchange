@@ -24,7 +24,8 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
         wallet = fastify.walletService.syncState;
       }
 
-      const statuses = [indexer.status, wallet.status, cardano.status];
+      // Cardano is reported but does not gate readiness: no route depends on it.
+      const statuses = [indexer.status, wallet.status];
       if (statuses.includes('ko')) {
         reply.status(500);
         return { status: 'ko' as const, midnight: { wallet, indexer }, cardano };

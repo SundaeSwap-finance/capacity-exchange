@@ -1,26 +1,31 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import pino from 'pino';
 
-const { mockReadTip, mockReadParams, mockFollowTip } = vi.hoisted(() => ({
+const { mockReadTip, mockReadParams, mockFollowTip, mockCreateTransport } = vi.hoisted(() => ({
   mockReadTip: vi.fn(),
   mockReadParams: vi.fn(),
   mockFollowTip: vi.fn(),
+  mockCreateTransport: vi.fn(() => ({})),
 }));
-vi.mock('@utxorpc/sdk', () => ({
-  CardanoQueryClient: class {
-    inner = { readParams: mockReadParams };
-  },
-  CardanoSyncClient: class {
-    inner = { readTip: mockReadTip, followTip: mockFollowTip };
-  },
+vi.mock('@connectrpc/connect-node', () => ({ createGrpcTransport: mockCreateTransport }));
+vi.mock('@connectrpc/connect', () => ({
+  createPromiseClient: (service: { typeName: string }) =>
+    service.typeName.endsWith('QueryService')
+      ? { readParams: mockReadParams }
+      : { readTip: mockReadTip, followTip: mockFollowTip },
 }));
 
 import { CardanoChainStateService, toBigInt } from './cardano-chain-state.js';
 
 const logger = pino({ level: 'silent' });
 
-const hash = (byte: number) => new Uint8Array(32).fill(byte);
-const hex = (byte: number) => Buffer.from(hash(byte)).toString('hex');
+/** Each test block's hash is its slot, so every slot has a distinct block. */
+function hash(slot: number) {
+  const bytes = new Uint8Array(32);
+  new DataView(bytes.buffer).setUint32(28, slot);
+  return bytes;
+}
+const hex = (slot: number) => Buffer.from(hash(slot)).toString('hex');
 const int = (value: bigint) => ({ bigInt: { case: 'int', value } });
 
 const PARAMS_RESPONSE = {
@@ -41,33 +46,41 @@ const PARAMS_RESPONSE = {
   },
 };
 
-function block(slot: number, byte: number, timestamp = Date.now()) {
+const tipResponse = (slot: number, timestamp = Date.now()) => ({
+  tip: { slot: BigInt(slot), hash: hash(slot), timestamp: BigInt(timestamp) },
+});
+
+function block(slot: number, timestamp = Date.now()) {
   return {
     chain: {
       case: 'cardano',
-      value: { header: { slot: BigInt(slot), hash: hash(byte) }, timestamp: BigInt(timestamp) },
+      value: { header: { slot: BigInt(slot), hash: hash(slot) }, timestamp: BigInt(timestamp) },
     },
     nativeBytes: new Uint8Array(),
   };
 }
-const apply = (slot: number, byte: number, timestamp?: number) => ({
-  action: { case: 'apply', value: block(slot, byte, timestamp) },
+const apply = (slot: number) => ({ action: { case: 'apply', value: block(slot) } });
+const undo = (slot: number) => ({ action: { case: 'undo', value: block(slot) } });
+const reset = (slot: number) => ({
+  action: { case: 'reset', value: { slot: BigInt(slot), hash: hash(slot) } },
 });
-const undo = (slot: number, byte: number) => ({
-  action: { case: 'undo', value: block(slot, byte) },
-});
-const reset = (slot: number, byte: number) => ({
-  action: { case: 'reset', value: { slot: BigInt(slot), hash: hash(byte) } },
-});
+const notFound = () =>
+  Object.assign(new Error('[not_found] none of the requested points intersect'), { code: 5 });
 
-/** A FollowTip stream the test feeds; it ends with an error when the caller aborts. */
+const END = Symbol('end');
+
+/** A FollowTip stream the test feeds. It fails when the caller aborts, as the real one does. */
 class FakeStream {
   private queue: unknown[] = [];
   private wake: (() => void) | null = null;
 
-  push(item: unknown) {
-    this.queue.push(item);
+  push(...items: unknown[]) {
+    this.queue.push(...items);
     this.wake?.();
+  }
+
+  end() {
+    this.push(END);
   }
 
   async *iterate(signal: AbortSignal) {
@@ -76,6 +89,9 @@ class FakeStream {
         throw new Error('[canceled] The operation was aborted.');
       }
       const next = this.queue.shift();
+      if (next === END) {
+        return;
+      }
       if (next instanceof Error) {
         throw next;
       }
@@ -97,9 +113,7 @@ describe('CardanoChainStateService', () => {
 
   beforeEach(() => {
     streams = [];
-    mockReadTip.mockReset().mockResolvedValue({
-      tip: { slot: 100n, hash: hash(100), timestamp: BigInt(Date.now()) },
-    });
+    mockReadTip.mockReset().mockResolvedValue(tipResponse(100));
     mockReadParams.mockReset().mockResolvedValue(PARAMS_RESPONSE);
     mockFollowTip.mockReset().mockImplementation((_req, { signal }) => {
       const stream = new FakeStream();
@@ -114,14 +128,17 @@ describe('CardanoChainStateService', () => {
     vi.useRealTimers();
   });
 
-  async function started() {
+  async function started(expectedStreams = 1) {
     svc = new CardanoChainStateService('http://dolos.test', logger as never);
-    await svc.start();
-    await vi.waitFor(() => expect(streams).toHaveLength(1));
+    svc.start();
+    await vi.waitFor(() => expect(streams).toHaveLength(expectedStreams));
     return svc;
   }
 
-  it('primes the tip and protocol params on start', async () => {
+  const intersectSlots = (call: number) =>
+    mockFollowTip.mock.calls[call][0].intersect.map((ref: { slot: bigint }) => ref.slot);
+
+  it('loads the tip and protocol params, then follows from that tip', async () => {
     const s = await started();
 
     expect(s.tip()).toMatchObject({ slot: 100n, hash: hex(100) });
@@ -135,48 +152,89 @@ describe('CardanoChainStateService', () => {
         steps: { numerator: 721n, denominator: 10000000n },
       },
     });
+    expect(mockFollowTip.mock.calls[0][0].intersect).toEqual([
+      { slot: 100n, hash: Buffer.from(hash(100)) },
+    ]);
   });
 
-  it('follows from the tip it read, and an apply moves the tip', async () => {
-    const s = await started();
-    const [request] = mockFollowTip.mock.calls[0];
-    expect(request.intersect).toEqual([{ slot: 100n, hash: Buffer.from(hash(100)) }]);
+  it('connects with HTTP/2 pings, so a dead connection is closed instead of reused', async () => {
+    await started();
 
-    streams[0].push(reset(100, 100));
-    streams[0].push(apply(101, 101));
+    expect(mockCreateTransport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseUrl: 'http://dolos.test',
+        httpVersion: '2',
+        pingIntervalMs: expect.any(Number),
+        pingTimeoutMs: expect.any(Number),
+      }),
+    );
+  });
+
+  it('an apply moves the tip', async () => {
+    const s = await started();
+    streams[0].push(reset(100), apply(101));
 
     await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
     expect(s.health()).toMatchObject({ status: 'ok', slot: 101 });
   });
 
-  it('an undo steps the tip back to the block before it', async () => {
+  it('undos step the tip back one block at a time', async () => {
     const s = await started();
-    streams[0].push(apply(101, 101));
-    streams[0].push(apply(102, 102));
-    streams[0].push(undo(102, 102));
+    streams[0].push(apply(101), apply(102), apply(103), undo(103), undo(102));
 
     await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
   });
 
+  it('an undo of an older block drops it and everything after it', async () => {
+    const s = await started();
+    streams[0].push(apply(101), apply(102), apply(103), undo(102));
+
+    await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+  });
+
+  it('keeps a tip after a rollback of the full 2160 blocks', async () => {
+    const s = await started();
+    for (let slot = 101; slot <= 2300; slot++) {
+      streams[0].push(apply(slot));
+    }
+    await vi.waitFor(() => expect(s.tip().slot).toBe(2300n));
+
+    for (let slot = 2300; slot > 2300 - 2160; slot--) {
+      streams[0].push(undo(slot));
+    }
+
+    await vi.waitFor(() => expect(s.tip().slot).toBe(140n));
+  });
+
+  it('forgets blocks deeper than the rollback window', async () => {
+    const s = await started();
+    for (let slot = 101; slot <= 2300; slot++) {
+      streams[0].push(apply(slot));
+    }
+    await vi.waitFor(() => expect(s.tip().slot).toBe(2300n));
+
+    // The window keeps 2161 blocks, 140..2300, so 139 is the newest one outside it.
+    streams[0].push(undo(139));
+
+    await vi.waitFor(() => expect(() => s.tip()).toThrow(/no tip/));
+  });
+
   it('a reset drops the blocks after the intersection', async () => {
     const s = await started();
-    streams[0].push(apply(101, 101));
-    streams[0].push(apply(102, 102));
+    streams[0].push(apply(101), apply(102));
     await vi.waitFor(() => expect(s.tip().slot).toBe(102n));
 
-    streams[0].push(reset(101, 101));
+    streams[0].push(reset(101));
 
     await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
   });
 
   it('reports syncing while the tip is more than five minutes old', async () => {
-    mockReadTip.mockResolvedValue({
-      tip: { slot: 100n, hash: hash(100), timestamp: BigInt(Date.now() - 6 * 60_000) },
-    });
+    mockReadTip.mockResolvedValue(tipResponse(100, Date.now() - 6 * 60_000));
     const s = await started();
     expect(s.health().status).toBe('syncing');
 
-    streams[0].push(apply(101, 101));
+    streams[0].push(apply(101));
 
     await vi.waitFor(() => expect(s.health().status).toBe('ok'));
   });
@@ -184,8 +242,7 @@ describe('CardanoChainStateService', () => {
   it('reports ko when the stream fails, then reconnects from its recent blocks', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const s = await started();
-    streams[0].push(apply(101, 101));
-    streams[0].push(apply(102, 102));
+    streams[0].push(apply(101), apply(102));
     await vi.waitFor(() => expect(s.tip().slot).toBe(102n));
 
     streams[0].push(new Error('connection reset'));
@@ -193,11 +250,95 @@ describe('CardanoChainStateService', () => {
 
     await vi.advanceTimersByTimeAsync(5_000);
     await vi.waitFor(() => expect(streams).toHaveLength(2));
-    const [request] = mockFollowTip.mock.calls[1];
-    expect(request.intersect.map((ref: { slot: bigint }) => ref.slot)).toEqual([102n, 101n, 100n]);
+    expect(intersectSlots(1)).toEqual([102n, 101n, 100n]);
 
-    streams[1].push(reset(102, 102));
+    streams[1].push(reset(102));
     await vi.waitFor(() => expect(s.health().status).toBe('ok'));
+  });
+
+  it('reconnects when the stream ends cleanly', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const s = await started();
+    streams[0].push(apply(101));
+    streams[0].end();
+    await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko', error: /ended/ }));
+
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(2));
+    expect(intersectSlots(1)).toEqual([101n, 100n]);
+  });
+
+  it('starts again from the source tip when no recent block intersects', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const s = await started();
+    streams[0].push(apply(101), apply(102));
+    await vi.waitFor(() => expect(s.tip().slot).toBe(102n));
+    mockReadTip.mockResolvedValue(tipResponse(500));
+
+    streams[0].push(notFound());
+    await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko', error: /not_found/ }));
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    await vi.waitFor(() => expect(streams).toHaveLength(2));
+    expect(mockReadTip).toHaveBeenCalledTimes(2);
+    expect(intersectSlots(1)).toEqual([500n]);
+  });
+
+  it('reconnects when a connection sends nothing after opening', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const s = await started();
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.waitFor(() =>
+      expect(s.health()).toMatchObject({ status: 'ko', error: /sent nothing/ }),
+    );
+
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(2));
+  });
+
+  it('reconnects when an open stream goes silent', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const s = await started();
+    streams[0].push(reset(100));
+    await vi.waitFor(() => expect(s.health().status).toBe('ok'));
+
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    await vi.waitFor(() =>
+      expect(s.health()).toMatchObject({ status: 'ko', error: /went silent/ }),
+    );
+
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(2));
+  });
+
+  it('does not throw on start when the source is down, and recovers when it returns', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockReadParams.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
+    svc = new CardanoChainStateService('http://dolos.test', logger as never);
+    svc.start();
+
+    await vi.waitFor(() =>
+      expect(svc!.health()).toMatchObject({ status: 'ko', error: /ECONNREFUSED/ }),
+    );
+    expect(() => svc!.protocolParams()).toThrow(/no protocol params/);
+
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(1));
+    streams[0].push(reset(100));
+    await vi.waitFor(() => expect(svc!.health().status).toBe('ok'));
+    expect(svc.protocolParams().minFeeConstant).toBe(155381n);
+  });
+
+  it('reports ko and opens no stream while ReadParams has no Cardano params', async () => {
+    mockReadParams.mockResolvedValue({ values: undefined });
+    svc = new CardanoChainStateService('http://dolos.test', logger as never);
+    svc.start();
+
+    await vi.waitFor(() =>
+      expect(svc!.health()).toMatchObject({ status: 'ko', error: /no Cardano params/ }),
+    );
+    expect(mockFollowTip).not.toHaveBeenCalled();
   });
 
   it('stop ends the stream without reconnecting', async () => {
@@ -206,14 +347,6 @@ describe('CardanoChainStateService', () => {
     svc = undefined;
 
     expect(mockFollowTip).toHaveBeenCalledTimes(1);
-  });
-
-  it('throws on start when ReadParams has no Cardano params', async () => {
-    mockReadParams.mockResolvedValue({ values: undefined });
-    svc = new CardanoChainStateService('http://dolos.test', logger as never);
-
-    await expect(svc.start()).rejects.toThrow(/no Cardano params/);
-    svc = undefined;
   });
 });
 

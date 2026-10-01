@@ -17,7 +17,7 @@ export default fp(async (fastify: FastifyInstance) => {
   }
 
   const service = new CardanoChainStateService(url, fastify.log);
-  await service.start();
+  service.start();
 
   fastify.decorate('cardanoChainStateService', service);
 

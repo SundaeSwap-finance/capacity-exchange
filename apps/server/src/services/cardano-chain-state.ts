@@ -1,5 +1,7 @@
 import { FastifyBaseLogger } from 'fastify';
-import { CardanoQueryClient, CardanoSyncClient } from '@utxorpc/sdk';
+import { createPromiseClient, type PromiseClient } from '@connectrpc/connect';
+import { createGrpcTransport } from '@connectrpc/connect-node';
+import { queryConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
 import type { Static } from '@sinclair/typebox';
 import type { ChainHealth, ChainStatus } from '../models/health.js';
 
@@ -10,18 +12,25 @@ const RECONNECT_DELAY_MS = 5_000;
 // slots), so a tip this old means the source has stopped keeping up.
 const MAX_TIP_AGE_MS = 5 * 60_000;
 // A rollback never goes deeper than the security parameter k (2160 on mainnet).
-const MAX_ROLLBACK_BLOCKS = 2160;
+// One block more keeps a tip after a rollback of the full depth.
+const TRACKED_BLOCKS = 2160 + 1;
 // Several points let a reconnect intersect even if the newest one was rolled
 // back while the stream was down.
 const INTERSECT_POINTS = 10;
+// Dolos opens every FollowTip stream with a reset, so silence this long after
+// connecting means the connection was accepted but is not being served.
+const FIRST_MESSAGE_TIMEOUT_MS = 15_000;
+// Pings catch a dead connection; this catches a stream the source stops serving
+// on a live one.
+const STREAM_IDLE_TIMEOUT_MS = MAX_TIP_AGE_MS;
+// Without pings a dead HTTP/2 connection is never noticed, and every retry is
+// sent down it again.
+const PING_INTERVAL_MS = 10_000;
+const PING_TIMEOUT_MS = 5_000;
+// The gRPC status Dolos returns when none of the intersect points is on its chain.
+const GRPC_NOT_FOUND = 5;
 
-type SyncInner = CardanoSyncClient['inner'];
-type BlockRef = NonNullable<Awaited<ReturnType<SyncInner['readTip']>>['tip']>;
-type FollowTipResponse =
-  ReturnType<SyncInner['followTip']> extends AsyncIterable<infer R> ? R : never;
-type TipAction = FollowTipResponse['action'];
-type PParams = Awaited<ReturnType<CardanoQueryClient['readParams']>>;
-type U5cBigInt = NonNullable<PParams['minFeeConstant']>;
+type TipAction = sync.FollowTipResponse['action'];
 
 export interface CardanoTip {
   slot: bigint;
@@ -50,8 +59,8 @@ export interface CardanoProtocolParams {
  * where the stream starts, because Dolos serves it from state that can lag.
  */
 export class CardanoChainStateService implements ChainHealth {
-  private readonly query: CardanoQueryClient;
-  private readonly sync: CardanoSyncClient;
+  private readonly query: PromiseClient<typeof queryConnect.QueryService>;
+  private readonly sync: PromiseClient<typeof syncConnect.SyncService>;
   private readonly logger: FastifyBaseLogger;
   // Applied blocks, oldest first, so an undo can step back to the one before.
   private recent: CardanoTip[] = [];
@@ -62,15 +71,19 @@ export class CardanoChainStateService implements ChainHealth {
   private paramsTimer?: ReturnType<typeof setInterval>;
 
   constructor(url: string, logger: FastifyBaseLogger) {
-    this.query = new CardanoQueryClient({ uri: url });
-    this.sync = new CardanoSyncClient({ uri: url });
+    const transport = createGrpcTransport({
+      httpVersion: '2',
+      baseUrl: url,
+      pingIntervalMs: PING_INTERVAL_MS,
+      pingTimeoutMs: PING_TIMEOUT_MS,
+    });
+    this.query = createPromiseClient(queryConnect.QueryService, transport);
+    this.sync = createPromiseClient(syncConnect.SyncService, transport);
     this.logger = logger;
   }
 
-  /** Primes the tip and protocol params, then follows the tip in the background. Throws if either read fails. */
-  async start(): Promise<void> {
-    const [tip] = await Promise.all([this.readTip(), this.refreshParams()]);
-    this.recent = [tip];
+  /** Follows the tip and loads the protocol params in the background; an unreachable source shows as `ko`. */
+  start(): void {
     this.following = this.follow();
     this.paramsTimer = setInterval(() => {
       this.refreshParams().catch((err) => {
@@ -92,14 +105,18 @@ export class CardanoChainStateService implements ChainHealth {
   tip(): CardanoTip {
     const tip = this.recent.at(-1);
     if (!tip) {
-      throw new Error('CardanoChainStateService has no tip: not started, or rolled back past it');
+      throw new Error(
+        'CardanoChainStateService has no tip: the source has not answered, or rolled back past every tracked block',
+      );
     }
     return tip;
   }
 
   protocolParams(): CardanoProtocolParams {
     if (!this.params) {
-      throw new Error('CardanoChainStateService not started: prime protocolParams before use');
+      throw new Error(
+        'CardanoChainStateService has no protocol params: the source has not answered',
+      );
     }
     return this.params;
   }
@@ -117,31 +134,55 @@ export class CardanoChainStateService implements ChainHealth {
   }
 
   private async follow(): Promise<void> {
-    const signal = this.abort.signal;
-    while (!signal.aborted) {
+    const stopped = this.abort.signal;
+    while (!stopped.aborted) {
+      const attempt = new AbortController();
+      const stopAttempt = () => attempt.abort();
+      stopped.addEventListener('abort', stopAttempt, { once: true });
+      let silence: string | null = null;
+      let watchdog: ReturnType<typeof setTimeout> | undefined;
+      const expectMessageWithin = (ms: number, reason: string) => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          silence = reason;
+          attempt.abort();
+        }, ms);
+      };
       try {
-        const intersect = this.recent.length
-          ? this.recent.slice(-INTERSECT_POINTS).reverse()
-          : [await this.readTip()];
-        const stream = this.sync.inner.followTip(
-          { intersect: intersect.map(toBlockRef) },
-          { signal },
+        if (!this.params) {
+          await this.refreshParams();
+        }
+        if (!this.recent.length) {
+          this.recent = [await this.readTip()];
+        }
+        expectMessageWithin(FIRST_MESSAGE_TIMEOUT_MS, 'FollowTip sent nothing after connecting');
+        const stream = this.sync.followTip(
+          { intersect: this.recent.slice(-INTERSECT_POINTS).reverse().map(toBlockRef) },
+          { signal: attempt.signal },
         );
         for await (const response of stream) {
+          expectMessageWithin(STREAM_IDLE_TIMEOUT_MS, 'FollowTip stream went silent');
           this.streamError = null;
           this.onAction(response.action);
         }
         throw new Error('FollowTip stream ended');
       } catch (err) {
-        if (signal.aborted) {
+        if (stopped.aborted) {
           return;
         }
-        this.streamError = String(err);
+        if (errorCode(err) === GRPC_NOT_FOUND) {
+          // Clearing makes the next attempt start from the source's tip.
+          this.recent = [];
+        }
+        this.streamError = silence ?? String(err);
         this.logger.warn(
-          { err },
+          { err, reason: this.streamError },
           'CardanoChainStateService lost the FollowTip stream; reconnecting',
         );
-        await pause(RECONNECT_DELAY_MS, signal);
+        await pause(RECONNECT_DELAY_MS, stopped);
+      } finally {
+        clearTimeout(watchdog);
+        stopped.removeEventListener('abort', stopAttempt);
       }
     }
   }
@@ -150,7 +191,7 @@ export class CardanoChainStateService implements ChainHealth {
     switch (action.case) {
       case 'apply': {
         this.recent.push(blockTip(action.value));
-        if (this.recent.length > MAX_ROLLBACK_BLOCKS) {
+        if (this.recent.length > TRACKED_BLOCKS) {
           this.recent.shift();
         }
         return;
@@ -174,10 +215,7 @@ export class CardanoChainStateService implements ChainHealth {
   }
 
   private async readTip(): Promise<CardanoTip> {
-    const { tip } = await this.sync.inner.readTip(
-      {},
-      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
-    );
+    const { tip } = await this.sync.readTip({}, { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) });
     if (!tip) {
       throw new Error('UTxO RPC ReadTip returned no tip');
     }
@@ -185,7 +223,7 @@ export class CardanoChainStateService implements ChainHealth {
   }
 
   private async refreshParams(): Promise<void> {
-    const { values } = await this.query.inner.readParams(
+    const { values } = await this.query.readParams(
       {},
       { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
     );
@@ -196,9 +234,7 @@ export class CardanoChainStateService implements ChainHealth {
   }
 }
 
-type AnyChainBlock = Extract<TipAction, { case: 'apply' }>['value'];
-
-function blockTip(block: AnyChainBlock): CardanoTip {
+function blockTip(block: sync.AnyChainBlock): CardanoTip {
   const cardano = block.chain.case === 'cardano' ? block.chain.value : undefined;
   if (!cardano?.header) {
     throw new Error('UTxO RPC FollowTip sent a block with no Cardano header');
@@ -208,6 +244,10 @@ function blockTip(block: AnyChainBlock): CardanoTip {
     hash: toHex(cardano.header.hash),
     timestamp: new Date(Number(cardano.timestamp)),
   };
+}
+
+function errorCode(err: unknown): unknown {
+  return typeof err === 'object' && err !== null && 'code' in err ? err.code : undefined;
 }
 
 /** Resolves after `ms`, or as soon as `signal` aborts. */
@@ -234,11 +274,11 @@ function lastIndexOfHash(tips: CardanoTip[], hash: string): number {
   return -1;
 }
 
-function toBlockRef(tip: CardanoTip): Partial<BlockRef> {
+function toBlockRef(tip: CardanoTip): Partial<sync.BlockRef> {
   return { slot: tip.slot, hash: Buffer.from(tip.hash, 'hex') };
 }
 
-export function toProtocolParams(p: PParams): CardanoProtocolParams {
+export function toProtocolParams(p: cardano.PParams): CardanoProtocolParams {
   return {
     minFeeCoefficient: toBigInt(p.minFeeCoefficient, 'minFeeCoefficient'),
     minFeeConstant: toBigInt(p.minFeeConstant, 'minFeeConstant'),
@@ -252,7 +292,7 @@ export function toProtocolParams(p: PParams): CardanoProtocolParams {
 }
 
 /** Decodes UTxO RPC's BigInt: an int64, or big-endian bytes for larger magnitudes. */
-export function toBigInt(value: U5cBigInt | undefined, field: string): bigint {
+export function toBigInt(value: cardano.BigInt | undefined, field: string): bigint {
   const big = value?.bigInt;
   switch (big?.case) {
     case 'int':

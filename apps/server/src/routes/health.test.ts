@@ -1,19 +1,33 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import healthRoutes from './health.js';
 import type { AppConfig } from '../loadConfig.js';
 import type { CardanoChainStateService } from '../services/cardano-chain-state.js';
+import type { WalletService, WalletSyncState } from '../services/wallet.js';
 
-/** A server with no Midnight network, so readiness depends on Cardano alone. */
-const CONFIG = { capacityExchangeUrls: [] } as unknown as AppConfig;
+type CardanoHealth = ReturnType<CardanoChainStateService['health']>;
 
-async function appWithCardano(health: ReturnType<CardanoChainStateService['health']> | null) {
+const INDEXER_URL = 'http://indexer.test/graphql';
+
+/** Answers the readiness check's indexer query with a block height. */
+function stubIndexer() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({ ok: true, json: async () => ({ data: { block: { height: 42 } } }) })),
+  );
+}
+
+async function appWith({ wallet, cardano }: { wallet?: WalletSyncState; cardano?: CardanoHealth }) {
   const app = Fastify({ logger: false });
-  app.decorate('config', CONFIG);
-  app.decorate('walletService', null);
+  const midnight = wallet ? { endpoints: { indexerHttpUrl: INDEXER_URL } } : undefined;
+  app.decorate('config', { midnight, capacityExchangeUrls: [] } as unknown as AppConfig);
+  app.decorate(
+    'walletService',
+    wallet ? ({ syncState: wallet } as unknown as WalletService) : null,
+  );
   app.decorate(
     'cardanoChainStateService',
-    health ? ({ health: () => health } as unknown as CardanoChainStateService) : null,
+    cardano ? ({ health: () => cardano } as unknown as CardanoChainStateService) : null,
   );
   await app.register(healthRoutes, { prefix: '/health' });
   await app.ready();
@@ -26,11 +40,14 @@ describe('GET /health/ready', () => {
   afterEach(async () => {
     await app?.close();
     app = undefined;
+    vi.unstubAllGlobals();
   });
 
-  it('reports Cardano as disabled when no UTxO RPC source is configured', async () => {
-    app = await appWithCardano(null);
-    const res = await app.inject({ method: 'GET', url: '/health/ready' });
+  const ready = () => app!.inject({ method: 'GET', url: '/health/ready' });
+
+  it('reports both chains as disabled when neither is configured', async () => {
+    app = await appWith({});
+    const res = await ready();
 
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({
@@ -40,33 +57,59 @@ describe('GET /health/ready', () => {
     });
   });
 
-  it('is ready while the Cardano tip is fresh', async () => {
-    app = await appWithCardano({ status: 'ok', slot: 2118000, tipAgeMs: 4000 });
-    const res = await app.inject({ method: 'GET', url: '/health/ready' });
+  it('reports the Cardano tip', async () => {
+    app = await appWith({ cardano: { status: 'ok', slot: 2118000, tipAgeMs: 4000 } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().cardano).toEqual({ status: 'ok', slot: 2118000, tipAgeMs: 4000 });
+  });
+
+  it('stays ready while the Cardano stream is down', async () => {
+    stubIndexer();
+    app = await appWith({
+      wallet: { status: 'ok' },
+      cardano: { status: 'ko', error: 'connection refused' },
+    });
+    const res = await ready();
 
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({
       status: 'ok',
-      cardano: { status: 'ok', slot: 2118000, tipAgeMs: 4000 },
-    });
-  });
-
-  it('is a 503 while the Cardano tip is stale', async () => {
-    app = await appWithCardano({ status: 'syncing', slot: 2000000, tipAgeMs: 600_000 });
-    const res = await app.inject({ method: 'GET', url: '/health/ready' });
-
-    expect(res.statusCode).toBe(503);
-    expect(res.json()).toMatchObject({ status: 'syncing', cardano: { status: 'syncing' } });
-  });
-
-  it('is a 500 when the Cardano stream is down', async () => {
-    app = await appWithCardano({ status: 'ko', error: 'connection refused' });
-    const res = await app.inject({ method: 'GET', url: '/health/ready' });
-
-    expect(res.statusCode).toBe(500);
-    expect(res.json()).toMatchObject({
-      status: 'ko',
+      midnight: { wallet: { status: 'ok' }, indexer: { status: 'ok', height: 42 } },
       cardano: { status: 'ko', error: 'connection refused' },
     });
+  });
+
+  it('stays ready while the Cardano tip is stale', async () => {
+    app = await appWith({ cardano: { status: 'syncing', slot: 2000000, tipAgeMs: 600_000 } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ status: 'ok', cardano: { status: 'syncing' } });
+  });
+
+  it('is a 503 while the Midnight wallet syncs, whatever the Cardano state', async () => {
+    stubIndexer();
+    app = await appWith({
+      wallet: { status: 'syncing' },
+      cardano: { status: 'ok', slot: 2118000, tipAgeMs: 4000 },
+    });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'syncing',
+      midnight: { wallet: { status: 'syncing' } },
+    });
+  });
+
+  it('is a 500 when the Midnight wallet fails', async () => {
+    stubIndexer();
+    app = await appWith({ wallet: { status: 'ko', error: 'sync failed' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toMatchObject({ status: 'ko', cardano: { status: 'disabled' } });
   });
 });

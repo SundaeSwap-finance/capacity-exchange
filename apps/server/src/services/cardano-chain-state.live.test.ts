@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import pino from 'pino';
-import { CardanoQueryClient } from '@utxorpc/sdk';
+import { createPromiseClient } from '@connectrpc/connect';
+import { createGrpcTransport } from '@connectrpc/connect-node';
+import { queryConnect } from '@utxorpc/spec';
 import { CardanoChainStateService, toBigInt } from './cardano-chain-state.js';
 
 /**
@@ -18,8 +20,9 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
 
   beforeAll(async () => {
     svc = new CardanoChainStateService(url!, pino({ level: 'silent' }) as never);
-    await svc.start();
-  });
+    svc.start();
+    await vi.waitFor(() => expect(svc.health().status).toBe('ok'), { timeout: 30_000 });
+  }, 40_000);
 
   afterAll(async () => {
     await svc?.stop();
@@ -50,12 +53,19 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
   );
 
   it.skipIf(!addressHex)('finds the UTxOs at an address', async () => {
-    const query = new CardanoQueryClient({ uri: url! });
-    const utxos = await query.searchUtxosByAddress(Buffer.from(addressHex!, 'hex'));
+    const transport = createGrpcTransport({ httpVersion: '2', baseUrl: url! });
+    const query = createPromiseClient(queryConnect.QueryService, transport);
+    const exactAddress = Buffer.from(addressHex!, 'hex');
+    const { items } = await query.searchUtxos({
+      predicate: {
+        match: { utxoPattern: { case: 'cardano', value: { address: { exactAddress } } } },
+      },
+    });
 
-    expect(utxos.length).toBeGreaterThan(0);
-    for (const utxo of utxos) {
-      expect(toBigInt(utxo.parsedValued?.coin, 'coin')).toBeGreaterThan(0n);
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      const output = item.parsedState.case === 'cardano' ? item.parsedState.value : undefined;
+      expect(toBigInt(output?.coin, 'coin')).toBeGreaterThan(0n);
     }
   });
 });
