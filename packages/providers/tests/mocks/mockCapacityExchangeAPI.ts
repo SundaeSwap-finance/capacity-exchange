@@ -10,7 +10,7 @@ export function createMockCapacityExchangeAPI() {
       ],
     }),
 
-    apiOffersPost: vi.fn().mockResolvedValue({
+    apiMidnightOffersPost: vi.fn().mockResolvedValue({
       offerId: 'test-offer-123',
       offerAmount: '1000000',
       offerCurrency: 'ADA',

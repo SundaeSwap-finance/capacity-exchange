@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { PriceConfig } from './config/prices.js';
 
 // loadConfig() calls dotenv's `config()` unconditionally. Real repo has a
-// `.env` file (with WALLET_STATE_DIR set) that would otherwise leak into these
+// `.env` file (with MIDNIGHT_WALLET_STATE_DIR set) that would otherwise leak into these
 // tests and defeat the "env var not set" scenarios below.
 vi.mock('dotenv', () => ({ config: vi.fn() }));
 
@@ -63,7 +63,7 @@ describe('loadConfig — optional Midnight configuration', () => {
   beforeEach(() => {
     process.env = { ...savedEnv, ...BASE_ENV };
     delete process.env.MIDNIGHT_NETWORK;
-    delete process.env.WALLET_STATE_DIR;
+    delete process.env.MIDNIGHT_WALLET_STATE_DIR;
     vi.mocked(loadPriceConfig).mockReset();
     vi.mocked(createWalletResources).mockClear();
   });
@@ -72,7 +72,7 @@ describe('loadConfig — optional Midnight configuration', () => {
     process.env = savedEnv;
   });
 
-  it('succeeds without MIDNIGHT_NETWORK or WALLET_STATE_DIR when only ADA is priced', async () => {
+  it('succeeds without MIDNIGHT_NETWORK or MIDNIGHT_WALLET_STATE_DIR when only ADA is priced', async () => {
     vi.mocked(loadPriceConfig).mockReturnValue(ADA_ONLY);
 
     const { config } = await loadConfig();
@@ -87,16 +87,16 @@ describe('loadConfig — optional Midnight configuration', () => {
     await expect(loadConfig()).rejects.toThrow(/MIDNIGHT_NETWORK is required/);
   });
 
-  it('throws if DUST is priced but WALLET_STATE_DIR is not set', async () => {
+  it('throws if DUST is priced but MIDNIGHT_WALLET_STATE_DIR is not set', async () => {
     process.env.MIDNIGHT_NETWORK = 'undeployed';
     vi.mocked(loadPriceConfig).mockReturnValue(DUST_PRICED);
 
-    await expect(loadConfig()).rejects.toThrow(/WALLET_STATE_DIR is required/);
+    await expect(loadConfig()).rejects.toThrow(/MIDNIGHT_WALLET_STATE_DIR is required/);
   });
 
   it('creates wallet resources when DUST is priced and both are set', async () => {
     process.env.MIDNIGHT_NETWORK = 'undeployed';
-    process.env.WALLET_STATE_DIR = './.wallet-state-test';
+    process.env.MIDNIGHT_WALLET_STATE_DIR = './.wallet-state-test';
     vi.mocked(loadPriceConfig).mockReturnValue(DUST_PRICED);
 
     const { config } = await loadConfig();
@@ -108,7 +108,7 @@ describe('loadConfig — optional Midnight configuration', () => {
 
   it(
     'does not attempt wallet setup for an ADA-only server even if MIDNIGHT_NETWORK ' +
-      'happens to be set, and does not require WALLET_STATE_DIR in that case',
+      'happens to be set, and does not require MIDNIGHT_WALLET_STATE_DIR in that case',
     async () => {
       // Regression: was gated on env.MIDNIGHT_NETWORK alone, so this used to throw.
       process.env.MIDNIGHT_NETWORK = 'undeployed';

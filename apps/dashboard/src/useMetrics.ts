@@ -1,31 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+export interface CapacityMetrics {
+  asset: string;
+  available: string;
+  consumedTotal: string;
+  consumedLastHour: string;
+  locksLastHour: number;
+  contention: {
+    lockedUtxos: number;
+    totalUtxos: number;
+    lockedAmount: string;
+    ratio: number;
+    averageRatioLastHour: number;
+  };
+}
+
 export interface Metrics {
   server: {
     name: string;
     version: string;
     uptime: number;
-    network: string;
   };
-  health: {
-    wallet: { status: string };
-  };
-  dustUsage: {
-    availableBalance: string;
-    totalSpecksConsumed: string;
-    specksLastHour: string;
-    locksLastHour: number;
-  };
+  capacity: CapacityMetrics[];
   revenue: {
     byCurrency: Record<string, string>;
   };
-  contention: {
-    lockedUtxos: number;
-    totalUtxos: number;
-    lockedSpecks: string;
-    ratio: number;
-    averageRatioLastHour: number;
-  };
+  networks: string[];
+  readiness: string;
 }
 
 interface MetricsState {
@@ -47,11 +48,22 @@ export function useMetrics(intervalSeconds = 5): MetricsState {
     }
     fetchingRef.current = true;
     try {
-      const res = await fetch(`${API_URL}/api/metrics`);
-      if (!res.ok) {
-        throw new Error(`${res.status} ${res.statusText}`);
+      const [metricsRes, rootRes, readyRes] = await Promise.all([
+        fetch(`${API_URL}/api/metrics`),
+        fetch(`${API_URL}/`),
+        fetch(`${API_URL}/health/ready`),
+      ]);
+      for (const res of [metricsRes, rootRes]) {
+        if (!res.ok) {
+          throw new Error(`${res.status} ${res.statusText}`);
+        }
       }
-      const data: Metrics = await res.json();
+      // A server that isn't ready answers 500/503, still with a status body.
+      const [metrics, root, ready] = await Promise.all([metricsRes.json(), rootRes.json(), readyRes.json()]);
+      const networks = Object.entries(root.chains as Record<string, { network: string }>).map(
+        ([chain, info]) => `${chain}: ${info.network}`
+      );
+      const data: Metrics = { ...metrics, networks, readiness: ready.status };
       countdownRef.current = intervalSeconds;
       setState({ data, error: false, secondsUntilRefresh: intervalSeconds });
     } catch {

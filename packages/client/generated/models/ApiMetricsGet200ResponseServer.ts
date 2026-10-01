@@ -37,12 +37,6 @@ export interface ApiMetricsGet200ResponseServer {
      * @memberof ApiMetricsGet200ResponseServer
      */
     uptime: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiMetricsGet200ResponseServer
-     */
-    network: string | null;
 }
 
 /**
@@ -52,7 +46,6 @@ export function instanceOfApiMetricsGet200ResponseServer(value: object): value i
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('version' in value) || value['version'] === undefined) return false;
     if (!('uptime' in value) || value['uptime'] === undefined) return false;
-    if (!('network' in value) || value['network'] === undefined) return false;
     return true;
 }
 
@@ -69,7 +62,6 @@ export function ApiMetricsGet200ResponseServerFromJSONTyped(json: any, ignoreDis
         'name': json['name'],
         'version': json['version'],
         'uptime': json['uptime'],
-        'network': json['network'],
     };
 }
 
@@ -87,7 +79,6 @@ export function ApiMetricsGet200ResponseServerToJSONTyped(value?: ApiMetricsGet2
         'name': value['name'],
         'version': value['version'],
         'uptime': value['uptime'],
-        'network': value['network'],
     };
 }
 

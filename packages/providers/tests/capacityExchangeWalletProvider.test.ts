@@ -87,7 +87,7 @@ describe('capacityExchangeWalletProvider', () => {
           json: async () => ({ quoteId: 'test-quote-id', prices: [QUOTED_PRICE.price] }),
         } as Response);
       }
-      if (url.includes('/api/offers')) {
+      if (url.includes('/api/midnight/offers')) {
         return Promise.resolve({
           ok: true,
           status: 201,

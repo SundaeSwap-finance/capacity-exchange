@@ -67,7 +67,7 @@ The chain has the final say. An offer's ID is its own TxId, and the ledger store
 
 ## Real vs simulated
 
-The offer route doesn't exist on the server yet, so `fund` requires exactly one of `--simulate-ces` or `--ces-url`, with no default. `--ces-url` would call `POST /api/babel/offers` and `GET /api/babel/offers/{id}`.
+The offer route doesn't exist on the server yet, so `fund` requires exactly one of `--simulate-ces` or `--ces-url`, with no default. `--ces-url` would call `POST /api/cardano/offers` and `GET /api/cardano/offers/{id}`.
 
 | Real                                         | Simulated by `--simulate-ces`               |
 | -------------------------------------------- | ------------------------------------------- |

@@ -84,10 +84,10 @@ start_ces_server() {
   local wallet_env_var
   if [ -n "${CES_WALLET_SEED:-}" ]; then
     write_secret_file "$CES_WALLET_SEED" "$CES_SERVER_SEED_FILE"
-    wallet_env_var="WALLET_SEED_FILE=$CES_SERVER_SEED_FILE"
+    wallet_env_var="MIDNIGHT_WALLET_SEED_FILE=$CES_SERVER_SEED_FILE"
   else
     write_secret_file "$CES_WALLET_MNEMONIC" "$CES_SERVER_MNEMONIC_FILE"
-    wallet_env_var="WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
+    wallet_env_var="MIDNIGHT_WALLET_MNEMONIC_FILE=$CES_SERVER_MNEMONIC_FILE"
   fi
 
   env \
@@ -97,7 +97,7 @@ start_ces_server() {
     PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
     QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
     OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
-    WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
+    MIDNIGHT_WALLET_STATE_DIR="$CACHED_WALLET_STATE_DIR" \
     LOG_LEVEL=info \
     PORT="$CES_PORT" \
     NODE_ENV=dev \

@@ -29,12 +29,12 @@ class WrappedDefaultApi extends DefaultApi {
     return wrapCesApi(() => super.apiPricesGet(requestParameters));
   }
 
-  async apiOffersPost(requestParameters: Parameters<DefaultApi['apiOffersPost']>[0]) {
-    return wrapCesApi(() => super.apiOffersPost(requestParameters));
+  async apiMidnightOffersPost(requestParameters: Parameters<DefaultApi['apiMidnightOffersPost']>[0]) {
+    return wrapCesApi(() => super.apiMidnightOffersPost(requestParameters));
   }
 
-  async apiSponsorPost(requestParameters: Parameters<DefaultApi['apiSponsorPost']>[0]) {
-    return wrapCesApi(() => super.apiSponsorPost(requestParameters));
+  async apiMidnightSponsorPost(requestParameters: Parameters<DefaultApi['apiMidnightSponsorPost']>[0]) {
+    return wrapCesApi(() => super.apiMidnightSponsorPost(requestParameters));
   }
 }
 

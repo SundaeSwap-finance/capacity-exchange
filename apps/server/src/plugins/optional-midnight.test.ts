@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import chainStatePlugin from './chain-state.js';
-import txPlugin from './tx.js';
-import walletUtxoPlugin from './wallet-utxo.js';
+import chainStatePlugin from './midnight/chain-state.js';
+import txPlugin from './midnight/tx.js';
+import walletUtxoPlugin from './midnight/wallet-utxo.js';
 import cesWalletProviderPlugin from './ces-wallet-provider.js';
 import metricsPlugin from './metrics.js';
-import sponsorPlugin from './sponsor.js';
-import offerPlugin from './offer.js';
+import sponsorPlugin from './midnight/sponsor.js';
+import offerPlugin from './midnight/offer.js';
 import type { AppConfig } from '../loadConfig.js';
 
 /**
@@ -45,32 +45,32 @@ describe('plugins decorate null instead of throwing when Midnight is not configu
     await app.close();
   });
 
-  it('chain-state: decorates chainStateService as null', () => {
-    expect(app.chainStateService).toBeNull();
+  it('chain-state: decorates midnightChainStateService as null', () => {
+    expect(app.midnightChainStateService).toBeNull();
   });
 
-  it('wallet-utxo: decorates both walletService and utxoService as null', () => {
-    expect(app.walletService).toBeNull();
-    expect(app.utxoService).toBeNull();
+  it('wallet-utxo: decorates both midnightWalletService and midnightUtxoService as null', () => {
+    expect(app.midnightWalletService).toBeNull();
+    expect(app.midnightUtxoService).toBeNull();
   });
 
   it('ces-wallet-provider: decorates cesWalletProvider as null', () => {
     expect(app.cesWalletProvider).toBeNull();
   });
 
-  it('tx: decorates txService as null', () => {
-    expect(app.txService).toBeNull();
+  it('tx: decorates midnightTxService as null', () => {
+    expect(app.midnightTxService).toBeNull();
   });
 
-  it('metrics: decorates metricsService as null', () => {
-    expect(app.metricsService).toBeNull();
+  it('metrics: reports no capacity', () => {
+    expect(app.metricsService.getMetrics().capacity).toEqual([]);
   });
 
-  it('offer: decorates offerService as null', () => {
-    expect(app.offerService).toBeNull();
+  it('offer: decorates midnightOfferService as null', () => {
+    expect(app.midnightOfferService).toBeNull();
   });
 
-  it('sponsor: decorates sponsorService as null', () => {
-    expect(app.sponsorService).toBeNull();
+  it('sponsor: decorates midnightSponsorService as null', () => {
+    expect(app.midnightSponsorService).toBeNull();
   });
 });

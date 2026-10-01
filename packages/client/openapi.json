@@ -20,7 +20,8 @@
                   "required": [
                     "name",
                     "version",
-                    "env"
+                    "capacityAssets",
+                    "chains"
                   ],
                   "properties": {
                     "name": {
@@ -29,76 +30,45 @@
                     "version": {
                       "type": "string"
                     },
-                    "env": {
+                    "capacityAssets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "DUST",
+                          "ADA"
+                        ]
+                      }
+                    },
+                    "chains": {
                       "type": "object",
-                      "required": [
-                        "network",
-                        "node_url",
-                        "node_ws_url",
-                        "indexer_url",
-                        "indexer_ws_url",
-                        "proof_server_url"
-                      ],
                       "properties": {
-                        "network": {
-                          "anyOf": [
-                            {
+                        "midnight": {
+                          "type": "object",
+                          "required": [
+                            "network",
+                            "nodeUrl",
+                            "indexerUrl",
+                            "indexerWsUrl",
+                            "proofServerUrl"
+                          ],
+                          "properties": {
+                            "network": {
                               "type": "string"
                             },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "node_url": {
-                          "anyOf": [
-                            {
+                            "nodeUrl": {
                               "type": "string"
                             },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "node_ws_url": {
-                          "anyOf": [
-                            {
+                            "indexerUrl": {
                               "type": "string"
                             },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "indexer_url": {
-                          "anyOf": [
-                            {
+                            "indexerWsUrl": {
                               "type": "string"
                             },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "indexer_ws_url": {
-                          "anyOf": [
-                            {
+                            "proofServerUrl": {
                               "type": "string"
-                            },
-                            {
-                              "type": "null"
                             }
-                          ]
-                        },
-                        "proof_server_url": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          }
                         }
                       }
                     }
@@ -151,9 +121,7 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "status",
-                    "midnight",
-                    "cardano"
+                    "status"
                   ],
                   "properties": {
                     "status": {
@@ -210,12 +178,6 @@
                                   "enum": [
                                     "ko"
                                   ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
-                                  ]
                                 }
                               ]
                             },
@@ -242,12 +204,6 @@
                                   "type": "string",
                                   "enum": [
                                     "ko"
-                                  ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
                                   ]
                                 }
                               ]
@@ -289,12 +245,6 @@
                               "type": "string",
                               "enum": [
                                 "ko"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "disabled"
                               ]
                             }
                           ]
@@ -322,9 +272,7 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "status",
-                    "midnight",
-                    "cardano"
+                    "status"
                   ],
                   "properties": {
                     "status": {
@@ -381,12 +329,6 @@
                                   "enum": [
                                     "ko"
                                   ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
-                                  ]
                                 }
                               ]
                             },
@@ -413,12 +355,6 @@
                                   "type": "string",
                                   "enum": [
                                     "ko"
-                                  ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
                                   ]
                                 }
                               ]
@@ -460,12 +396,6 @@
                               "type": "string",
                               "enum": [
                                 "ko"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "disabled"
                               ]
                             }
                           ]
@@ -493,9 +423,7 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "status",
-                    "midnight",
-                    "cardano"
+                    "status"
                   ],
                   "properties": {
                     "status": {
@@ -552,12 +480,6 @@
                                   "enum": [
                                     "ko"
                                   ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
-                                  ]
                                 }
                               ]
                             },
@@ -584,12 +506,6 @@
                                   "type": "string",
                                   "enum": [
                                     "ko"
-                                  ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
                                   ]
                                 }
                               ]
@@ -631,12 +547,6 @@
                               "type": "string",
                               "enum": [
                                 "ko"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "disabled"
                               ]
                             }
                           ]
@@ -792,7 +702,7 @@
         }
       }
     },
-    "/api/offers": {
+    "/api/midnight/offers": {
       "post": {
         "requestBody": {
           "required": true,
@@ -1023,7 +933,7 @@
         }
       }
     },
-    "/api/ada/offers": {
+    "/api/midnight/ada/offers": {
       "post": {
         "requestBody": {
           "required": true,
@@ -1299,7 +1209,7 @@
         }
       }
     },
-    "/api/sponsor": {
+    "/api/midnight/sponsor": {
       "post": {
         "requestBody": {
           "required": true,
@@ -1454,10 +1364,8 @@
                   "type": "object",
                   "required": [
                     "server",
-                    "health",
-                    "dustUsage",
-                    "revenue",
-                    "contention"
+                    "capacity",
+                    "revenue"
                   ],
                   "properties": {
                     "server": {
@@ -1465,8 +1373,7 @@
                       "required": [
                         "name",
                         "version",
-                        "uptime",
-                        "network"
+                        "uptime"
                       ],
                       "properties": {
                         "name": {
@@ -1477,86 +1384,68 @@
                         },
                         "uptime": {
                           "type": "number"
-                        },
-                        "network": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
                         }
                       }
                     },
-                    "health": {
-                      "type": "object",
-                      "required": [
-                        "wallet"
-                      ],
-                      "properties": {
-                        "wallet": {
-                          "type": "object",
-                          "required": [
-                            "status"
-                          ],
-                          "properties": {
-                            "status": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "syncing"
-                                  ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "ok"
-                                  ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "ko"
-                                  ]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "disabled"
-                                  ]
-                                }
-                              ]
-                            },
-                            "error": {
-                              "type": "string"
+                    "capacity": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "asset",
+                          "available",
+                          "consumedTotal",
+                          "consumedLastHour",
+                          "locksLastHour",
+                          "contention"
+                        ],
+                        "properties": {
+                          "asset": {
+                            "type": "string",
+                            "enum": [
+                              "DUST",
+                              "ADA"
+                            ]
+                          },
+                          "available": {
+                            "type": "string"
+                          },
+                          "consumedTotal": {
+                            "type": "string"
+                          },
+                          "consumedLastHour": {
+                            "type": "string"
+                          },
+                          "locksLastHour": {
+                            "type": "number"
+                          },
+                          "contention": {
+                            "type": "object",
+                            "required": [
+                              "lockedUtxos",
+                              "totalUtxos",
+                              "lockedAmount",
+                              "ratio",
+                              "averageRatioLastHour"
+                            ],
+                            "properties": {
+                              "lockedUtxos": {
+                                "type": "number"
+                              },
+                              "totalUtxos": {
+                                "type": "number"
+                              },
+                              "lockedAmount": {
+                                "type": "string"
+                              },
+                              "ratio": {
+                                "type": "number"
+                              },
+                              "averageRatioLastHour": {
+                                "type": "number"
+                              }
                             }
                           }
-                        }
-                      }
-                    },
-                    "dustUsage": {
-                      "type": "object",
-                      "required": [
-                        "availableBalance",
-                        "totalSpecksConsumed",
-                        "specksLastHour",
-                        "locksLastHour"
-                      ],
-                      "properties": {
-                        "availableBalance": {
-                          "type": "string"
-                        },
-                        "totalSpecksConsumed": {
-                          "type": "string"
-                        },
-                        "specksLastHour": {
-                          "type": "string"
-                        },
-                        "locksLastHour": {
-                          "type": "number"
                         }
                       }
                     },
@@ -1571,33 +1460,6 @@
                           "additionalProperties": {
                             "type": "string"
                           }
-                        }
-                      }
-                    },
-                    "contention": {
-                      "type": "object",
-                      "required": [
-                        "lockedUtxos",
-                        "totalUtxos",
-                        "lockedSpecks",
-                        "ratio",
-                        "averageRatioLastHour"
-                      ],
-                      "properties": {
-                        "lockedUtxos": {
-                          "type": "number"
-                        },
-                        "totalUtxos": {
-                          "type": "number"
-                        },
-                        "lockedSpecks": {
-                          "type": "string"
-                        },
-                        "ratio": {
-                          "type": "number"
-                        },
-                        "averageRatioLastHour": {
-                          "type": "number"
                         }
                       }
                     }

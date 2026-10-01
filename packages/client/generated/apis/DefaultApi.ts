@@ -15,35 +15,35 @@
 
 import * as runtime from '../runtime.js';
 import type {
-  ApiAdaOffersPostRequest,
   ApiMetricsGet200Response,
-  ApiOffersPost201Response,
-  ApiOffersPostRequest,
+  ApiMidnightAdaOffersPostRequest,
+  ApiMidnightOffersPost201Response,
+  ApiMidnightOffersPostRequest,
+  ApiMidnightSponsorPost200Response,
+  ApiMidnightSponsorPostRequest,
   ApiPricesGet200Response,
   ApiPricesGet400Response,
-  ApiSponsorPost200Response,
-  ApiSponsorPostRequest,
   Get200Response,
   HealthGet200Response,
   HealthReadyGet200Response,
 } from '../models/index.js';
 import {
-    ApiAdaOffersPostRequestFromJSON,
-    ApiAdaOffersPostRequestToJSON,
     ApiMetricsGet200ResponseFromJSON,
     ApiMetricsGet200ResponseToJSON,
-    ApiOffersPost201ResponseFromJSON,
-    ApiOffersPost201ResponseToJSON,
-    ApiOffersPostRequestFromJSON,
-    ApiOffersPostRequestToJSON,
+    ApiMidnightAdaOffersPostRequestFromJSON,
+    ApiMidnightAdaOffersPostRequestToJSON,
+    ApiMidnightOffersPost201ResponseFromJSON,
+    ApiMidnightOffersPost201ResponseToJSON,
+    ApiMidnightOffersPostRequestFromJSON,
+    ApiMidnightOffersPostRequestToJSON,
+    ApiMidnightSponsorPost200ResponseFromJSON,
+    ApiMidnightSponsorPost200ResponseToJSON,
+    ApiMidnightSponsorPostRequestFromJSON,
+    ApiMidnightSponsorPostRequestToJSON,
     ApiPricesGet200ResponseFromJSON,
     ApiPricesGet200ResponseToJSON,
     ApiPricesGet400ResponseFromJSON,
     ApiPricesGet400ResponseToJSON,
-    ApiSponsorPost200ResponseFromJSON,
-    ApiSponsorPost200ResponseToJSON,
-    ApiSponsorPostRequestFromJSON,
-    ApiSponsorPostRequestToJSON,
     Get200ResponseFromJSON,
     Get200ResponseToJSON,
     HealthGet200ResponseFromJSON,
@@ -52,12 +52,16 @@ import {
     HealthReadyGet200ResponseToJSON,
 } from '../models/index.js';
 
-export interface ApiAdaOffersPostOperationRequest {
-    apiAdaOffersPostRequest: ApiAdaOffersPostRequest;
+export interface ApiMidnightAdaOffersPostOperationRequest {
+    apiMidnightAdaOffersPostRequest: ApiMidnightAdaOffersPostRequest;
 }
 
-export interface ApiOffersPostOperationRequest {
-    apiOffersPostRequest: ApiOffersPostRequest;
+export interface ApiMidnightOffersPostOperationRequest {
+    apiMidnightOffersPostRequest: ApiMidnightOffersPostRequest;
+}
+
+export interface ApiMidnightSponsorPostOperationRequest {
+    apiMidnightSponsorPostRequest: ApiMidnightSponsorPostRequest;
 }
 
 export interface ApiPricesGetRequest {
@@ -65,51 +69,10 @@ export interface ApiPricesGetRequest {
     currency: ApiPricesGetCurrencyEnum;
 }
 
-export interface ApiSponsorPostOperationRequest {
-    apiSponsorPostRequest: ApiSponsorPostRequest;
-}
-
 /**
  * 
  */
 export class DefaultApi extends runtime.BaseAPI {
-
-    /**
-     */
-    async apiAdaOffersPostRaw(requestParameters: ApiAdaOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiOffersPost201Response>> {
-        if (requestParameters['apiAdaOffersPostRequest'] == null) {
-            throw new runtime.RequiredError(
-                'apiAdaOffersPostRequest',
-                'Required parameter "apiAdaOffersPostRequest" was null or undefined when calling apiAdaOffersPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/ada/offers`;
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ApiAdaOffersPostRequestToJSON(requestParameters['apiAdaOffersPostRequest']),
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiOffersPost201ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async apiAdaOffersPost(requestParameters: ApiAdaOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiOffersPost201Response> {
-        const response = await this.apiAdaOffersPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
 
     /**
      */
@@ -140,11 +103,11 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiOffersPostRaw(requestParameters: ApiOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiOffersPost201Response>> {
-        if (requestParameters['apiOffersPostRequest'] == null) {
+    async apiMidnightAdaOffersPostRaw(requestParameters: ApiMidnightAdaOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMidnightOffersPost201Response>> {
+        if (requestParameters['apiMidnightAdaOffersPostRequest'] == null) {
             throw new runtime.RequiredError(
-                'apiOffersPostRequest',
-                'Required parameter "apiOffersPostRequest" was null or undefined when calling apiOffersPost().'
+                'apiMidnightAdaOffersPostRequest',
+                'Required parameter "apiMidnightAdaOffersPostRequest" was null or undefined when calling apiMidnightAdaOffersPost().'
             );
         }
 
@@ -155,23 +118,97 @@ export class DefaultApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
 
-        let urlPath = `/api/offers`;
+        let urlPath = `/api/midnight/ada/offers`;
 
         const response = await this.request({
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: ApiOffersPostRequestToJSON(requestParameters['apiOffersPostRequest']),
+            body: ApiMidnightAdaOffersPostRequestToJSON(requestParameters['apiMidnightAdaOffersPostRequest']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiOffersPost201ResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiMidnightOffersPost201ResponseFromJSON(jsonValue));
     }
 
     /**
      */
-    async apiOffersPost(requestParameters: ApiOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiOffersPost201Response> {
-        const response = await this.apiOffersPostRaw(requestParameters, initOverrides);
+    async apiMidnightAdaOffersPost(requestParameters: ApiMidnightAdaOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMidnightOffersPost201Response> {
+        const response = await this.apiMidnightAdaOffersPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiMidnightOffersPostRaw(requestParameters: ApiMidnightOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMidnightOffersPost201Response>> {
+        if (requestParameters['apiMidnightOffersPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiMidnightOffersPostRequest',
+                'Required parameter "apiMidnightOffersPostRequest" was null or undefined when calling apiMidnightOffersPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/midnight/offers`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiMidnightOffersPostRequestToJSON(requestParameters['apiMidnightOffersPostRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiMidnightOffersPost201ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiMidnightOffersPost(requestParameters: ApiMidnightOffersPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMidnightOffersPost201Response> {
+        const response = await this.apiMidnightOffersPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiMidnightSponsorPostRaw(requestParameters: ApiMidnightSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMidnightSponsorPost200Response>> {
+        if (requestParameters['apiMidnightSponsorPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiMidnightSponsorPostRequest',
+                'Required parameter "apiMidnightSponsorPostRequest" was null or undefined when calling apiMidnightSponsorPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/midnight/sponsor`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiMidnightSponsorPostRequestToJSON(requestParameters['apiMidnightSponsorPostRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiMidnightSponsorPost200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiMidnightSponsorPost(requestParameters: ApiMidnightSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMidnightSponsorPost200Response> {
+        const response = await this.apiMidnightSponsorPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -221,43 +258,6 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async apiPricesGet(requestParameters: ApiPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiPricesGet200Response> {
         const response = await this.apiPricesGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     */
-    async apiSponsorPostRaw(requestParameters: ApiSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiSponsorPost200Response>> {
-        if (requestParameters['apiSponsorPostRequest'] == null) {
-            throw new runtime.RequiredError(
-                'apiSponsorPostRequest',
-                'Required parameter "apiSponsorPostRequest" was null or undefined when calling apiSponsorPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/sponsor`;
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ApiSponsorPostRequestToJSON(requestParameters['apiSponsorPostRequest']),
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiSponsorPost200ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async apiSponsorPost(requestParameters: ApiSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiSponsorPost200Response> {
-        const response = await this.apiSponsorPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

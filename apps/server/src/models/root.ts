@@ -1,16 +1,21 @@
 import { Type } from '@sinclair/typebox';
+import { CapacityAssetSchema } from '../config/prices.js';
+
+const MidnightInfo = Type.Object({
+  network: Type.String(),
+  nodeUrl: Type.String(),
+  indexerUrl: Type.String(),
+  indexerWsUrl: Type.String(),
+  proofServerUrl: Type.String(),
+});
 
 export const RootResponse = Type.Object({
   name: Type.String(),
   version: Type.String(),
-  // Null when no Midnight network is configured (e.g. an ADA-only server).
-  env: Type.Object({
-    network: Type.Union([Type.String(), Type.Null()]),
-    node_url: Type.Union([Type.String(), Type.Null()]),
-    node_ws_url: Type.Union([Type.String(), Type.Null()]),
-    indexer_url: Type.Union([Type.String(), Type.Null()]),
-    indexer_ws_url: Type.Union([Type.String(), Type.Null()]),
-    proof_server_url: Type.Union([Type.String(), Type.Null()]),
+  capacityAssets: Type.Array(CapacityAssetSchema),
+  // A chain is present only when this server is configured to use it.
+  chains: Type.Object({
+    midnight: Type.Optional(MidnightInfo),
   }),
 });
 

@@ -4,87 +4,15 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**apiAdaOffersPost**](DefaultApi.md#apiadaofferspostoperation) | **POST** /api/ada/offers |  |
 | [**apiMetricsGet**](DefaultApi.md#apimetricsget) | **GET** /api/metrics |  |
-| [**apiOffersPost**](DefaultApi.md#apiofferspostoperation) | **POST** /api/offers |  |
+| [**apiMidnightAdaOffersPost**](DefaultApi.md#apimidnightadaofferspostoperation) | **POST** /api/midnight/ada/offers |  |
+| [**apiMidnightOffersPost**](DefaultApi.md#apimidnightofferspostoperation) | **POST** /api/midnight/offers |  |
+| [**apiMidnightSponsorPost**](DefaultApi.md#apimidnightsponsorpostoperation) | **POST** /api/midnight/sponsor |  |
 | [**apiPricesGet**](DefaultApi.md#apipricesget) | **GET** /api/prices |  |
-| [**apiSponsorPost**](DefaultApi.md#apisponsorpostoperation) | **POST** /api/sponsor |  |
 | [**healthGet**](DefaultApi.md#healthget) | **GET** /health/ |  |
 | [**healthReadyGet**](DefaultApi.md#healthreadyget) | **GET** /health/ready |  |
 | [**rootGet**](DefaultApi.md#rootget) | **GET** / |  |
 
-
-
-## apiAdaOffersPost
-
-> ApiOffersPost201Response apiAdaOffersPost(apiAdaOffersPostRequest)
-
-
-
-### Example
-
-```ts
-import {
-  Configuration,
-  DefaultApi,
-} from '';
-import type { ApiAdaOffersPostOperationRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new DefaultApi();
-
-  const body = {
-    // ApiAdaOffersPostRequest
-    apiAdaOffersPostRequest: ...,
-  } satisfies ApiAdaOffersPostOperationRequest;
-
-  try {
-    const data = await api.apiAdaOffersPost(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **apiAdaOffersPostRequest** | [ApiAdaOffersPostRequest](ApiAdaOffersPostRequest.md) |  | |
-
-### Return type
-
-[**ApiOffersPost201Response**](ApiOffersPost201Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: `application/json`
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **201** | Default Response |  -  |
-| **400** | Default Response |  -  |
-| **404** | Default Response |  -  |
-| **409** | Default Response |  -  |
-| **410** | Default Response |  -  |
-| **500** | Default Response |  -  |
-| **501** | Default Response |  -  |
-| **503** | Default Response |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
 ## apiMetricsGet
@@ -144,9 +72,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## apiOffersPost
+## apiMidnightAdaOffersPost
 
-> ApiOffersPost201Response apiOffersPost(apiOffersPostRequest)
+> ApiMidnightOffersPost201Response apiMidnightAdaOffersPost(apiMidnightAdaOffersPostRequest)
 
 
 
@@ -157,19 +85,19 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { ApiOffersPostOperationRequest } from '';
+import type { ApiMidnightAdaOffersPostOperationRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
   const api = new DefaultApi();
 
   const body = {
-    // ApiOffersPostRequest
-    apiOffersPostRequest: ...,
-  } satisfies ApiOffersPostOperationRequest;
+    // ApiMidnightAdaOffersPostRequest
+    apiMidnightAdaOffersPostRequest: ...,
+  } satisfies ApiMidnightAdaOffersPostOperationRequest;
 
   try {
-    const data = await api.apiOffersPost(body);
+    const data = await api.apiMidnightAdaOffersPost(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -185,11 +113,83 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **apiOffersPostRequest** | [ApiOffersPostRequest](ApiOffersPostRequest.md) |  | |
+| **apiMidnightAdaOffersPostRequest** | [ApiMidnightAdaOffersPostRequest](ApiMidnightAdaOffersPostRequest.md) |  | |
 
 ### Return type
 
-[**ApiOffersPost201Response**](ApiOffersPost201Response.md)
+[**ApiMidnightOffersPost201Response**](ApiMidnightOffersPost201Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **201** | Default Response |  -  |
+| **400** | Default Response |  -  |
+| **404** | Default Response |  -  |
+| **409** | Default Response |  -  |
+| **410** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **501** | Default Response |  -  |
+| **503** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiMidnightOffersPost
+
+> ApiMidnightOffersPost201Response apiMidnightOffersPost(apiMidnightOffersPostRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiMidnightOffersPostOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // ApiMidnightOffersPostRequest
+    apiMidnightOffersPostRequest: ...,
+  } satisfies ApiMidnightOffersPostOperationRequest;
+
+  try {
+    const data = await api.apiMidnightOffersPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **apiMidnightOffersPostRequest** | [ApiMidnightOffersPostRequest](ApiMidnightOffersPostRequest.md) |  | |
+
+### Return type
+
+[**ApiMidnightOffersPost201Response**](ApiMidnightOffersPost201Response.md)
 
 ### Authorization
 
@@ -208,6 +208,75 @@ No authorization required
 | **400** | Default Response |  -  |
 | **409** | Default Response |  -  |
 | **410** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **501** | Default Response |  -  |
+| **503** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiMidnightSponsorPost
+
+> ApiMidnightSponsorPost200Response apiMidnightSponsorPost(apiMidnightSponsorPostRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiMidnightSponsorPostOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // ApiMidnightSponsorPostRequest
+    apiMidnightSponsorPostRequest: ...,
+  } satisfies ApiMidnightSponsorPostOperationRequest;
+
+  try {
+    const data = await api.apiMidnightSponsorPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **apiMidnightSponsorPostRequest** | [ApiMidnightSponsorPostRequest](ApiMidnightSponsorPostRequest.md) |  | |
+
+### Return type
+
+[**ApiMidnightSponsorPost200Response**](ApiMidnightSponsorPost200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Default Response |  -  |
+| **422** | Default Response |  -  |
 | **500** | Default Response |  -  |
 | **501** | Default Response |  -  |
 | **503** | Default Response |  -  |
@@ -281,75 +350,6 @@ No authorization required
 | **200** | Default Response |  -  |
 | **400** | Default Response |  -  |
 | **500** | Default Response |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
-
-## apiSponsorPost
-
-> ApiSponsorPost200Response apiSponsorPost(apiSponsorPostRequest)
-
-
-
-### Example
-
-```ts
-import {
-  Configuration,
-  DefaultApi,
-} from '';
-import type { ApiSponsorPostOperationRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new DefaultApi();
-
-  const body = {
-    // ApiSponsorPostRequest
-    apiSponsorPostRequest: ...,
-  } satisfies ApiSponsorPostOperationRequest;
-
-  try {
-    const data = await api.apiSponsorPost(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **apiSponsorPostRequest** | [ApiSponsorPostRequest](ApiSponsorPostRequest.md) |  | |
-
-### Return type
-
-[**ApiSponsorPost200Response**](ApiSponsorPost200Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: `application/json`
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | Default Response |  -  |
-| **422** | Default Response |  -  |
-| **500** | Default Response |  -  |
-| **501** | Default Response |  -  |
-| **503** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

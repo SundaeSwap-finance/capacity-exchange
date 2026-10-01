@@ -152,7 +152,7 @@ function categorize(status: number): ResultCategory {
 async function sendOffer(config: Config, userId: number): Promise<RequestResult> {
   const start = performance.now();
   try {
-    const response = await fetch(`${config.server}/api/offers`, {
+    const response = await fetch(`${config.server}/api/midnight/offers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

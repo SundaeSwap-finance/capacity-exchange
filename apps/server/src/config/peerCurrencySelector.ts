@@ -1,7 +1,7 @@
 import type { FastifyBaseLogger } from 'fastify';
 import type { ExchangePrice, PromptForCurrency } from '@sundaeswap/capacity-exchange-providers';
 import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
-import type { WalletService } from '../services/wallet.js';
+import type { MidnightWalletService } from '../services/midnight/wallet.js';
 import type { PeerPriceService } from '../services/peerPrice.js';
 
 interface Candidate {
@@ -18,7 +18,7 @@ interface Candidate {
  */
 export function createAutoSelectCurrency(
   log: FastifyBaseLogger,
-  walletService: WalletService,
+  walletService: MidnightWalletService,
   peerPriceService: PeerPriceService,
 ): PromptForCurrency {
   return async (prices: ExchangePrice[], dustRequired: bigint, requestId: string) => {
@@ -53,7 +53,7 @@ async function selectFromCandidates(
   dustRequired: bigint,
   requestId: string,
   log: FastifyBaseLogger,
-  walletService: WalletService,
+  walletService: MidnightWalletService,
   peerPriceService: PeerPriceService,
 ): ReturnType<PromptForCurrency> {
   const [shieldedBalances, unshieldedBalances] = await Promise.all([
