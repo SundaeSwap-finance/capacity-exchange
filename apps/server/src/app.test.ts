@@ -47,8 +47,8 @@ describe('buildApp — ADA-only server (no Midnight configuration)', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({
       status: 'ok',
-      wallet: { status: 'disabled' },
-      indexer: { status: 'disabled' },
+      midnight: { wallet: { status: 'disabled' }, indexer: { status: 'disabled' } },
+      cardano: { status: 'disabled' },
     });
   });
 

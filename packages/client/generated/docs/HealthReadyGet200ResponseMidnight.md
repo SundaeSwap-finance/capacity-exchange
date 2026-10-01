@@ -1,5 +1,5 @@
 
-# ApiMetricsGet200ResponseHealth
+# HealthReadyGet200ResponseMidnight
 
 
 ## Properties
@@ -7,16 +7,18 @@
 Name | Type
 ------------ | -------------
 `wallet` | [HealthReadyGet200ResponseMidnightWallet](HealthReadyGet200ResponseMidnightWallet.md)
+`indexer` | [HealthReadyGet200ResponseMidnightIndexer](HealthReadyGet200ResponseMidnightIndexer.md)
 
 ## Example
 
 ```typescript
-import type { ApiMetricsGet200ResponseHealth } from ''
+import type { HealthReadyGet200ResponseMidnight } from ''
 
 // TODO: Update the object below with actual values
 const example = {
   "wallet": null,
-} satisfies ApiMetricsGet200ResponseHealth
+  "indexer": null,
+} satisfies HealthReadyGet200ResponseMidnight
 
 console.log(example)
 
@@ -25,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ApiMetricsGet200ResponseHealth
+const exampleParsed = JSON.parse(exampleJSON) as HealthReadyGet200ResponseMidnight
 console.log(exampleParsed)
 ```
 

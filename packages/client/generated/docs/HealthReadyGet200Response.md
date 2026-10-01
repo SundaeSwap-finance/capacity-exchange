@@ -7,8 +7,8 @@
 Name | Type
 ------------ | -------------
 `status` | string
-`wallet` | [HealthReadyGet200ResponseWallet](HealthReadyGet200ResponseWallet.md)
-`indexer` | [HealthReadyGet200ResponseIndexer](HealthReadyGet200ResponseIndexer.md)
+`midnight` | [HealthReadyGet200ResponseMidnight](HealthReadyGet200ResponseMidnight.md)
+`cardano` | [HealthReadyGet200ResponseCardano](HealthReadyGet200ResponseCardano.md)
 
 ## Example
 
@@ -18,8 +18,8 @@ import type { HealthReadyGet200Response } from ''
 // TODO: Update the object below with actual values
 const example = {
   "status": null,
-  "wallet": null,
-  "indexer": null,
+  "midnight": null,
+  "cardano": null,
 } satisfies HealthReadyGet200Response
 
 console.log(example)

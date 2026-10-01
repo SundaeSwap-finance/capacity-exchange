@@ -13,20 +13,20 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { HealthReadyGet200ResponseIndexer } from './HealthReadyGet200ResponseIndexer.js';
+import type { HealthReadyGet200ResponseMidnight } from './HealthReadyGet200ResponseMidnight.js';
 import {
-    HealthReadyGet200ResponseIndexerFromJSON,
-    HealthReadyGet200ResponseIndexerFromJSONTyped,
-    HealthReadyGet200ResponseIndexerToJSON,
-    HealthReadyGet200ResponseIndexerToJSONTyped,
-} from './HealthReadyGet200ResponseIndexer.js';
-import type { HealthReadyGet200ResponseWallet } from './HealthReadyGet200ResponseWallet.js';
+    HealthReadyGet200ResponseMidnightFromJSON,
+    HealthReadyGet200ResponseMidnightFromJSONTyped,
+    HealthReadyGet200ResponseMidnightToJSON,
+    HealthReadyGet200ResponseMidnightToJSONTyped,
+} from './HealthReadyGet200ResponseMidnight.js';
+import type { HealthReadyGet200ResponseCardano } from './HealthReadyGet200ResponseCardano.js';
 import {
-    HealthReadyGet200ResponseWalletFromJSON,
-    HealthReadyGet200ResponseWalletFromJSONTyped,
-    HealthReadyGet200ResponseWalletToJSON,
-    HealthReadyGet200ResponseWalletToJSONTyped,
-} from './HealthReadyGet200ResponseWallet.js';
+    HealthReadyGet200ResponseCardanoFromJSON,
+    HealthReadyGet200ResponseCardanoFromJSONTyped,
+    HealthReadyGet200ResponseCardanoToJSON,
+    HealthReadyGet200ResponseCardanoToJSONTyped,
+} from './HealthReadyGet200ResponseCardano.js';
 
 /**
  * 
@@ -42,16 +42,16 @@ export interface HealthReadyGet200Response {
     status: HealthReadyGet200ResponseStatusEnum;
     /**
      * 
-     * @type {HealthReadyGet200ResponseWallet}
+     * @type {HealthReadyGet200ResponseMidnight}
      * @memberof HealthReadyGet200Response
      */
-    wallet: HealthReadyGet200ResponseWallet;
+    midnight: HealthReadyGet200ResponseMidnight;
     /**
      * 
-     * @type {HealthReadyGet200ResponseIndexer}
+     * @type {HealthReadyGet200ResponseCardano}
      * @memberof HealthReadyGet200Response
      */
-    indexer: HealthReadyGet200ResponseIndexer;
+    cardano: HealthReadyGet200ResponseCardano;
 }
 
 
@@ -71,8 +71,8 @@ export type HealthReadyGet200ResponseStatusEnum = typeof HealthReadyGet200Respon
  */
 export function instanceOfHealthReadyGet200Response(value: object): value is HealthReadyGet200Response {
     if (!('status' in value) || value['status'] === undefined) return false;
-    if (!('wallet' in value) || value['wallet'] === undefined) return false;
-    if (!('indexer' in value) || value['indexer'] === undefined) return false;
+    if (!('midnight' in value) || value['midnight'] === undefined) return false;
+    if (!('cardano' in value) || value['cardano'] === undefined) return false;
     return true;
 }
 
@@ -87,8 +87,8 @@ export function HealthReadyGet200ResponseFromJSONTyped(json: any, ignoreDiscrimi
     return {
         
         'status': json['status'],
-        'wallet': HealthReadyGet200ResponseWalletFromJSON(json['wallet']),
-        'indexer': HealthReadyGet200ResponseIndexerFromJSON(json['indexer']),
+        'midnight': HealthReadyGet200ResponseMidnightFromJSON(json['midnight']),
+        'cardano': HealthReadyGet200ResponseCardanoFromJSON(json['cardano']),
     };
 }
 
@@ -104,8 +104,8 @@ export function HealthReadyGet200ResponseToJSONTyped(value?: HealthReadyGet200Re
     return {
         
         'status': value['status'],
-        'wallet': HealthReadyGet200ResponseWalletToJSON(value['wallet']),
-        'indexer': HealthReadyGet200ResponseIndexerToJSON(value['indexer']),
+        'midnight': HealthReadyGet200ResponseMidnightToJSON(value['midnight']),
+        'cardano': HealthReadyGet200ResponseCardanoToJSON(value['cardano']),
     };
 }
 
