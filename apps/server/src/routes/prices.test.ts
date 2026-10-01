@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { randomBytes } from 'crypto';
-import priceRoutes from './prices.js';
+import priceRoutes, { assetPriceRoutes } from './prices.js';
 import { PriceService } from '../services/price.js';
 import { QuoteService } from '../services/quote.js';
 import { useRouteTestApp } from './test-utils.js';
@@ -126,6 +126,68 @@ describe('GET /api/prices on a server that does not sell ADA', () => {
       method: 'GET',
       url: '/api/prices?currency=ADA&amount=1000',
     });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('does not sell ADA');
+  });
+});
+
+describe.each([
+  { chain: 'midnight', asset: 'DUST' },
+  { chain: 'cardano', asset: 'ADA' },
+] as const)('GET /api/$chain/prices', ({ chain, asset }) => {
+  const app = useRouteTestApp({
+    decorations: { priceService, quoteService },
+    routes: { plugin: assetPriceRoutes(asset), prefix: `/api/${chain}` },
+  });
+  const shared = useRouteTestApp({
+    decorations: { priceService, quoteService },
+    routes: { plugin: priceRoutes, prefix: '/api' },
+  });
+
+  it(`answers the same as /api/prices?currency=${asset}`, async () => {
+    const res = await app.get().inject({ method: 'GET', url: `/api/${chain}/prices?amount=1000` });
+    const expected = await shared.get().inject({
+      method: 'GET',
+      url: `/api/prices?currency=${asset}&amount=1000`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().prices).toEqual(expected.json().prices);
+  });
+
+  it(`stamps ${asset} into the quote`, async () => {
+    const res = await app.get().inject({ method: 'GET', url: `/api/${chain}/prices?amount=1000` });
+    const result = quoteService.getQuote(res.json().quoteId);
+    expect(result.status === 'ok' && result.quote.currency).toBe(asset);
+    expect(result.status === 'ok' && result.quote.amount).toBe(1000n);
+  });
+
+  it('rejects a non-numeric amount at the schema', async () => {
+    const res = await app.get().inject({ method: 'GET', url: `/api/${chain}/prices?amount=abc` });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('GET /api/cardano/prices on a server that does not sell ADA', () => {
+  const app = useRouteTestApp({
+    decorations: {
+      priceService: new PriceService({
+        DUST: [
+          {
+            currency: { type: 'midnight:shielded', rawId: 'lovelace' },
+            basePrice: '1000',
+            rateNumerator: '1',
+            rateDenominator: '1',
+          },
+        ],
+      }),
+      quoteService,
+    },
+    routes: { plugin: assetPriceRoutes('ADA'), prefix: '/api/cardano' },
+  });
+
+  it('400s', async () => {
+    const res = await app.get().inject({ method: 'GET', url: '/api/cardano/prices?amount=1000' });
     expect(res.statusCode).toBe(400);
     expect(res.json().message).toContain('does not sell ADA');
   });

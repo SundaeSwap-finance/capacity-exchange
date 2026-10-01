@@ -1,24 +1,24 @@
 
-# ApiPricesGet200ResponsePricesInner
+# PricesResponse
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`amount` | string
-`currency` | [ApiPricesGet200ResponsePricesInnerCurrency](ApiPricesGet200ResponsePricesInnerCurrency.md)
+`quoteId` | string
+`prices` | [Array&lt;Price&gt;](Price.md)
 
 ## Example
 
 ```typescript
-import type { ApiPricesGet200ResponsePricesInner } from ''
+import type { PricesResponse } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "amount": null,
-  "currency": null,
-} satisfies ApiPricesGet200ResponsePricesInner
+  "quoteId": null,
+  "prices": null,
+} satisfies PricesResponse
 
 console.log(example)
 
@@ -27,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ApiPricesGet200ResponsePricesInner
+const exampleParsed = JSON.parse(exampleJSON) as PricesResponse
 console.log(exampleParsed)
 ```
 

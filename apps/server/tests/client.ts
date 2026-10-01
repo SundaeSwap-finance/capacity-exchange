@@ -40,10 +40,10 @@ export class CapacityExchangeClient {
   async getPrices(
     specks: string,
   ): Promise<ApiResponse<typeof PricesResponse.static | typeof ErrorResponse.static>> {
-    const response = await fetch(`${this.baseUrl}/api/prices?currency=DUST&amount=${specks}`);
+    const response = await fetch(`${this.baseUrl}/api/midnight/prices?amount=${specks}`);
     const data = (await response.json()) as
       typeof PricesResponse.static | typeof ErrorResponse.static;
-    console.debug(`GET /api/prices?currency=DUST&amount=${specks} -> ${response.status}`, data);
+    console.debug(`GET /api/midnight/prices?amount=${specks} -> ${response.status}`, data);
     return { status: response.status, data };
   }
 

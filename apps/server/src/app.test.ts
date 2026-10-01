@@ -63,7 +63,7 @@ describe('buildApp — ADA-only server (no Midnight configuration)', () => {
   });
 
   it('still prices the capacity asset it actually sells (ADA)', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/prices?currency=ADA&amount=1000000' });
+    const res = await app.inject({ method: 'GET', url: '/api/cardano/prices?amount=1000000' });
     expect(res.statusCode).toBe(200);
     expect(res.json().prices).toBeInstanceOf(Array);
   });

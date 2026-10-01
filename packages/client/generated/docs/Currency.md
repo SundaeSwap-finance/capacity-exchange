@@ -1,26 +1,26 @@
 
-# ApiPricesGet400Response
+# Currency
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`error` | string
-`message` | string
-`details` | string
+`id` | string
+`type` | string
+`rawId` | string
 
 ## Example
 
 ```typescript
-import type { ApiPricesGet400Response } from ''
+import type { Currency } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "error": null,
-  "message": null,
-  "details": null,
-} satisfies ApiPricesGet400Response
+  "id": null,
+  "type": null,
+  "rawId": null,
+} satisfies Currency
 
 console.log(example)
 
@@ -29,7 +29,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ApiPricesGet400Response
+const exampleParsed = JSON.parse(exampleJSON) as Currency
 console.log(exampleParsed)
 ```
 

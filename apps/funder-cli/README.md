@@ -38,7 +38,7 @@ bun src/cli.ts balance --caller-wallet ./caller
 bun src/cli.ts build --selection .ces-fund/selection.json \
   --send 900000:<policyid><hexname> --to $(cat ./recipient/payment.addr)
 
-# 5. price that ADA in tokens — a real call to GET /api/prices   -> quote.json
+# 5. price that ADA in tokens — a real call to GET /api/cardano/prices -> quote.json
 bun src/cli.ts quote --selection .ces-fund/selection.json --ces-url <url> --capacity <lovelace, from step 4>
 
 # 6. put the price into the offer (it comes out of the change),  -> offer.json
@@ -71,7 +71,7 @@ The offer route doesn't exist on the server yet, so `fund` requires exactly one 
 
 | Real                                         | Simulated by `--simulate-ces`               |
 | -------------------------------------------- | ------------------------------------------- |
-| `GET /api/prices` and its quote              | the exchange receiving the offer over HTTP  |
+| `GET /api/cardano/prices` and its quote      | the exchange receiving the offer over HTTP  |
 | the offer and the caller's signature         | choosing to carry it, and which UTxO to use |
 | the batch, its fee, and everything submitted | quote settlement (expiry isn't checked)     |
 

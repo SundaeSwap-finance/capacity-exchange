@@ -4,15 +4,83 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**apiCardanoPricesGet**](DefaultApi.md#apicardanopricesget) | **GET** /api/cardano/prices |  |
 | [**apiMetricsGet**](DefaultApi.md#apimetricsget) | **GET** /api/metrics |  |
 | [**apiMidnightAdaOffersPost**](DefaultApi.md#apimidnightadaofferspostoperation) | **POST** /api/midnight/ada/offers |  |
 | [**apiMidnightOffersPost**](DefaultApi.md#apimidnightofferspostoperation) | **POST** /api/midnight/offers |  |
+| [**apiMidnightPricesGet**](DefaultApi.md#apimidnightpricesget) | **GET** /api/midnight/prices |  |
 | [**apiMidnightSponsorPost**](DefaultApi.md#apimidnightsponsorpostoperation) | **POST** /api/midnight/sponsor |  |
-| [**apiPricesGet**](DefaultApi.md#apipricesget) | **GET** /api/prices |  |
 | [**healthGet**](DefaultApi.md#healthget) | **GET** /health/ |  |
 | [**healthReadyGet**](DefaultApi.md#healthreadyget) | **GET** /health/ready |  |
 | [**rootGet**](DefaultApi.md#rootget) | **GET** / |  |
 
+
+
+## apiCardanoPricesGet
+
+> PricesResponse apiCardanoPricesGet(amount)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiCardanoPricesGetRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // string
+    amount: amount_example,
+  } satisfies ApiCardanoPricesGetRequest;
+
+  try {
+    const data = await api.apiCardanoPricesGet(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **amount** | `string` |  | [Defaults to `undefined`] |
+
+### Return type
+
+[**PricesResponse**](PricesResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Default Response |  -  |
+| **400** | Default Response |  -  |
+| **500** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
 ## apiMetricsGet
@@ -215,6 +283,73 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
+## apiMidnightPricesGet
+
+> PricesResponse apiMidnightPricesGet(amount)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiMidnightPricesGetRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // string
+    amount: amount_example,
+  } satisfies ApiMidnightPricesGetRequest;
+
+  try {
+    const data = await api.apiMidnightPricesGet(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **amount** | `string` |  | [Defaults to `undefined`] |
+
+### Return type
+
+[**PricesResponse**](PricesResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Default Response |  -  |
+| **400** | Default Response |  -  |
+| **500** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
 ## apiMidnightSponsorPost
 
 > ApiMidnightSponsorPost200Response apiMidnightSponsorPost(apiMidnightSponsorPostRequest)
@@ -280,76 +415,6 @@ No authorization required
 | **500** | Default Response |  -  |
 | **501** | Default Response |  -  |
 | **503** | Default Response |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
-
-## apiPricesGet
-
-> ApiPricesGet200Response apiPricesGet(amount, currency)
-
-
-
-### Example
-
-```ts
-import {
-  Configuration,
-  DefaultApi,
-} from '';
-import type { ApiPricesGetRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new DefaultApi();
-
-  const body = {
-    // string
-    amount: amount_example,
-    // 'DUST' | 'ADA'
-    currency: currency_example,
-  } satisfies ApiPricesGetRequest;
-
-  try {
-    const data = await api.apiPricesGet(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **amount** | `string` |  | [Defaults to `undefined`] |
-| **currency** | `DUST`, `ADA` |  | [Defaults to `undefined`] [Enum: DUST, ADA] |
-
-### Return type
-
-[**ApiPricesGet200Response**](ApiPricesGet200Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | Default Response |  -  |
-| **400** | Default Response |  -  |
-| **500** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

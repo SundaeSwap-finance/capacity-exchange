@@ -8,7 +8,7 @@ Name | Type
 ------------ | -------------
 `offerId` | string
 `offerAmount` | string
-`offerCurrency` | [ApiPricesGet200ResponsePricesInnerCurrency](ApiPricesGet200ResponsePricesInnerCurrency.md)
+`offerCurrency` | [Currency](Currency.md)
 `serializedTx` | string
 `expiresAt` | Date
 

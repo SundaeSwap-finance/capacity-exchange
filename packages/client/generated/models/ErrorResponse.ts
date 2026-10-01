@@ -16,43 +16,43 @@ import { mapValues } from '../runtime.js';
 /**
  * 
  * @export
- * @interface ApiPricesGet400Response
+ * @interface ErrorResponse
  */
-export interface ApiPricesGet400Response {
+export interface ErrorResponse {
     /**
      * 
      * @type {string}
-     * @memberof ApiPricesGet400Response
+     * @memberof ErrorResponse
      */
     error: string;
     /**
      * 
      * @type {string}
-     * @memberof ApiPricesGet400Response
+     * @memberof ErrorResponse
      */
     message: string;
     /**
      * 
      * @type {string}
-     * @memberof ApiPricesGet400Response
+     * @memberof ErrorResponse
      */
     details?: string;
 }
 
 /**
- * Check if a given object implements the ApiPricesGet400Response interface.
+ * Check if a given object implements the ErrorResponse interface.
  */
-export function instanceOfApiPricesGet400Response(value: object): value is ApiPricesGet400Response {
+export function instanceOfErrorResponse(value: object): value is ErrorResponse {
     if (!('error' in value) || value['error'] === undefined) return false;
     if (!('message' in value) || value['message'] === undefined) return false;
     return true;
 }
 
-export function ApiPricesGet400ResponseFromJSON(json: any): ApiPricesGet400Response {
-    return ApiPricesGet400ResponseFromJSONTyped(json, false);
+export function ErrorResponseFromJSON(json: any): ErrorResponse {
+    return ErrorResponseFromJSONTyped(json, false);
 }
 
-export function ApiPricesGet400ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): ApiPricesGet400Response {
+export function ErrorResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): ErrorResponse {
     if (json == null) {
         return json;
     }
@@ -64,11 +64,11 @@ export function ApiPricesGet400ResponseFromJSONTyped(json: any, ignoreDiscrimina
     };
 }
 
-export function ApiPricesGet400ResponseToJSON(json: any): ApiPricesGet400Response {
-    return ApiPricesGet400ResponseToJSONTyped(json, false);
+export function ErrorResponseToJSON(json: any): ErrorResponse {
+    return ErrorResponseToJSONTyped(json, false);
 }
 
-export function ApiPricesGet400ResponseToJSONTyped(value?: ApiPricesGet400Response | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorResponseToJSONTyped(value?: ErrorResponse | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

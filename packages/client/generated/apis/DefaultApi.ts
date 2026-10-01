@@ -21,11 +21,11 @@ import type {
   ApiMidnightOffersPostRequest,
   ApiMidnightSponsorPost200Response,
   ApiMidnightSponsorPostRequest,
-  ApiPricesGet200Response,
-  ApiPricesGet400Response,
+  ErrorResponse,
   Get200Response,
   HealthGet200Response,
   HealthReadyGet200Response,
+  PricesResponse,
 } from '../models/index.js';
 import {
     ApiMetricsGet200ResponseFromJSON,
@@ -40,17 +40,21 @@ import {
     ApiMidnightSponsorPost200ResponseToJSON,
     ApiMidnightSponsorPostRequestFromJSON,
     ApiMidnightSponsorPostRequestToJSON,
-    ApiPricesGet200ResponseFromJSON,
-    ApiPricesGet200ResponseToJSON,
-    ApiPricesGet400ResponseFromJSON,
-    ApiPricesGet400ResponseToJSON,
+    ErrorResponseFromJSON,
+    ErrorResponseToJSON,
     Get200ResponseFromJSON,
     Get200ResponseToJSON,
     HealthGet200ResponseFromJSON,
     HealthGet200ResponseToJSON,
     HealthReadyGet200ResponseFromJSON,
     HealthReadyGet200ResponseToJSON,
+    PricesResponseFromJSON,
+    PricesResponseToJSON,
 } from '../models/index.js';
+
+export interface ApiCardanoPricesGetRequest {
+    amount: string;
+}
 
 export interface ApiMidnightAdaOffersPostOperationRequest {
     apiMidnightAdaOffersPostRequest: ApiMidnightAdaOffersPostRequest;
@@ -60,19 +64,56 @@ export interface ApiMidnightOffersPostOperationRequest {
     apiMidnightOffersPostRequest: ApiMidnightOffersPostRequest;
 }
 
-export interface ApiMidnightSponsorPostOperationRequest {
-    apiMidnightSponsorPostRequest: ApiMidnightSponsorPostRequest;
+export interface ApiMidnightPricesGetRequest {
+    amount: string;
 }
 
-export interface ApiPricesGetRequest {
-    amount: string;
-    currency: ApiPricesGetCurrencyEnum;
+export interface ApiMidnightSponsorPostOperationRequest {
+    apiMidnightSponsorPostRequest: ApiMidnightSponsorPostRequest;
 }
 
 /**
  * 
  */
 export class DefaultApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async apiCardanoPricesGetRaw(requestParameters: ApiCardanoPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PricesResponse>> {
+        if (requestParameters['amount'] == null) {
+            throw new runtime.RequiredError(
+                'amount',
+                'Required parameter "amount" was null or undefined when calling apiCardanoPricesGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['amount'] != null) {
+            queryParameters['amount'] = requestParameters['amount'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/cardano/prices`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PricesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiCardanoPricesGet(requestParameters: ApiCardanoPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PricesResponse> {
+        const response = await this.apiCardanoPricesGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */
@@ -177,6 +218,44 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
+    async apiMidnightPricesGetRaw(requestParameters: ApiMidnightPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PricesResponse>> {
+        if (requestParameters['amount'] == null) {
+            throw new runtime.RequiredError(
+                'amount',
+                'Required parameter "amount" was null or undefined when calling apiMidnightPricesGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['amount'] != null) {
+            queryParameters['amount'] = requestParameters['amount'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/midnight/prices`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PricesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiMidnightPricesGet(requestParameters: ApiMidnightPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PricesResponse> {
+        const response = await this.apiMidnightPricesGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
     async apiMidnightSponsorPostRaw(requestParameters: ApiMidnightSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMidnightSponsorPost200Response>> {
         if (requestParameters['apiMidnightSponsorPostRequest'] == null) {
             throw new runtime.RequiredError(
@@ -209,55 +288,6 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async apiMidnightSponsorPost(requestParameters: ApiMidnightSponsorPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMidnightSponsorPost200Response> {
         const response = await this.apiMidnightSponsorPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     */
-    async apiPricesGetRaw(requestParameters: ApiPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiPricesGet200Response>> {
-        if (requestParameters['amount'] == null) {
-            throw new runtime.RequiredError(
-                'amount',
-                'Required parameter "amount" was null or undefined when calling apiPricesGet().'
-            );
-        }
-
-        if (requestParameters['currency'] == null) {
-            throw new runtime.RequiredError(
-                'currency',
-                'Required parameter "currency" was null or undefined when calling apiPricesGet().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['amount'] != null) {
-            queryParameters['amount'] = requestParameters['amount'];
-        }
-
-        if (requestParameters['currency'] != null) {
-            queryParameters['currency'] = requestParameters['currency'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/prices`;
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiPricesGet200ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async apiPricesGet(requestParameters: ApiPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiPricesGet200Response> {
-        const response = await this.apiPricesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -343,12 +373,3 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
 }
-
-/**
- * @export
- */
-export const ApiPricesGetCurrencyEnum = {
-    Dust: 'DUST',
-    Ada: 'ADA'
-} as const;
-export type ApiPricesGetCurrencyEnum = typeof ApiPricesGetCurrencyEnum[keyof typeof ApiPricesGetCurrencyEnum];

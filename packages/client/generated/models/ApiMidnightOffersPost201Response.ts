@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { ApiPricesGet200ResponsePricesInnerCurrency } from './ApiPricesGet200ResponsePricesInnerCurrency.js';
+import type { Currency } from './Currency.js';
 import {
-    ApiPricesGet200ResponsePricesInnerCurrencyFromJSON,
-    ApiPricesGet200ResponsePricesInnerCurrencyFromJSONTyped,
-    ApiPricesGet200ResponsePricesInnerCurrencyToJSON,
-    ApiPricesGet200ResponsePricesInnerCurrencyToJSONTyped,
-} from './ApiPricesGet200ResponsePricesInnerCurrency.js';
+    CurrencyFromJSON,
+    CurrencyFromJSONTyped,
+    CurrencyToJSON,
+    CurrencyToJSONTyped,
+} from './Currency.js';
 
 /**
  * 
@@ -41,10 +41,10 @@ export interface ApiMidnightOffersPost201Response {
     offerAmount: string;
     /**
      * 
-     * @type {ApiPricesGet200ResponsePricesInnerCurrency}
+     * @type {Currency}
      * @memberof ApiMidnightOffersPost201Response
      */
-    offerCurrency: ApiPricesGet200ResponsePricesInnerCurrency;
+    offerCurrency: Currency;
     /**
      * 
      * @type {string}
@@ -83,7 +83,7 @@ export function ApiMidnightOffersPost201ResponseFromJSONTyped(json: any, ignoreD
         
         'offerId': json['offerId'],
         'offerAmount': json['offerAmount'],
-        'offerCurrency': ApiPricesGet200ResponsePricesInnerCurrencyFromJSON(json['offerCurrency']),
+        'offerCurrency': CurrencyFromJSON(json['offerCurrency']),
         'serializedTx': json['serializedTx'],
         'expiresAt': (new Date(json['expiresAt'])),
     };
@@ -102,7 +102,7 @@ export function ApiMidnightOffersPost201ResponseToJSONTyped(value?: ApiMidnightO
         
         'offerId': value['offerId'],
         'offerAmount': value['offerAmount'],
-        'offerCurrency': ApiPricesGet200ResponsePricesInnerCurrencyToJSON(value['offerCurrency']),
+        'offerCurrency': CurrencyToJSON(value['offerCurrency']),
         'serializedTx': value['serializedTx'],
         'expiresAt': value['expiresAt'].toISOString(),
     };

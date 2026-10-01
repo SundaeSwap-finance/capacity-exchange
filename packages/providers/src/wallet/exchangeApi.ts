@@ -25,8 +25,8 @@ async function wrapCesApi<T>(cesApi: () => Promise<T>): Promise<T> {
 }
 
 class WrappedDefaultApi extends DefaultApi {
-  async apiPricesGet(requestParameters: Parameters<DefaultApi['apiPricesGet']>[0]) {
-    return wrapCesApi(() => super.apiPricesGet(requestParameters));
+  async apiMidnightPricesGet(requestParameters: Parameters<DefaultApi['apiMidnightPricesGet']>[0]) {
+    return wrapCesApi(() => super.apiMidnightPricesGet(requestParameters));
   }
 
   async apiMidnightOffersPost(requestParameters: Parameters<DefaultApi['apiMidnightOffersPost']>[0]) {

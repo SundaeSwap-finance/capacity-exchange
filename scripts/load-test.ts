@@ -308,14 +308,14 @@ async function checkServer(server: string): Promise<void> {
 }
 
 async function discoverCurrency(config: Config): Promise<string> {
-  const res = await fetch(`${config.server}/api/prices?currency=DUST&amount=${config.specks}`);
+  const res = await fetch(`${config.server}/api/midnight/prices?amount=${config.specks}`);
   if (res.status !== 200) {
     const text = await res.text().catch(() => '');
-    throw new Error(`/api/prices returned ${res.status}: ${text}`);
+    throw new Error(`/api/midnight/prices returned ${res.status}: ${text}`);
   }
   const data = (await res.json()) as { prices: { currency: string; amount: string }[] };
   if (!data.prices?.length) {
-    throw new Error('No currencies available from /api/prices');
+    throw new Error('No currencies available from /api/midnight/prices');
   }
   return data.prices[0].currency;
 }

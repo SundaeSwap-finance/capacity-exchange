@@ -80,7 +80,7 @@ describe('capacityExchangeWalletProvider', () => {
     const offerAmount = overrides.offerAmount ?? QUOTED_PRICE.price.amount;
     const offerCurrencyId = overrides.offerCurrencyId ?? QUOTED_PRICE.price.currency.id;
     global.fetch = vi.fn().mockImplementation((url: string) => {
-      if (url.includes('/api/prices')) {
+      if (url.includes('/api/midnight/prices')) {
         return Promise.resolve({
           ok: true,
           status: 200,

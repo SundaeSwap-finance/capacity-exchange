@@ -22,7 +22,7 @@ import rootRoutes from './routes/root.js';
 import offerRoutes from './routes/midnight/offers.js';
 import adaOfferRoutes from './routes/midnight/adaOffers.js';
 import sponsorRoutes from './routes/midnight/sponsor.js';
-import priceRoutes from './routes/prices.js';
+import priceRoutes, { assetPriceRoutes } from './routes/prices.js';
 import metricsRoutes from './routes/metrics.js';
 import type { AppConfig } from './loadConfig.js';
 import { packageName, packageVersion } from './packageInfo.js';
@@ -84,6 +84,8 @@ export async function registerRoutes(app: FastifyInstance) {
   app.register(rootRoutes);
   app.register(healthRoutes, { prefix: '/health' });
   app.register(priceRoutes, { prefix: '/api' });
+  app.register(assetPriceRoutes('DUST'), { prefix: '/api/midnight' });
+  app.register(assetPriceRoutes('ADA'), { prefix: '/api/cardano' });
   app.register(offerRoutes, { prefix: '/api/midnight' });
   app.register(adaOfferRoutes, { prefix: '/api/midnight' });
   app.register(sponsorRoutes, { prefix: '/api/midnight' });

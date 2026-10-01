@@ -1,4 +1,4 @@
-import { ApiPricesGetCurrencyEnum, Configuration, DefaultApi } from '@sundaeswap/capacity-exchange-client';
+import { Configuration, DefaultApi } from '@sundaeswap/capacity-exchange-client';
 import {
   OFFERS_PATH,
   OfferRejected,
@@ -41,10 +41,7 @@ function apiFor(url: string): DefaultApi {
 
 /** Asks one exchange what it would charge for `amount` lovelace of ADA capacity. */
 export async function fetchPrices(url: string, amount: bigint): Promise<InstanceQuote> {
-  const response = await apiFor(url).apiPricesGet({
-    amount: amount.toString(),
-    currency: ApiPricesGetCurrencyEnum.Ada,
-  });
+  const response = await apiFor(url).apiCardanoPricesGet({ amount: amount.toString() });
   return {
     url,
     quoteId: response.quoteId,

@@ -570,7 +570,7 @@
         }
       }
     },
-    "/api/prices": {
+    "/api/midnight/prices": {
       "get": {
         "parameters": [
           {
@@ -581,18 +581,6 @@
             "in": "query",
             "name": "amount",
             "required": true
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "DUST",
-                "ADA"
-              ]
-            },
-            "in": "query",
-            "name": "currency",
-            "required": true
           }
         ],
         "responses": {
@@ -601,6 +589,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "PricesResponse",
                   "type": "object",
                   "required": [
                     "quoteId",
@@ -613,6 +602,7 @@
                     "prices": {
                       "type": "array",
                       "items": {
+                        "title": "Price",
                         "type": "object",
                         "required": [
                           "amount",
@@ -623,6 +613,7 @@
                             "type": "string"
                           },
                           "currency": {
+                            "title": "Currency",
                             "type": "object",
                             "required": [
                               "id",
@@ -654,6 +645,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -679,6 +671,132 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cardano/prices": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            },
+            "in": "query",
+            "name": "amount",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "PricesResponse",
+                  "type": "object",
+                  "required": [
+                    "quoteId",
+                    "prices"
+                  ],
+                  "properties": {
+                    "quoteId": {
+                      "type": "string"
+                    },
+                    "prices": {
+                      "type": "array",
+                      "items": {
+                        "title": "Price",
+                        "type": "object",
+                        "required": [
+                          "amount",
+                          "currency"
+                        ],
+                        "properties": {
+                          "amount": {
+                            "type": "string"
+                          },
+                          "currency": {
+                            "title": "Currency",
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "type",
+                              "rawId"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "rawId": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "ErrorResponse",
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -750,6 +868,7 @@
                       "type": "string"
                     },
                     "offerCurrency": {
+                      "title": "Currency",
                       "type": "object",
                       "required": [
                         "id",
@@ -785,6 +904,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -810,6 +930,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -835,6 +956,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -860,6 +982,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -885,6 +1008,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -910,6 +1034,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1001,6 +1126,7 @@
                       "type": "string"
                     },
                     "offerCurrency": {
+                      "title": "Currency",
                       "type": "object",
                       "required": [
                         "id",
@@ -1036,6 +1162,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1061,6 +1188,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1086,6 +1214,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1111,6 +1240,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1136,6 +1266,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1161,6 +1292,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1186,6 +1318,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1255,6 +1388,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1280,6 +1414,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1305,6 +1440,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",
@@ -1330,6 +1466,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "title": "ErrorResponse",
                   "type": "object",
                   "required": [
                     "error",

@@ -10,11 +10,9 @@ docs/ApiMidnightOffersPost201Response.md
 docs/ApiMidnightOffersPostRequest.md
 docs/ApiMidnightSponsorPost200Response.md
 docs/ApiMidnightSponsorPostRequest.md
-docs/ApiPricesGet200Response.md
-docs/ApiPricesGet200ResponsePricesInner.md
-docs/ApiPricesGet200ResponsePricesInnerCurrency.md
-docs/ApiPricesGet400Response.md
+docs/Currency.md
 docs/DefaultApi.md
+docs/ErrorResponse.md
 docs/Get200Response.md
 docs/Get200ResponseChains.md
 docs/Get200ResponseChainsMidnight.md
@@ -24,6 +22,8 @@ docs/HealthReadyGet200ResponseCardano.md
 docs/HealthReadyGet200ResponseMidnight.md
 docs/HealthReadyGet200ResponseMidnightIndexer.md
 docs/HealthReadyGet200ResponseMidnightWallet.md
+docs/Price.md
+docs/PricesResponse.md
 index.ts
 models/ApiMetricsGet200Response.ts
 models/ApiMetricsGet200ResponseCapacityInner.ts
@@ -35,10 +35,8 @@ models/ApiMidnightOffersPost201Response.ts
 models/ApiMidnightOffersPostRequest.ts
 models/ApiMidnightSponsorPost200Response.ts
 models/ApiMidnightSponsorPostRequest.ts
-models/ApiPricesGet200Response.ts
-models/ApiPricesGet200ResponsePricesInner.ts
-models/ApiPricesGet200ResponsePricesInnerCurrency.ts
-models/ApiPricesGet400Response.ts
+models/Currency.ts
+models/ErrorResponse.ts
 models/Get200Response.ts
 models/Get200ResponseChains.ts
 models/Get200ResponseChainsMidnight.ts
@@ -48,5 +46,7 @@ models/HealthReadyGet200ResponseCardano.ts
 models/HealthReadyGet200ResponseMidnight.ts
 models/HealthReadyGet200ResponseMidnightIndexer.ts
 models/HealthReadyGet200ResponseMidnightWallet.ts
+models/Price.ts
+models/PricesResponse.ts
 models/index.ts
 runtime.ts

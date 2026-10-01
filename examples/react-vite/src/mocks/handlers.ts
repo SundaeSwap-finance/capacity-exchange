@@ -13,7 +13,7 @@ export const handlers = [
     });
   }),
 
-  http.get('https://capacity-exchange.preview.sundae.fi/api/prices', () => {
+  http.get('https://capacity-exchange.preview.sundae.fi/api/midnight/prices', () => {
     return HttpResponse.json({
       quoteId: 'mock-quote-id',
       prices: [MOCK_PRICE_1, MOCK_PRICE_2],
