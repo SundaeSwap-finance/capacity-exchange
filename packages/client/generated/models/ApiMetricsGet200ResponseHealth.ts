@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { HealthReadyGet200ResponseWallet } from './HealthReadyGet200ResponseWallet.js';
+import type { HealthReadyGet200ResponseMidnightWallet } from './HealthReadyGet200ResponseMidnightWallet.js';
 import {
-    HealthReadyGet200ResponseWalletFromJSON,
-    HealthReadyGet200ResponseWalletFromJSONTyped,
-    HealthReadyGet200ResponseWalletToJSON,
-    HealthReadyGet200ResponseWalletToJSONTyped,
-} from './HealthReadyGet200ResponseWallet.js';
+    HealthReadyGet200ResponseMidnightWalletFromJSON,
+    HealthReadyGet200ResponseMidnightWalletFromJSONTyped,
+    HealthReadyGet200ResponseMidnightWalletToJSON,
+    HealthReadyGet200ResponseMidnightWalletToJSONTyped,
+} from './HealthReadyGet200ResponseMidnightWallet.js';
 
 /**
  * 
@@ -29,10 +29,10 @@ import {
 export interface ApiMetricsGet200ResponseHealth {
     /**
      * 
-     * @type {HealthReadyGet200ResponseWallet}
+     * @type {HealthReadyGet200ResponseMidnightWallet}
      * @memberof ApiMetricsGet200ResponseHealth
      */
-    wallet: HealthReadyGet200ResponseWallet;
+    wallet: HealthReadyGet200ResponseMidnightWallet;
 }
 
 /**
@@ -53,7 +53,7 @@ export function ApiMetricsGet200ResponseHealthFromJSONTyped(json: any, ignoreDis
     }
     return {
         
-        'wallet': HealthReadyGet200ResponseWalletFromJSON(json['wallet']),
+        'wallet': HealthReadyGet200ResponseMidnightWalletFromJSON(json['wallet']),
     };
 }
 
@@ -68,7 +68,7 @@ export function ApiMetricsGet200ResponseHealthToJSONTyped(value?: ApiMetricsGet2
 
     return {
         
-        'wallet': HealthReadyGet200ResponseWalletToJSON(value['wallet']),
+        'wallet': HealthReadyGet200ResponseMidnightWalletToJSON(value['wallet']),
     };
 }
 

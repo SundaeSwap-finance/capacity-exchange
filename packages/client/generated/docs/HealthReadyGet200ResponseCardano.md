@@ -1,5 +1,5 @@
 
-# HealthReadyGet200ResponseIndexer
+# HealthReadyGet200ResponseCardano
 
 
 ## Properties
@@ -7,22 +7,22 @@
 Name | Type
 ------------ | -------------
 `status` | string
-`height` | number
+`slot` | number
+`tipAgeMs` | number
 `error` | string
-`details` | string
 
 ## Example
 
 ```typescript
-import type { HealthReadyGet200ResponseIndexer } from ''
+import type { HealthReadyGet200ResponseCardano } from ''
 
 // TODO: Update the object below with actual values
 const example = {
   "status": null,
-  "height": null,
+  "slot": null,
+  "tipAgeMs": null,
   "error": null,
-  "details": null,
-} satisfies HealthReadyGet200ResponseIndexer
+} satisfies HealthReadyGet200ResponseCardano
 
 console.log(example)
 
@@ -31,7 +31,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as HealthReadyGet200ResponseIndexer
+const exampleParsed = JSON.parse(exampleJSON) as HealthReadyGet200ResponseCardano
 console.log(exampleParsed)
 ```
 

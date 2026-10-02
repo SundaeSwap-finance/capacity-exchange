@@ -1,4 +1,4 @@
-import { Type } from '@sinclair/typebox';
+import { Type, type Static } from '@sinclair/typebox';
 
 export const HealthResponse = Type.Object({
   status: Type.Literal('ok'),
@@ -35,16 +35,38 @@ export const WalletStatus = Type.Object({
   error: Type.Optional(Type.String()),
 });
 
-export const ReadyResponse = Type.Object({
-  status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
+export const ChainStatus = Type.Object({
+  // 'syncing' means no failure is known, but the tip is stale or not known yet.
+  status: Type.Union([
+    Type.Literal('syncing'),
+    Type.Literal('ok'),
+    Type.Literal('ko'),
+    Type.Literal('disabled'),
+  ]),
+  slot: Type.Optional(Type.Number()),
+  tipAgeMs: Type.Optional(Type.Number()),
+  error: Type.Optional(Type.String()),
+});
+
+/** A chain the server follows, as the readiness check sees it. */
+export interface ChainHealth {
+  health(): Static<typeof ChainStatus>;
+}
+
+export const MidnightStatus = Type.Object({
   wallet: WalletStatus,
   indexer: IndexerStatus,
 });
 
+export const ReadyResponse = Type.Object({
+  status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
+  midnight: MidnightStatus,
+  cardano: ChainStatus,
+});
+
 // For /health/ready
 // Note: We don't use the ErrorResponse here so that monitoring and alerting
-// tools can take advantage of the structured wallet sync and indexer status
-// details
+// tools can take advantage of the structured per-chain status details
 export const ReadinessSchema = {
   schema: {
     response: {

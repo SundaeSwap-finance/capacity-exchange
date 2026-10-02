@@ -46,6 +46,7 @@ export interface AppConfig {
   blockfrostApiKey?: string;
   blockfrostBaseUrl?: string;
   cardanoServerAddress?: string;
+  cardanoUtxorpcUrl?: string;
 }
 
 export interface ServerBootstrap {
@@ -97,6 +98,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     blockfrostApiKey: env.BLOCKFROST_API_KEY,
     blockfrostBaseUrl: env.BLOCKFROST_BASE_URL,
     cardanoServerAddress: env.CARDANO_SERVER_ADDRESS,
+    cardanoUtxorpcUrl: env.CARDANO_UTXORPC_URL,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
       ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
           .map((u) => u.trim())

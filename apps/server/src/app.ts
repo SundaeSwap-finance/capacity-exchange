@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import chainStatePlugin from './plugins/chain-state.js';
+import cardanoChainStatePlugin from './plugins/cardano-chain-state.js';
 import walletPlugin from './plugins/wallet-utxo.js';
 import cesWalletProviderPlugin from './plugins/ces-wallet-provider.js';
 import cardanoPlugin from './plugins/cardano.js';
@@ -42,6 +43,7 @@ export async function buildApp(
   await app.register(errorHandler);
   await app.register(observability);
   await app.register(chainStatePlugin);
+  await app.register(cardanoChainStatePlugin);
   await app.register(walletPlugin);
   await app.register(pricesPlugin);
   await app.register(peerPricesPlugin);

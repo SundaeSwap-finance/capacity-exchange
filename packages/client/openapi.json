@@ -152,8 +152,8 @@
                   "type": "object",
                   "required": [
                     "status",
-                    "wallet",
-                    "indexer"
+                    "midnight",
+                    "cardano"
                   ],
                   "properties": {
                     "status": {
@@ -178,7 +178,94 @@
                         }
                       ]
                     },
-                    "wallet": {
+                    "midnight": {
+                      "type": "object",
+                      "required": [
+                        "wallet",
+                        "indexer"
+                      ],
+                      "properties": {
+                        "wallet": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "syncing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "indexer": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "height": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "cardano": {
                       "type": "object",
                       "required": [
                         "status"
@@ -212,46 +299,13 @@
                             }
                           ]
                         },
-                        "error": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "indexer": {
-                      "type": "object",
-                      "required": [
-                        "status"
-                      ],
-                      "properties": {
-                        "status": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ok"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ko"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "disabled"
-                              ]
-                            }
-                          ]
+                        "slot": {
+                          "type": "number"
                         },
-                        "height": {
+                        "tipAgeMs": {
                           "type": "number"
                         },
                         "error": {
-                          "type": "string"
-                        },
-                        "details": {
                           "type": "string"
                         }
                       }
@@ -269,8 +323,8 @@
                   "type": "object",
                   "required": [
                     "status",
-                    "wallet",
-                    "indexer"
+                    "midnight",
+                    "cardano"
                   ],
                   "properties": {
                     "status": {
@@ -295,7 +349,94 @@
                         }
                       ]
                     },
-                    "wallet": {
+                    "midnight": {
+                      "type": "object",
+                      "required": [
+                        "wallet",
+                        "indexer"
+                      ],
+                      "properties": {
+                        "wallet": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "syncing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "indexer": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "height": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "cardano": {
                       "type": "object",
                       "required": [
                         "status"
@@ -329,46 +470,13 @@
                             }
                           ]
                         },
-                        "error": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "indexer": {
-                      "type": "object",
-                      "required": [
-                        "status"
-                      ],
-                      "properties": {
-                        "status": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ok"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ko"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "disabled"
-                              ]
-                            }
-                          ]
+                        "slot": {
+                          "type": "number"
                         },
-                        "height": {
+                        "tipAgeMs": {
                           "type": "number"
                         },
                         "error": {
-                          "type": "string"
-                        },
-                        "details": {
                           "type": "string"
                         }
                       }
@@ -386,8 +494,8 @@
                   "type": "object",
                   "required": [
                     "status",
-                    "wallet",
-                    "indexer"
+                    "midnight",
+                    "cardano"
                   ],
                   "properties": {
                     "status": {
@@ -412,7 +520,94 @@
                         }
                       ]
                     },
-                    "wallet": {
+                    "midnight": {
+                      "type": "object",
+                      "required": [
+                        "wallet",
+                        "indexer"
+                      ],
+                      "properties": {
+                        "wallet": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "syncing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "indexer": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "disabled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "height": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "cardano": {
                       "type": "object",
                       "required": [
                         "status"
@@ -446,46 +641,13 @@
                             }
                           ]
                         },
-                        "error": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "indexer": {
-                      "type": "object",
-                      "required": [
-                        "status"
-                      ],
-                      "properties": {
-                        "status": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ok"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ko"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "disabled"
-                              ]
-                            }
-                          ]
+                        "slot": {
+                          "type": "number"
                         },
-                        "height": {
+                        "tipAgeMs": {
                           "type": "number"
                         },
                         "error": {
-                          "type": "string"
-                        },
-                        "details": {
                           "type": "string"
                         }
                       }
