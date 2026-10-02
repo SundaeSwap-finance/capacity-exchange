@@ -73,6 +73,8 @@ const END = Symbol('end');
 class FakeStream {
   private queue: unknown[] = [];
   private wake: (() => void) | null = null;
+  /** Set once the reader stops consuming the stream, for any reason. */
+  closed = false;
 
   push(...items: unknown[]) {
     this.queue.push(...items);
@@ -84,6 +86,14 @@ class FakeStream {
   }
 
   async *iterate(signal: AbortSignal) {
+    try {
+      yield* this.read(signal);
+    } finally {
+      this.closed = true;
+    }
+  }
+
+  private async *read(signal: AbortSignal) {
     while (true) {
       if (signal.aborted) {
         throw new Error('[canceled] The operation was aborted.');
@@ -138,11 +148,19 @@ describe('CardanoChainStateService', () => {
   const intersectSlots = (call: number) =>
     mockFollowTip.mock.calls[call][0].intersect.map((ref: { slot: bigint }) => ref.slot);
 
-  it('loads the tip and protocol params, then follows from that tip', async () => {
+  it('follows from the tip it read', async () => {
     const s = await started();
 
     expect(s.tip()).toMatchObject({ slot: 100n, hash: hex(100) });
-    expect(s.protocolParams()).toEqual({
+    expect(mockFollowTip.mock.calls[0][0].intersect).toEqual([
+      { slot: 100n, hash: Buffer.from(hash(100)) },
+    ]);
+  });
+
+  it('reads the protocol params from the source on each call', async () => {
+    const s = await started();
+
+    expect(await s.protocolParams()).toEqual({
       minFeeCoefficient: 44n,
       minFeeConstant: 155381n,
       coinsPerUtxoByte: 4310n,
@@ -152,9 +170,20 @@ describe('CardanoChainStateService', () => {
         steps: { numerator: 721n, denominator: 10000000n },
       },
     });
-    expect(mockFollowTip.mock.calls[0][0].intersect).toEqual([
-      { slot: 100n, hash: Buffer.from(hash(100)) },
-    ]);
+
+    const next = structuredClone(PARAMS_RESPONSE);
+    next.values.params.value.minFeeConstant = int(200000n);
+    mockReadParams.mockResolvedValue(next);
+
+    expect((await s.protocolParams()).minFeeConstant).toBe(200000n);
+    expect(mockReadParams).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects protocolParams when ReadParams has no Cardano params', async () => {
+    const s = await started();
+    mockReadParams.mockResolvedValue({ values: undefined });
+
+    await expect(s.protocolParams()).rejects.toThrow(/no Cardano params/);
   });
 
   it('connects with HTTP/2 pings, so a dead connection is closed instead of reused', async () => {
@@ -206,17 +235,75 @@ describe('CardanoChainStateService', () => {
     await vi.waitFor(() => expect(s.tip().slot).toBe(140n));
   });
 
-  it('forgets blocks deeper than the rollback window', async () => {
+  it('stops following after a rollback deeper than 2160 blocks', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const s = await started();
     for (let slot = 101; slot <= 2300; slot++) {
       streams[0].push(apply(slot));
     }
     await vi.waitFor(() => expect(s.tip().slot).toBe(2300n));
 
-    // The window keeps 2161 blocks, 140..2300, so 139 is the newest one outside it.
-    streams[0].push(undo(139));
+    // The window keeps 2161 blocks, 140..2300: the 2161st undo, of 140, is one too deep.
+    for (let slot = 2300; slot >= 140; slot--) {
+      streams[0].push(undo(slot));
+    }
 
+    await vi.waitFor(() =>
+      expect(s.health()).toMatchObject({ status: 'ko', error: /rolled back 2161 blocks/ }),
+    );
+    expect(s.tip().slot).toBe(140n);
+    expect(streams[0].closed).toBe(true);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(streams).toHaveLength(1);
+  });
+
+  it('counts a reset to an older tracked block towards the rollback depth', async () => {
+    const s = await started();
+    for (let slot = 101; slot <= 2300; slot++) {
+      streams[0].push(apply(slot));
+    }
+    await vi.waitFor(() => expect(s.tip().slot).toBe(2300n));
+
+    streams[0].push(reset(140));
+    await vi.waitFor(() => expect(s.tip().slot).toBe(140n));
+    streams[0].push(undo(140));
+
+    await vi.waitFor(() =>
+      expect(s.health()).toMatchObject({ status: 'ko', error: /rolled back 2161 blocks/ }),
+    );
+  });
+
+  it('counts the rollback depth from the last apply', async () => {
+    const s = await started();
+    for (let slot = 101; slot <= 2300; slot++) {
+      streams[0].push(apply(slot));
+    }
+    await vi.waitFor(() => expect(s.tip().slot).toBe(2300n));
+
+    // 1500 undos, an apply, then 661 more: 2161 in all, but at most 1500 in a row.
+    for (let slot = 2300; slot > 800; slot--) {
+      streams[0].push(undo(slot));
+    }
+    streams[0].push(apply(801));
+    for (let slot = 801; slot > 140; slot--) {
+      streams[0].push(undo(slot));
+    }
+    streams[0].push(apply(141));
+
+    await vi.waitFor(() => expect(s.tip().slot).toBe(141n));
+    expect(s.health().status).toBe('ok');
+  });
+
+  it('resets quietly when a rollback passes a window that has not filled yet', async () => {
+    const s = await started();
+    streams[0].push(undo(100), undo(99));
     await vi.waitFor(() => expect(() => s.tip()).toThrow(/no tip/));
+    expect(s.health()).toEqual({ status: 'syncing' });
+
+    streams[0].push(apply(99));
+
+    await vi.waitFor(() => expect(s.tip().slot).toBe(99n));
+    expect(s.health().status).toBe('ok');
   });
 
   it('a reset drops the blocks after the intersection', async () => {
@@ -314,31 +401,19 @@ describe('CardanoChainStateService', () => {
 
   it('does not throw on start when the source is down, and recovers when it returns', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockReadParams.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
+    mockReadTip.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
     svc = new CardanoChainStateService('http://dolos.test', logger as never);
     svc.start();
 
     await vi.waitFor(() =>
       expect(svc!.health()).toMatchObject({ status: 'ko', error: /ECONNREFUSED/ }),
     );
-    expect(() => svc!.protocolParams()).toThrow(/no protocol params/);
+    expect(mockFollowTip).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(5_000);
     await vi.waitFor(() => expect(streams).toHaveLength(1));
     streams[0].push(reset(100));
     await vi.waitFor(() => expect(svc!.health().status).toBe('ok'));
-    expect(svc.protocolParams().minFeeConstant).toBe(155381n);
-  });
-
-  it('reports ko and opens no stream while ReadParams has no Cardano params', async () => {
-    mockReadParams.mockResolvedValue({ values: undefined });
-    svc = new CardanoChainStateService('http://dolos.test', logger as never);
-    svc.start();
-
-    await vi.waitFor(() =>
-      expect(svc!.health()).toMatchObject({ status: 'ko', error: /no Cardano params/ }),
-    );
-    expect(mockFollowTip).not.toHaveBeenCalled();
   });
 
   it('stop ends the stream without reconnecting', async () => {

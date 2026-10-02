@@ -5,15 +5,16 @@ import { queryConnect, syncConnect, type cardano, type sync } from '@utxorpc/spe
 import type { Static } from '@sinclair/typebox';
 import type { ChainHealth, ChainStatus } from '../models/health.js';
 
-const PARAMS_POLL_INTERVAL_MS = 60_000;
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;
 // Blocks arrive every ~20 s on average (active slot coefficient 0.05, 1 s
 // slots), so a tip this old means the source has stopped keeping up.
 const MAX_TIP_AGE_MS = 5 * 60_000;
-// A rollback never goes deeper than the security parameter k (2160 on mainnet).
+// The deepest rollback the service can undo: mainnet's security parameter k.
+// A deeper one stops the service, since its history does not reach back that far.
+const MAX_ROLLBACK_DEPTH = 2160;
 // One block more keeps a tip after a rollback of the full depth.
-const TRACKED_BLOCKS = 2160 + 1;
+const TRACKED_BLOCKS = MAX_ROLLBACK_DEPTH + 1;
 // Several points let a reconnect intersect even if the newest one was rolled
 // back while the stream was down.
 const INTERSECT_POINTS = 10;
@@ -54,7 +55,7 @@ export interface CardanoProtocolParams {
 }
 
 /**
- * Follows the Cardano tip over UTxO RPC and caches the protocol parameters.
+ * Follows the Cardano tip and reads the protocol parameters over UTxO RPC.
  * The FollowTip stream is the source of truth for the tip: ReadTip only seeds
  * where the stream starts, because Dolos serves it from state that can lag.
  */
@@ -64,11 +65,11 @@ export class CardanoChainStateService implements ChainHealth {
   private readonly logger: FastifyBaseLogger;
   // Applied blocks, oldest first, so an undo can step back to the one before.
   private recent: CardanoTip[] = [];
-  private params: CardanoProtocolParams | null = null;
+  // Blocks rolled back since the last apply.
+  private rollbackDepth = 0;
   private streamError: string | null = null;
   private readonly abort = new AbortController();
   private following?: Promise<void>;
-  private paramsTimer?: ReturnType<typeof setInterval>;
 
   constructor(url: string, logger: FastifyBaseLogger) {
     const transport = createGrpcTransport({
@@ -82,22 +83,12 @@ export class CardanoChainStateService implements ChainHealth {
     this.logger = logger;
   }
 
-  /** Follows the tip and loads the protocol params in the background; an unreachable source shows as `ko`. */
+  /** Follows the tip; an unreachable source shows as `ko`. */
   start(): void {
     this.following = this.follow();
-    this.paramsTimer = setInterval(() => {
-      this.refreshParams().catch((err) => {
-        this.logger.warn(
-          { err },
-          'CardanoChainStateService params refresh failed; keeping last known value',
-        );
-      });
-    }, PARAMS_POLL_INTERVAL_MS);
   }
 
   async stop(): Promise<void> {
-    clearInterval(this.paramsTimer);
-    this.paramsTimer = undefined;
     this.abort.abort();
     await this.following;
   }
@@ -112,13 +103,16 @@ export class CardanoChainStateService implements ChainHealth {
     return tip;
   }
 
-  protocolParams(): CardanoProtocolParams {
-    if (!this.params) {
-      throw new Error(
-        'CardanoChainStateService has no protocol params: the source has not answered',
-      );
+  /** Reads the protocol params on each call: they can change at an epoch boundary. */
+  public async protocolParams(): Promise<CardanoProtocolParams> {
+    const { values } = await this.query.readParams(
+      {},
+      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
+    );
+    if (values?.params.case !== 'cardano') {
+      throw new Error('UTxO RPC ReadParams returned no Cardano params');
     }
-    return this.params;
+    return toProtocolParams(values.params.value);
   }
 
   health(): Static<typeof ChainStatus> {
@@ -149,11 +143,9 @@ export class CardanoChainStateService implements ChainHealth {
         }, ms);
       };
       try {
-        if (!this.params) {
-          await this.refreshParams();
-        }
         if (!this.recent.length) {
           this.recent = [await this.readTip()];
+          this.rollbackDepth = 0;
         }
         expectMessageWithin(FIRST_MESSAGE_TIMEOUT_MS, 'FollowTip sent nothing after connecting');
         const stream = this.sync.followTip(
@@ -164,6 +156,14 @@ export class CardanoChainStateService implements ChainHealth {
           expectMessageWithin(STREAM_IDLE_TIMEOUT_MS, 'FollowTip stream went silent');
           this.streamError = null;
           this.onAction(response.action);
+          if (this.rollbackDepth > MAX_ROLLBACK_DEPTH) {
+            this.streamError = `Cardano rolled back ${this.rollbackDepth} blocks, more than the ${MAX_ROLLBACK_DEPTH} the service can undo`;
+            this.logger.error(
+              { depth: this.rollbackDepth },
+              'CardanoChainStateService stopped following; restart to resume',
+            );
+            return;
+          }
         }
         throw new Error('FollowTip stream ended');
       } catch (err) {
@@ -190,6 +190,7 @@ export class CardanoChainStateService implements ChainHealth {
   private onAction(action: TipAction): void {
     switch (action.case) {
       case 'apply': {
+        this.rollbackDepth = 0;
         this.recent.push(blockTip(action.value));
         if (this.recent.length > TRACKED_BLOCKS) {
           this.recent.shift();
@@ -198,17 +199,32 @@ export class CardanoChainStateService implements ChainHealth {
       }
       case 'undo': {
         const undone = blockTip(action.value);
+        this.rollbackDepth += 1;
+        // Too deep: follow() stops, and the last good tip stays for diagnostics.
+        if (this.rollbackDepth > MAX_ROLLBACK_DEPTH) {
+          return;
+        }
         const at = lastIndexOfHash(this.recent, undone.hash);
-        // An undo past the oldest tracked block leaves no tip until the next apply.
+        // Within the depth limit, a block older than the window only means the
+        // window has not filled yet: there is no tip until the next apply.
         this.recent = at >= 0 ? this.recent.slice(0, at) : [];
         this.logger.info({ slot: undone.slot.toString() }, 'Cardano rollback: block undone');
         return;
       }
       case 'reset': {
-        // The stream opens with a reset to the intersection it found.
-        const hash = toHex(action.value.hash);
-        const at = lastIndexOfHash(this.recent, hash);
-        this.recent = at >= 0 ? this.recent.slice(0, at + 1) : [];
+        // The stream opens with a reset to the intersection it found; a reset to
+        // an older tracked block rolls back the blocks after it.
+        const at = lastIndexOfHash(this.recent, toHex(action.value.hash));
+        if (at < 0) {
+          this.recent = [];
+          this.rollbackDepth = 0;
+          return;
+        }
+        this.rollbackDepth += this.recent.length - 1 - at;
+        if (this.rollbackDepth > MAX_ROLLBACK_DEPTH) {
+          return;
+        }
+        this.recent = this.recent.slice(0, at + 1);
         return;
       }
     }
@@ -220,17 +236,6 @@ export class CardanoChainStateService implements ChainHealth {
       throw new Error('UTxO RPC ReadTip returned no tip');
     }
     return { slot: tip.slot, hash: toHex(tip.hash), timestamp: new Date(Number(tip.timestamp)) };
-  }
-
-  private async refreshParams(): Promise<void> {
-    const { values } = await this.query.readParams(
-      {},
-      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
-    );
-    if (values?.params.case !== 'cardano') {
-      throw new Error('UTxO RPC ReadParams returned no Cardano params');
-    }
-    this.params = toProtocolParams(values.params.value);
   }
 }
 

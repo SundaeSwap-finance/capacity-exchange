@@ -28,8 +28,8 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
     await svc?.stop();
   });
 
-  it('reads protocol params a fee can be computed from', () => {
-    const params = svc.protocolParams();
+  it('reads protocol params a fee can be computed from', async () => {
+    const params = await svc.protocolParams();
 
     expect(params.minFeeCoefficient).toBeGreaterThan(0n);
     expect(params.minFeeConstant).toBeGreaterThan(0n);
