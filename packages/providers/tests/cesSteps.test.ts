@@ -30,7 +30,7 @@ function makeExchangePrice(): ExchangePrice {
     exchangeApi: {
       url: 'http://test-ces.example.com',
       api: {
-        apiOffersPost: vi.fn().mockResolvedValue({
+        apiMidnightOffersPost: vi.fn().mockResolvedValue({
           offerId: 'test-offer-id',
           offerAmount: String(OFFER_AMOUNT),
           offerCurrency: { id: 'midnight:shielded:ADA', type: 'midnight:shielded', rawId: OFFER_RAW_ID },
@@ -75,7 +75,7 @@ function makeUnshieldedExchangePrice(): ExchangePrice {
     exchangeApi: {
       url: 'http://test-ces.example.com',
       api: {
-        apiOffersPost: vi.fn().mockResolvedValue({
+        apiMidnightOffersPost: vi.fn().mockResolvedValue({
           offerId: 'test-offer-id',
           offerAmount: String(OFFER_AMOUNT),
           offerCurrency: currency,

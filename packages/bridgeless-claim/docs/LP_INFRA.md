@@ -1,15 +1,15 @@
 # LP infrastructure
 
-The LP-side server that liquidity providers run. The existing CES server plus a new `/ada/offers` endpoint plus a claim flow that watches the **Coupler** on Midnight and submits claim txs to the **Escrow Bearer** on Cardano.
+The LP-side server that liquidity providers run. The existing CES server plus a new `/api/midnight/ada/offers` endpoint plus a claim flow that watches the **Coupler** on Midnight and submits claim txs to the **Escrow Bearer** on Cardano.
 
 ## Responsibilities
 
 The CES server:
 
 1. **Issues** signed quote tokens via the existing `/prices` endpoint
-2. **Receives** `POST /ada/offers` calls from **Users** with an escrow utxo reference, the **Coupler** address, and quote token
+2. **Receives** `POST /api/midnight/ada/offers` calls from **Users** with an escrow utxo reference, the **Coupler** address, and quote token
 3. **Verifies** the quote token's sig and expiry, reads the on-chain escrow utxo from Cardano, validates that the datum and locked ADA match the quoted terms, confirms confirmation depth, and reads the settings utxo to enforce the current `max_ada_payout` cap (see [VALIDATOR.md Settings utxo](VALIDATOR.md#settings-utxo))
-4. **Builds** the LP-side capacity leg (`dust_input + absorb(h, h')`) and returns it as the `/ada/offers` response
+4. **Builds** the LP-side capacity leg (`dust_input + absorb(h, h')`) and returns it as the `/api/midnight/ada/offers` response
 5. **Chain-syncs** the **Escrow Bearer's** Cardano address, maintaining an in-memory index of escrow utxos filtered to `datum.lp_address == self` keyed by `datum.h_prime`
 6. **Tracks** the settings utxo and caches the current `max_ada_payout` and `finality_proof_script` for offer verification and proof claim building (see [VALIDATOR.md Settings utxo](VALIDATOR.md#settings-utxo))
 7. **Subscribes** to the **Coupler's** state via the Midnight indexer. On a state change, extracts `h'` from the `absorb` call's args and looks `h'` up in the index
@@ -22,7 +22,7 @@ The CES server:
 flowchart TB
     subgraph LP_server["CES server"]
         Pricing["Pricing (existing /prices)"]
-        AdaOffers["Offers (new /ada/offers)"]
+        AdaOffers["Offers (new /api/midnight/ada/offers)"]
         Index["Bearer chain-sync index: h' → escrow utxo"]
         Settings["Settings utxo cache: max_ada_payout + finality_proof_script"]
         Claim["Claim flow: watch + lookup + assemble + submit"]
@@ -48,7 +48,7 @@ flowchart TB
 
 `Cardano node` here can be a self-hosted node, Blockfrost, or any equivalent Cardano data source.
 
-## `POST /ada/offers`
+## `POST /api/midnight/ada/offers`
 
 A new endpoint on the CES server. The **User** calls it after creating their Cardano escrow utxo. The endpoint returns the **LP's** capacity leg of the merged Midnight tx.
 
@@ -83,7 +83,7 @@ On success:
 
 ### Verification
 
-When the CES server receives a `POST /ada/offers` call, the handler:
+When the CES server receives a `POST /api/midnight/ada/offers` call, the handler:
 
 1. **Verifies** the `quoteId` HMAC signature against the **LP's** own secret. Rejects on mismatch.
 2. **Decodes** the quote payload, checks `exp`, rejects if expired.
@@ -115,13 +115,13 @@ The CES server subscribes to the settings utxo NFT. When CES detects the NFT has
 
 The cache is read at three points:
 
-- `/ada/offers` verification reads `max_ada_payout` to reject offers whose escrow is greater than the cap.
+- `/api/midnight/ada/offers` verification reads `max_ada_payout` to reject offers whose escrow is greater than the cap.
 - Proof claim building reads `finality_proof_script` to decide whether to create a BEEFY proof script withdrawal alongside the `ClaimProof`.
 - Proof claim tx building includes the current settings utxo as a reference input (required by the **Bearer**).
 
 **Reactivity:**
 
-- A `max_ada_payout` decrease takes effect immediately for new `/ada/offers` calls. In-flight offers can no longer be claimed if the escrow's locked lovelace exceeds the new cap, so the LP eats the DUST opportunity cost on those.
+- A `max_ada_payout` decrease takes effect immediately for new `/api/midnight/ada/offers` calls. In-flight offers can no longer be claimed if the escrow's locked lovelace exceeds the new cap, so the LP eats the DUST opportunity cost on those.
 - A `finality_proof_script` flip changes the required claim tx shape. Any claim tx already in the mempool but not yet on-chain at the moment of the flip will fail the V7 validator check.
 
 ## Claim flow

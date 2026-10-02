@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { Get200ResponseEnv } from './Get200ResponseEnv.js';
+import type { Get200ResponseChains } from './Get200ResponseChains.js';
 import {
-    Get200ResponseEnvFromJSON,
-    Get200ResponseEnvFromJSONTyped,
-    Get200ResponseEnvToJSON,
-    Get200ResponseEnvToJSONTyped,
-} from './Get200ResponseEnv.js';
+    Get200ResponseChainsFromJSON,
+    Get200ResponseChainsFromJSONTyped,
+    Get200ResponseChainsToJSON,
+    Get200ResponseChainsToJSONTyped,
+} from './Get200ResponseChains.js';
 
 /**
  * 
@@ -41,11 +41,28 @@ export interface Get200Response {
     version: string;
     /**
      * 
-     * @type {Get200ResponseEnv}
+     * @type {Array<string>}
      * @memberof Get200Response
      */
-    env: Get200ResponseEnv;
+    capacityAssets: Array<Get200ResponseCapacityAssetsEnum>;
+    /**
+     * 
+     * @type {Get200ResponseChains}
+     * @memberof Get200Response
+     */
+    chains: Get200ResponseChains;
 }
+
+
+/**
+ * @export
+ */
+export const Get200ResponseCapacityAssetsEnum = {
+    Dust: 'DUST',
+    Ada: 'ADA'
+} as const;
+export type Get200ResponseCapacityAssetsEnum = typeof Get200ResponseCapacityAssetsEnum[keyof typeof Get200ResponseCapacityAssetsEnum];
+
 
 /**
  * Check if a given object implements the Get200Response interface.
@@ -53,7 +70,8 @@ export interface Get200Response {
 export function instanceOfGet200Response(value: object): value is Get200Response {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('version' in value) || value['version'] === undefined) return false;
-    if (!('env' in value) || value['env'] === undefined) return false;
+    if (!('capacityAssets' in value) || value['capacityAssets'] === undefined) return false;
+    if (!('chains' in value) || value['chains'] === undefined) return false;
     return true;
 }
 
@@ -69,7 +87,8 @@ export function Get200ResponseFromJSONTyped(json: any, ignoreDiscriminator: bool
         
         'name': json['name'],
         'version': json['version'],
-        'env': Get200ResponseEnvFromJSON(json['env']),
+        'capacityAssets': json['capacityAssets'],
+        'chains': Get200ResponseChainsFromJSON(json['chains']),
     };
 }
 
@@ -86,7 +105,8 @@ export function Get200ResponseToJSONTyped(value?: Get200Response | null, ignoreD
         
         'name': value['name'],
         'version': value['version'],
-        'env': Get200ResponseEnvToJSON(value['env']),
+        'capacityAssets': value['capacityAssets'],
+        'chains': Get200ResponseChainsToJSON(value['chains']),
     };
 }
 

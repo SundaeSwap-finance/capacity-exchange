@@ -17,8 +17,8 @@ export async function requestSponsorship(tx: UnboundTransaction, exchangeApi: Ce
   const serializedTx = Buffer.from(tx.serialize()).toString('hex');
   console.debug('[SponsoredTransactions] Requesting sponsorship from CES:', exchangeApi.url);
 
-  const response = await exchangeApi.api.apiSponsorPost({
-    apiSponsorPostRequest: { provenTx: serializedTx },
+  const response = await exchangeApi.api.apiMidnightSponsorPost({
+    apiMidnightSponsorPostRequest: { provenTx: serializedTx },
   });
 
   console.debug('[SponsoredTransactions] Sponsorship response received');

@@ -18,31 +18,20 @@ export const HealthSchema = {
 // the union of its success and error states--union'ing objects breaks OpenAPI
 // spec generation
 export const IndexerStatus = Type.Object({
-  // 'disabled' means no Midnight network is configured on this server (e.g. ADA-only).
-  status: Type.Union([Type.Literal('ok'), Type.Literal('ko'), Type.Literal('disabled')]),
+  status: Type.Union([Type.Literal('ok'), Type.Literal('ko')]),
   height: Type.Optional(Type.Number()),
   error: Type.Optional(Type.String()),
   details: Type.Optional(Type.String()),
 });
 
 export const WalletStatus = Type.Object({
-  status: Type.Union([
-    Type.Literal('syncing'),
-    Type.Literal('ok'),
-    Type.Literal('ko'),
-    Type.Literal('disabled'),
-  ]),
+  status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
   error: Type.Optional(Type.String()),
 });
 
 export const ChainStatus = Type.Object({
   // 'syncing' means no failure is known, but the tip is stale or not known yet.
-  status: Type.Union([
-    Type.Literal('syncing'),
-    Type.Literal('ok'),
-    Type.Literal('ko'),
-    Type.Literal('disabled'),
-  ]),
+  status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
   slot: Type.Optional(Type.Number()),
   tipAgeMs: Type.Optional(Type.Number()),
   error: Type.Optional(Type.String()),
@@ -60,8 +49,9 @@ export const MidnightStatus = Type.Object({
 
 export const ReadyResponse = Type.Object({
   status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
-  midnight: MidnightStatus,
-  cardano: ChainStatus,
+  // A chain is present only when this server is configured to use it.
+  midnight: Type.Optional(MidnightStatus),
+  cardano: Type.Optional(ChainStatus),
 });
 
 // For /health/ready

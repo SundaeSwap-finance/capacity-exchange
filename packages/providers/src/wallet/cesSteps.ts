@@ -14,7 +14,7 @@ import { hexToBytes, toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import { createCesApis, getDefaultRegistryAddress, resolveCesUrls, type CesApi } from './exchangeApi.js';
 import { fetchRegistryCesUrls } from './registryLookup.js';
 import { fetchPricesFromExchanges } from './priceService.js';
-import type { ApiOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
+import type { ApiMidnightOffersPost201Response } from '@sundaeswap/capacity-exchange-client';
 import {
   CapacityExchangeNoPricesAvailableError,
   CapacityExchangeOfferMismatchError,
@@ -157,7 +157,7 @@ function validateOfferTx(
   }
 }
 
-function convertToOffer(offerResponse: ApiOffersPost201Response): Offer {
+function convertToOffer(offerResponse: ApiMidnightOffersPost201Response): Offer {
   return {
     offerId: offerResponse.offerId,
     offerAmount: offerResponse.offerAmount,
@@ -258,8 +258,8 @@ async function resolveRegisteredCesUrls(networkId: string, chainStateProvider: C
 export async function requestCesOffer(exchangePrice: ExchangePrice): Promise<Offer> {
   console.debug('[CESSteps] Requesting offer from exchange:', exchangePrice.exchangeApi.url);
   // WrappedDefaultApi already translates ResponseError → CapacityExchangeServerError.
-  const offerResponse: ApiOffersPost201Response = await exchangePrice.exchangeApi.api.apiOffersPost({
-    apiOffersPostRequest: {
+  const offerResponse: ApiMidnightOffersPost201Response = await exchangePrice.exchangeApi.api.apiMidnightOffersPost({
+    apiMidnightOffersPostRequest: {
       quoteId: exchangePrice.quoteId,
       offerCurrency: exchangePrice.price.currency.id,
     },

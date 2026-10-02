@@ -62,14 +62,16 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   const priceConfig = loadPriceConfig(env.PRICE_CONFIG_FILE);
 
   // DUST is the only capacity asset this server can actually build/settle offers for
-  // today (see OfferService.buildOffer), so Midnight wallet setup is only required
+  // today (see MidnightOfferService.buildOffer), so Midnight wallet setup is only required
   // when a server prices DUST at all.
   const dustPriced = pricedAssets(priceConfig.priceFormulas).includes('DUST');
   if (dustPriced && !env.MIDNIGHT_NETWORK) {
     throw new Error('MIDNIGHT_NETWORK is required because priceFormulas.DUST is configured');
   }
-  if (dustPriced && !env.WALLET_STATE_DIR) {
-    throw new Error('WALLET_STATE_DIR is required because priceFormulas.DUST is configured');
+  if (dustPriced && !env.MIDNIGHT_WALLET_STATE_DIR) {
+    throw new Error(
+      'MIDNIGHT_WALLET_STATE_DIR is required because priceFormulas.DUST is configured',
+    );
   }
 
   // both `dustPriced` and `MIDNIGHT_NETWORK` are required, so an ADA-only server
@@ -77,7 +79,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   let midnight: MidnightConfig | undefined;
   if (dustPriced && env.MIDNIGHT_NETWORK) {
     const networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
-    const endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL });
+    const endpoints = resolveEndpoints(networkId, {
+      proofServerUrl: env.MIDNIGHT_PROOF_SERVER_URL,
+    });
     const wallet = await createWalletResources(env, networkId, logger);
     midnight = { networkId, endpoints, ...wallet };
   }
@@ -95,8 +99,8 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,
     peer: priceConfig.peer,
-    blockfrostApiKey: env.BLOCKFROST_API_KEY,
-    blockfrostBaseUrl: env.BLOCKFROST_BASE_URL,
+    blockfrostApiKey: env.CARDANO_BLOCKFROST_API_KEY,
+    blockfrostBaseUrl: env.CARDANO_BLOCKFROST_BASE_URL,
     cardanoServerAddress: env.CARDANO_SERVER_ADDRESS,
     cardanoUtxorpcUrl: env.CARDANO_UTXORPC_URL,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS

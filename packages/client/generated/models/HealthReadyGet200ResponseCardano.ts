@@ -52,8 +52,7 @@ export interface HealthReadyGet200ResponseCardano {
 export const HealthReadyGet200ResponseCardanoStatusEnum = {
     Syncing: 'syncing',
     Ok: 'ok',
-    Ko: 'ko',
-    Disabled: 'disabled'
+    Ko: 'ko'
 } as const;
 export type HealthReadyGet200ResponseCardanoStatusEnum = typeof HealthReadyGet200ResponseCardanoStatusEnum[keyof typeof HealthReadyGet200ResponseCardanoStatusEnum];
 

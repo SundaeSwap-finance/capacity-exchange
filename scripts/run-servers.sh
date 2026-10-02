@@ -133,10 +133,10 @@ resolve_server1_wallet() {
   local mnemonic="${CES_WALLET_MNEMONIC_NO_DUST:-$ROOT_DIR/wallet-mnemonic-no-dust.$MIDNIGHT_NETWORK.txt}"
   local seed="${CES_WALLET_SEED_NO_DUST_PREVIEW:-}"
   if [ -f "$mnemonic" ]; then
-    NO_DUST_WALLET_KEY="WALLET_MNEMONIC_FILE"
+    NO_DUST_WALLET_KEY="MIDNIGHT_WALLET_MNEMONIC_FILE"
     NO_DUST_WALLET_VAL="$mnemonic"
   elif [ -n "$seed" ] && [ -f "$seed" ]; then
-    NO_DUST_WALLET_KEY="WALLET_SEED_FILE"
+    NO_DUST_WALLET_KEY="MIDNIGHT_WALLET_SEED_FILE"
     NO_DUST_WALLET_VAL="$seed"
   else
     log "ERROR: No-dust Server wallet not found. Set CES_WALLET_MNEMONIC_NO_DUST or CES_WALLET_SEED_NO_DUST_PREVIEW."
@@ -207,7 +207,7 @@ check_balances() {
     fi
   done
   local server1_flag="--server1-mnemonic"
-  [ "$NO_DUST_WALLET_KEY" = "WALLET_SEED_FILE" ] && server1_flag="--server1-seed"
+  [ "$NO_DUST_WALLET_KEY" = "MIDNIGHT_WALLET_SEED_FILE" ] && server1_flag="--server1-seed"
   bun "$ROOT_DIR/scripts/check-server-balances.ts" \
     --network "$MIDNIGHT_NETWORK" \
     "$server1_flag" "$NO_DUST_WALLET_VAL" \
@@ -227,7 +227,7 @@ build_peer_urls() {
 start_server1() {
   local log_path="$LOG_DIR/server1.log"
   log "Starting No-dust Server on port $BASE_PORT (no-dust wallet, peers -> $PEER_URLS)..."
-  env -u WALLET_SEED_FILE -u WALLET_MNEMONIC_FILE \
+  env -u MIDNIGHT_WALLET_SEED_FILE -u MIDNIGHT_WALLET_MNEMONIC_FILE \
     "$NO_DUST_WALLET_KEY=$NO_DUST_WALLET_VAL" \
     PORT="$BASE_PORT" \
     DASHBOARD_PORT="$BASE_DASHBOARD_PORT" \
@@ -235,7 +235,7 @@ start_server1() {
     PRICE_CONFIG_FILE="$CES_SERVER_NO_DUST_PRICE_CONFIG" \
     CAPACITY_EXCHANGE_PEER_URLS="$PEER_URLS" \
     QUOTE_SECRET_FILE="$PROJECT_ROOT/.quote-secret-1.hex" \
-    WALLET_STATE_DIR="$WALLET_STATE_DIR" \
+    MIDNIGHT_WALLET_STATE_DIR="$WALLET_STATE_DIR" \
     QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
     OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
     LOG_LEVEL="$LOG_LEVEL" \
@@ -256,22 +256,22 @@ start_n_servers() {
     local log_path_i="$LOG_DIR/server$i.log"
     local wallet_key wallet_val
     if [ -f "$mnemonic_file_i" ]; then
-      wallet_key="WALLET_MNEMONIC_FILE"
+      wallet_key="MIDNIGHT_WALLET_MNEMONIC_FILE"
       wallet_val="$mnemonic_file_i"
     else
-      wallet_key="WALLET_SEED_FILE"
+      wallet_key="MIDNIGHT_WALLET_SEED_FILE"
       wallet_val="$seed_file_i"
     fi
 
     log "Starting server $i on port $port_i (funded wallet, $wallet_key: $wallet_val)..."
-    env -u WALLET_SEED_FILE -u WALLET_MNEMONIC_FILE -u CAPACITY_EXCHANGE_PEER_URLS \
+    env -u MIDNIGHT_WALLET_SEED_FILE -u MIDNIGHT_WALLET_MNEMONIC_FILE -u CAPACITY_EXCHANGE_PEER_URLS \
       PORT="$port_i" \
       DASHBOARD_PORT="$dashboard_port_i" \
       MIDNIGHT_NETWORK="$MIDNIGHT_NETWORK" \
       "$wallet_key=$wallet_val" \
       PRICE_CONFIG_FILE="$CES_SERVER_PRICE_CONFIG" \
       QUOTE_SECRET_FILE="$quote_secret_i" \
-      WALLET_STATE_DIR="$WALLET_STATE_DIR" \
+      MIDNIGHT_WALLET_STATE_DIR="$WALLET_STATE_DIR" \
       QUOTE_TTL_SECONDS="$QUOTE_TTL_SECONDS" \
       OFFER_TTL_SECONDS="$OFFER_TTL_SECONDS" \
       LOG_LEVEL="$LOG_LEVEL" \

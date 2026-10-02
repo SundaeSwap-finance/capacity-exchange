@@ -51,8 +51,7 @@ export interface HealthReadyGet200ResponseMidnightIndexer {
  */
 export const HealthReadyGet200ResponseMidnightIndexerStatusEnum = {
     Ok: 'ok',
-    Ko: 'ko',
-    Disabled: 'disabled'
+    Ko: 'ko'
 } as const;
 export type HealthReadyGet200ResponseMidnightIndexerStatusEnum = typeof HealthReadyGet200ResponseMidnightIndexerStatusEnum[keyof typeof HealthReadyGet200ResponseMidnightIndexerStatusEnum];
 

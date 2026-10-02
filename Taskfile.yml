@@ -122,7 +122,7 @@ tasks:
           COLORS: blue,cyan,magenta,green,yellow,red
           EXTRA: >-
             "bun run --filter @sundaeswap/capacity-exchange-providers build:watch"
-            "bun run --filter @capacity-exchange/server dev"
+            "env ${PROOF_SERVER_URL:+MIDNIGHT_PROOF_SERVER_URL=$PROOF_SERVER_URL} bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/demo dev"
             "bun run --filter @capacity-exchange/dashboard dev"
     requires:
@@ -138,7 +138,7 @@ tasks:
           NAMES: core,node,server,dashboard
           COLORS: blue,cyan,green,red
           EXTRA: >-
-            "bun run --filter @capacity-exchange/server dev"
+            "env ${PROOF_SERVER_URL:+MIDNIGHT_PROOF_SERVER_URL=$PROOF_SERVER_URL} bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/dashboard dev"
     requires:
       vars: [NETWORK_ID]

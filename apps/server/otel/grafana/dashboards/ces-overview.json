@@ -55,8 +55,8 @@
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
       "targets": [
         {
-          "expr": "ces_utxo_locked_count",
-          "legendFormat": "locked"
+          "expr": "ces_capacity_locked_utxos",
+          "legendFormat": "{{asset}} locked"
         }
       ]
     },
@@ -66,19 +66,19 @@
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
       "targets": [
         {
-          "expr": "ces_utxo_total_count",
-          "legendFormat": "total"
+          "expr": "ces_capacity_total_utxos",
+          "legendFormat": "{{asset}} total"
         }
       ]
     },
     {
-      "title": "Dust Committed (specks)",
+      "title": "Capacity Committed",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
       "targets": [
         {
-          "expr": "ces_dust_committed_specks_total",
-          "legendFormat": "cumulative"
+          "expr": "ces_capacity_committed_total",
+          "legendFormat": "{{asset}}"
         }
       ]
     },

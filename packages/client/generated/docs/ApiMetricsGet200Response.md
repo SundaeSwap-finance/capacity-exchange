@@ -7,10 +7,8 @@
 Name | Type
 ------------ | -------------
 `server` | [ApiMetricsGet200ResponseServer](ApiMetricsGet200ResponseServer.md)
-`health` | [ApiMetricsGet200ResponseHealth](ApiMetricsGet200ResponseHealth.md)
-`dustUsage` | [ApiMetricsGet200ResponseDustUsage](ApiMetricsGet200ResponseDustUsage.md)
+`capacity` | [Array&lt;ApiMetricsGet200ResponseCapacityInner&gt;](ApiMetricsGet200ResponseCapacityInner.md)
 `revenue` | [ApiMetricsGet200ResponseRevenue](ApiMetricsGet200ResponseRevenue.md)
-`contention` | [ApiMetricsGet200ResponseContention](ApiMetricsGet200ResponseContention.md)
 
 ## Example
 
@@ -20,10 +18,8 @@ import type { ApiMetricsGet200Response } from ''
 // TODO: Update the object below with actual values
 const example = {
   "server": null,
-  "health": null,
-  "dustUsage": null,
+  "capacity": null,
   "revenue": null,
-  "contention": null,
 } satisfies ApiMetricsGet200Response
 
 console.log(example)

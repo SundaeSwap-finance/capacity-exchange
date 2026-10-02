@@ -3,7 +3,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import healthRoutes from './health.js';
 import type { AppConfig } from '../loadConfig.js';
 import type { CardanoChainStateService } from '../services/cardano-chain-state.js';
-import type { WalletService, WalletSyncState } from '../services/wallet.js';
+import type { MidnightWalletService, WalletSyncState } from '../services/midnight/wallet.js';
 
 type CardanoHealth = ReturnType<CardanoChainStateService['health']>;
 
@@ -22,8 +22,8 @@ async function appWith({ wallet, cardano }: { wallet?: WalletSyncState; cardano?
   const midnight = wallet ? { endpoints: { indexerHttpUrl: INDEXER_URL } } : undefined;
   app.decorate('config', { midnight, capacityExchangeUrls: [] } as unknown as AppConfig);
   app.decorate(
-    'walletService',
-    wallet ? ({ syncState: wallet } as unknown as WalletService) : null,
+    'midnightWalletService',
+    wallet ? ({ syncState: wallet } as unknown as MidnightWalletService) : null,
   );
   app.decorate(
     'cardanoChainStateService',
@@ -45,16 +45,12 @@ describe('GET /health/ready', () => {
 
   const ready = () => app!.inject({ method: 'GET', url: '/health/ready' });
 
-  it('reports both chains as disabled when neither is configured', async () => {
+  it('leaves out chains that are not configured', async () => {
     app = await appWith({});
     const res = await ready();
 
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({
-      status: 'ok',
-      midnight: { wallet: { status: 'disabled' }, indexer: { status: 'disabled' } },
-      cardano: { status: 'disabled' },
-    });
+    expect(res.json()).toEqual({ status: 'ok' });
   });
 
   it('reports the Cardano tip', async () => {
@@ -110,6 +106,7 @@ describe('GET /health/ready', () => {
     const res = await ready();
 
     expect(res.statusCode).toBe(500);
-    expect(res.json()).toMatchObject({ status: 'ko', cardano: { status: 'disabled' } });
+    expect(res.json()).toMatchObject({ status: 'ko', midnight: { wallet: { status: 'ko' } } });
+    expect(res.json()).not.toHaveProperty('cardano');
   });
 });

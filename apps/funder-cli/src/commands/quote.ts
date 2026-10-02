@@ -21,7 +21,7 @@ export async function runQuote(config: Config, options: QuoteOptions): Promise<v
   const held = new Set(Object.keys(selection.assets));
 
   for (const url of options.cesUrl) {
-    step('quote', `GET ${url.replace(/\/$/, '')}/api/prices?currency=ADA&amount=${amount}`);
+    step('quote', `GET ${url.replace(/\/$/, '')}/api/cardano/prices?amount=${amount}`);
   }
   const { quotes, failures } = await fetchAllPrices(options.cesUrl, amount);
   for (const failure of failures) {

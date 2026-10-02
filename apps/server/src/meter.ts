@@ -1,4 +1,10 @@
-import { metrics, type Meter, type Counter, type Histogram } from '@opentelemetry/api';
+import {
+  metrics,
+  type Attributes,
+  type Meter,
+  type Counter,
+  type Histogram,
+} from '@opentelemetry/api';
 
 /** Lazy meter and instrument factory. */
 class MeterService {
@@ -20,10 +26,10 @@ class MeterService {
     return () => (h ??= this.getMeter().createHistogram(name, { description, unit: 'ms' }));
   }
 
-  gauge(name: string, description: string, getValue: () => number): void {
+  gauge(name: string, description: string, getValue: () => number, attributes?: Attributes): void {
     this.getMeter()
       .createObservableGauge(name, { description })
-      .addCallback((obs) => obs.observe(getValue()));
+      .addCallback((obs) => obs.observe(getValue(), attributes));
   }
 }
 

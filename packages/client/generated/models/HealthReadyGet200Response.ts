@@ -45,13 +45,13 @@ export interface HealthReadyGet200Response {
      * @type {HealthReadyGet200ResponseMidnight}
      * @memberof HealthReadyGet200Response
      */
-    midnight: HealthReadyGet200ResponseMidnight;
+    midnight?: HealthReadyGet200ResponseMidnight;
     /**
      * 
      * @type {HealthReadyGet200ResponseCardano}
      * @memberof HealthReadyGet200Response
      */
-    cardano: HealthReadyGet200ResponseCardano;
+    cardano?: HealthReadyGet200ResponseCardano;
 }
 
 
@@ -71,8 +71,6 @@ export type HealthReadyGet200ResponseStatusEnum = typeof HealthReadyGet200Respon
  */
 export function instanceOfHealthReadyGet200Response(value: object): value is HealthReadyGet200Response {
     if (!('status' in value) || value['status'] === undefined) return false;
-    if (!('midnight' in value) || value['midnight'] === undefined) return false;
-    if (!('cardano' in value) || value['cardano'] === undefined) return false;
     return true;
 }
 
@@ -87,8 +85,8 @@ export function HealthReadyGet200ResponseFromJSONTyped(json: any, ignoreDiscrimi
     return {
         
         'status': json['status'],
-        'midnight': HealthReadyGet200ResponseMidnightFromJSON(json['midnight']),
-        'cardano': HealthReadyGet200ResponseCardanoFromJSON(json['cardano']),
+        'midnight': json['midnight'] == null ? undefined : HealthReadyGet200ResponseMidnightFromJSON(json['midnight']),
+        'cardano': json['cardano'] == null ? undefined : HealthReadyGet200ResponseCardanoFromJSON(json['cardano']),
     };
 }
 

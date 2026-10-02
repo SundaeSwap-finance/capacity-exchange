@@ -14,27 +14,25 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     '/ready',
     ReadinessSchema,
     async (_request, reply): Promise<typeof ReadyResponse.static> => {
-      const disabled = { status: 'disabled' as const };
-      const cardano = fastify.cardanoChainStateService?.health() ?? disabled;
+      const cardano = fastify.cardanoChainStateService?.health();
 
-      let wallet: typeof ReadyResponse.static.midnight.wallet = disabled;
-      let indexer: typeof ReadyResponse.static.midnight.indexer = disabled;
-      if (fastify.config.midnight && fastify.walletService) {
-        indexer = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
-        wallet = fastify.walletService.syncState;
+      let midnight: typeof ReadyResponse.static.midnight;
+      if (fastify.config.midnight && fastify.midnightWalletService) {
+        const indexer = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
+        midnight = { wallet: fastify.midnightWalletService.syncState, indexer };
       }
 
       // Cardano is reported but does not gate readiness: no route depends on it.
-      const statuses = [indexer.status, wallet.status];
+      const statuses = midnight ? [midnight.indexer.status, midnight.wallet.status] : [];
       if (statuses.includes('ko')) {
         reply.status(500);
-        return { status: 'ko' as const, midnight: { wallet, indexer }, cardano };
+        return { status: 'ko' as const, midnight, cardano };
       }
       if (statuses.includes('syncing')) {
         reply.status(503);
-        return { status: 'syncing' as const, midnight: { wallet, indexer }, cardano };
+        return { status: 'syncing' as const, midnight, cardano };
       }
-      return { status: 'ok' as const, midnight: { wallet, indexer }, cardano };
+      return { status: 'ok' as const, midnight, cardano };
     },
   );
 };

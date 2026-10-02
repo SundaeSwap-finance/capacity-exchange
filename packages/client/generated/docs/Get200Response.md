@@ -8,7 +8,8 @@ Name | Type
 ------------ | -------------
 `name` | string
 `version` | string
-`env` | [Get200ResponseEnv](Get200ResponseEnv.md)
+`capacityAssets` | Array&lt;string&gt;
+`chains` | [Get200ResponseChains](Get200ResponseChains.md)
 
 ## Example
 
@@ -19,7 +20,8 @@ import type { Get200Response } from ''
 const example = {
   "name": null,
   "version": null,
-  "env": null,
+  "capacityAssets": null,
+  "chains": null,
 } satisfies Get200Response
 
 console.log(example)

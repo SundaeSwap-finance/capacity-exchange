@@ -1,15 +1,21 @@
 import { Type } from '@sinclair/typebox';
 
 // Currency information surfaced from multiple APIs
-export const Currency = Type.Object({
-  id: Type.String(),
-  type: Type.String(),
-  rawId: Type.String(),
-});
+export const Currency = Type.Object(
+  {
+    id: Type.String(),
+    type: Type.String(),
+    rawId: Type.String(),
+  },
+  { title: 'Currency' },
+);
 
 // Generic error response shape
-export const ErrorResponse = Type.Object({
-  error: Type.String(),
-  message: Type.String(),
-  details: Type.Optional(Type.String()),
-});
+export const ErrorResponse = Type.Object(
+  {
+    error: Type.String(),
+    message: Type.String(),
+    details: Type.Optional(Type.String()),
+  },
+  { title: 'ErrorResponse' },
+);

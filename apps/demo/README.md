@@ -88,7 +88,7 @@ The demo webapp setup (preview) depends on these services:
 | Midnight node | `wss://rpc.preview.midnight.network/ws` | No — public endpoint |
 | Midnight indexer | `https://indexer.preview.midnight.network/api/v3/graphql` | No — public endpoint |
 
-For other networks (preprod, mainnet), you must provide your own proof server via `PROOF_SERVER_URL` in the server's `.env`. Network endpoints are configured in `packages/midnight-core/src/networks.ts`.
+For other networks (preprod, mainnet), you must provide your own proof server via `MIDNIGHT_PROOF_SERVER_URL` in the server's `.env`. Network endpoints are configured in `packages/midnight-core/src/networks.ts`.
 
 ## Wallet Configuration
 
@@ -100,7 +100,7 @@ wallet-mnemonic.{network}.txt   # e.g. wallet-mnemonic.preview.txt
 
 `task setup:demo` prompts for your mnemonic and creates this file. Each package finds it by walking up the directory tree from its working directory, so you only configure it once.
 
-In production (mainnet), set `WALLET_MNEMONIC_FILE` or `WALLET_SEED_FILE` explicitly instead — the walk-up fallback is disabled on mainnet.
+In production (mainnet), set the server's `MIDNIGHT_WALLET_MNEMONIC_FILE` or `MIDNIGHT_WALLET_SEED_FILE` explicitly instead — the walk-up fallback is disabled on mainnet.
 
 ## Generating the Client
 

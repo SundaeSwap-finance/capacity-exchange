@@ -20,7 +20,7 @@ export async function fetchPricesFromExchanges(
 
   const priceResponses = await Promise.allSettled(
     exchangeApis.map(({ url, api }) =>
-      api.apiPricesGet({ currency: 'DUST', amount: dustRequired.toString() }).then((response) => ({
+      api.apiMidnightPricesGet({ amount: dustRequired.toString() }).then((response) => ({
         url,
         quoteId: response.quoteId,
         prices: response.prices,

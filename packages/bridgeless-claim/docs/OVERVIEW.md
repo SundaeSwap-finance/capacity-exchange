@@ -91,7 +91,7 @@ sequenceDiagram
     Note over User: 3. generate s, s'. h = hash(s). h' = hash(s').
     User->>Escrow Bearer: 4. escrow(h, h_prime, refund_address, lp_address, eTTL) plus locked lovelace
     Escrow Bearer-->>LP: 5. chain-sync emits new escrow, LP adds to h_prime index
-    User->>LP: 6. POST /ada/offers with escrow utxo ref, quote token, and target Coupler address
+    User->>LP: 6. POST /api/midnight/ada/offers with escrow utxo ref, quote token, and target Coupler address
     Note over LP: 7. verify confirmations, verify quote token sig and expiry, verify on-chain datum and locked ADA, verify Escrow Bearer + Coupler addresses are supported
     Note over LP: 8. build capacity leg: DUST spend and absorb(h, h')
     LP-->>User: 9. unbalanced tx
@@ -112,7 +112,7 @@ sequenceDiagram
 The flow threads four legs across **User**, **LP**, Cardano, and Midnight. Each leg below points to its detail home.
 
 1. **Discovery and quote** (diagram steps 0-3). **LP** runs a background chain-sync subscription on the **Bearer's** address. **User** picks an **LP** from the CES registry, hits `/prices`, gets a signed quote token plus `lp_address`, and generates `s` and `s'`. See [SDK Responsibilities](SDK.md#responsibilities), [LP_INFRA Responsibilities](LP_INFRA.md#responsibilities), [Bearer chain-sync index](LP_INFRA.md#bearer-chain-sync-index).
-2. **Escrow and offer** (diagram steps 4-9). **User** locks the quoted lovelace at the **Bearer's** address with datum `{ h, h_prime, refund_address, lp_address, eTTL }`. **LP's** chain-sync indexes the new escrow by `h_prime`. **User** calls `POST /ada/offers`, **LP** verifies and returns the capacity leg (`dust_input + absorb(h, h')`). See [VALIDATOR Datum](VALIDATOR.md#datum), [LP_INFRA /ada/offers](LP_INFRA.md#post-adaoffers).
+2. **Escrow and offer** (diagram steps 4-9). **User** locks the quoted lovelace at the **Bearer's** address with datum `{ h, h_prime, refund_address, lp_address, eTTL }`. **LP's** chain-sync indexes the new escrow by `h_prime`. **User** calls `POST /api/midnight/ada/offers`, **LP** verifies and returns the capacity leg (`dust_input + absorb(h, h')`). See [VALIDATOR Datum](VALIDATOR.md#datum), [LP_INFRA /api/midnight/ada/offers](LP_INFRA.md#post-apimidnightadaoffers).
 3. **Merge and submit on Midnight** (diagram steps 10-11). **User** builds the reveal leg (`mintReveal(disclose(s), witness(s'))` plus `user_op`), merges with the capacity leg, signs, and submits to Midnight. `s` becomes public in the extrinsic call data. See [SDK Responsibilities](SDK.md#responsibilities), [COMPACT](COMPACT.md).
 4. **Claim on Cardano** (diagram steps 12-18). The **Coupler** emits a state change for the `absorb` call. **LP** extracts `h'`, looks up the matching escrow in its index, assembles the `ClaimProof`, and submits the claim tx (with a BEEFY proof script withdrawal in the Trustless release). The **Bearer** runs V1-V7 and releases ADA to `datum.lp_address`. See [LP_INFRA Claim flow](LP_INFRA.md#claim-flow), [VALIDATOR Claim path](VALIDATOR.md#claim-path), [VALIDATOR Verification](VALIDATOR.md#verification).
 
@@ -144,6 +144,6 @@ sequenceDiagram
 
 - [VALIDATOR.md](VALIDATOR.md): the Cardano-side validator (the **Escrow Bearer**), datum and redeemer schema, claim and refund tx shapes, claim-path verification steps
 - [SDK.md](SDK.md): the user-side library with secret generation, escrow and refund handling, and merged-tx Midnight submission
-- [LP_INFRA.md](LP_INFRA.md): the LP-side server, the new `POST /ada/offers` endpoint, escrow verification steps
+- [LP_INFRA.md](LP_INFRA.md): the LP-side server, the new `POST /api/midnight/ada/offers` endpoint, escrow verification steps
 - [COMPACT.md](COMPACT.md): the Midnight-side contract (the **Commitment Coupler**) and its two circuits for balancing a commit-reveal scheme
 

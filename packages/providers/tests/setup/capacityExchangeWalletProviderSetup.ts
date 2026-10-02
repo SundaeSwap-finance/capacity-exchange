@@ -50,7 +50,7 @@ export function setupFetchMock(): void {
       } as Response);
     }
 
-    if (url.includes('/api/prices')) {
+    if (url.includes('/api/midnight/prices')) {
       return Promise.resolve({
         ok: true,
         status: 200,
@@ -64,7 +64,7 @@ export function setupFetchMock(): void {
       } as Response);
     }
 
-    if (url.includes('/api/offers')) {
+    if (url.includes('/api/midnight/offers')) {
       return Promise.resolve({
         ok: true,
         status: 201,

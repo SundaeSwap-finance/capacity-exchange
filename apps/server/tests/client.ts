@@ -40,17 +40,17 @@ export class CapacityExchangeClient {
   async getPrices(
     specks: string,
   ): Promise<ApiResponse<typeof PricesResponse.static | typeof ErrorResponse.static>> {
-    const response = await fetch(`${this.baseUrl}/api/prices?currency=DUST&amount=${specks}`);
+    const response = await fetch(`${this.baseUrl}/api/midnight/prices?amount=${specks}`);
     const data = (await response.json()) as
       typeof PricesResponse.static | typeof ErrorResponse.static;
-    console.debug(`GET /api/prices?currency=DUST&amount=${specks} -> ${response.status}`, data);
+    console.debug(`GET /api/midnight/prices?amount=${specks} -> ${response.status}`, data);
     return { status: response.status, data };
   }
 
   async createOffer(
     request: typeof CreateOfferRequest.static,
   ): Promise<ApiResponse<typeof CreateOfferResponse.static | typeof ErrorResponse.static>> {
-    const response = await fetch(`${this.baseUrl}/api/offers`, {
+    const response = await fetch(`${this.baseUrl}/api/midnight/offers`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export class CapacityExchangeClient {
     });
     const data = (await response.json()) as
       typeof CreateOfferResponse.static | typeof ErrorResponse.static;
-    console.debug(`POST /api/offers -> ${response.status}`, data);
+    console.debug(`POST /api/midnight/offers -> ${response.status}`, data);
     return { status: response.status, data };
   }
 }

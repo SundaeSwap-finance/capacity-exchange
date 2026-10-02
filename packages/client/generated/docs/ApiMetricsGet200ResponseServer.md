@@ -9,7 +9,6 @@ Name | Type
 `name` | string
 `version` | string
 `uptime` | number
-`network` | string
 
 ## Example
 
@@ -21,7 +20,6 @@ const example = {
   "name": null,
   "version": null,
   "uptime": null,
-  "network": null,
 } satisfies ApiMetricsGet200ResponseServer
 
 console.log(example)

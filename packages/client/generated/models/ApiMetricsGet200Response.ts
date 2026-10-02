@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { ApiMetricsGet200ResponseContention } from './ApiMetricsGet200ResponseContention.js';
+import type { ApiMetricsGet200ResponseCapacityInner } from './ApiMetricsGet200ResponseCapacityInner.js';
 import {
-    ApiMetricsGet200ResponseContentionFromJSON,
-    ApiMetricsGet200ResponseContentionFromJSONTyped,
-    ApiMetricsGet200ResponseContentionToJSON,
-    ApiMetricsGet200ResponseContentionToJSONTyped,
-} from './ApiMetricsGet200ResponseContention.js';
+    ApiMetricsGet200ResponseCapacityInnerFromJSON,
+    ApiMetricsGet200ResponseCapacityInnerFromJSONTyped,
+    ApiMetricsGet200ResponseCapacityInnerToJSON,
+    ApiMetricsGet200ResponseCapacityInnerToJSONTyped,
+} from './ApiMetricsGet200ResponseCapacityInner.js';
 import type { ApiMetricsGet200ResponseServer } from './ApiMetricsGet200ResponseServer.js';
 import {
     ApiMetricsGet200ResponseServerFromJSON,
@@ -34,20 +34,6 @@ import {
     ApiMetricsGet200ResponseRevenueToJSON,
     ApiMetricsGet200ResponseRevenueToJSONTyped,
 } from './ApiMetricsGet200ResponseRevenue.js';
-import type { ApiMetricsGet200ResponseDustUsage } from './ApiMetricsGet200ResponseDustUsage.js';
-import {
-    ApiMetricsGet200ResponseDustUsageFromJSON,
-    ApiMetricsGet200ResponseDustUsageFromJSONTyped,
-    ApiMetricsGet200ResponseDustUsageToJSON,
-    ApiMetricsGet200ResponseDustUsageToJSONTyped,
-} from './ApiMetricsGet200ResponseDustUsage.js';
-import type { ApiMetricsGet200ResponseHealth } from './ApiMetricsGet200ResponseHealth.js';
-import {
-    ApiMetricsGet200ResponseHealthFromJSON,
-    ApiMetricsGet200ResponseHealthFromJSONTyped,
-    ApiMetricsGet200ResponseHealthToJSON,
-    ApiMetricsGet200ResponseHealthToJSONTyped,
-} from './ApiMetricsGet200ResponseHealth.js';
 
 /**
  * 
@@ -63,28 +49,16 @@ export interface ApiMetricsGet200Response {
     server: ApiMetricsGet200ResponseServer;
     /**
      * 
-     * @type {ApiMetricsGet200ResponseHealth}
+     * @type {Array<ApiMetricsGet200ResponseCapacityInner>}
      * @memberof ApiMetricsGet200Response
      */
-    health: ApiMetricsGet200ResponseHealth;
-    /**
-     * 
-     * @type {ApiMetricsGet200ResponseDustUsage}
-     * @memberof ApiMetricsGet200Response
-     */
-    dustUsage: ApiMetricsGet200ResponseDustUsage;
+    capacity: Array<ApiMetricsGet200ResponseCapacityInner>;
     /**
      * 
      * @type {ApiMetricsGet200ResponseRevenue}
      * @memberof ApiMetricsGet200Response
      */
     revenue: ApiMetricsGet200ResponseRevenue;
-    /**
-     * 
-     * @type {ApiMetricsGet200ResponseContention}
-     * @memberof ApiMetricsGet200Response
-     */
-    contention: ApiMetricsGet200ResponseContention;
 }
 
 /**
@@ -92,10 +66,8 @@ export interface ApiMetricsGet200Response {
  */
 export function instanceOfApiMetricsGet200Response(value: object): value is ApiMetricsGet200Response {
     if (!('server' in value) || value['server'] === undefined) return false;
-    if (!('health' in value) || value['health'] === undefined) return false;
-    if (!('dustUsage' in value) || value['dustUsage'] === undefined) return false;
+    if (!('capacity' in value) || value['capacity'] === undefined) return false;
     if (!('revenue' in value) || value['revenue'] === undefined) return false;
-    if (!('contention' in value) || value['contention'] === undefined) return false;
     return true;
 }
 
@@ -110,10 +82,8 @@ export function ApiMetricsGet200ResponseFromJSONTyped(json: any, ignoreDiscrimin
     return {
         
         'server': ApiMetricsGet200ResponseServerFromJSON(json['server']),
-        'health': ApiMetricsGet200ResponseHealthFromJSON(json['health']),
-        'dustUsage': ApiMetricsGet200ResponseDustUsageFromJSON(json['dustUsage']),
+        'capacity': ((json['capacity'] as Array<any>).map(ApiMetricsGet200ResponseCapacityInnerFromJSON)),
         'revenue': ApiMetricsGet200ResponseRevenueFromJSON(json['revenue']),
-        'contention': ApiMetricsGet200ResponseContentionFromJSON(json['contention']),
     };
 }
 
@@ -129,10 +99,8 @@ export function ApiMetricsGet200ResponseToJSONTyped(value?: ApiMetricsGet200Resp
     return {
         
         'server': ApiMetricsGet200ResponseServerToJSON(value['server']),
-        'health': ApiMetricsGet200ResponseHealthToJSON(value['health']),
-        'dustUsage': ApiMetricsGet200ResponseDustUsageToJSON(value['dustUsage']),
+        'capacity': ((value['capacity'] as Array<any>).map(ApiMetricsGet200ResponseCapacityInnerToJSON)),
         'revenue': ApiMetricsGet200ResponseRevenueToJSON(value['revenue']),
-        'contention': ApiMetricsGet200ResponseContentionToJSON(value['contention']),
     };
 }
 

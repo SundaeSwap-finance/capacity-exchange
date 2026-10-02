@@ -44,7 +44,7 @@ stateDiagram-v2
 `ClaimWindow` and `RefundEligible` are windows describing which path is available, not literal on-chain states. The escrow utxo only transitions on consumption (claim or refund). All other transitions are time- and policy-driven off-chain conditions.
 
 - `Created` → `ClaimWindow`: off-chain, the **LP** determines this based on `confirmations >= cardano_wait_depth` AND current time `< eTTL`
-- `Created` → `RefundEligible`: time-based, `eTTL` passes before the **LP** opens a claim window (e.g., the **User** never submitted `/ada/offers`)
+- `Created` → `RefundEligible`: time-based, `eTTL` passes before the **LP** opens a claim window (e.g., the **User** never submitted `/api/midnight/ada/offers`)
 - `ClaimWindow` → `Claimed`: requires full claim verification (see [claim path](#claim-path) below)
 - `ClaimWindow` → `ClaimWindow`: claim is permissionless, race-lost or malformed claim txs leave the escrow live until `eTTL`
 - `ClaimWindow` → `RefundEligible`: time-based, `eTTL` passes without a successful claim landing
@@ -80,7 +80,7 @@ The **Bearer** enforces both settings utxo fields on-chain: `max_ada_payout` via
 `max_ada_payout` is also pre-checked off-chain at two points to avoid building escrows and offers that V1 would reject:
 
 - The **SDK** reads the settings utxo before the **User** locks ADA and refuses to create an escrow whose locked lovelace would exceed `max_ada_payout`. Saves the **User** from creating an escrow no **LP** will fulfill.
-- The **LP** reads the settings utxo during `/ada/offers` verification and rejects any offer whose escrow exceeds `max_ada_payout`. Saves the **LP** from spending DUST on a capacity leg that won't claim.
+- The **LP** reads the settings utxo during `/api/midnight/ada/offers` verification and rejects any offer whose escrow exceeds `max_ada_payout`. Saves the **LP** from spending DUST on a capacity leg that won't claim.
 
 ## Refund path
 

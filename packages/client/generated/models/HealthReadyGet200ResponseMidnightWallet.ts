@@ -40,8 +40,7 @@ export interface HealthReadyGet200ResponseMidnightWallet {
 export const HealthReadyGet200ResponseMidnightWalletStatusEnum = {
     Syncing: 'syncing',
     Ok: 'ok',
-    Ko: 'ko',
-    Disabled: 'disabled'
+    Ko: 'ko'
 } as const;
 export type HealthReadyGet200ResponseMidnightWalletStatusEnum = typeof HealthReadyGet200ResponseMidnightWalletStatusEnum[keyof typeof HealthReadyGet200ResponseMidnightWalletStatusEnum];
 
