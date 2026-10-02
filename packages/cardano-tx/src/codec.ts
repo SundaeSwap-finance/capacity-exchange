@@ -1,6 +1,6 @@
 import { decode, encode, Tag, type Writer } from 'cbor2';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { emptyValue, type Value } from '../cardano/value.js';
+import { emptyValue, type Value } from './value.js';
 
 /** Transaction body map keys we touch. See eras/dijkstra/impl/cddl/data/dijkstra.cddl. */
 export const BODY_INPUTS = 0;

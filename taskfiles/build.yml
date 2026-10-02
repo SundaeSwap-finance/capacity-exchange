@@ -33,8 +33,13 @@ tasks:
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-client build
 
+  cardano-tx:
+    deps: [install]
+    cmds:
+      - bun run --filter @sundaeswap/capacity-exchange-cardano-tx build
+
   libs:
-    deps: [react-sdk, registry-node, coupler]
+    deps: [react-sdk, registry-node, coupler, cardano-tx]
 
   registry:
     deps: [compile-contracts]
@@ -62,7 +67,7 @@ tasks:
       - bun run --filter @sundaeswap/capacity-exchange-react-sdk build
 
   server:
-    deps: [providers]
+    deps: [providers, cardano-tx]
     cmds:
       - bun run --filter @capacity-exchange/server build
 
