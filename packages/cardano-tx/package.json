@@ -1,0 +1,36 @@
+{
+  "name": "@sundaeswap/capacity-exchange-cardano-tx",
+  "version": "0.1.0",
+  "description": "Builds, signs and batches Cardano Dijkstra transactions and sub-transactions",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE.md"
+  ],
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.3.0",
+    "@noble/hashes": "^2.3.0",
+    "cbor2": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

@@ -1,6 +1,6 @@
 import { encode } from 'cbor2';
-import type { Value } from '../cardano/value.js';
-import { addValue, lovelaceValue, subValue, sumValues, valuesEqual } from '../cardano/value.js';
+import type { Value } from './value.js';
+import { addValue, lovelaceValue, subValue, sumValues, valuesEqual } from './value.js';
 import {
   asArray,
   asSet,
@@ -185,8 +185,47 @@ export function assembleBatch(params: AssembleParams): AssembleResult {
   parent.body.set(BODY_SUB_TRANSACTIONS, asSet(subs.map((s) => new RawCbor(s.bytes))));
   const declaredReferenceInputs = declareSubTransactionInputs(parent, subs);
 
-  const parentInputs = readInputs(parent.body, BODY_INPUTS);
-  const draftOutputs = readOutputs(parent.body, BODY_OUTPUTS);
+  const { fee, outputs, signedSizeBytes } = settleFee({
+    tx: parent,
+    changeIndex,
+    txFeeFixed,
+    txFeePerByte,
+    utxoCostPerByte,
+    witnessCount,
+  });
+
+  const balance = computeBalance(readInputs(parent.body, BODY_INPUTS), outputs, subs, fee, resolve);
+  if (!balance.balances) {
+    throw new Error('Batch does not balance after assembly; refusing to continue');
+  }
+
+  return { parent, fee, balance, signedSizeBytes, declaredReferenceInputs };
+}
+
+export interface SettleFeeParams {
+  /** A transaction at a fee of zero, whose change output holds everything the fee can come out of. */
+  tx: DecodedTx;
+  changeIndex: number;
+  txFeeFixed: bigint;
+  txFeePerByte: bigint;
+  utxoCostPerByte: bigint;
+  /** Vkey witnesses the transaction will carry, so the fee covers the signed size. */
+  witnessCount: number;
+}
+
+export interface SettledFee {
+  fee: bigint;
+  outputs: TxOutput[];
+  signedSizeBytes: number;
+}
+
+/**
+ * Sets the fee and takes it out of the change output, in place. It settles by iteration: the
+ * fee changes the change output's size, which can change the fee.
+ */
+export function settleFee(params: SettleFeeParams): SettledFee {
+  const { tx, changeIndex, txFeeFixed, txFeePerByte, utxoCostPerByte, witnessCount } = params;
+  const draftOutputs = readOutputs(tx.body, BODY_OUTPUTS);
   const change = draftOutputs[changeIndex];
   if (!change) {
     throw new Error(`Draft has no output #${changeIndex} to take the fee from`);
@@ -199,9 +238,9 @@ export function assembleBatch(params: AssembleParams): AssembleResult {
     outputs = draftOutputs.map((o, i) =>
       i === changeIndex ? { ...o, value: { ...o.value, lovelace: change.value.lovelace - fee } } : o
     );
-    parent.body.set(BODY_OUTPUTS, outputs.map(encodeOutput));
-    parent.body.set(BODY_FEE, fee);
-    signedSizeBytes = encode(parent.items).length + vkeyWitnessBytes(witnessCount);
+    tx.body.set(BODY_OUTPUTS, outputs.map(encodeOutput));
+    tx.body.set(BODY_FEE, fee);
+    signedSizeBytes = encode(tx.items).length + vkeyWitnessBytes(witnessCount);
     const next = minFeeFor(signedSizeBytes, txFeeFixed, txFeePerByte);
     if (next === fee) {
       break;
@@ -209,22 +248,16 @@ export function assembleBatch(params: AssembleParams): AssembleResult {
     fee = next;
   }
   if (minFeeFor(signedSizeBytes, txFeeFixed, txFeePerByte) !== fee) {
-    throw new Error('Batch fee did not settle; refusing to guess');
+    throw new Error('Fee did not settle; refusing to guess');
   }
 
   const changeOut = outputs[changeIndex];
   const minChange = minUtxoLovelace(changeOut, utxoCostPerByte);
   if (changeOut.value.lovelace < minChange) {
     throw new Error(
-      `Exchange change of ${changeOut.value.lovelace} lovelace is below its ${minChange} lovelace minimum ` +
-        'once the offers and the fee are paid for; it needs a larger UTxO to fund this batch.'
+      `Change of ${changeOut.value.lovelace} lovelace is below its ${minChange} lovelace minimum once the ` +
+        'fee is paid; the transaction needs larger inputs.'
     );
   }
-
-  const balance = computeBalance(parentInputs, outputs, subs, fee, resolve);
-  if (!balance.balances) {
-    throw new Error('Batch does not balance after assembly; refusing to continue');
-  }
-
-  return { parent, fee, balance, signedSizeBytes, declaredReferenceInputs };
+  return { fee, outputs, signedSizeBytes };
 }
