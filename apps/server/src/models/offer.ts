@@ -28,7 +28,7 @@ const commonOfferResponse = {
   503: ErrorResponse,
 };
 
-// For /api/offers
+// For /api/midnight/offers
 export const OfferSchema = {
   schema: {
     body: CreateOfferRequest,
@@ -57,7 +57,7 @@ export const AdaCreateOfferRequest = Type.Object({
   }),
 });
 
-// For /api/ada/offers
+// For /api/midnight/ada/offers
 export const AdaOfferSchema = {
   schema: {
     body: AdaCreateOfferRequest,

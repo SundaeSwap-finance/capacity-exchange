@@ -26,7 +26,7 @@ export default fp(async (fastify: FastifyInstance) => {
     fastify.log.info("CardanoService init'd");
   } else {
     fastify.log.debug(
-      'CardanoService not configured (BLOCKFROST_API_KEY, BLOCKFROST_BASE_URL, and CARDANO_SERVER_ADDRESS must all be set)',
+      'CardanoService not configured (CARDANO_BLOCKFROST_API_KEY, CARDANO_BLOCKFROST_BASE_URL, and CARDANO_SERVER_ADDRESS must all be set)',
     );
   }
 });

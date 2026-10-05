@@ -13,7 +13,7 @@ describe('Health API', () => {
     const res = await CLIENT.getReadiness();
     expect(res.status).toBe(200);
     expect(res.data.status).toBe('ok');
-    expect(res.data.wallet.status).toBe('ok');
-    expect(res.data.indexer.status).toBe('ok');
+    expect(res.data.midnight.wallet.status).toBe('ok');
+    expect(res.data.midnight.indexer.status).toBe('ok');
   });
 });

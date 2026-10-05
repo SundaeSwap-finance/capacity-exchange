@@ -4,20 +4,21 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**apiAdaOffersPost**](DefaultApi.md#apiadaofferspostoperation) | **POST** /api/ada/offers |  |
+| [**apiCardanoPricesGet**](DefaultApi.md#apicardanopricesget) | **GET** /api/cardano/prices |  |
 | [**apiMetricsGet**](DefaultApi.md#apimetricsget) | **GET** /api/metrics |  |
-| [**apiOffersPost**](DefaultApi.md#apiofferspostoperation) | **POST** /api/offers |  |
-| [**apiPricesGet**](DefaultApi.md#apipricesget) | **GET** /api/prices |  |
-| [**apiSponsorPost**](DefaultApi.md#apisponsorpostoperation) | **POST** /api/sponsor |  |
+| [**apiMidnightAdaOffersPost**](DefaultApi.md#apimidnightadaofferspostoperation) | **POST** /api/midnight/ada/offers |  |
+| [**apiMidnightOffersPost**](DefaultApi.md#apimidnightofferspostoperation) | **POST** /api/midnight/offers |  |
+| [**apiMidnightPricesGet**](DefaultApi.md#apimidnightpricesget) | **GET** /api/midnight/prices |  |
+| [**apiMidnightSponsorPost**](DefaultApi.md#apimidnightsponsorpostoperation) | **POST** /api/midnight/sponsor |  |
 | [**healthGet**](DefaultApi.md#healthget) | **GET** /health/ |  |
 | [**healthReadyGet**](DefaultApi.md#healthreadyget) | **GET** /health/ready |  |
 | [**rootGet**](DefaultApi.md#rootget) | **GET** / |  |
 
 
 
-## apiAdaOffersPost
+## apiCardanoPricesGet
 
-> ApiOffersPost201Response apiAdaOffersPost(apiAdaOffersPostRequest)
+> PricesResponse apiCardanoPricesGet(amount)
 
 
 
@@ -28,19 +29,19 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { ApiAdaOffersPostOperationRequest } from '';
+import type { ApiCardanoPricesGetRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
   const api = new DefaultApi();
 
   const body = {
-    // ApiAdaOffersPostRequest
-    apiAdaOffersPostRequest: ...,
-  } satisfies ApiAdaOffersPostOperationRequest;
+    // string
+    amount: amount_example,
+  } satisfies ApiCardanoPricesGetRequest;
 
   try {
-    const data = await api.apiAdaOffersPost(body);
+    const data = await api.apiCardanoPricesGet(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -56,11 +57,11 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **apiAdaOffersPostRequest** | [ApiAdaOffersPostRequest](ApiAdaOffersPostRequest.md) |  | |
+| **amount** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
-[**ApiOffersPost201Response**](ApiOffersPost201Response.md)
+[**PricesResponse**](PricesResponse.md)
 
 ### Authorization
 
@@ -68,21 +69,16 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: `application/json`
+- **Content-Type**: Not defined
 - **Accept**: `application/json`
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-| **201** | Default Response |  -  |
+| **200** | Default Response |  -  |
 | **400** | Default Response |  -  |
-| **404** | Default Response |  -  |
-| **409** | Default Response |  -  |
-| **410** | Default Response |  -  |
 | **500** | Default Response |  -  |
-| **501** | Default Response |  -  |
-| **503** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
@@ -144,9 +140,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## apiOffersPost
+## apiMidnightAdaOffersPost
 
-> ApiOffersPost201Response apiOffersPost(apiOffersPostRequest)
+> ApiMidnightOffersPost201Response apiMidnightAdaOffersPost(apiMidnightAdaOffersPostRequest)
 
 
 
@@ -157,19 +153,19 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { ApiOffersPostOperationRequest } from '';
+import type { ApiMidnightAdaOffersPostOperationRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
   const api = new DefaultApi();
 
   const body = {
-    // ApiOffersPostRequest
-    apiOffersPostRequest: ...,
-  } satisfies ApiOffersPostOperationRequest;
+    // ApiMidnightAdaOffersPostRequest
+    apiMidnightAdaOffersPostRequest: ...,
+  } satisfies ApiMidnightAdaOffersPostOperationRequest;
 
   try {
-    const data = await api.apiOffersPost(body);
+    const data = await api.apiMidnightAdaOffersPost(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -185,11 +181,83 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **apiOffersPostRequest** | [ApiOffersPostRequest](ApiOffersPostRequest.md) |  | |
+| **apiMidnightAdaOffersPostRequest** | [ApiMidnightAdaOffersPostRequest](ApiMidnightAdaOffersPostRequest.md) |  | |
 
 ### Return type
 
-[**ApiOffersPost201Response**](ApiOffersPost201Response.md)
+[**ApiMidnightOffersPost201Response**](ApiMidnightOffersPost201Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **201** | Default Response |  -  |
+| **400** | Default Response |  -  |
+| **404** | Default Response |  -  |
+| **409** | Default Response |  -  |
+| **410** | Default Response |  -  |
+| **500** | Default Response |  -  |
+| **501** | Default Response |  -  |
+| **503** | Default Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiMidnightOffersPost
+
+> ApiMidnightOffersPost201Response apiMidnightOffersPost(apiMidnightOffersPostRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { ApiMidnightOffersPostOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // ApiMidnightOffersPostRequest
+    apiMidnightOffersPostRequest: ...,
+  } satisfies ApiMidnightOffersPostOperationRequest;
+
+  try {
+    const data = await api.apiMidnightOffersPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **apiMidnightOffersPostRequest** | [ApiMidnightOffersPostRequest](ApiMidnightOffersPostRequest.md) |  | |
+
+### Return type
+
+[**ApiMidnightOffersPost201Response**](ApiMidnightOffersPost201Response.md)
 
 ### Authorization
 
@@ -215,9 +283,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## apiPricesGet
+## apiMidnightPricesGet
 
-> ApiPricesGet200Response apiPricesGet(amount, currency)
+> PricesResponse apiMidnightPricesGet(amount)
 
 
 
@@ -228,7 +296,7 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { ApiPricesGetRequest } from '';
+import type { ApiMidnightPricesGetRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
@@ -237,12 +305,10 @@ async function example() {
   const body = {
     // string
     amount: amount_example,
-    // 'DUST' | 'ADA'
-    currency: currency_example,
-  } satisfies ApiPricesGetRequest;
+  } satisfies ApiMidnightPricesGetRequest;
 
   try {
-    const data = await api.apiPricesGet(body);
+    const data = await api.apiMidnightPricesGet(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -259,11 +325,10 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **amount** | `string` |  | [Defaults to `undefined`] |
-| **currency** | `DUST`, `ADA` |  | [Defaults to `undefined`] [Enum: DUST, ADA] |
 
 ### Return type
 
-[**ApiPricesGet200Response**](ApiPricesGet200Response.md)
+[**PricesResponse**](PricesResponse.md)
 
 ### Authorization
 
@@ -285,9 +350,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## apiSponsorPost
+## apiMidnightSponsorPost
 
-> ApiSponsorPost200Response apiSponsorPost(apiSponsorPostRequest)
+> ApiMidnightSponsorPost200Response apiMidnightSponsorPost(apiMidnightSponsorPostRequest)
 
 
 
@@ -298,19 +363,19 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { ApiSponsorPostOperationRequest } from '';
+import type { ApiMidnightSponsorPostOperationRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
   const api = new DefaultApi();
 
   const body = {
-    // ApiSponsorPostRequest
-    apiSponsorPostRequest: ...,
-  } satisfies ApiSponsorPostOperationRequest;
+    // ApiMidnightSponsorPostRequest
+    apiMidnightSponsorPostRequest: ...,
+  } satisfies ApiMidnightSponsorPostOperationRequest;
 
   try {
-    const data = await api.apiSponsorPost(body);
+    const data = await api.apiMidnightSponsorPost(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -326,11 +391,11 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **apiSponsorPostRequest** | [ApiSponsorPostRequest](ApiSponsorPostRequest.md) |  | |
+| **apiMidnightSponsorPostRequest** | [ApiMidnightSponsorPostRequest](ApiMidnightSponsorPostRequest.md) |  | |
 
 ### Return type
 
-[**ApiSponsorPost200Response**](ApiSponsorPost200Response.md)
+[**ApiMidnightSponsorPost200Response**](ApiMidnightSponsorPost200Response.md)
 
 ### Authorization
 

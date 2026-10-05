@@ -12,7 +12,7 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.walletService || !fastify.config.midnight) {
+  if (!fastify.midnightWalletService || !fastify.config.midnight) {
     fastify.decorate('cesWalletProvider', null);
     fastify.log.debug('CES wallet provider not configured (no Midnight network configured)');
     return;
@@ -27,12 +27,12 @@ export default fp(async (fastify: FastifyInstance) => {
   const { indexerHttpUrl, indexerWsUrl } = fastify.config.midnight.endpoints;
   const chainStateProvider = indexerChainStateProvider(indexerHttpUrl, indexerWsUrl);
 
-  const { walletService, peerPriceService, log } = fastify;
+  const { midnightWalletService, peerPriceService, log } = fastify;
 
-  const promptForCurrency = createAutoSelectCurrency(log, walletService, peerPriceService);
+  const promptForCurrency = createAutoSelectCurrency(log, midnightWalletService, peerPriceService);
 
   const cesWalletProvider = buildCesWalletProvider(
-    walletService,
+    midnightWalletService,
     fastify.config.midnight.networkId,
     chainStateProvider,
     fastify.config.capacityExchangeUrls,

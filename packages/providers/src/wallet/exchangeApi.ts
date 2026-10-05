@@ -25,16 +25,16 @@ async function wrapCesApi<T>(cesApi: () => Promise<T>): Promise<T> {
 }
 
 class WrappedDefaultApi extends DefaultApi {
-  async apiPricesGet(requestParameters: Parameters<DefaultApi['apiPricesGet']>[0]) {
-    return wrapCesApi(() => super.apiPricesGet(requestParameters));
+  async apiMidnightPricesGet(requestParameters: Parameters<DefaultApi['apiMidnightPricesGet']>[0]) {
+    return wrapCesApi(() => super.apiMidnightPricesGet(requestParameters));
   }
 
-  async apiOffersPost(requestParameters: Parameters<DefaultApi['apiOffersPost']>[0]) {
-    return wrapCesApi(() => super.apiOffersPost(requestParameters));
+  async apiMidnightOffersPost(requestParameters: Parameters<DefaultApi['apiMidnightOffersPost']>[0]) {
+    return wrapCesApi(() => super.apiMidnightOffersPost(requestParameters));
   }
 
-  async apiSponsorPost(requestParameters: Parameters<DefaultApi['apiSponsorPost']>[0]) {
-    return wrapCesApi(() => super.apiSponsorPost(requestParameters));
+  async apiMidnightSponsorPost(requestParameters: Parameters<DefaultApi['apiMidnightSponsorPost']>[0]) {
+    return wrapCesApi(() => super.apiMidnightSponsorPost(requestParameters));
   }
 }
 

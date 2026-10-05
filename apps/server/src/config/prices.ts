@@ -10,8 +10,9 @@ export type CapacityAsset = (typeof CAPACITY_ASSETS)[number];
  * A capacity asset is what a server sells: the thing a caller needs in order to get their
  * transaction on-chain. `DUST` pays Midnight fees; `ADA` pays Cardano fees.
  *
- * The same identifier is the key in `priceFormulas` and the value of `/api/prices?currency=`,
- * so an operator's config and the wire agree by construction.
+ * The same identifier is the key in `priceFormulas` and the asset the API reports (in `/`'s
+ * `capacityAssets` and each `/api/metrics` capacity entry), so an operator's config and the wire
+ * agree by construction.
  *
  * Weird definition is a workaround for a bug with openapi-generator
  */

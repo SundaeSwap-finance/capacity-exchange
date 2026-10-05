@@ -5,12 +5,12 @@ import {
   type ChainStateProvider,
   type PromptForCurrency,
 } from '@sundaeswap/capacity-exchange-providers';
-import type { WalletService } from '../services/wallet.js';
+import type { MidnightWalletService } from '../services/midnight/wallet.js';
 import { createAutoConfirmOffer } from './peerOfferConfirmer.js';
 
 /** Builds the sponsor-fallback `capacityExchangeWalletProvider` with auto-confirm. */
 export function buildCesWalletProvider(
-  walletService: WalletService,
+  walletService: MidnightWalletService,
   networkId: string,
   chainStateProvider: ChainStateProvider,
   additionalCapacityExchangeUrls: string[],

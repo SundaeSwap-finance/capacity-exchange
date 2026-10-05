@@ -4,8 +4,8 @@
  * names the states and rejection codes but not their wire spelling; kebab-case is ours.
  */
 
-/** Where the route would live. `/api/offers` is already taken by Midnight DUST offers. */
-export const OFFERS_PATH = '/api/babel/offers';
+/** Where the route will live. Offer routes are prefixed by the chain the capacity is for. */
+export const OFFERS_PATH = '/api/cardano/offers';
 
 /**
  * An offer's state at a service. The first five are the service's own view; the last three

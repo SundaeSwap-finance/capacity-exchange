@@ -45,69 +45,51 @@ describe('buildApp — ADA-only server (no Midnight configuration)', () => {
   it('reports readiness without attempting to reach a Midnight network', async () => {
     const res = await app.inject({ method: 'GET', url: '/health/ready' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({
-      status: 'ok',
-      wallet: { status: 'disabled' },
-      indexer: { status: 'disabled' },
-    });
+    expect(res.json()).toEqual({ status: 'ok' });
   });
 
-  it('reports null Midnight endpoints from the root endpoint', async () => {
+  it('reports ADA as the only capacity asset and no Midnight chain from the root endpoint', async () => {
     const res = await app.inject({ method: 'GET', url: '/' });
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body.env).toEqual({
-      network: null,
-      node_url: null,
-      node_ws_url: null,
-      indexer_url: null,
-      indexer_ws_url: null,
-      proof_server_url: null,
-    });
+    expect(body.capacityAssets).toEqual(['ADA']);
+    expect(body.chains).toEqual({});
   });
 
-  it('serves metrics with a disabled wallet and zeroed DUST usage', async () => {
+  it('serves metrics with no DUST capacity', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/metrics' });
     expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body.server.network).toBeNull();
-    expect(body.health.wallet).toEqual({ status: 'disabled' });
-    expect(body.dustUsage).toEqual({
-      availableBalance: '0',
-      totalSpecksConsumed: '0',
-      specksLastHour: '0',
-      locksLastHour: 0,
-    });
+    expect(res.json().capacity).toEqual([]);
   });
 
   it('still prices the capacity asset it actually sells (ADA)', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/prices?currency=ADA&amount=1000000' });
+    const res = await app.inject({ method: 'GET', url: '/api/cardano/prices?amount=1000000' });
     expect(res.statusCode).toBe(200);
     expect(res.json().prices).toBeInstanceOf(Array);
   });
 
-  it('returns 501 for /api/sponsor, since there is no Midnight wallet to pay DUST fees with', async () => {
+  it('returns 501 for /api/midnight/sponsor, since there is no Midnight wallet to pay DUST fees with', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/api/sponsor',
+      url: '/api/midnight/sponsor',
       payload: { provenTx: 'aa' },
     });
     expect(res.statusCode).toBe(501);
   });
 
-  it('returns 501 for /api/offers, since there is no DUST to sell', async () => {
+  it('returns 501 for /api/midnight/offers, since there is no DUST to sell', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/api/offers',
+      url: '/api/midnight/offers',
       payload: { quoteId: 'anything', offerCurrency: 'lovelace' },
     });
     expect(res.statusCode).toBe(501);
   });
 
-  it('returns 501 for /api/ada/offers when ADA offers are also unconfigured', async () => {
+  it('returns 501 for /api/midnight/ada/offers when ADA offers are also unconfigured', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/api/ada/offers',
+      url: '/api/midnight/ada/offers',
       payload: {
         quoteId: 'anything',
         offerCurrency: 'midnight:shielded:lovelace',
@@ -118,4 +100,12 @@ describe('buildApp — ADA-only server (no Midnight configuration)', () => {
     });
     expect(res.statusCode).toBe(501);
   });
+
+  it.each(['/api/offers', '/api/ada/offers', '/api/sponsor'])(
+    'still serves the Midnight route at its old path %s',
+    async (url) => {
+      const res = await app.inject({ method: 'POST', url, payload: {} });
+      expect(res.statusCode).not.toBe(404);
+    },
+  );
 });

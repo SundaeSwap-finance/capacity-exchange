@@ -1,23 +1,24 @@
 import { Type } from '@sinclair/typebox';
-import { WalletStatus } from './health.js';
+import { CapacityAssetSchema } from '../config/prices.js';
 
-const DustUsageSchema = Type.Object({
-  availableBalance: Type.String(),
-  totalSpecksConsumed: Type.String(),
-  specksLastHour: Type.String(),
+// Amounts are strings in the capacity asset's base unit (specks for DUST, lovelace for ADA).
+const CapacitySchema = Type.Object({
+  asset: CapacityAssetSchema,
+  available: Type.String(),
+  consumedTotal: Type.String(),
+  consumedLastHour: Type.String(),
   locksLastHour: Type.Number(),
+  contention: Type.Object({
+    lockedUtxos: Type.Number(),
+    totalUtxos: Type.Number(),
+    lockedAmount: Type.String(),
+    ratio: Type.Number(),
+    averageRatioLastHour: Type.Number(),
+  }),
 });
 
 const RevenueSchema = Type.Object({
   byCurrency: Type.Record(Type.String(), Type.String()),
-});
-
-const ContentionSchema = Type.Object({
-  lockedUtxos: Type.Number(),
-  totalUtxos: Type.Number(),
-  lockedSpecks: Type.String(),
-  ratio: Type.Number(),
-  averageRatioLastHour: Type.Number(),
 });
 
 export const MetricsResponse = Type.Object({
@@ -25,15 +26,10 @@ export const MetricsResponse = Type.Object({
     name: Type.String(),
     version: Type.String(),
     uptime: Type.Number(),
-    // Null when no Midnight network is configured (e.g. an ADA-only server).
-    network: Type.Union([Type.String(), Type.Null()]),
   }),
-  health: Type.Object({
-    wallet: WalletStatus,
-  }),
-  dustUsage: DustUsageSchema,
+  // One entry per capacity asset this server holds to sell.
+  capacity: Type.Array(CapacitySchema),
   revenue: RevenueSchema,
-  contention: ContentionSchema,
 });
 
 export const MetricsSchema = {

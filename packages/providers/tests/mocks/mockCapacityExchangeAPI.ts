@@ -3,14 +3,14 @@ import { vi } from 'vitest';
 
 export function createMockCapacityExchangeAPI() {
   const mockApi = {
-    apiPricesGet: vi.fn().mockResolvedValue({
+    apiMidnightPricesGet: vi.fn().mockResolvedValue({
       prices: [
         { currency: 'ADA', amount: '1000000' },
         { currency: 'BTC', amount: '50000' },
       ],
     }),
 
-    apiOffersPost: vi.fn().mockResolvedValue({
+    apiMidnightOffersPost: vi.fn().mockResolvedValue({
       offerId: 'test-offer-123',
       offerAmount: '1000000',
       offerCurrency: 'ADA',

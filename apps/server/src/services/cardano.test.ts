@@ -27,8 +27,9 @@ const SENDER_ADDRESS =
   'addr_test1xplan4jdxya4uf7az75smhz7xa6hf7xp2huj5v5vacmhgknlm8ty6vfmtcna69afphw9udm4wnuvz40e9gegem3hw3dqcrknql';
 
 function makeService(serverAddress = SERVER_ADDRESS) {
-  const apiKey = process.env.BLOCKFROST_API_KEY ?? 'api-test-key';
-  const baseUrl = process.env.BLOCKFROST_BASE_URL ?? 'https://cardano-preview.blockfrost.io/api/v0';
+  const apiKey = process.env.CARDANO_BLOCKFROST_API_KEY ?? 'api-test-key';
+  const baseUrl =
+    process.env.CARDANO_BLOCKFROST_BASE_URL ?? 'https://cardano-preview.blockfrost.io/api/v0';
   return new CardanoService(apiKey, baseUrl, logger, serverAddress);
 }
 
@@ -88,20 +89,20 @@ describe('CardanoService.verifyUtxoExists', () => {
     txsUtxosMock.mockReset();
   });
 
-  it.skipIf(!process.env.BLOCKFROST_API_KEY || process.env.BLOCKFROST_API_KEY === 'api-test-key')(
-    'returns the full response when all checks pass (real Blockfrost fetch)',
-    async () => {
-      const result = await makeService().verifyUtxoExists({
-        txHash: TEST_TX_HASH,
-        senderAddress: SENDER_ADDRESS,
-        sentValue: 15_000_000n,
-      });
+  it.skipIf(
+    !process.env.CARDANO_BLOCKFROST_API_KEY ||
+      process.env.CARDANO_BLOCKFROST_API_KEY === 'api-test-key',
+  )('returns the full response when all checks pass (real Blockfrost fetch)', async () => {
+    const result = await makeService().verifyUtxoExists({
+      txHash: TEST_TX_HASH,
+      senderAddress: SENDER_ADDRESS,
+      sentValue: 15_000_000n,
+    });
 
-      expect(result).not.toBeNull();
-      expect(result!.hash).toBe(TEST_TX_HASH);
-      expect(result!.outputs.some((o) => o.address === SERVER_ADDRESS)).toBe(true);
-    },
-  );
+    expect(result).not.toBeNull();
+    expect(result!.hash).toBe(TEST_TX_HASH);
+    expect(result!.outputs.some((o) => o.address === SERVER_ADDRESS)).toBe(true);
+  });
 
   it('returns null when the transaction is not found (404)', async () => {
     mockTxsUtxosError(404);

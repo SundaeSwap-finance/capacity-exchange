@@ -6,7 +6,7 @@ function exchangeOffering(types: string[]): CesApi {
   return {
     url: 'fake://exchange',
     api: {
-      apiPricesGet: async () => ({
+      apiMidnightPricesGet: async () => ({
         quoteId: 'q1',
         prices: types.map((type) => ({
           amount: '1000',

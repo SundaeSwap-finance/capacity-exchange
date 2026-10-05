@@ -14,32 +14,25 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     '/ready',
     ReadinessSchema,
     async (_request, reply): Promise<typeof ReadyResponse.static> => {
-      if (!fastify.config.midnight || !fastify.walletService) {
-        const disabled = { status: 'disabled' as const };
-        return { status: 'ok' as const, wallet: disabled, indexer: disabled };
+      const cardano = fastify.cardanoChainStateService?.health();
+
+      let midnight: typeof ReadyResponse.static.midnight;
+      if (fastify.config.midnight && fastify.midnightWalletService) {
+        const indexer = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
+        midnight = { wallet: fastify.midnightWalletService.syncState, indexer };
       }
 
-      // Check that we can reach the config'd indexer
-      const indexerStatus = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
-
-      // Check wallet sync status
-      const walletStatus = fastify.walletService.syncState;
-      const isIndexerReady = indexerStatus.status === 'ok';
-      const isWalletReady = walletStatus.status === 'ok';
-
-      // If either failed, return 500
-      if (!isIndexerReady || walletStatus.status === 'ko') {
+      // Cardano is reported but does not gate readiness: no route depends on it.
+      const statuses = midnight ? [midnight.indexer.status, midnight.wallet.status] : [];
+      if (statuses.includes('ko')) {
         reply.status(500);
-        return { status: 'ko' as const, wallet: walletStatus, indexer: indexerStatus };
+        return { status: 'ko' as const, midnight, cardano };
       }
-
-      // The indexer is ready but the wallet sync isn't, return 503
-      if (!isWalletReady) {
+      if (statuses.includes('syncing')) {
         reply.status(503);
-        return { status: 'syncing' as const, wallet: walletStatus, indexer: indexerStatus };
+        return { status: 'syncing' as const, midnight, cardano };
       }
-
-      return { status: 'ok' as const, wallet: walletStatus, indexer: indexerStatus };
+      return { status: 'ok' as const, midnight, cardano };
     },
   );
 };

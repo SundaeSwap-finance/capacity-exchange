@@ -25,7 +25,7 @@ interface StubEscrowRef {
  *  through the real balanceTx selection path so the bridgeless payer runs. */
 export function fakeCardanoResolver(): CesApiResolver {
   const api = {
-    apiPricesGet: async () => ({
+    apiMidnightPricesGet: async () => ({
       quoteId: crypto.randomUUID(),
       prices: [{ amount: QUOTED_LOVELACE, currency: { id: `${CARDANO_ADA}:`, type: CARDANO_ADA, rawId: '' } }],
     }),

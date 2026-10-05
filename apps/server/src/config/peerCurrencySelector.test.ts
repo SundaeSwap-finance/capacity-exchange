@@ -3,7 +3,7 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { ExchangePrice } from '@sundaeswap/capacity-exchange-providers';
 import { createAutoSelectCurrency } from './peerCurrencySelector.js';
 import { PeerPriceService } from '../services/peerPrice.js';
-import type { WalletService } from '../services/wallet.js';
+import type { MidnightWalletService } from '../services/midnight/wallet.js';
 import type { RawPriceFormula } from './prices.js';
 
 const silentLogger = {
@@ -70,11 +70,11 @@ function makeUnshieldedFormula(
 function makeWalletService(
   shieldedBalances: Record<string, bigint>,
   unshieldedBalances: Record<string, bigint> = {},
-): WalletService {
+): MidnightWalletService {
   return {
     getShieldedTokenBalances: async () => shieldedBalances,
     getUnshieldedTokenBalances: async () => unshieldedBalances,
-  } as unknown as WalletService;
+  } as unknown as MidnightWalletService;
 }
 
 const DUST_REQUIRED = 100n;
