@@ -193,7 +193,7 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
       lookup,
       { capacity: BigInt(quote.capacity), priceUnit: quote.priceUnit, priceAmount: BigInt(quote.priceAmount) },
       pp,
-      ownUtxos
+      (input) => ownUtxos.some((u) => u.txHash === input.txHash && u.index === input.index)
     );
   } catch (err) {
     if (err instanceof OfferRejected) {

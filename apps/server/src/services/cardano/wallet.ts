@@ -1,5 +1,5 @@
 import { FastifyBaseLogger } from 'fastify';
-import { createPromiseClient, type PromiseClient } from '@connectrpc/connect';
+import { Code, ConnectError, createPromiseClient, type PromiseClient } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect, submitConnect, type query } from '@utxorpc/spec';
 import { decode } from 'cbor2';
@@ -16,6 +16,8 @@ import {
   readSigningKey,
   settleFee,
   signTx,
+  subValue,
+  sumValues,
   type TxInput,
   type TxOutput,
   unsignedTx,
@@ -53,14 +55,22 @@ export function utxoRef(input: TxInput): string {
   return `${input.txHash}#${input.index}`;
 }
 
+/** A datum, or a reference script, which would add a reference-script fee the fee estimate omits. */
+function carriesDatumOrScript(output: TxOutput): boolean {
+  if (output.rest instanceof Map) {
+    return output.rest.has(2) || output.rest.has(3);
+  }
+  return Array.isArray(output.rest) && output.rest.length > 0;
+}
+
 /**
- * Picks ADA-only UTxOs, largest first, until they cover `target` plus a margin for the fee
- * and the change minimum. Token-bearing UTxOs are left alone: Dolos's Dijkstra validation
- * rejects any transaction that moves a native token.
+ * Picks UTxOs, largest lovelace first, until they cover `target` plus a margin for the fee and
+ * the change minimum. Tokens they hold ride along into the change. UTxOs carrying a datum or a
+ * reference script are left alone.
  */
-export function selectAdaOnly(utxos: WalletUtxo[], target: bigint): WalletUtxo[] {
+export function selectFunding(utxos: WalletUtxo[], target: bigint): WalletUtxo[] {
   const candidates = utxos
-    .filter((u) => u.output.value.assets.size === 0)
+    .filter((u) => !carriesDatumOrScript(u.output))
     .sort((a, b) => Number(b.output.value.lovelace - a.output.value.lovelace));
   const selected: WalletUtxo[] = [];
   let total = 0n;
@@ -73,7 +83,7 @@ export function selectAdaOnly(utxos: WalletUtxo[], target: bigint): WalletUtxo[]
   }
   if (total < target + SELECTION_MARGIN_LOVELACE) {
     throw new Error(
-      `Cardano wallet holds ${total} lovelace in ADA-only UTxOs; it needs ${target + SELECTION_MARGIN_LOVELACE}`,
+      `Cardano wallet holds ${total} spendable lovelace; it needs ${target + SELECTION_MARGIN_LOVELACE}`,
     );
   }
   return selected;
@@ -165,14 +175,16 @@ export class CardanoWalletService {
     return new Map(items.map(toWalletUtxo).map((u) => [utxoRef(u.input), u.output]));
   }
 
-  /** Pays `outputs` from ADA-only UTxOs, returning change to the wallet. Returns the tx id. */
+  /** Pays `outputs`, returning change, tokens included, to the wallet. Returns the tx id. */
   async pay(outputs: TxOutput[]): Promise<string> {
     const target = outputs.reduce((total, o) => total + o.value.lovelace, 0n);
-    const selected = selectAdaOnly(await this.utxos(), target);
-    const total = selected.reduce((sum, u) => sum + u.output.value.lovelace, 0n);
+    const selected = selectFunding(await this.utxos(), target);
     const change: TxOutput = {
       address: this.address,
-      value: { lovelace: total - target, assets: new Map() },
+      value: subValue(
+        sumValues(selected.map((u) => u.output.value)),
+        sumValues(outputs.map((o) => o.value)),
+      ),
     };
     const tx = unsignedTx(
       selected.map((u) => u.input),
@@ -182,20 +194,33 @@ export class CardanoWalletService {
     return this.signAndSubmit(tx);
   }
 
-  /** Signs with the wallet's key, submits, and keeps the transaction's inputs out of selection. */
+  /**
+   * Signs with the wallet's key and submits. The inputs leave selection before the call, since a
+   * timeout says nothing about whether the source took the transaction, and return only when the
+   * source refuses it.
+   */
   async signAndSubmit(
     tx: DecodedTx,
     spends: TxInput[] = readInputs(tx.body, BODY_INPUTS),
   ): Promise<string> {
     const bytes = signTx(tx, [this.key]);
     const txId = bytesToHex(hashBody(tx.body));
-    await this.submitter.submitTx(
-      { tx: { type: { case: 'raw', value: bytes } } },
-      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
-    );
     const now = Date.now();
     for (const input of spends) {
       this.pendingSpends.set(utxoRef(input), now);
+    }
+    try {
+      await this.submitter.submitTx(
+        { tx: { type: { case: 'raw', value: bytes } } },
+        { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
+      );
+    } catch (err) {
+      if (err instanceof ConnectError && err.code === Code.InvalidArgument) {
+        for (const input of spends) {
+          this.pendingSpends.delete(utxoRef(input));
+        }
+      }
+      throw err;
     }
     this.logger.info({ txId, size: bytes.length }, 'Submitted Cardano transaction');
     return txId;

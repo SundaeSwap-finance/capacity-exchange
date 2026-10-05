@@ -364,7 +364,9 @@ describe('verifyOffer (chain-state checks)', () => {
       [CES_IN],
       [{ address: CALLER_ADDR, value: { lovelace: 1_000_000n, assets: new Map() } }]
     );
-    const err = rejection(() => verifyOffer(offer(body), lookup, QUOTE, PP, [CES_IN]));
+    const err = rejection(() =>
+      verifyOffer(offer(body), lookup, QUOTE, PP, (i) => i.txHash === CES_IN.txHash && i.index === CES_IN.index)
+    );
     expect(err.message).toMatch(/belongs to this service/);
   });
 

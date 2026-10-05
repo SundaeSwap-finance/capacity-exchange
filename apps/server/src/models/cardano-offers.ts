@@ -30,9 +30,10 @@ export const SubmitCardanoOfferRequest = Type.Object(
       description:
         'Hex of the CIP-0198 envelope `[envelope_version, era_tag, #6.24(sub_transaction)]`',
     }),
-    quoteId: Type.Optional(
-      Type.String({ description: 'Ignored: offers that move ADA alone carry no price' }),
-    ),
+    quoteId: Type.String({
+      minLength: 1,
+      description: 'A quote from `GET /api/cardano/prices` for the ADA the offer needs',
+    }),
   },
   { title: 'SubmitCardanoOfferRequest' },
 );
