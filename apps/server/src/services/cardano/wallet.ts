@@ -219,6 +219,7 @@ export class CardanoWalletService {
         for (const input of spends) {
           this.pendingSpends.delete(utxoRef(input));
         }
+        this.logger.debug({ txId, cborHex: bytesToHex(bytes) }, 'Cardano transaction refused');
       }
       throw err;
     }
