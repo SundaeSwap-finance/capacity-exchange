@@ -375,13 +375,46 @@ describe('CardanoChainStateService', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const s = await started();
 
-    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(60_000);
     await vi.waitFor(() =>
       expect(s.health()).toMatchObject({ status: 'ko', error: /sent nothing/ }),
     );
 
     await vi.advanceTimersByTimeAsync(5_000);
     await vi.waitFor(() => expect(streams).toHaveLength(2));
+  });
+
+  it('waits a minute for the first message before giving up on a connection', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const s = await started();
+
+    await vi.advanceTimersByTimeAsync(45_000);
+    expect(s.health().status).not.toBe('ko');
+    expect(streams).toHaveLength(1);
+  });
+
+  it('doubles the reconnect delay while attempts keep failing, and resets once one is served', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const s = await started();
+
+    streams[0].push(new Error('connection reset'));
+    await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko' }));
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(2));
+
+    streams[1].push(new Error('connection reset'));
+    await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko', error: /reset/ }));
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(streams).toHaveLength(2);
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(3));
+
+    streams[2].push(reset(100));
+    await vi.waitFor(() => expect(s.health().status).toBe('ok'));
+    streams[2].push(new Error('connection reset'));
+    await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko' }));
+    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.waitFor(() => expect(streams).toHaveLength(4));
   });
 
   it('reconnects when an open stream goes silent', async () => {
