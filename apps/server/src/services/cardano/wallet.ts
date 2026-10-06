@@ -25,6 +25,10 @@ import {
 import type { CardanoProtocolParams } from '../cardano-chain-state.js';
 
 const RPC_TIMEOUT_MS = 10_000;
+// Waits before each resubmission of a transaction whose submission timed out or failed in
+// transit. A Dolos source holds submissions while it applies a batch of blocks, which on a
+// busy chain outlasts one RPC timeout.
+const SUBMIT_RETRY_DELAYS_MS = [2_000, 5_000, 10_000];
 // Inputs a submitted transaction spends stay out of coin selection until the source stops
 // reporting them as unspent, or until this long has passed and the transaction is presumed lost.
 const PENDING_SPEND_TTL_MS = 10 * 60_000;
@@ -53,6 +57,52 @@ export function feeParams(params: CardanoProtocolParams): FeeParams {
 
 export function utxoRef(input: TxInput): string {
   return `${input.txHash}#${input.index}`;
+}
+
+const isRefusal = (err: unknown): err is ConnectError =>
+  err instanceof ConnectError && err.code === Code.InvalidArgument;
+
+/**
+ * Submits until the source takes the transaction or refuses it, resubmitting the same bytes
+ * after a failure in transit. Once an attempt has failed in transit it may still have reached
+ * the source, so a later refusal counts as submitted when it reports a duplicate or the
+ * transaction has `landed`.
+ */
+export async function submitUntilSettled({
+  submit,
+  landed,
+  onRetry = () => {},
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  delaysMs = SUBMIT_RETRY_DELAYS_MS,
+}: {
+  submit: () => Promise<void>;
+  landed: () => Promise<boolean>;
+  onRetry?: (err: unknown, delayMs: number) => void;
+  sleep?: (ms: number) => Promise<void>;
+  delaysMs?: number[];
+}): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await submit();
+      return;
+    } catch (err) {
+      if (isRefusal(err)) {
+        if (
+          attempt > 0 &&
+          (/duplicate tx/.test(err.rawMessage) || (await landed().catch(() => false)))
+        ) {
+          return;
+        }
+        throw err;
+      }
+      const delayMs = delaysMs[attempt];
+      if (delayMs === undefined) {
+        throw err;
+      }
+      onRetry(err, delayMs);
+      await sleep(delayMs);
+    }
+  }
 }
 
 /** A datum, or a reference script, which would add a reference-script fee the fee estimate omits. */
@@ -210,12 +260,22 @@ export class CardanoWalletService {
       this.pendingSpends.set(utxoRef(input), now);
     }
     try {
-      await this.submitter.submitTx(
-        { tx: { type: { case: 'raw', value: bytes } } },
-        { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
-      );
+      await submitUntilSettled({
+        submit: async () => {
+          await this.submitter.submitTx(
+            { tx: { type: { case: 'raw', value: bytes } } },
+            { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
+          );
+        },
+        landed: async () => (await this.resolve([{ txHash: txId, index: 0 }])).size > 0,
+        onRetry: (err, delayMs) =>
+          this.logger.warn(
+            { txId, err: String((err as Error)?.message ?? err), retryInMs: delayMs },
+            'Cardano submission failed in transit; resubmitting',
+          ),
+      });
     } catch (err) {
-      if (err instanceof ConnectError && err.code === Code.InvalidArgument) {
+      if (isRefusal(err)) {
         for (const input of spends) {
           this.pendingSpends.delete(utxoRef(input));
         }
