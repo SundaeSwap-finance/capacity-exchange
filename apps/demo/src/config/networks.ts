@@ -1,12 +1,5 @@
-import { resolveEndpoints, requireBrowserEnv, toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
-
-export function requireEnvOneOf(name: string, allowedValues: readonly string[]): string {
-  const value = requireBrowserEnv(name);
-  if (!allowedValues.includes(value)) {
-    throw new Error(`Invalid value "${value}" for ${name}. Must be one of: ${allowedValues.join(', ')}`);
-  }
-  return value;
-}
+import { resolveEndpoints, toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
+import type { AppConfig } from './appConfig';
 
 export interface NetworkConfig {
   networkId: string;
@@ -17,10 +10,13 @@ export interface NetworkConfig {
   capacityExchangeUrl: string;
 }
 
-export function resolveNetworkConfig(networkId: string): NetworkConfig {
-  const endpoints = resolveEndpoints(toNetworkIdEnum(networkId), {
-    proofServerUrl: import.meta.env.VITE_PROOF_SERVER_URL,
-  });
+export function resolveNetworkConfig({ networkId, capacityExchangeUrl, proofServerUrl }: AppConfig): NetworkConfig {
+  const endpoints = resolveEndpoints(toNetworkIdEnum(networkId), { capacityExchangeUrl, proofServerUrl });
+  if (!endpoints.capacityExchangeUrl) {
+    throw new Error(
+      `No capacity exchange configured for '${networkId}'. Set CAPACITY_EXCHANGE_URL for the dev server.`
+    );
+  }
 
   return {
     networkId,
@@ -28,6 +24,6 @@ export function resolveNetworkConfig(networkId: string): NetworkConfig {
     indexerWsUrl: endpoints.indexerWsUrl,
     proofServerUrl: endpoints.proofServerUrl,
     nodeWsUrl: endpoints.nodeUrl,
-    capacityExchangeUrl: requireBrowserEnv('VITE_CAPACITY_EXCHANGE_URL'),
+    capacityExchangeUrl: endpoints.capacityExchangeUrl,
   };
 }

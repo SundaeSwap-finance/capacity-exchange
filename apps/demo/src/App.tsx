@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
-import { resolveNetworkConfig, NetworkConfigProvider, requireEnvOneOf } from './config';
+import { resolveNetworkConfig, NetworkConfigProvider, readAppConfig } from './config';
 import { useSeedWallet, useExtensionWallet } from './features/wallet';
 import { useActiveWallet } from './features/wallet';
 import { useContractsConfig } from './features/contract/hooks/useContractsConfig';
@@ -22,12 +22,12 @@ import { PlaygroundStep } from './steps/PlaygroundStep';
 import { DevAccessStep } from './steps/DevAccessStep';
 import { useMockDemoState } from './mock/useMockDemoState';
 import { getDemoRailContent } from './demoNarrative';
-import type { NetworkConfig } from './config';
+import type { AppConfig, NetworkConfig } from './config';
 import type { SeedWalletState } from './features/wallet/seed/types';
 import type { ExtensionWalletState } from './features/wallet/extension/useExtensionWallet';
 
-function isMockDemoEnabled() {
-  if (import.meta.env.VITE_MOCK_DEMO_MODE === 'true') {
+function isMockDemoEnabled(appConfig: AppConfig) {
+  if (appConfig.mockDemo) {
     return true;
   }
 
@@ -40,13 +40,14 @@ function isMockDemoEnabled() {
 }
 
 function App() {
-  const mockDemoEnabled = isMockDemoEnabled();
-  const networkId = requireEnvOneOf('VITE_NETWORK_ID', ['undeployed', 'preview', 'preprod', 'mainnet']);
+  const appConfig = useMemo(readAppConfig, []);
+  const { networkId } = appConfig;
+  const mockDemoEnabled = isMockDemoEnabled(appConfig);
   useEffect(() => {
     setMidnightNetworkId(networkId);
   }, [networkId]);
 
-  const currentConfig = useMemo(() => resolveNetworkConfig(networkId), [networkId]);
+  const currentConfig = useMemo(() => resolveNetworkConfig(appConfig), [appConfig]);
 
   return (
     <NetworkConfigProvider config={currentConfig}>
