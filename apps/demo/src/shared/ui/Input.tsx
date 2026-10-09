@@ -14,8 +14,8 @@ export function Input({ scale = 'md', className = '', ...props }: InputProps) {
     <input
       className={`
         ${INPUT_SIZES[scale]}
-        bg-dark-800 border border-dark-600 rounded text-white
-        placeholder-dark-500 focus:outline-none focus:border-blue-500
+        border rounded-sm text-white
+        focus:outline-hidden focus:border-blue-500
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}

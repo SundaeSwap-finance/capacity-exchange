@@ -35,10 +35,10 @@ export function LoadingSpinner({ message, size = 'md', showElapsed = false }: Lo
   const elapsed = useElapsedTime(showElapsed);
 
   return (
-    <div className="flex items-center gap-2 text-dark-400 text-sm">
-      <div className={`animate-spin ${sizeStyles[size]} border-dark-400 border-t-transparent rounded-full`} />
+    <div className="flex items-center gap-2 text-sm">
+      <div className={`animate-spin ${sizeStyles[size]} border-t-transparent rounded-full`} />
       {message}
-      {showElapsed && elapsed >= 1000 && <span className="text-dark-500">{formatElapsed(elapsed)}</span>}
+      {showElapsed && elapsed >= 1000 && <span>{formatElapsed(elapsed)}</span>}
     </div>
   );
 }

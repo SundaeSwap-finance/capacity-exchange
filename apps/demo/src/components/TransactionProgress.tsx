@@ -24,7 +24,7 @@ export function TransactionProgress({ steps }: TransactionProgressProps) {
           )}
 
           {/* Status icon */}
-          <div className="relative z-10 mt-0.5 flex-shrink-0">
+          <div className="relative z-10 mt-0.5 shrink-0">
             {step.status === 'done' && (
               <div className="w-[18px] h-[18px] rounded-full bg-ces-accent/20 flex items-center justify-center">
                 <svg

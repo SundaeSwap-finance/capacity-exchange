@@ -235,7 +235,7 @@ function CesPlaygroundAction({
         <>
           <div className="flex items-center gap-3">
             {status === 'selecting-currency' ? (
-              <div className="w-4 h-4 rounded-full border-2 border-ces-gold animate-pulse flex-shrink-0" />
+              <div className="w-4 h-4 rounded-full border-2 border-ces-gold animate-pulse shrink-0" />
             ) : (
               <div className="ces-spinner-sm" />
             )}

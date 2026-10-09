@@ -45,7 +45,7 @@ function SeedWalletConnection({ wallet }: SeedWalletConnectionProps) {
         {status === 'connecting' && (
           <div className="space-y-2">
             <LoadingSpinner message="Deriving keys and syncing wallet..." />
-            <p className="text-xs text-dark-500">This may take a moment while we sync with the network.</p>
+            <p className="text-xs">This may take a moment while we sync with the network.</p>
           </div>
         )}
 

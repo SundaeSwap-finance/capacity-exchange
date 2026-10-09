@@ -13,17 +13,14 @@ export function WalletModeSelector({ onSelect }: WalletModeSelectorProps) {
       <div className="space-y-3">
         <button
           onClick={() => onSelect('extension')}
-          className="w-full p-4 text-left bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg transition-colors"
+          className="w-full p-4 text-left border rounded-lg transition-colors"
         >
           <div className="font-medium text-white">Browser Extension</div>
-          <div className="text-sm text-dark-400 mt-1">Connect using Lace wallet extension</div>
+          <div className="text-sm mt-1">Connect using Lace wallet extension</div>
         </button>
-        <button
-          onClick={() => onSelect('seed')}
-          className="w-full p-4 text-left bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg transition-colors"
-        >
+        <button onClick={() => onSelect('seed')} className="w-full p-4 text-left border rounded-lg transition-colors">
           <div className="font-medium text-white">Secret Key</div>
-          <div className="text-sm text-dark-400 mt-1">Provide a secret key directly</div>
+          <div className="text-sm mt-1">Provide a secret key directly</div>
         </button>
       </div>
     </Card>

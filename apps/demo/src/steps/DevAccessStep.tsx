@@ -99,7 +99,7 @@ export function DevAccessForm({ compact = false }: { compact?: boolean }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full px-3 py-2 bg-ces-surface-raised border border-ces-border text-ces-text text-sm placeholder:text-ces-text-muted/40 focus:outline-none focus:border-ces-accent transition-colors"
+          className="w-full px-3 py-2 bg-ces-surface-raised border border-ces-border text-ces-text text-sm placeholder:text-ces-text-muted/40 focus:outline-hidden focus:border-ces-accent transition-colors"
         />
       </div>
 
@@ -114,7 +114,7 @@ export function DevAccessForm({ compact = false }: { compact?: boolean }) {
           onChange={(e) => setProject(e.target.value)}
           placeholder="A privacy-preserving loyalty program..."
           rows={compact ? 2 : 3}
-          className="w-full px-3 py-2 bg-ces-surface-raised border border-ces-border text-ces-text text-sm placeholder:text-ces-text-muted/40 focus:outline-none focus:border-ces-accent transition-colors resize-none"
+          className="w-full px-3 py-2 bg-ces-surface-raised border border-ces-border text-ces-text text-sm placeholder:text-ces-text-muted/40 focus:outline-hidden focus:border-ces-accent transition-colors resize-none"
         />
       </div>
 

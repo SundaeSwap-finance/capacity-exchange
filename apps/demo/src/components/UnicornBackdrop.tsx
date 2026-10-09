@@ -6,7 +6,7 @@ const SDK_URL = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2
 export function UnicornBackdrop() {
   return (
     <div aria-hidden="true" className="ces-unicorn-backdrop pointer-events-none absolute inset-0 z-[1] overflow-hidden">
-      <div className="h-full w-full opacity-68">
+      <div className="h-full w-full">
         <UnicornScene
           jsonFilePath={SCENE_JSON_PATH}
           sdkUrl={SDK_URL}

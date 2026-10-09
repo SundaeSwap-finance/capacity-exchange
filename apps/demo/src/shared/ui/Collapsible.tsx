@@ -10,15 +10,15 @@ export function Collapsible({ title, defaultOpen = true, children }: Collapsible
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-dark-700 rounded">
+    <div className="border rounded-sm">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-dark-300 hover:bg-dark-800 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors"
       >
         <span>{title}</span>
-        <span className="text-dark-500">{isOpen ? '▲' : '▼'}</span>
+        <span>{isOpen ? '▲' : '▼'}</span>
       </button>
-      {isOpen && <div className="px-3 py-3 border-t border-dark-700">{children}</div>}
+      {isOpen && <div className="px-3 py-3 border-t">{children}</div>}
     </div>
   );
 }
