@@ -60,6 +60,14 @@ Run `task --list` to see all tasks. Key ones:
 
 All network-aware tasks require `NETWORK_ID=<network>` (e.g., `preview`, `undeployed`).
 
+A demo build is network-agnostic: `dist/index.html` carries an `@@APP_CONFIG@@` placeholder, and every URL comes from the network's defaults in `packages/midnight-core/src/networks.ts`. Fill it for a network before serving the bundle:
+
+```bash
+bun run --filter @capacity-exchange/demo interpolate-index --network-id preview
+```
+
+The dev server fills the placeholder itself, from `NETWORK_ID` and the optional `CAPACITY_EXCHANGE_URL`, `PROOF_SERVER_URL` and `MOCK_DEMO_MODE` (see `apps/demo/.env.example`). So `PROOF_SERVER_URL` configures the server and the webapp alike.
+
 ## Project Structure
 
 ```
@@ -105,7 +113,3 @@ In production (mainnet), set the server's `MIDNIGHT_WALLET_MNEMONIC_FILE` or `MI
 ## Generating the Client
 
 The code in `packages/client/generated` is auto-generated from the server's OpenAPI spec. To regenerate, run `task regenerate-client`.
-
-## Security Notes
-
-The `demo` webapp reads the wallet mnemonic at build time and bakes it into the JS bundle via Vite (`VITE_SERVER_MNEMONIC`). This is fine for a demo on a test network but should not be used in production or with a real wallet.

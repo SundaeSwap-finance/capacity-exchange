@@ -66,14 +66,11 @@ tasks:
     cmds:
       - bun run --filter @capacity-exchange/server build
 
+  # Network-agnostic: the bundle's network is filled in at deploy by the demo's interpolate-index.
   webapp:
     deps: [libs]
-    env:
-      NETWORK_ID: '{{.NETWORK_ID}}'
     cmds:
       - bun run --filter @capacity-exchange/demo build
-    requires:
-      vars: [NETWORK_ID]
 
   # --- Typecheck ---
 
@@ -94,5 +91,3 @@ tasks:
     deps: [libs, server, typecheck-demo-contracts, typecheck-coupler-cli]
     cmds:
       - task: webapp
-        vars:
-          NETWORK_ID: preview

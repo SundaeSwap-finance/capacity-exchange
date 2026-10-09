@@ -101,8 +101,6 @@ tasks:
       - task: compile-contracts
       - task: _demo:copy-zk-assets
       - task: _build:webapp
-        vars:
-          NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
       - task: deploy
         vars:
@@ -163,8 +161,8 @@ tasks:
     env:
       MIDNIGHT_NETWORK: '{{.NETWORK_ID}}'
       PRICE_CONFIG_FILE: 'price-config.{{.NETWORK_ID}}.json'
-      VITE_NETWORK_ID: '{{.NETWORK_ID}}'
-      VITE_CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
+      NETWORK_ID: '{{.NETWORK_ID}}'
+      CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
     cmds:
       - >-
         bunx concurrently --kill-others
@@ -180,8 +178,6 @@ tasks:
       - task: _demo:copy-zk-assets
       - task: _demo:copy-configs
       - task: _build:webapp
-        vars:
-          NETWORK_ID: '{{.NETWORK_ID}}'
       - task: _build:server
       - task: _build:typecheck-demo-contracts
     requires:
