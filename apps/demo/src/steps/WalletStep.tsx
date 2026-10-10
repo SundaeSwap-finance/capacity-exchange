@@ -268,7 +268,7 @@ export function WalletStep({ seedWallet, extensionWallet, walletInfoState, onCon
                     e.stopPropagation();
                     removeWallet(w.id);
                   }}
-                  className="p-1.5 rounded hover:bg-ces-danger/10 text-ces-text-muted/40 hover:text-ces-danger transition-colors"
+                  className="p-1.5 rounded-sm hover:bg-ces-danger/10 text-ces-text-muted/40 hover:text-ces-danger transition-colors"
                   title="Delete wallet"
                 >
                   <svg className="h-3.5 w-3.5" viewBox="0 0 12 10" fill="currentColor" aria-hidden="true">
@@ -398,7 +398,7 @@ function SyncBar({ label, progress }: { label: string; progress: SubWalletProgre
 
   return (
     <div>
-      <div className="grid grid-cols-[8rem,minmax(0,28rem),2.5rem] items-center gap-x-4">
+      <div className="grid grid-cols-[8rem_minmax(0,28rem)_2.5rem] items-center gap-x-4">
         <span className="text-xs text-ces-text-muted">{label} //</span>
         <div className="h-1.5 w-full rounded-full bg-ces-surface-raised overflow-hidden">
           <div
@@ -425,7 +425,7 @@ function SyncBar({ label, progress }: { label: string; progress: SubWalletProgre
         </span>
       </div>
       {eta && !progress.done && (
-        <div className="mt-0.5 grid grid-cols-[8rem,minmax(0,28rem),2.5rem] gap-x-4">
+        <div className="mt-0.5 grid grid-cols-[8rem_minmax(0,28rem)_2.5rem] gap-x-4">
           <span />
           <span className="text-[10px] text-white font-mono">{eta}</span>
           <span />

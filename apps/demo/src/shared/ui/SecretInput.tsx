@@ -37,17 +37,11 @@ export function SecretInput({
         spellCheck={false}
       />
       {onRandom && (
-        <Button
-          variant="ghost"
-          onClick={onRandom}
-          disabled={disabled}
-          className="bg-dark-800 border border-dark-600"
-          title="Generate random seed"
-        >
+        <Button variant="ghost" onClick={onRandom} disabled={disabled} className="border" title="Generate random seed">
           🎲
         </Button>
       )}
-      <Button variant="ghost" onClick={() => setVisible(!visible)} className="bg-dark-800 border border-dark-600">
+      <Button variant="ghost" onClick={() => setVisible(!visible)} className="border">
         {visible ? 'Hide' : 'Show'}
       </Button>
     </div>

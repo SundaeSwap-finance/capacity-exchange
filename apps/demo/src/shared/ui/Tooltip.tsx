@@ -20,7 +20,7 @@ export function Tooltip({ content, position = 'right', children }: TooltipProps)
     <div className="relative group inline-block">
       {children}
       <div className={`absolute ${positionStyles[position]} hidden group-hover:block z-10 pointer-events-none`}>
-        <div className="bg-dark-700 text-dark-200 text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">{content}</div>
+        <div className="text-xs px-2 py-1 rounded-sm shadow-lg whitespace-nowrap">{content}</div>
       </div>
     </div>
   );

@@ -41,9 +41,7 @@ export function SeedInput({ onSubmit, disabled }: SeedInputProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-dark-300 mb-1">
-          Wallet Seed ({SEED_LENGTH} hex characters)
-        </label>
+        <label className="block text-sm font-medium mb-1">Wallet Seed ({SEED_LENGTH} hex characters)</label>
         <SecretInput
           value={seed}
           onChange={handleChange}

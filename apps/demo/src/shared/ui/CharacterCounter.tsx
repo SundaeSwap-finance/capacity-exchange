@@ -5,7 +5,7 @@ interface CharacterCounterProps {
 
 export function CharacterCounter({ current, max }: CharacterCounterProps) {
   return (
-    <div className="mt-1 text-xs text-dark-500">
+    <div className="mt-1 text-xs">
       {current}/{max} characters
     </div>
   );

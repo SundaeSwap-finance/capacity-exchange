@@ -21,7 +21,7 @@ function ExtensionWalletConnection({ wallet }: ExtensionWalletConnectionProps) {
         </div>
 
         {status === 'connecting' && (
-          <p className="text-sm text-dark-400">Please unlock your Lace wallet and approve the connection...</p>
+          <p className="text-sm">Please unlock your Lace wallet and approve the connection...</p>
         )}
 
         {status === 'error' && wallet.error && <Message variant="error">{wallet.error}</Message>}

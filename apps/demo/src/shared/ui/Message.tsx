@@ -34,7 +34,7 @@ interface MessageProps {
 export function Message({ variant, children, className = '' }: MessageProps) {
   const styles = variantStyles[variant];
   return (
-    <div className={`p-3 border rounded ${styles.container} ${className}`}>
+    <div className={`p-3 border rounded-sm ${styles.container} ${className}`}>
       <div className={`flex gap-2 text-sm ${styles.text}`}>
         <span>{styles.icon}</span>
         <div>{children}</div>

@@ -1,10 +1,8 @@
+@import 'tailwindcss';
+
 @import './fonts.css';
 @import './tokens.css';
 @import './theme.css';
 @import './tailwind.theme.css';
 @import './base.css';
 @import './animations.css';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

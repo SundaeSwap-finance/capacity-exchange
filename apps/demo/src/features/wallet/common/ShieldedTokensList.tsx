@@ -14,14 +14,14 @@ export function ShieldedTokensList({ balances }: ShieldedTokensListProps) {
 
   return (
     <div className="space-y-2">
-      <span className="text-dark-500 text-sm">Shielded Tokens</span>
+      <span className="block text-sm">Shielded Tokens</span>
       <div className="space-y-1">
         {entries.map(([tokenType, balance]) => (
-          <div key={tokenType} className="flex justify-between items-center bg-dark-800 rounded px-3 py-2">
-            <span className="font-mono text-xs text-dark-400" title={tokenType}>
+          <div key={tokenType} className="flex justify-between items-center rounded-sm px-3 py-2">
+            <span className="font-mono text-xs" title={tokenType}>
               {tokenType ? truncateMiddle(tokenType) : 'NIGHT'}
             </span>
-            <span className="text-dark-200 text-sm">{balance.toLocaleString()}</span>
+            <span className="text-sm">{balance.toLocaleString()}</span>
           </div>
         ))}
       </div>

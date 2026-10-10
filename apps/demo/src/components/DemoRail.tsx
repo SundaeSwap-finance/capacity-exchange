@@ -44,7 +44,7 @@ export function DemoRail({ content, entries }: DemoRailProps) {
           {entries.map((entry) => (
             <div
               key={entry.id}
-              className="grid grid-cols-[48px,34px,minmax(0,1fr)] gap-2 font-mono text-[9px] leading-[1.5]"
+              className="grid grid-cols-[48px_34px_minmax(0,1fr)] gap-2 font-mono text-[9px] leading-[1.5]"
             >
               <span
                 className={`${
@@ -72,7 +72,7 @@ export function DemoRail({ content, entries }: DemoRailProps) {
               >
                 {entry.source}
               </span>
-              <span className="text-ces-text/88">
+              <span>
                 [{levelLabel(entry.level)}] {entry.message}
               </span>
             </div>

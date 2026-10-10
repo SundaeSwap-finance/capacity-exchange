@@ -1,20 +1,20 @@
-/* Tailwind v3 theme bridge.
-   tailwind.config.js reads these variables to keep utility classes semantic. */
+/* Tailwind theme bridge.
+   Maps the semantic design tokens onto Tailwind utilities (bg-ces-*, font-display, ...). */
 
-:root {
-  --tw-ces-void: var(--ces-color-void);
-  --tw-ces-surface: var(--ces-color-surface);
-  --tw-ces-surface-solid: var(--ces-color-surface-solid);
-  --tw-ces-surface-raised: var(--ces-color-surface-raised);
-  --tw-ces-text: var(--ces-color-text);
-  --tw-ces-text-muted: var(--ces-color-text-muted);
-  --tw-ces-accent: var(--ces-color-accent);
-  --tw-ces-accent-hover: var(--ces-color-accent-hover);
-  --tw-ces-gold: var(--ces-color-gold);
-  --tw-ces-danger: var(--ces-color-danger);
-  --tw-ces-border: var(--ces-color-border);
+@theme inline {
+  --color-ces-void: rgb(var(--ces-color-void));
+  --color-ces-surface: rgb(var(--ces-color-surface));
+  --color-ces-surface-solid: rgb(var(--ces-color-surface-solid));
+  --color-ces-surface-raised: rgb(var(--ces-color-surface-raised));
+  --color-ces-text: rgb(var(--ces-color-text));
+  --color-ces-text-muted: rgb(var(--ces-color-text-muted));
+  --color-ces-accent: rgb(var(--ces-color-accent));
+  --color-ces-accent-hover: rgb(var(--ces-color-accent-hover));
+  --color-ces-gold: rgb(var(--ces-color-gold));
+  --color-ces-danger: rgb(var(--ces-color-danger));
+  --color-ces-border: rgb(var(--ces-color-border));
 
-  --tw-ces-font-sans: var(--ces-font-sans);
-  --tw-ces-font-display: var(--ces-font-display);
-  --tw-ces-font-mono: var(--ces-font-mono);
+  --font-sans: var(--ces-font-sans);
+  --font-display: var(--ces-font-display);
+  --font-mono: var(--ces-font-mono);
 }

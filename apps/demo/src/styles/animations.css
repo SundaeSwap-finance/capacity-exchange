@@ -10,11 +10,13 @@
   }
 }
 
-.ces-input-pulse {
-  animation: ces-input-glow 2s ease-in-out infinite;
-  border: 1px solid;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
+@layer base {
+  .ces-input-pulse {
+    animation: ces-input-glow 2s ease-in-out infinite;
+    border: 1px solid;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+  }
 }
 
 @keyframes ces-fade-in {

@@ -13,10 +13,10 @@ export function BalanceGrid({ dustBalance, unshieldedBalances }: BalanceGridProp
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="bg-dark-800 px-3 py-2 rounded">
+      <div className="px-3 py-2 rounded-sm">
         <LabelValue label="DUST">{formatDust(dustBalance)}</LabelValue>
       </div>
-      <div className="bg-dark-800 px-3 py-2 rounded">
+      <div className="px-3 py-2 rounded-sm">
         <LabelValue label="NIGHT">{nightDisplay}</LabelValue>
       </div>
     </div>
