@@ -1,5 +1,19 @@
 # @sundaeswap/capacity-exchange-providers
 
+## 4.0.0
+
+### Major Changes
+
+- db38193: `ExchangeApi.apiPricesGet`, `ExchangeApi.apiOffersPost` and `ExchangeApi.apiSponsorPost` are renamed `apiMidnightPricesGet`, `apiMidnightOffersPost` and `apiMidnightSponsorPost`, and now call `/api/midnight/prices`, `/api/midnight/offers` and `/api/midnight/sponsor`. Use a server that serves those routes.
+
+### Patch Changes
+
+- Updated dependencies [db38193]
+- Updated dependencies [ddcd80c]
+- Updated dependencies [22ea004]
+  - @sundaeswap/capacity-exchange-client@2.0.0
+  - @sundaeswap/capacity-exchange-core@2.1.0
+
 ## 3.0.4
 
 ### Patch Changes
