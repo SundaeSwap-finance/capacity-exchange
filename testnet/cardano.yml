@@ -1,0 +1,64 @@
+name: cardano-devnet
+
+services:
+  genesis:
+    image: &node-image 'ghcr.io/input-output-hk/ouroboros-leios/cardano-node-testnet:rc-2026w41'
+    command: ['bash', '/keys/genesis.sh']
+    volumes:
+      - './cardano:/keys:ro'
+      - 'devnet:/devnet'
+
+  node:
+    image: *node-image
+    container_name: 'cardano-devnet-node'
+    working_dir: '/devnet'
+    command:
+      - 'cardano-node'
+      - 'run'
+      - '--config=config.json'
+      - '--topology=topology.json'
+      - '--database-path=db'
+      - '--socket-path=node.socket'
+      - '--host-addr=0.0.0.0'
+      - '--port=3001'
+      - '--shelley-kes-key=pools-keys/pool1/kes.skey'
+      - '--shelley-vrf-key=pools-keys/pool1/vrf.skey'
+      - '--shelley-operational-certificate=pools-keys/pool1/opcert.cert'
+      - '--byron-delegation-certificate=pools-keys/pool1/byron-delegation.cert'
+      - '--byron-signing-key=pools-keys/pool1/byron-delegate.key'
+    environment:
+      CARDANO_NODE_SOCKET_PATH: '/devnet/node.socket'
+      CARDANO_NODE_NETWORK_ID: '42'
+    volumes:
+      - 'devnet:/devnet'
+    healthcheck:
+      test: ['CMD-SHELL', 'cardano-cli query tip | jq -e ''.era == "Dijkstra" and .block > 0''']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    depends_on:
+      genesis:
+        condition: service_completed_successfully
+
+  dolos:
+    image: 'ghcr.io/sundaeswap-finance/dolos:leios-musashi-2026-10-12'
+    container_name: 'cardano-devnet-dolos'
+    command: ['-c', '/devnet/dolos/dolos.toml', 'daemon']
+    working_dir: '/devnet/dolos'
+    ports:
+      - '127.0.0.1:50051:50051'
+    volumes:
+      - 'devnet:/devnet'
+    healthcheck:
+      test: ['CMD', 'bash', '-c', '</dev/tcp/127.0.0.1/50051']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    depends_on:
+      node:
+        condition: service_healthy
+
+volumes:
+  devnet:

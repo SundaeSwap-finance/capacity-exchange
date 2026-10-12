@@ -75,6 +75,27 @@ jobs:
         if: always()
         run: cat apps/server/*_server.log 2>/dev/null || true
 
+  integ-cardano:
+    name: Integration tests (local Cardano devnet)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: go-task/setup-task@v2
+
+      - name: Start local Cardano devnet
+        uses: hoverkraft-tech/compose-action@v2
+        with:
+          compose-file: ./testnet/cardano.yml
+          up-flags: '--wait'
+
+      - name: Run Cardano integration tests
+        run: task test:integ:cardano
+      - name: Print devnet logs
+        if: failure()
+        run: docker compose -f testnet/cardano.yml logs --no-color --tail 200
+
   smoke:
     name: 'Smoke tests (${{ matrix.env }})'
     needs: build
