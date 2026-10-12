@@ -36,6 +36,21 @@ describe('resolveEndpoints capacityExchangeUrl', () => {
   });
 });
 
+describe('resolveEndpoints indexer overrides', () => {
+  const indexerHttpUrl = 'https://indexer.example/api/v0?project_id=abc';
+  const indexerWsUrl = 'wss://indexer.example/api/v0/ws?project_id=abc';
+
+  it('takes both URLs verbatim, query string included', () => {
+    const endpoints = resolveEndpoints(toNetworkIdEnum('preprod'), { indexerHttpUrl, indexerWsUrl });
+    expect(endpoints.indexerHttpUrl).toBe(indexerHttpUrl);
+    expect(endpoints.indexerWsUrl).toBe(indexerWsUrl);
+  });
+
+  it.each([{ indexerHttpUrl }, { indexerWsUrl }])('rejects only one of the pair in %j', (overrides) => {
+    expect(() => resolveEndpoints(toNetworkIdEnum('preprod'), overrides)).toThrow(/both the HTTP and the WS URL/);
+  });
+});
+
 describe('defaultCapacityExchangeUrls', () => {
   it.each([
     ['preview', ['https://capacity-exchange.preview.sundae.fi']],

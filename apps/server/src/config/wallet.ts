@@ -11,7 +11,7 @@ import {
 } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import { FileStateStore, loadWalletSeed } from '@sundaeswap/capacity-exchange-nodejs';
-import type { AppEnv } from './env.js';
+import { midnightEndpointOverrides, type AppEnv } from './env.js';
 import { readFileOrError } from './files.js';
 import { fetchSecret } from './secrets.js';
 
@@ -105,7 +105,7 @@ export async function createWalletResources(
   const saved = await walletStateStore.loadWalletState();
   const walletConnection = await createWallet({
     seedHex: walletSeed,
-    walletConfig: resolveWalletConfig(networkId, { proofServerUrl: env.MIDNIGHT_PROOF_SERVER_URL }),
+    walletConfig: resolveWalletConfig(networkId, midnightEndpointOverrides(env)),
     ...saved,
   });
 

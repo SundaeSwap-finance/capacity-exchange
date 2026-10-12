@@ -10,8 +10,19 @@ export interface NetworkConfig {
   capacityExchangeUrl: string;
 }
 
-export function resolveNetworkConfig({ networkId, capacityExchangeUrl, proofServerUrl }: AppConfig): NetworkConfig {
-  const endpoints = resolveEndpoints(toNetworkIdEnum(networkId), { capacityExchangeUrl, proofServerUrl });
+export function resolveNetworkConfig({
+  networkId,
+  capacityExchangeUrl,
+  proofServerUrl,
+  indexerUrl,
+  indexerWsUrl,
+}: AppConfig): NetworkConfig {
+  const endpoints = resolveEndpoints(toNetworkIdEnum(networkId), {
+    capacityExchangeUrl,
+    proofServerUrl,
+    indexerHttpUrl: indexerUrl,
+    indexerWsUrl,
+  });
   if (!endpoints.capacityExchangeUrl) {
     throw new Error(
       `No capacity exchange configured for '${networkId}'. Set CAPACITY_EXCHANGE_URL for the dev server.`

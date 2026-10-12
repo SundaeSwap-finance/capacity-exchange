@@ -16,6 +16,8 @@ describe('parseAppConfig', () => {
       networkId: 'undeployed',
       capacityExchangeUrl: 'http://localhost:3000',
       proofServerUrl: 'http://127.0.0.1:6300',
+      indexerUrl: 'http://localhost:8088/api/v3/graphql',
+      indexerWsUrl: 'ws://localhost:8088/api/v3/graphql/ws',
       mockDemo: true,
     };
     expect(parseAppConfig(config)).toEqual(config);
@@ -25,6 +27,13 @@ describe('parseAppConfig', () => {
     'rejects a malformed url in %j',
     (override) => {
       expect(() => parseAppConfig({ networkId: 'preview', ...override })).toThrow(/Must be a URL/);
+    }
+  );
+
+  it.each([{ indexerUrl: 'https://indexer.example' }, { indexerWsUrl: 'wss://indexer.example' }])(
+    'rejects only one indexer URL in %j',
+    (override) => {
+      expect(() => parseAppConfig({ networkId: 'preview', ...override })).toThrow(/both indexerUrl and indexerWsUrl/);
     }
   );
 

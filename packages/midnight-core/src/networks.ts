@@ -89,6 +89,10 @@ export function resolveEndpoints(
   if (!proofServerUrl) {
     throw new Error(`No proof server configured for '${networkId}'. Set PROOF_SERVER_URL in your .env file.`);
   }
+  // The HTTP and WS endpoints must be the same indexer, so one alone is a misconfiguration.
+  if ((overrides.indexerHttpUrl === undefined) !== (overrides.indexerWsUrl === undefined)) {
+    throw new Error(`Indexer overrides for '${networkId}' must set both the HTTP and the WS URL, or neither.`);
+  }
   return {
     nodeUrl: overrides.nodeUrl ?? defaults.nodeUrl,
     proofServerUrl,

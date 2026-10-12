@@ -14,11 +14,13 @@ function devAppConfig() {
     name: 'dev-app-config',
     apply: 'serve',
     transformIndexHtml(html) {
-      const { CAPACITY_EXCHANGE_URL, PROOF_SERVER_URL, MOCK_DEMO_MODE } = process.env;
+      const { CAPACITY_EXCHANGE_URL, PROOF_SERVER_URL, INDEXER_URL, INDEXER_WS_URL, MOCK_DEMO_MODE } = process.env;
       return fillAppConfig(html, {
         networkId: requireEnvVar(process.env, 'NETWORK_ID'),
         ...(CAPACITY_EXCHANGE_URL && { capacityExchangeUrl: CAPACITY_EXCHANGE_URL }),
         ...(PROOF_SERVER_URL && { proofServerUrl: PROOF_SERVER_URL }),
+        ...(INDEXER_URL && { indexerUrl: INDEXER_URL }),
+        ...(INDEXER_WS_URL && { indexerWsUrl: INDEXER_WS_URL }),
         ...(MOCK_DEMO_MODE === 'true' && { mockDemo: true }),
       });
     },

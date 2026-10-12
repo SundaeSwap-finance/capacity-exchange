@@ -162,13 +162,58 @@ describe('interpolate-index.ts', () => {
   it.each([
     ['a network id flag with no value', (d: string) => ['--dist', d, '--network-id']],
     ['a dist flag with no value', (d: string) => ['--network-id', 'preview', '--dist', d, '--dist']],
-    ['an unknown flag', (d: string) => ['--network-id', 'preview', '--dist', d, '--config', 'x.json']],
+    ['a config flag with no value', (d: string) => ['--network-id', 'preview', '--dist', d, '--config']],
+    ['an unknown flag', (d: string) => ['--network-id', 'preview', '--dist', d, '--bogus', 'x.json']],
   ])('rejects %s and leaves the page untouched', (_label, args) => {
     const laid = dist();
     const r = spawnSync(SCRIPT, args(laid.dist), { encoding: 'utf-8' });
     expect(r.status).not.toBe(0);
     expect(r.stderr).toMatch(/error: (unknown option|option .* argument missing)/);
     expect(readFileSync(laid.indexPath, 'utf-8')).toContain('@@APP_CONFIG@@');
+  });
+
+  describe('--config', () => {
+    const indexer = {
+      indexerUrl: 'https://midnight-preprod.blockfrost.io/api/v0?project_id=abc',
+      indexerWsUrl: 'wss://midnight-preprod.blockfrost.io/api/v0/ws?project_id=abc',
+    };
+
+    /** Writes `contents` as the overrides file and runs the script with it. */
+    function runWithConfig(contents: string, networkId = 'preprod'): Run {
+      const laid = dist();
+      const configPath = join(laid.dist, '..', 'config.json');
+      writeFileSync(configPath, contents);
+      const r = spawnSync(SCRIPT, ['--network-id', networkId, '--dist', laid.dist, '--config', configPath], {
+        encoding: 'utf-8',
+      });
+      return {
+        status: r.status ?? -1,
+        stderr: r.stderr,
+        index: readFileSync(laid.indexPath, 'utf-8'),
+        indexPath: laid.indexPath,
+        dist: laid.dist,
+      };
+    }
+
+    it('inlines the overrides beside the network id, query strings intact', () => {
+      const r = runWithConfig(JSON.stringify(indexer));
+      expect(r.status).toBe(0);
+      expect(inlined(r.index)).toEqual({ networkId: 'preprod', ...indexer });
+    });
+
+    it.each([
+      ['only one indexer URL', JSON.stringify({ indexerUrl: indexer.indexerUrl }), /both indexerUrl and indexerWsUrl/],
+      ['a malformed URL', JSON.stringify({ proofServerUrl: 'not a url' }), /Must be a URL/],
+      ['a misspelt key', JSON.stringify({ ...indexer, indexerURL: 'https://x' }), /unknown keys: indexerURL/],
+      ['a second network id', JSON.stringify({ networkId: 'mainnet' }), /must not set networkId/],
+      ['a JSON array', '[]', /must hold a JSON object/],
+      ['invalid JSON', '{', /cannot read config file/],
+    ])('rejects %s and leaves the page untouched', (_label, contents, message) => {
+      const r = runWithConfig(contents);
+      expect(r.status).not.toBe(0);
+      expect(r.stderr).toMatch(message);
+      expect(r.index).toContain('@@APP_CONFIG@@');
+    });
   });
 
   // Reads the accepted set out of the CLI and holds the cases above to it.

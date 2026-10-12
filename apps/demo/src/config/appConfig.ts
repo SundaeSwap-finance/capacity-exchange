@@ -1,13 +1,17 @@
 import { SUPPORTED_NETWORK_IDS } from '@sundaeswap/capacity-exchange-core';
 
-/** The runtime config index.html carries. A deploy fills only the network id, via
- * scripts/interpolate-index.ts; the dev server may also fill the overrides. */
+/** The runtime config index.html carries, filled at deploy by scripts/interpolate-index.ts
+ * or by the dev server. Only the network id is required; the rest override its defaults. */
 export interface AppConfig {
   networkId: string;
   /** Replaces the network's default capacity exchange. */
   capacityExchangeUrl?: string;
   /** Replaces the network's default proof server. */
   proofServerUrl?: string;
+  /** Replaces the network's default indexer. Set together with indexerWsUrl. */
+  indexerUrl?: string;
+  /** Replaces the network's default indexer subscriptions. Set together with indexerUrl. */
+  indexerWsUrl?: string;
   /** Starts the mocked demo flow, as ?mockDemo=1 does. */
   mockDemo?: boolean;
 }
@@ -45,10 +49,17 @@ export function parseAppConfig(raw: unknown): AppConfig {
   if (mockDemo !== undefined && typeof mockDemo !== 'boolean') {
     throw new Error(`Invalid mockDemo ${JSON.stringify(mockDemo)} in app config. Must be a boolean.`);
   }
+  const indexerUrl = optionalUrl(fields, 'indexerUrl');
+  const indexerWsUrl = optionalUrl(fields, 'indexerWsUrl');
+  if ((indexerUrl === undefined) !== (indexerWsUrl === undefined)) {
+    throw new Error('App config must set both indexerUrl and indexerWsUrl, or neither.');
+  }
   return {
     networkId,
     capacityExchangeUrl: optionalUrl(fields, 'capacityExchangeUrl'),
     proofServerUrl: optionalUrl(fields, 'proofServerUrl'),
+    indexerUrl,
+    indexerWsUrl,
     mockDemo,
   };
 }

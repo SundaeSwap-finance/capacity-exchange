@@ -60,13 +60,15 @@ Run `task --list` to see all tasks. Key ones:
 
 All network-aware tasks require `NETWORK_ID=<network>` (e.g., `preview`, `undeployed`).
 
-A demo build is network-agnostic: `dist/index.html` carries an `@@APP_CONFIG@@` placeholder, and every URL comes from the network's defaults in `packages/midnight-core/src/networks.ts`. Fill it for a network before serving the bundle:
+A demo build is network-agnostic: `dist/index.html` carries an `@@APP_CONFIG@@` placeholder, and every URL defaults to the network's entry in `packages/midnight-core/src/networks.ts`. Fill it for a network before serving the bundle:
 
 ```bash
 bun run --filter @capacity-exchange/demo interpolate-index --network-id preview
 ```
 
-The dev server fills the placeholder itself, from `NETWORK_ID` and the optional `CAPACITY_EXCHANGE_URL`, `PROOF_SERVER_URL` and `MOCK_DEMO_MODE` (see `apps/demo/.env.example`). So `PROOF_SERVER_URL` configures the server and the webapp alike.
+To override defaults, pass `--config <file>` with a JSON object of `capacityExchangeUrl`, `proofServerUrl`, `indexerUrl` and `indexerWsUrl`. Set the two indexer URLs together; query strings such as a Blockfrost `project_id` are kept as given.
+
+The dev server fills the placeholder itself, from `NETWORK_ID` and the optional `CAPACITY_EXCHANGE_URL`, `PROOF_SERVER_URL`, `INDEXER_URL`, `INDEXER_WS_URL` and `MOCK_DEMO_MODE` (see `apps/demo/.env.example`). Under `task dev`, `PROOF_SERVER_URL`, `INDEXER_URL` and `INDEXER_WS_URL` configure the server and the webapp alike, since the Taskfile passes them to the server with a `MIDNIGHT_` prefix.
 
 ## Project Structure
 
