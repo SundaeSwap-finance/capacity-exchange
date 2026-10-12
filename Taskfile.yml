@@ -213,6 +213,19 @@ tasks:
     cmds:
       - bun run --filter '*' test:integ
 
+  test:integ:cardano:
+    desc: Run Cardano integration tests against local Cardano devnet
+    deps: [_build:install]
+    preconditions:
+      - sh: bash -c '</dev/tcp/127.0.0.1/50051'
+        msg: Dolos is not running on port 50051. Start it with docker compose -f testnet/cardano.yml up -d --wait
+    env:
+      UTXORPC_LIVE_TEST_URL: 'http://127.0.0.1:50051'
+      UTXORPC_LIVE_TEST_ADDRESS:
+        sh: cat {{.ROOT_DIR}}/testnet/cardano/funded.addr.hex
+    cmds:
+      - bun run --filter '*' test:integ:cardano
+
   check:
     desc: Lint and format check
     deps: [_build:install]
