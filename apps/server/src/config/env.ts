@@ -1,5 +1,6 @@
 import { Value } from '@sinclair/typebox/value';
 import { Type, type Static } from '@sinclair/typebox';
+import type { NetworkEndpoints } from '@sundaeswap/capacity-exchange-core';
 
 const AppEnvSchema = Type.Object({
   // Required only if `priceFormulas.DUST` is configured; see loadConfig.ts.
@@ -15,6 +16,9 @@ const AppEnvSchema = Type.Object({
   QUOTE_SECRET_FILE: Type.String(),
   OFFER_TTL_SECONDS: Type.Number(),
   MIDNIGHT_PROOF_SERVER_URL: Type.Optional(Type.String()),
+  // Set both or neither; see resolveEndpoints.
+  MIDNIGHT_INDEXER_URL: Type.Optional(Type.String()),
+  MIDNIGHT_INDEXER_WS_URL: Type.Optional(Type.String()),
   // Required only if `priceFormulas.DUST` is configured; see loadConfig.ts.
   MIDNIGHT_WALLET_STATE_DIR: Type.Optional(Type.String()),
   OTEL_SERVICE_NAME: Type.Optional(Type.String()),
@@ -28,6 +32,16 @@ const AppEnvSchema = Type.Object({
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
+
+/** The Midnight endpoints the env replaces, for resolveEndpoints. Shared so the server's
+ * endpoints and its wallet's cannot point at different services. */
+export function midnightEndpointOverrides(env: AppEnv): Partial<NetworkEndpoints> {
+  return {
+    proofServerUrl: env.MIDNIGHT_PROOF_SERVER_URL,
+    indexerHttpUrl: env.MIDNIGHT_INDEXER_URL,
+    indexerWsUrl: env.MIDNIGHT_INDEXER_WS_URL,
+  };
+}
 
 /** Parse and validate app env vars from process.env. */
 export function parseAppEnv(): AppEnv {
@@ -48,6 +62,8 @@ export function parseAppEnv(): AppEnv {
       ? Number(process.env.OFFER_TTL_SECONDS)
       : undefined,
     MIDNIGHT_PROOF_SERVER_URL: process.env.MIDNIGHT_PROOF_SERVER_URL,
+    MIDNIGHT_INDEXER_URL: process.env.MIDNIGHT_INDEXER_URL,
+    MIDNIGHT_INDEXER_WS_URL: process.env.MIDNIGHT_INDEXER_WS_URL,
     MIDNIGHT_WALLET_STATE_DIR: process.env.MIDNIGHT_WALLET_STATE_DIR,
     CAPACITY_EXCHANGE_PEER_URLS: process.env.CAPACITY_EXCHANGE_PEER_URLS,
     CARDANO_BLOCKFROST_API_KEY: process.env.CARDANO_BLOCKFROST_API_KEY,

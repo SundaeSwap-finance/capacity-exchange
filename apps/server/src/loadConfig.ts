@@ -15,7 +15,7 @@ import {
   type PeerConfig,
   type SponsoredContract,
 } from './config/prices.js';
-import { parseAppEnv } from './config/env.js';
+import { midnightEndpointOverrides, parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
 
@@ -79,9 +79,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   let midnight: MidnightConfig | undefined;
   if (dustPriced && env.MIDNIGHT_NETWORK) {
     const networkId = toNetworkIdEnum(env.MIDNIGHT_NETWORK);
-    const endpoints = resolveEndpoints(networkId, {
-      proofServerUrl: env.MIDNIGHT_PROOF_SERVER_URL,
-    });
+    const endpoints = resolveEndpoints(networkId, midnightEndpointOverrides(env));
     const wallet = await createWalletResources(env, networkId, logger);
     midnight = { networkId, endpoints, ...wallet };
   }
