@@ -19,6 +19,7 @@
   "dependencies": {
     "@noble/curves": "^2.3.0",
     "@noble/hashes": "^2.3.0",
+    "@sundaeswap/capacity-exchange-cardano-tx": "workspace:^",
     "@sundaeswap/capacity-exchange-client": "workspace:^",
     "cbor2": "^2.3.0",
     "commander": "^14.0.3"

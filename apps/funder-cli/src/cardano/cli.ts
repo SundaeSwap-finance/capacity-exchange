@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Config } from '../config.js';
 import { requireSocket } from '../config.js';
-import { emptyValue, type Value } from './value.js';
+import { emptyValue, type Value } from '@sundaeswap/capacity-exchange-cardano-tx';
 
 /** The era whose commands we use. Nested transactions are a Dijkstra feature. */
 const ERA = 'dijkstra';

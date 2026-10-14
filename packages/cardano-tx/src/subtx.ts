@@ -2,8 +2,8 @@ import { blake2b } from '@noble/hashes/blake2.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { decode, encode, getEncoded } from 'cbor2';
 import { readFileSync } from 'node:fs';
-import type { Value } from '../cardano/value.js';
-import { subValue, sumValues } from '../cardano/value.js';
+import type { Value } from './value.js';
+import { subValue, sumValues } from './value.js';
 import {
   asArray,
   asSet,

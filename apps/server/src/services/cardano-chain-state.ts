@@ -7,6 +7,10 @@ import type { ChainHealth, ChainStatus } from '../models/health.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;
+// Each reconnect that fails in a row doubles the delay up to this cap. A source
+// that keeps serving the streams a client gave up on gets slower with every
+// retry, so retrying at a fixed rate feeds the stall it is waiting out.
+const MAX_RECONNECT_DELAY_MS = 60_000;
 // Blocks arrive every ~20 s on average (active slot coefficient 0.05, 1 s
 // slots), so a tip this old means the source has stopped keeping up.
 const MAX_TIP_AGE_MS = 5 * 60_000;
@@ -19,8 +23,9 @@ const TRACKED_BLOCKS = MAX_ROLLBACK_DEPTH + 1;
 // back while the stream was down.
 const INTERSECT_POINTS = 10;
 // Dolos opens every FollowTip stream with a reset, so silence this long after
-// connecting means the connection was accepted but is not being served.
-const FIRST_MESSAGE_TIMEOUT_MS = 15_000;
+// connecting means the connection was accepted but is not being served. A
+// Dolos busy applying a large endorser block can take tens of seconds.
+const FIRST_MESSAGE_TIMEOUT_MS = 60_000;
 // Pings catch a dead connection; this catches a stream the source stops serving
 // on a live one.
 const STREAM_IDLE_TIMEOUT_MS = MAX_TIP_AGE_MS;
@@ -129,6 +134,7 @@ export class CardanoChainStateService implements ChainHealth {
 
   private async follow(): Promise<void> {
     const stopped = this.abort.signal;
+    let failures = 0;
     while (!stopped.aborted) {
       const attempt = new AbortController();
       const stopAttempt = () => attempt.abort();
@@ -154,6 +160,7 @@ export class CardanoChainStateService implements ChainHealth {
         );
         for await (const response of stream) {
           expectMessageWithin(STREAM_IDLE_TIMEOUT_MS, 'FollowTip stream went silent');
+          failures = 0;
           this.streamError = null;
           this.onAction(response.action);
           if (this.rollbackDepth > MAX_ROLLBACK_DEPTH) {
@@ -179,7 +186,11 @@ export class CardanoChainStateService implements ChainHealth {
           { err, reason: this.streamError },
           'CardanoChainStateService lost the FollowTip stream; reconnecting',
         );
-        await pause(RECONNECT_DELAY_MS, stopped);
+        failures += 1;
+        await pause(
+          Math.min(RECONNECT_DELAY_MS * 2 ** (failures - 1), MAX_RECONNECT_DELAY_MS),
+          stopped,
+        );
       } finally {
         clearTimeout(watchdog);
         stopped.removeEventListener('abort', stopAttempt);

@@ -1,7 +1,7 @@
 /**
- * The offer protocol, after CIP-0198's HTTPS binding. The server has no such route yet, so
- * this is the shape the real client speaks and the stand-in exchange reports in. CIP-0198
- * names the states and rejection codes but not their wire spelling; kebab-case is ours.
+ * The offer protocol, after CIP-0198's HTTPS binding: the shape the client speaks to the
+ * server's `/api/cardano/offers`, and the stand-in exchange reports in. CIP-0198 names the
+ * states and rejection codes but not their wire spelling; kebab-case is ours.
  */
 
 /** Where the route will live. Offer routes are prefixed by the chain the capacity is for. */
@@ -15,32 +15,13 @@ export const OFFERS_PATH = '/api/cardano/offers';
 export type OfferState =
   'received' | 'verified' | 'included-in-batch' | 'submitted' | 'rejected' | 'confirmed' | 'expired' | 'invalidated';
 
-/** CIP-0198's closed set of refusal reasons. */
-export type RejectionCode =
-  | 'malformed'
-  | 'unsupported-version'
-  | 'not-interested'
-  | 'over-budget'
-  | 'duplicate'
-  | 'settled'
-  | 'expired'
-  | 'invalidated'
-  | 'superseded'
-  | 'busy'
-  | 'not-ready';
+import type { RejectionCode } from '@sundaeswap/capacity-exchange-cardano-tx';
+
+export { OfferRejected, type RejectionCode } from '@sundaeswap/capacity-exchange-cardano-tx';
 
 export interface Rejection {
   code: RejectionCode;
   message: string;
-}
-
-export class OfferRejected extends Error {
-  constructor(
-    readonly code: RejectionCode,
-    message: string
-  ) {
-    super(`${code}: ${message}`);
-  }
 }
 
 /** `POST {OFFERS_PATH}`. CIP-0198 has a firm quote travel alongside the envelope. */

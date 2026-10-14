@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "capacity-exchange-sdk",
@@ -144,6 +143,7 @@
       "dependencies": {
         "@noble/curves": "^2.3.0",
         "@noble/hashes": "^2.3.0",
+        "@sundaeswap/capacity-exchange-cardano-tx": "workspace:^",
         "@sundaeswap/capacity-exchange-client": "workspace:^",
         "cbor2": "^2.3.0",
         "commander": "^14.0.3",
@@ -178,6 +178,7 @@
         "@opentelemetry/sdk-node": "^0.222.0",
         "@opentelemetry/semantic-conventions": "^1.43.0",
         "@sinclair/typebox": "^0.34.47",
+        "@sundaeswap/capacity-exchange-cardano-tx": "workspace:^",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
         "@sundaeswap/capacity-exchange-providers": "workspace:^",
@@ -265,6 +266,20 @@
       "devDependencies": {
         "@types/node": "^25.5.2",
         "typescript": "^5.9.3",
+      },
+    },
+    "packages/cardano-tx": {
+      "name": "@sundaeswap/capacity-exchange-cardano-tx",
+      "version": "0.1.0",
+      "dependencies": {
+        "@noble/curves": "^2.3.0",
+        "@noble/hashes": "^2.3.0",
+        "cbor2": "^2.3.0",
+      },
+      "devDependencies": {
+        "@types/node": "22.10.7",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18",
       },
     },
     "packages/client": {
@@ -1119,6 +1134,8 @@
     "@substrate/light-client-extension-helpers": ["@substrate/light-client-extension-helpers@1.0.0", "", { "dependencies": { "@polkadot-api/json-rpc-provider": "^0.0.1", "@polkadot-api/json-rpc-provider-proxy": "^0.1.0", "@polkadot-api/observable-client": "^0.3.0", "@polkadot-api/substrate-client": "^0.1.2", "@substrate/connect-extension-protocol": "^2.0.0", "@substrate/connect-known-chains": "^1.1.5", "rxjs": "^7.8.1" }, "peerDependencies": { "smoldot": "2.x" } }, "sha512-TdKlni1mBBZptOaeVrKnusMg/UBpWUORNDv5fdCaJklP4RJiFOzBCrzC+CyVI5kQzsXBisZ+2pXm+rIjS38kHg=="],
 
     "@substrate/ss58-registry": ["@substrate/ss58-registry@1.51.0", "", {}, "sha512-TWDurLiPxndFgKjVavCniytBIw+t4ViOi7TYp9h/D0NMmkEc9klFTo+827eyEJ0lELpqO207Ey7uGxUa+BS1jQ=="],
+
+    "@sundaeswap/capacity-exchange-cardano-tx": ["@sundaeswap/capacity-exchange-cardano-tx@workspace:packages/cardano-tx"],
 
     "@sundaeswap/capacity-exchange-client": ["@sundaeswap/capacity-exchange-client@workspace:packages/client"],
 
@@ -2460,6 +2477,8 @@
 
     "@scure/sr25519/@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
 
+    "@sundaeswap/capacity-exchange-cardano-tx/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
+
     "@sundaeswap/capacity-exchange-coupler/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
 
     "@sundaeswap/capacity-exchange-registry/@types/node": ["@types/node@22.10.7", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg=="],
@@ -2613,6 +2632,8 @@
     "@openapitools/openapi-generator-cli/concurrently/yargs": ["yargs@18.0.0", "", { "dependencies": { "cliui": "^9.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "string-width": "^7.2.0", "y18n": "^5.0.5", "yargs-parser": "^22.0.0" } }, "sha512-4UEqdc2RYGHZc7Doyqkrqiln3p9X2DZVxaGbwhn2pi7MrRagKaOcIKe8L3OxYcbhXLgLFUS3zAYuQjKBQgmuNg=="],
 
     "@polkadot/x-fetch/node-fetch/data-uri-to-buffer": ["data-uri-to-buffer@4.0.1", "", {}, "sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A=="],
+
+    "@sundaeswap/capacity-exchange-cardano-tx/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 
     "@sundaeswap/capacity-exchange-coupler/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
 

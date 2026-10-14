@@ -1,6 +1,6 @@
 import { decode, encode, Tag, type Writer } from 'cbor2';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { emptyValue, type Value } from '../cardano/value.js';
+import { emptyValue, type Value } from './value.js';
 
 /** Transaction body map keys we touch. See eras/dijkstra/impl/cddl/data/dijkstra.cddl. */
 export const BODY_INPUTS = 0;
@@ -11,8 +11,8 @@ export const BODY_REFERENCE_INPUTS = 18;
 export const BODY_SUB_TRANSACTIONS = 23;
 
 /**
- * Body keys the stand-in exchange refuses in an offer, per `sub_transaction_body` in
- * eras/dijkstra/impl/cddl/data/dijkstra.cddl. It only carries offers that move value, and
+ * Body keys `receiveOffer` refuses in an offer, per `sub_transaction_body` in
+ * eras/dijkstra/impl/cddl/data/dijkstra.cddl. A service only carries offers that move value, and
  * derives each offer's imbalance from inputs and outputs alone, so anything else that moves
  * value would be mispriced. Donation (22) and direct deposits (25) matter most: both move
  * lovelace where `computeBalance` cannot see it. The validity interval (3, 8) is allowed on

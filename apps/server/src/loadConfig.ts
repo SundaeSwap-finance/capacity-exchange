@@ -47,6 +47,8 @@ export interface AppConfig {
   blockfrostBaseUrl?: string;
   cardanoServerAddress?: string;
   cardanoUtxorpcUrl?: string;
+  /** A cardano-cli payment signing key; with `cardanoUtxorpcUrl`, it enables Cardano offers. */
+  cardanoWalletSkeyFile?: string;
 }
 
 export interface ServerBootstrap {
@@ -103,6 +105,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     blockfrostBaseUrl: env.CARDANO_BLOCKFROST_BASE_URL,
     cardanoServerAddress: env.CARDANO_SERVER_ADDRESS,
     cardanoUtxorpcUrl: env.CARDANO_UTXORPC_URL,
+    cardanoWalletSkeyFile: env.CARDANO_WALLET_SKEY_FILE,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
       ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
           .map((u) => u.trim())
