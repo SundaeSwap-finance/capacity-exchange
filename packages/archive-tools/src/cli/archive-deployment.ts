@@ -6,7 +6,7 @@ import { createLogger, runCli } from '@sundaeswap/capacity-exchange-nodejs';
 import { S3Store } from '../aws/s3-store.js';
 import { toDeployRecord, type ContractDeployRecord, type DeploymentInput } from '../deployments.js';
 import { verifyArchiveExists } from '../archive-reads.js';
-import { writePointer, writeRecord, type WritePointerResult, type WriteRecordResult } from '../deployment-writes.js';
+import { writeRecord, type WriteRecordResult } from '../deployment-writes.js';
 
 const logger = createLogger(import.meta);
 
@@ -22,10 +22,12 @@ export interface ArchiveDeploymentResult {
   contract: string;
   record: ContractDeployRecord;
   recordWrite: WriteRecordResult;
-  pointerWrite: WritePointerResult;
 }
 
-/** Verifies the (sha, contract) archive exists, writes the immutable deploy record, then advances the pointer. */
+/**
+ * Verifies the (sha, contract) archive exists, then writes the immutable deploy record. The
+ * pointer, and so what's live, is moved separately with point-deployment.
+ */
 export async function archiveDeployment(opts: ArchiveDeploymentOpts): Promise<ArchiveDeploymentResult> {
   const record = toDeployRecord(opts.input, opts.network);
   logger.info({ network: opts.network, contract: opts.contract, record }, 'archiving deploy record');
@@ -43,16 +45,7 @@ export async function archiveDeployment(opts: ArchiveDeploymentOpts): Promise<Ar
   }
   logger.info({ key: recordWrite.key, status: recordWrite.status }, 'record write done');
 
-  const pointerWrite = await writePointer(store, opts.contract, {
-    address: record.address,
-    sha: record.sha,
-  });
-  logger.info(
-    { key: pointerWrite.key, status: pointerWrite.status, current: pointerWrite.newCurrent },
-    'pointer write done'
-  );
-
-  return { network: opts.network, contract: opts.contract, record, recordWrite, pointerWrite };
+  return { network: opts.network, contract: opts.contract, record, recordWrite };
 }
 
 interface CliOpts {
@@ -70,7 +63,7 @@ function parseArgs(argv: string[]): CliOpts {
   const program = new Command();
   program
     .name('archive-deployment')
-    .description('Write an immutable S3 record of a contract deploy plus update the per-contract pointer.')
+    .description('Write an immutable S3 record of a contract deploy. Use point-deployment to make it live.')
     .requiredOption('--network <id>', 'Network identifier')
     .requiredOption('--contract <name>', 'Contract name in kebab-case')
     .requiredOption('--bucket <name>', 'Destination s3 bucket')

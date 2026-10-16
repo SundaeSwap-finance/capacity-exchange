@@ -1,5 +1,6 @@
 export * from './archive.js';
 export * from './archive-reads.js';
+export * from './compiles.js';
 export * from './deployments.js';
 export * from './deployment-writes.js';
 export * from './git.js';
