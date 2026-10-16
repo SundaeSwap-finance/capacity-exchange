@@ -1,5 +1,12 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
+## 2.1.3
+
+### Patch Changes
+
+- Updated dependencies [db38193]
+  - @sundaeswap/capacity-exchange-providers@4.0.0
+
 ## 2.1.2
 
 ### Patch Changes
