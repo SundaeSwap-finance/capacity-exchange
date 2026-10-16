@@ -3,36 +3,39 @@
 import { Command } from 'commander';
 import { createLogger, runCli } from '@sundaeswap/capacity-exchange-nodejs';
 import { S3Store } from '../aws/s3-store.js';
-import { loadCurrentDeployRecord } from '../archive-reads.js';
+import { loadDeployRecordAt } from '../archive-reads.js';
+import { readContractCompiles } from '../compiles.js';
 import { CONTRACT_NAMES, type ContractDeployRecord, type DeployedContracts } from '../deployments.js';
 
 const logger = createLogger(import.meta);
 
 interface CliOpts {
   bucket: string;
+  compiles: string;
 }
 
 function parseArgs(argv: string[]): CliOpts {
   const program = new Command();
   program
     .name('derive-deployed-contracts')
-    .description("Assemble the per-network contract address bundle from the state bucket's deploy records.")
-    .requiredOption('--bucket <name>', 'Source s3 bucket');
+    .description("Assemble the per-network contract address bundle from the env's deploys of the pinned compiles.")
+    .requiredOption('--bucket <name>', 'Source s3 bucket')
+    .requiredOption('--compiles <file>', 'Pin file naming the compile sha per contract (contract-compiles.json)');
   program.parse(argv);
   return program.opts<CliOpts>();
 }
 
 async function main(): Promise<DeployedContracts> {
   const cli = parseArgs(process.argv);
+  const compiles = readContractCompiles(cli.compiles);
   const store = new S3Store({ bucket: cli.bucket });
 
-  // Load each contract's current deploy record in parallel. Each lookup is two reads:
-  // (1) read deployments/<contract>.json to get the current sha and address,
-  // (2) read archive/<sha>/<contract>/deploys/<address>.json to get the record itself.
+  // The pinned compile decides which deploy each contract uses, not the pointer, so a
+  // deploy goes live together with the code that pins it.
   const records = Object.fromEntries(
     await Promise.all(
       CONTRACT_NAMES.map(async (c) => {
-        const record = await loadCurrentDeployRecord(store, c);
+        const record = await loadDeployRecordAt(store, c, compiles[c]);
         logger.info(
           { contract: c, sha: record.sha, address: record.address, network: record.network },
           'loaded deploy record'

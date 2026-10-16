@@ -9,8 +9,10 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
+    "test": "vitest run",
     "archive-write": "bun src/cli/archive-write.ts",
-    "archive-deployment": "bun src/cli/archive-deployment.ts"
+    "archive-deployment": "bun src/cli/archive-deployment.ts",
+    "point-deployment": "bun src/cli/point-deployment.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1051.0",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
