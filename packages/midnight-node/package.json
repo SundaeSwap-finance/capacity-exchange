@@ -9,6 +9,7 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
+    "!dist/tsconfig.tsbuildinfo",
     "LICENSE.md"
   ],
   "exports": {
@@ -18,8 +19,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "tsc -b",
+    "build:watch": "tsc -b --watch",
     "clean": "rm -rf dist",
     "balances": "bun src/cli/balances.ts",
     "split-night": "bun src/cli/split-night.ts"

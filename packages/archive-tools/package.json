@@ -8,7 +8,7 @@
     "./read": "./src/read.ts"
   },
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc -b",
     "test": "vitest run",
     "archive-write": "bun src/cli/archive-write.ts",
     "archive-deployment": "bun src/cli/archive-deployment.ts",

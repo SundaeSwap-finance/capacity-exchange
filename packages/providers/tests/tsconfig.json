@@ -8,7 +8,11 @@
     "rootDir": "..",
     "paths": {
       "@/*": ["../src/*"]
-    }
+    },
+    "noEmit": true,
+    "composite": false,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
-  "include": ["./**/*.ts", "../src/**/*.ts"]
+  "include": ["./**/*.ts", "../src/**/*.ts"],
+  "references": [{ "path": "../../midnight-core" }, { "path": "../../client" }, { "path": "../../registry" }]
 }

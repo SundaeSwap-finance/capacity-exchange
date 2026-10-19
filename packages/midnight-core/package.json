@@ -18,14 +18,15 @@
   },
   "files": [
     "dist",
+    "!dist/tsconfig.tsbuildinfo",
     "LICENSE.md"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "tsc -b",
+    "build:watch": "tsc -b --watch",
     "clean": "rm -rf dist",
     "test": "vitest run",
     "publish:prod": "bun publish --tolerate-republish"

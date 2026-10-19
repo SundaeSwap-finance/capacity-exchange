@@ -12,8 +12,11 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "composite": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/zkir", "**/keys"]
+  "exclude": ["node_modules", "dist", "**/zkir", "**/keys"],
+  "references": [{ "path": "../midnight-core" }, { "path": "../midnight-node" }, { "path": "../registry" }]
 }

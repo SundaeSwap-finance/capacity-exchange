@@ -10,7 +10,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "nodenext"
+    "moduleResolution": "nodenext",
+    "composite": true,
+    "tsBuildInfoFile": "./generated/dist/tsconfig.tsbuildinfo"
   },
   "include": ["generated/**/*.ts"],
   "exclude": ["node_modules", "generated/dist"]

@@ -101,7 +101,6 @@ tasks:
       - task: compile-contracts
       - task: _demo:copy-zk-assets
       - task: _build:webapp
-      - task: _build:server
       - task: deploy
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
@@ -111,15 +110,15 @@ tasks:
 
   dev:demo:
     desc: Start server and demo webapp with hot-reload
-    deps: [require-proof-server-url, _demo:require-deployed, _demo:require-demo-price-config, _build:libs]
+    deps: [require-proof-server-url, _demo:require-deployed, _demo:require-demo-price-config, _build:typescript]
     cmds:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,providers,server,webapp,dashboard
-          COLORS: blue,cyan,magenta,green,yellow,red
+          WATCH: packages/midnight-node packages/providers
+          NAMES: libs,server,webapp,dashboard
+          COLORS: blue,green,yellow,red
           EXTRA: >-
-            "bun run --filter @sundaeswap/capacity-exchange-providers build:watch"
             "env ${PROOF_SERVER_URL:+MIDNIGHT_PROOF_SERVER_URL=$PROOF_SERVER_URL} ${INDEXER_URL:+MIDNIGHT_INDEXER_URL=$INDEXER_URL} ${INDEXER_WS_URL:+MIDNIGHT_INDEXER_WS_URL=$INDEXER_WS_URL} bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/demo dev"
             "bun run --filter @capacity-exchange/dashboard dev"
@@ -133,8 +132,9 @@ tasks:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,server,dashboard
-          COLORS: blue,cyan,green,red
+          WATCH: packages/midnight-node
+          NAMES: libs,server,dashboard
+          COLORS: blue,green,red
           EXTRA: >-
             "env ${PROOF_SERVER_URL:+MIDNIGHT_PROOF_SERVER_URL=$PROOF_SERVER_URL} ${INDEXER_URL:+MIDNIGHT_INDEXER_URL=$INDEXER_URL} ${INDEXER_WS_URL:+MIDNIGHT_INDEXER_WS_URL=$INDEXER_WS_URL} bun run --filter @capacity-exchange/server dev"
             "bun run --filter @capacity-exchange/dashboard dev"
@@ -143,15 +143,15 @@ tasks:
 
   dev:webapp:
     desc: Start the demo webapp with hot-reload
-    deps: [_demo:require-deployed, _build:providers]
+    deps: [_demo:require-deployed, _build:typescript]
     cmds:
       - task: _dev:run
         vars:
           NETWORK_ID: '{{.NETWORK_ID}}'
-          NAMES: core,node,providers,webapp
-          COLORS: blue,cyan,magenta,yellow
+          WATCH: packages/midnight-node packages/providers
+          NAMES: libs,webapp
+          COLORS: blue,yellow
           EXTRA: >-
-            "bun run --filter @sundaeswap/capacity-exchange-providers build:watch"
             "bun run --filter @capacity-exchange/demo dev"
     requires:
       vars: [NETWORK_ID]
@@ -164,11 +164,12 @@ tasks:
       NETWORK_ID: '{{.NETWORK_ID}}'
       CAPACITY_EXCHANGE_URL: 'http://localhost:3000'
     cmds:
+      # One watcher for all library projects: separate `tsc -b --watch` processes would
+      # each rebuild shared dependencies like core.
       - >-
         bunx concurrently --kill-others
         -n {{.NAMES}} -c {{.COLORS}}
-        "bun run --filter @sundaeswap/capacity-exchange-core build:watch"
-        "bun run --filter @sundaeswap/capacity-exchange-nodejs build:watch"
+        "bun run tsc -b --watch --preserveWatchOutput {{.WATCH}}"
         {{.EXTRA}}
 
   build:demo:
@@ -178,31 +179,29 @@ tasks:
       - task: _demo:copy-zk-assets
       - task: _demo:copy-configs
       - task: _build:webapp
-      - task: _build:server
-      - task: _build:typecheck-demo-contracts
     requires:
       vars: [NETWORK_ID]
 
   build:libs:
-    desc: Build all library packages (core, node, providers, react-sdk)
+    desc: Build and typecheck all TypeScript packages and apps (compiles contracts first)
     cmds:
-      - task: _build:libs
+      - task: _build:typescript
 
   build-all:
-    desc: Typecheck all TypeScript packages (compiles contracts first)
+    desc: Build and typecheck everything, including the demo webapp (compiles contracts first)
     cmds:
       - task: compile-contracts
       - task: _build:build-all
 
   test:
     desc: Run tests
-    deps: [_build:libs, compile-contracts]
+    deps: [_build:typescript]
     cmds:
       - bun run --if-present --filter '*' test
 
   test:integ:
     desc: Run integration tests against local devnet
-    deps: [_build:libs]
+    deps: [_build:typescript]
     preconditions:
       - sh: curl -sSf http://localhost:8088/ready
         msg: Indexer is not running on port 8088.
@@ -245,7 +244,7 @@ tasks:
 
   check-client:
     desc: Check that the client has the latest schema from the server
-    deps: [_build:install, _build:server]
+    deps: [_build:typescript]
     cmds:
       - bun run check-client
 
@@ -257,7 +256,7 @@ tasks:
 
   regenerate-client:
     desc: Regenerate client with latest schema from server
-    deps: [_build:install, _build:server]
+    deps: [_build:typescript]
     cmds:
       - bun run regenerate-client
 
