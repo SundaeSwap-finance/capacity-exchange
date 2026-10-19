@@ -20,6 +20,8 @@
   "references": [
     { "path": "../../packages/midnight-core" },
     { "path": "../../packages/midnight-node" },
-    { "path": "../../packages/providers" }
+    { "path": "../../packages/providers" },
+    { "path": "../../packages/client" },
+    { "path": "../../packages/registry" }
   ]
 }

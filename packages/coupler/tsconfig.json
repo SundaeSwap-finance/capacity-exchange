@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "noEmit": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "target": "ES2022",
     "module": "nodenext",
     "lib": ["ES2022"],
@@ -13,9 +14,7 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
-    "incremental": true,
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    "rootDir": "."
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "out"],

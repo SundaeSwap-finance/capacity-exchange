@@ -11,9 +11,7 @@
     "allowSyntheticDefaultImports": true,
     "noEmit": true,
     "rootDir": ".",
-    "customConditions": ["bun"],
-    "incremental": true,
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    "customConditions": ["bun"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

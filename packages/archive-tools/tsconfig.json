@@ -11,9 +11,7 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "noEmit": true,
-    "rootDir": "src",
-    "incremental": true,
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    "rootDir": "src"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"],
