@@ -9,8 +9,7 @@
   },
   "scripts": {
     "dev": "bun --watch src/server.ts",
-    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-core' build && bun run --filter '@sundaeswap/capacity-exchange-nodejs' build && bun run --filter '@sundaeswap/capacity-exchange-providers' build",
-    "build": "tsc",
+    "build": "tsc -b",
     "start": "bun dist/server.js",
     "format": "prettier --write .",
     "check-format": "prettier --check .",

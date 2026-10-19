@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "target": "ES2022",
     "module": "nodenext",
     "lib": ["ES2022"],
@@ -12,8 +13,11 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "out"]
+  "exclude": ["node_modules", "dist", "out"],
+  "references": [{ "path": "../midnight-core" }, { "path": "../providers" }]
 }

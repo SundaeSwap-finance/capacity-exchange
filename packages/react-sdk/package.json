@@ -14,8 +14,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "prebuild": "bun run --filter '@sundaeswap/capacity-exchange-providers' build",
-    "build": "tsc",
+    "build": "tsc -b",
     "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {

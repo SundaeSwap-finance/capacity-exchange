@@ -13,81 +13,34 @@ tasks:
 
   compile-contracts:
     run: once
+    deps: [install]
     cmds:
       - bun run compile
 
-  # --- Package build graph ---
+  # --- TypeScript ---
+  # The package graph lives in tsconfig project references (see tsconfig.build.json), so
+  # these tasks only sequence non-TypeScript prerequisites. Don't run separate `tsc -b`
+  # invocations in parallel: they would rebuild shared dependencies concurrently.
 
-  midnight-core:
-    deps: [install]
+  typescript:
+    run: once
+    deps: [install, compile-contracts]
     cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-core build
+      - bun run build
 
+  # Narrow target for tasks that only need the node runtime and shouldn't compile contracts.
   midnight-node:
-    deps: [midnight-core]
+    run: once
+    deps: [install]
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-nodejs build
 
-  client:
-    deps: [install]
-    cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-client build
-
-  libs:
-    deps: [react-sdk, registry-node, coupler]
-
-  registry:
-    deps: [compile-contracts]
-    cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-registry build
-
-  registry-node:
-    deps: [midnight-node, registry]
-    cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-registry-nodejs build
-
-  coupler:
-    deps: [providers, compile-contracts]
-    cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-coupler build
-
-  providers:
-    deps: [client, registry]
-    cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-providers build
-
-  react-sdk:
-    deps: [providers]
-    cmds:
-      - bun run --filter @sundaeswap/capacity-exchange-react-sdk build
-
-  server:
-    deps: [providers]
-    cmds:
-      - bun run --filter @capacity-exchange/server build
-
   # Network-agnostic: the bundle's network is filled in at deploy by the demo's interpolate-index.
   webapp:
-    deps: [libs]
+    deps: [typescript]
     cmds:
       - bun run --filter @capacity-exchange/demo build
 
-  # --- Typecheck ---
-
-  typecheck-demo-contracts:
-    deps: [providers]
-    cmds:
-      - bun run --filter @capacity-exchange/demo-contracts build
-
-  # The e2e app is not built or published, but it is the only in-repo consumer of the
-  # coupler and of the providers testing seam, so nothing else catches a break in either.
-  typecheck-coupler-cli:
-    deps: [coupler]
-    cmds:
-      - bunx tsc --noEmit -p apps/coupler-cli/tsconfig.json
-
-  # TODO: Also typecheck test directories (packages/*/tests)
   build-all:
-    deps: [libs, server, typecheck-demo-contracts, typecheck-coupler-cli]
     cmds:
       - task: webapp
