@@ -16,7 +16,7 @@
     "compile:counter": "bunx run-compactc counter/counter.compact counter/out",
     "compile:token-mint": "bunx run-compactc token-mint/vault.compact token-mint/out",
     "compile": "bun run compile:counter && bun run compile:token-mint",
-    "build": "tsc --noEmit",
+    "build": "tsc -b",
     "counter:e2e": "bun src/counter/cli/e2e.ts",
     "counter:deploy": "bun src/counter/cli/deploy.ts",
     "counter:increment": "bun src/counter/cli/increment.ts",

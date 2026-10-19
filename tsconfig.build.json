@@ -1,0 +1,23 @@
+// Solution config: `tsc -b tsconfig.build.json` builds and typechecks every TypeScript
+// project in dependency order, in one process. Per-package `references` define the graph.
+// TODO: Also typecheck the remaining test directories (packages/*/tests)
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/midnight-core" },
+    { "path": "./packages/client" },
+    { "path": "./packages/midnight-node" },
+    { "path": "./packages/registry" },
+    { "path": "./packages/registry-node" },
+    { "path": "./packages/providers" },
+    { "path": "./packages/providers/tests" },
+    { "path": "./packages/react-sdk" },
+    { "path": "./packages/coupler" },
+    { "path": "./packages/archive-tools" },
+    { "path": "./apps/server" },
+    { "path": "./apps/demo/contracts" },
+    // Not built or published, but the only in-repo consumer of the coupler and of the
+    // providers testing seam, so nothing else catches a break in either.
+    { "path": "./apps/coupler-cli" }
+  ]
+}

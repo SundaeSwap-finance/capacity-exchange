@@ -6,6 +6,7 @@
   "type": "module",
   "files": [
     "dist",
+    "!dist/tsconfig.tsbuildinfo",
     "LICENSE.md"
   ],
   "exports": {
@@ -15,7 +16,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "generate-secret": "bun src/cli/generate-secret-key.ts",
     "deploy": "bun src/cli/deploy.ts",
     "register": "bun src/cli/register.ts",

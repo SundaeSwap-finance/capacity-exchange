@@ -9,6 +9,7 @@
   "types": "generated/dist/index.d.ts",
   "files": [
     "generated",
+    "!generated/dist/tsconfig.tsbuildinfo",
     "LICENSE.md"
   ],
   "publishConfig": {
@@ -21,9 +22,9 @@
     }
   },
   "scripts": {
-    "clean": "rm -rf generated/dist generated/tsconfig.tsbuildinfo",
+    "clean": "rm -rf generated/dist",
     "regenerate-client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated --additional-properties=supportsES6=true,importFileExtension=.js",
-    "build": "tsc",
+    "build": "tsc -b",
     "publish:prod": "bun publish --tolerate-republish"
   },
   "dependencies": {
