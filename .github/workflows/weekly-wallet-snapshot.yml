@@ -42,15 +42,45 @@ jobs:
         run: task build:libs
 
       # Resumes from the files already committed in apps/demo/public/wallet-snapshots
-      # (unless --force-fresh is set). continue-on-error so a single failing
-      # network still lets the successfully-updated snapshots be PR'd.
-      - name: Update wallet snapshots
-        id: update
+      # (unless --force-fresh is set). One step per network so each can point at
+      # its own indexer via the <NETWORK>_INDEXER_URL / _WS_URL repository
+      # variables (unset falls back to the network default). continue-on-error so a
+      # single failing network still lets the successfully-updated snapshots be PR'd.
+      - name: Update preview wallet snapshot
+        id: update-preview
         continue-on-error: true
+        env:
+          INDEXER_URL: ${{ vars.PREVIEW_INDEXER_URL }}
+          INDEXER_WS_URL: ${{ vars.PREVIEW_INDEXER_WS_URL }}
         run: |
           bun scripts/update-wallet-snapshots.ts \
             --out-dir apps/demo/public/wallet-snapshots \
-            ${{ inputs.force_fresh && '--force-fresh' || '' }}
+            ${{ inputs.force_fresh && '--force-fresh' || '' }} \
+            preview
+
+      - name: Update preprod wallet snapshot
+        id: update-preprod
+        continue-on-error: true
+        env:
+          INDEXER_URL: ${{ vars.PREPROD_INDEXER_URL }}
+          INDEXER_WS_URL: ${{ vars.PREPROD_INDEXER_WS_URL }}
+        run: |
+          bun scripts/update-wallet-snapshots.ts \
+            --out-dir apps/demo/public/wallet-snapshots \
+            ${{ inputs.force_fresh && '--force-fresh' || '' }} \
+            preprod
+
+      - name: Update mainnet wallet snapshot
+        id: update-mainnet
+        continue-on-error: true
+        env:
+          INDEXER_URL: ${{ vars.MAINNET_INDEXER_URL }}
+          INDEXER_WS_URL: ${{ vars.MAINNET_INDEXER_WS_URL }}
+        run: |
+          bun scripts/update-wallet-snapshots.ts \
+            --out-dir apps/demo/public/wallet-snapshots \
+            ${{ inputs.force_fresh && '--force-fresh' || '' }} \
+            mainnet
 
       # Uses the default GITHUB_TOKEN (no secrets to set up). Note: PRs opened
       # with GITHUB_TOKEN do NOT trigger the CI workflow — to run CI on this PR,
@@ -74,7 +104,7 @@ jobs:
       # Surface a partial/total failure of the sync itself, after the PR for any
       # successful networks has been opened.
       - name: Fail if snapshot sync failed
-        if: steps.update.outcome == 'failure'
+        if: steps.update-preview.outcome == 'failure' || steps.update-preprod.outcome == 'failure' || steps.update-mainnet.outcome == 'failure'
         run: |
-          echo "::error::update-wallet-snapshots.ts reported failures; check the 'Update wallet snapshots' step."
+          echo "::error::update-wallet-snapshots.ts reported failures; check the 'Update <network> wallet snapshot' steps."
           exit 1
