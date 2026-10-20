@@ -1,5 +1,17 @@
 # @sundaeswap/capacity-exchange-coupler
 
+## 0.2.5
+
+### Patch Changes
+
+- 5bffa0a: Use TypeScript project references when building the monorepo
+- Updated dependencies [db38193]
+- Updated dependencies [bc18b1a]
+- Updated dependencies [22ea004]
+- Updated dependencies [5bffa0a]
+  - @sundaeswap/capacity-exchange-providers@4.0.0
+  - @sundaeswap/capacity-exchange-core@2.1.0
+
 ## 0.2.4
 
 ### Patch Changes

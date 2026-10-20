@@ -1,5 +1,16 @@
 # @sundaeswap/capacity-exchange-core
 
+## 2.1.0
+
+### Minor Changes
+
+- 22ea004: Support "inert" DUST wallets which contain no DUST and do no work. Useful for demos or tests.
+
+### Patch Changes
+
+- bc18b1a: Assert that a consumer overriding one midnight indexer URL also overrides the other.
+- 5bffa0a: Use TypeScript project references when building the monorepo
+
 ## 2.0.0
 
 ### Major Changes

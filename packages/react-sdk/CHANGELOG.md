@@ -1,5 +1,14 @@
 # @sundaeswap/capacity-exchange-react-sdk
 
+## 2.1.3
+
+### Patch Changes
+
+- 5bffa0a: Use TypeScript project references when building the monorepo
+- Updated dependencies [db38193]
+- Updated dependencies [5bffa0a]
+  - @sundaeswap/capacity-exchange-providers@4.0.0
+
 ## 2.1.2
 
 ### Patch Changes
