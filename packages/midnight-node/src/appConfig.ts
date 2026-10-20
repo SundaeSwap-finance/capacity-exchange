@@ -45,7 +45,13 @@ export function resolveEnv(): Env {
 
 export function buildNetworkConfig(networkName: string, env: Env): NetworkConfig {
   const networkId = toNetworkIdEnum(networkName);
-  const endpoints = resolveEndpoints(networkId, { proofServerUrl: env.PROOF_SERVER_URL, nodeUrl: env.NODE_URL });
+  // `|| undefined` so an empty var (e.g. an unset GitHub Actions variable) falls back to the default.
+  const endpoints = resolveEndpoints(networkId, {
+    proofServerUrl: env.PROOF_SERVER_URL,
+    nodeUrl: env.NODE_URL,
+    indexerHttpUrl: env.INDEXER_URL || undefined,
+    indexerWsUrl: env.INDEXER_WS_URL || undefined,
+  });
   return { networkName, networkId, endpoints };
 }
 
