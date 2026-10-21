@@ -1,5 +1,23 @@
 # @sundaeswap/capacity-exchange-providers
 
+## 4.0.0
+
+### Major Changes
+
+- db38193: `ExchangeApi.apiPricesGet`, `ExchangeApi.apiOffersPost` and `ExchangeApi.apiSponsorPost` are renamed `apiMidnightPricesGet`, `apiMidnightOffersPost` and `apiMidnightSponsorPost`, and now call `/api/midnight/prices`, `/api/midnight/offers` and `/api/midnight/sponsor`. Use a server that serves those routes.
+
+### Patch Changes
+
+- 5bffa0a: Use TypeScript project references when building the monorepo
+- Updated dependencies [db38193]
+- Updated dependencies [bc18b1a]
+- Updated dependencies [ddcd80c]
+- Updated dependencies [22ea004]
+- Updated dependencies [5bffa0a]
+  - @sundaeswap/capacity-exchange-client@2.0.0
+  - @sundaeswap/capacity-exchange-core@2.1.0
+  - @sundaeswap/capacity-exchange-registry@3.0.2
+
 ## 3.0.4
 
 ### Patch Changes
