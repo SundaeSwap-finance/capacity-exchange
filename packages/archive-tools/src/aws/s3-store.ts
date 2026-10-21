@@ -18,6 +18,28 @@ function isAwsError(err: unknown, ...names: string[]): boolean {
   return n !== undefined && names.includes(n);
 }
 
+// A GetObject body can stall without erroring, and the SDK's retries end once the
+// response headers arrive. So each read gets its own deadline and retries.
+const GET_ATTEMPTS = 3;
+const GET_TIMEOUT_MS = 60_000;
+
+/** Runs `op` with an abort signal, rejecting if it hasn't settled within `ms`. */
+async function withDeadline<T>(ms: number, what: string, op: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`${what} timed out after ${ms}ms`));
+    }, ms);
+  });
+  try {
+    return await Promise.race([op(controller.signal), deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Thin wrapper around `S3Client` with the bucket name baked in. Pure S3 IO; no fs. */
 export class S3Store {
   private client: S3Client;
@@ -62,19 +84,29 @@ export class S3Store {
   /**
    * GetObject with a caller-supplied body transformer. Returns null when the key is
    * absent, propagates any other SDK error. All single-key reads route through here.
+   * Retries a read that misses its deadline, body included.
    */
   private async get<T>(
     key: string,
     transform: (body: NonNullable<GetObjectCommandOutput['Body']>) => Promise<T>
   ): Promise<T | null> {
-    try {
-      const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
-      return await transform(res.Body!);
-    } catch (err) {
-      if (isAwsError(err, 'NoSuchKey')) {
-        return null;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await withDeadline(GET_TIMEOUT_MS, `s3 get '${key}'`, async (abortSignal) => {
+          const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }), {
+            abortSignal,
+          });
+          return await transform(res.Body!);
+        });
+      } catch (err) {
+        if (isAwsError(err, 'NoSuchKey')) {
+          return null;
+        }
+        const timedOut = err instanceof Error && err.message.endsWith(`timed out after ${GET_TIMEOUT_MS}ms`);
+        if (!timedOut || attempt >= GET_ATTEMPTS) {
+          throw err;
+        }
       }
-      throw err;
     }
   }
 

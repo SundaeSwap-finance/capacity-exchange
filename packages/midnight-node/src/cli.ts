@@ -50,6 +50,13 @@ export interface RunCliOptions {
 export function runCli<T>(main: () => Promise<T>, options: RunCliOptions = {}): void {
   const { pretty = false } = options;
 
+  // The event loop can drain while main is still pending, e.g. when a stream stalls
+  // without erroring. Without this the process would exit 0 with its work half done.
+  process.once('beforeExit', () => {
+    console.error(JSON.stringify({ error: 'exited before main settled: a pending operation never completed' }));
+    process.exit(1);
+  });
+
   main().then(
     (result) => {
       const output = pretty ? JSON.stringify(result, null, 2) : JSON.stringify(result);
