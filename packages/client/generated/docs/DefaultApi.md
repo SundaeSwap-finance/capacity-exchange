@@ -19,7 +19,7 @@ All URIs are relative to *http://localhost*
 
 ## apiCardanoOffersPost
 
-> ApiCardanoOffersPost202Response apiCardanoOffersPost()
+> ApiCardanoOffersPost202Response apiCardanoOffersPost(body)
 
 
 
@@ -36,8 +36,13 @@ async function example() {
   console.log("🚀 Testing  SDK...");
   const api = new DefaultApi();
 
+  const body = {
+    // Blob | CBOR-encoded offer envelope
+    body: BINARY_DATA_HERE,
+  } satisfies ApiCardanoOffersPostRequest;
+
   try {
-    const data = await api.apiCardanoOffersPost();
+    const data = await api.apiCardanoOffersPost(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -50,7 +55,10 @@ example().catch(console.error);
 
 ### Parameters
 
-This endpoint does not need any parameter.
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **body** | `Blob` | CBOR-encoded offer envelope | |
 
 ### Return type
 
@@ -62,7 +70,7 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: Not defined
+- **Content-Type**: `application/cbor`
 - **Accept**: `application/json`
 
 

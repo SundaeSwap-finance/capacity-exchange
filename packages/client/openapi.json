@@ -1344,6 +1344,19 @@
     },
     "/api/cardano/offers": {
       "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/cbor": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "description": "CBOR-encoded offer envelope"
+              }
+            }
+          },
+          "description": "CBOR-encoded offer envelope"
+        },
         "responses": {
           "202": {
             "description": "Default Response",

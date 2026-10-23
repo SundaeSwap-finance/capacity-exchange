@@ -55,6 +55,10 @@ import {
     PricesResponseToJSON,
 } from '../models/index.js';
 
+export interface ApiCardanoOffersPostRequest {
+    body: Blob;
+}
+
 export interface ApiCardanoPricesGetRequest {
     amount: string;
 }
@@ -82,10 +86,19 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiCardanoOffersPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiCardanoOffersPost202Response>> {
+    async apiCardanoOffersPostRaw(requestParameters: ApiCardanoOffersPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiCardanoOffersPost202Response>> {
+        if (requestParameters['body'] == null) {
+            throw new runtime.RequiredError(
+                'body',
+                'Required parameter "body" was null or undefined when calling apiCardanoOffersPost().'
+            );
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/cbor';
 
 
         let urlPath = `/api/cardano/offers`;
@@ -95,6 +108,7 @@ export class DefaultApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: requestParameters['body'] as any,
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ApiCardanoOffersPost202ResponseFromJSON(jsonValue));
@@ -102,8 +116,8 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiCardanoOffersPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiCardanoOffersPost202Response> {
-        const response = await this.apiCardanoOffersPostRaw(initOverrides);
+    async apiCardanoOffersPost(requestParameters: ApiCardanoOffersPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiCardanoOffersPost202Response> {
+        const response = await this.apiCardanoOffersPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
