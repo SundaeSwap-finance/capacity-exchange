@@ -43,7 +43,6 @@
     "@midnight-ntwrk/ledger-v8": "8.1.0",
     "@scure/bip32": "2.0.1",
     "@scure/bip39": "^2.0.1",
-    "cbor2": "^2.0.1",
     "commander": "^14.0.2",
     "dotenv": "17.2.3"
   },

@@ -1,24 +1,18 @@
-import { encode } from 'cbor2';
+import { Serialization } from '@cardano-sdk/core';
+import type { Cardano } from '@cardano-sdk/core';
 import type { Value } from '../cardano/value.js';
 import { addValue, lovelaceValue, subValue, sumValues, valuesEqual } from '../cardano/value.js';
 import {
-  asArray,
-  asSet,
-  BODY_FEE,
-  BODY_INPUTS,
-  BODY_OUTPUTS,
-  BODY_REFERENCE_INPUTS,
-  BODY_SUB_TRANSACTIONS,
-  bytesToHex,
-  type DecodedTx,
-  decodeInput,
-  encodeInput,
-  encodeOutput,
-  RawCbor,
-  readInputs,
-  readOutputs,
+  cborSize,
+  encodeTx,
+  inputRef,
+  inputSet,
+  outputValue,
+  type Transaction,
+  type TransactionBody,
   type TxInput,
   type TxOutput,
+  withValue,
 } from './codec.js';
 import { minUtxoLovelace, type SubTransaction } from './subtx.js';
 
@@ -37,15 +31,19 @@ export type ResolveInput = (input: TxInput) => Value;
  * on its own is perfectly valid as long as the batch does.
  */
 export function computeBalance(
-  parentInputs: TxInput[],
-  parentOutputs: TxOutput[],
+  parentInputs: readonly TxInput[],
+  parentOutputs: readonly TxOutput[],
   subs: SubTransaction[],
   fee: bigint,
   resolve: ResolveInput
 ): Balance {
-  const consumed = sumValues([...parentInputs.map(resolve), ...subs.flatMap((sub) => sub.inputs.map(resolve))]);
+  const subBodies = subs.map((sub) => sub.body());
+  const consumed = sumValues([
+    ...parentInputs.map(resolve),
+    ...subBodies.flatMap((body) => body.inputs().values().map(resolve)),
+  ]);
   const produced = addValue(
-    sumValues([...parentOutputs.map((o) => o.value), ...subs.flatMap((s) => s.outputs.map((o) => o.value))]),
+    sumValues([...parentOutputs, ...subBodies.flatMap((body) => body.outputs())].map(outputValue)),
     lovelaceValue(fee)
   );
   return { consumed, produced, fee, balances: valuesEqual(consumed, produced) };
@@ -59,12 +57,12 @@ export function computeBalance(
 export function deductPrice(
   outputs: TxOutput[],
   price: Map<string, bigint>,
-  callerAddress: Uint8Array
+  callerAddress: Cardano.Address
 ): { outputs: TxOutput[]; index: number } {
-  const caller = bytesToHex(callerAddress);
+  const caller = callerAddress.toBytes();
   const covers = (output: TxOutput): boolean =>
-    [...price].every(([unit, qty]) => (output.value.assets.get(unit) ?? 0n) >= qty);
-  const index = outputs.findLastIndex((output) => bytesToHex(output.address) === caller && covers(output));
+    [...price].every(([unit, qty]) => (outputValue(output).assets.get(unit) ?? 0n) >= qty);
+  const index = outputs.findLastIndex((output) => output.address().toBytes() === caller && covers(output));
   if (index < 0) {
     const elsewhere = outputs.some(covers);
     throw new Error(
@@ -75,7 +73,7 @@ export function deductPrice(
     );
   }
   const updated = outputs.map((output, i) =>
-    i === index ? { ...output, value: subValue(output.value, { lovelace: 0n, assets: price }) } : output
+    i === index ? withValue(output, subValue(outputValue(output), { lovelace: 0n, assets: price })) : output
   );
   return { outputs: updated, index };
 }
@@ -115,12 +113,12 @@ export function offerFee(subTxBytes: number, txFeeFixed: bigint, txFeePerByte: b
  * parent also consuming them -- which is what happens if they are added as spend inputs, since
  * sub-transactions are processed first and the parent then double-spends.
  */
-export function declareSubTransactionInputs(parent: DecodedTx, subs: SubTransaction[]): TxInput[] {
-  const existing = asArray(parent.body.get(BODY_REFERENCE_INPUTS)).map(decodeInput);
-  const seen = new Set(existing.map((i) => `${i.txHash}#${i.index}`));
+export function declareSubTransactionInputs(body: TransactionBody, subs: SubTransaction[]): TxInput[] {
+  const existing = body.referenceInputs()?.values() ?? [];
+  const seen = new Set(existing.map(inputRef));
   const added: TxInput[] = [];
-  for (const input of subs.flatMap((s) => s.inputs)) {
-    const ref = `${input.txHash}#${input.index}`;
+  for (const input of subs.flatMap((s) => s.body().inputs().values())) {
+    const ref = inputRef(input);
     if (seen.has(ref)) {
       continue;
     }
@@ -130,7 +128,7 @@ export function declareSubTransactionInputs(parent: DecodedTx, subs: SubTransact
   const all = [...existing, ...added];
   // `reference_inputs` is a nonempty_set, so only write the key when there is something in it.
   if (all.length > 0) {
-    parent.body.set(BODY_REFERENCE_INPUTS, asSet(all.map(encodeInput)));
+    body.setReferenceInputs(inputSet(all));
   }
   return added;
 }
@@ -140,7 +138,7 @@ export interface AssembleParams {
    * The exchange's own draft: its inputs, and a change output that already absorbs the tokens
    * the offers pay and gives up the lovelace they need, all at a fee of zero.
    */
-  draft: DecodedTx;
+  draft: Transaction;
   /** Which draft output is the exchange's change, so the fee can come out of it. */
   changeIndex: number;
   subs: SubTransaction[];
@@ -153,7 +151,7 @@ export interface AssembleParams {
 }
 
 export interface AssembleResult {
-  parent: DecodedTx;
+  parent: Transaction;
   fee: bigint;
   balance: Balance;
   signedSizeBytes: number;
@@ -172,36 +170,42 @@ export function assembleBatch(params: AssembleParams): AssembleResult {
   if (subs.length === 0) {
     throw new Error('A batch needs at least one offer');
   }
-  const offerIds = subs.map((s) => s.bodyHash);
+  const offerIds = subs.map((s) => s.getId());
   if (new Set(offerIds).size !== offerIds.length) {
     throw new Error('The same offer appears twice in one batch');
   }
-  const spent = subs.flatMap((s) => s.inputs.map((i) => `${i.txHash}#${i.index}`));
+  const spent = subs.flatMap((s) => s.body().inputs().values().map(inputRef));
   if (new Set(spent).size !== spent.length) {
     throw new Error('Two offers spend the same input, which the ledger rejects for the whole batch');
   }
 
-  const parent = draft;
-  parent.body.set(BODY_SUB_TRANSACTIONS, asSet(subs.map((s) => new RawCbor(s.bytes))));
-  const declaredReferenceInputs = declareSubTransactionInputs(parent, subs);
+  const body = draft.body();
+  // Each sub-transaction keeps the bytes it was parsed from, so this writes them verbatim.
+  const subTransactions = Serialization.CborSet.fromCore([], Serialization.SubTransaction.fromCore);
+  subTransactions.setValues(subs);
+  body.setSubTransactions(subTransactions);
+  const declaredReferenceInputs = declareSubTransactionInputs(body, subs);
 
-  const parentInputs = readInputs(parent.body, BODY_INPUTS);
-  const draftOutputs = readOutputs(parent.body, BODY_OUTPUTS);
+  const parent = new Serialization.Transaction(body, draft.witnessSet(), draft.auxiliaryData());
+  const parentInputs = body.inputs().values();
+  const draftOutputs = body.outputs();
   const change = draftOutputs[changeIndex];
   if (!change) {
     throw new Error(`Draft has no output #${changeIndex} to take the fee from`);
   }
+  const changeValue = outputValue(change);
 
   let fee = 0n;
   let outputs = draftOutputs;
   let signedSizeBytes = 0;
   for (let pass = 0; pass < 5; pass++) {
     outputs = draftOutputs.map((o, i) =>
-      i === changeIndex ? { ...o, value: { ...o.value, lovelace: change.value.lovelace - fee } } : o
+      i === changeIndex ? withValue(o, { ...changeValue, lovelace: changeValue.lovelace - fee }) : o
     );
-    parent.body.set(BODY_OUTPUTS, outputs.map(encodeOutput));
-    parent.body.set(BODY_FEE, fee);
-    signedSizeBytes = encode(parent.items).length + vkeyWitnessBytes(witnessCount);
+    body.setOutputs(outputs);
+    body.setFee(fee);
+    parent.setBody(body);
+    signedSizeBytes = cborSize(encodeTx(parent)) + vkeyWitnessBytes(witnessCount);
     const next = minFeeFor(signedSizeBytes, txFeeFixed, txFeePerByte);
     if (next === fee) {
       break;
@@ -213,10 +217,11 @@ export function assembleBatch(params: AssembleParams): AssembleResult {
   }
 
   const changeOut = outputs[changeIndex];
+  const changeLovelace = outputValue(changeOut).lovelace;
   const minChange = minUtxoLovelace(changeOut, utxoCostPerByte);
-  if (changeOut.value.lovelace < minChange) {
+  if (changeLovelace < minChange) {
     throw new Error(
-      `Exchange change of ${changeOut.value.lovelace} lovelace is below its ${minChange} lovelace minimum ` +
+      `Exchange change of ${changeLovelace} lovelace is below its ${minChange} lovelace minimum ` +
         'once the offers and the fee are paid for; it needs a larger UTxO to fund this batch.'
     );
   }

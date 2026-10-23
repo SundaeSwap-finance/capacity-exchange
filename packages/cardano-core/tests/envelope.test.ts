@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { DIJKSTRA_ERA_TAG, ENVELOPE_VERSION_TAG, parseEnvelope, SubTransaction } from '../src';
+import { DIJKSTRA_ERA_TAG, ENVELOPE_VERSION_TAG, parseEnvelope, serializeEnvelope, SubTransaction } from '../src';
 import { Serialization } from '@cardano-sdk/core';
+import { HexBlob } from '@cardano-sdk/util';
 
 describe('parseEnvelope', () => {
   function emptySubTxBytes(): Uint8Array {
@@ -111,5 +112,48 @@ describe('parseEnvelope', () => {
     const envelope = writeEnvelope({ subTxBytes: emptySubTxBytes() });
     const parseResult = parseEnvelope(new Uint8Array([...envelope, 0x00]));
     expect(parseResult).toEqual({ status: 'malformed', reason: 'unexpected trailing data' });
+  });
+});
+
+describe('serializeEnvelope', () => {
+  function emptySubTx(): SubTransaction {
+    return SubTransaction.fromCore({
+      body: {
+        inputs: [],
+        outputs: [],
+      },
+      witness: {
+        signatures: new Map(),
+      },
+    });
+  }
+
+  it('should write [version, era, #6.24(subtx)]', () => {
+    const subTx = emptySubTx();
+    const envelope = Buffer.from(serializeEnvelope(subTx)).toString('hex');
+    // 83 = array(3), 01 = version, 07 = era, d818 = tag 24
+    expect(envelope.startsWith('830107d818')).toBe(true);
+    expect(envelope.endsWith(subTx.toCbor())).toBe(true);
+  });
+
+  it('should round trip through parseEnvelope', () => {
+    const subTx = emptySubTx();
+    const parseResult = parseEnvelope(serializeEnvelope(subTx));
+    expect(parseResult.status).toBe('ok');
+    if (parseResult.status === 'ok') {
+      expect(parseResult.value.toCbor()).toBe(subTx.toCbor());
+      expect(parseResult.value.getId()).toBe(subTx.getId());
+    }
+  });
+
+  it('should carry a parsed subtx verbatim, even when it is not canonically encoded', () => {
+    // The body map {0: [], 1: []}, with key 0 written in two bytes (18 00) rather than one.
+    const nonCanonical = '83' + 'a2180080' + '0180' + 'a0' + 'f6';
+    const subTx = SubTransaction.fromCbor(HexBlob(nonCanonical));
+    const parseResult = parseEnvelope(serializeEnvelope(subTx));
+    expect(parseResult.status).toBe('ok');
+    if (parseResult.status === 'ok') {
+      expect(parseResult.value.toCbor()).toBe(nonCanonical);
+    }
   });
 });

@@ -15,7 +15,11 @@ export class CardanoOfferService {
     if (parseResult.status !== 'ok') {
       return parseResult;
     }
+    const subTx = parseResult.value;
 
-    throw new Error('todo');
+    // TODO: actually save the offer
+
+    const offerId = subTx.getId();
+    return { status: 'ok', response: { offerId } };
   }
 }

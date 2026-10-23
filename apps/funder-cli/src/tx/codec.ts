@@ -1,74 +1,19 @@
-import { decode, encode, Tag, type Writer } from 'cbor2';
+import { Cardano, Serialization } from '@cardano-sdk/core';
+import { HexBlob } from '@cardano-sdk/util';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { emptyValue, type Value } from '../cardano/value.js';
+import type { Value } from '../cardano/value.js';
 
-/** Transaction body map keys we touch. See eras/dijkstra/impl/cddl/data/dijkstra.cddl. */
-export const BODY_INPUTS = 0;
-export const BODY_OUTPUTS = 1;
-export const BODY_FEE = 2;
-export const BODY_MINT = 9;
-export const BODY_REFERENCE_INPUTS = 18;
-export const BODY_SUB_TRANSACTIONS = 23;
-
-/**
- * Body keys the stand-in exchange refuses in an offer, per `sub_transaction_body` in
- * eras/dijkstra/impl/cddl/data/dijkstra.cddl. It only carries offers that move value, and
- * derives each offer's imbalance from inputs and outputs alone, so anything else that moves
- * value would be mispriced. Donation (22) and direct deposits (25) matter most: both move
- * lovelace where `computeBalance` cannot see it. The validity interval (3, 8) is allowed on
- * purpose — it is how a caller bounds how long their UTxO stays committed to an offer.
- */
-export const FORBIDDEN_SUB_TX_KEYS: Array<[number, string]> = [
-  [2, 'a fee'],
-  [4, 'certificates'],
-  [5, 'withdrawals'],
-  [9, 'mint'],
-  [11, 'a script data hash'],
-  [13, 'collateral inputs'],
-  [14, 'guards'],
-  [16, 'a collateral return'],
-  [17, 'total collateral'],
-  [19, 'voting procedures'],
-  [20, 'proposal procedures'],
-  [21, 'a treasury value'],
-  [22, 'a treasury donation'],
-  [23, 'nested sub-transactions'],
-  [24, 'required top-level guards'],
-  [25, 'direct deposits'],
-  [26, 'account balance intervals'],
-  [27, 'starting account balance intervals'],
-];
-
-export type CborMap = Map<number, unknown>;
-
-/** CBOR integers decode as `number` when small and `bigint` when large; normalise to bigint. */
-export function toBigInt(value: unknown, fallback = 0n): bigint {
-  if (value === undefined || value === null) {
-    return fallback;
-  }
-  if (typeof value === 'bigint') {
-    return value;
-  }
-  if (typeof value === 'number') {
-    return BigInt(value);
-  }
-  throw new Error(`Expected a CBOR integer, got ${typeof value}`);
-}
+export type Transaction = Serialization.Transaction;
+export type TransactionBody = Serialization.TransactionBody;
+export type SubTransactionBody = Serialization.SubTransactionBody;
+export type TxInput = Serialization.TransactionInput;
+export type TxOutput = Serialization.TransactionOutput;
+export type InputSet = ReturnType<TransactionBody['inputs']>;
 
 export interface TextEnvelope {
   type: string;
   description: string;
   cborHex: string;
-}
-
-/**
- * A decoded transaction. Dijkstra's mempool form is `[body, wits, auxdata]`, but a
- * `[body, wits, true, auxdata]` form is also accepted by the ledger, so we keep the raw
- * item list and its arity rather than assuming either.
- */
-export interface DecodedTx {
-  items: unknown[];
-  body: CborMap;
 }
 
 export function hexToBytes(hex: string): Uint8Array {
@@ -77,6 +22,11 @@ export function hexToBytes(hex: string): Uint8Array {
 
 export function bytesToHex(bytes: Uint8Array | ArrayBufferView): string {
   return Buffer.from(bytes as Uint8Array).toString('hex');
+}
+
+/** Size in bytes of hex-encoded CBOR. */
+export function cborSize(hex: string): number {
+  return hex.length / 2;
 }
 
 export function readEnvelope(path: string): TextEnvelope {
@@ -91,30 +41,45 @@ export function writeEnvelope(path: string, envelope: TextEnvelope): void {
   writeFileSync(path, `${JSON.stringify(envelope, null, 2)}\n`);
 }
 
-export function decodeTx(cborHex: string): DecodedTx {
-  const items = decode(hexToBytes(cborHex)) as unknown[];
-  if (!Array.isArray(items) || items.length < 3) {
-    throw new Error('Transaction CBOR is not a [body, witnesses, ...] array');
-  }
-  const body = items[0];
-  if (!(body instanceof Map)) {
-    throw new Error('Transaction body is not a CBOR map');
-  }
-  return { items, body: body as CborMap };
-}
-
-export function encodeTx(tx: DecodedTx): string {
-  return bytesToHex(encode(tx.items));
+export function decodeTx(cborHex: string): Transaction {
+  return Serialization.Transaction.fromCbor(Serialization.TxCBOR(cborHex));
 }
 
 /**
- * Guards the one assumption the splice depends on: that decoding and re-encoding a
- * transaction reproduces it byte for byte. If it ever did not, rewriting the body would
- * silently change the transaction id and invalidate every signature already on it.
+ * Writes a transaction in Dijkstra's `[body, wits, auxdata]` frame, which is what cardano-cli
+ * produces. The SDK's own `toCbor` writes the Alonzo `[body, wits, is_valid, auxdata]` frame
+ * whenever it re-encodes, which the ledger accepts but which is a byte longer than what we
+ * were given.
+ */
+export function encodeTx(tx: Transaction): string {
+  if (!tx.isValid()) {
+    throw new Error('Dijkstra transactions have no is_valid flag; refusing to encode one marked invalid');
+  }
+  const writer = new Serialization.CborWriter();
+  writer.writeStartArray(3);
+  writer.writeEncodedValue(hexToBytes(tx.body().toCbor()));
+  writer.writeEncodedValue(hexToBytes(tx.witnessSet().toCbor()));
+  const auxiliaryData = tx.auxiliaryData();
+  if (auxiliaryData) {
+    writer.writeEncodedValue(hexToBytes(auxiliaryData.toCbor()));
+  } else {
+    writer.writeNull();
+  }
+  return writer.encodeAsHex();
+}
+
+/**
+ * Guards the one assumption the splice depends on: that re-serialising a transaction body
+ * reproduces it byte for byte. The SDK hands back the original bytes until something is set,
+ * so this forces a re-encode. If it ever differed, rewriting the body would silently change
+ * fields we never meant to touch.
  */
 export function assertRoundTrip(cborHex: string): void {
-  const reencoded = encodeTx(decodeTx(cborHex));
-  if (reencoded !== cborHex) {
+  const tx = decodeTx(cborHex);
+  const body = tx.body();
+  body.setFee(body.fee());
+  tx.setBody(body);
+  if (encodeTx(tx) !== cborHex) {
     throw new Error(
       'Transaction CBOR does not survive a decode/encode round trip. Refusing to modify it, ' +
         'because doing so would change the transaction id.'
@@ -122,178 +87,64 @@ export function assertRoundTrip(cborHex: string): void {
   }
 }
 
-/**
- * Bytes that are already CBOR, written out exactly as given. A sub-transaction goes into a
- * batch this way: its witnesses sign the hash of its body *as encoded*, so re-encoding it,
- * even into something equivalent, can invalidate a signature the batch builder cannot redo.
- */
-export class RawCbor {
-  constructor(readonly bytes: Uint8Array) {}
-
-  toCBOR(w: Writer): undefined {
-    w.write(this.bytes);
-    return undefined;
-  }
-}
-
-// --- CIP-0198 offer envelope ---
-
-/** `envelope_version`: the first revision of CIP-0198. */
-export const ENVELOPE_VERSION = 1;
-
-/**
- * `era_tag` is still TBD in CIP-0198. This is Dijkstra's index in the hard-fork combinator
- * (Byron 0 … Conway 6), which is the obvious candidate but not yet a published value.
- */
-export const DIJKSTRA_ERA_TAG = 7;
-
-/** `[envelope_version, era_tag, #6.24(bytes .cbor subtx)]`, carrying the sub-transaction verbatim. */
-export function encodeEnvelope(subTxBytes: Uint8Array): Uint8Array {
-  return encode([ENVELOPE_VERSION, DIJKSTRA_ERA_TAG, new Tag(24, subTxBytes)]);
-}
-
-export function decodeEnvelope(bytes: Uint8Array): Uint8Array {
-  const envelope = decode(bytes) as unknown;
-  if (!Array.isArray(envelope) || envelope.length !== 3) {
-    throw new Error('Offer envelope is not a 3-element array');
-  }
-  const [version, eraTag, wrapped] = envelope as [unknown, unknown, unknown];
-  if (Number(version) !== ENVELOPE_VERSION) {
-    throw new Error(`Unsupported envelope version ${String(version)}`);
-  }
-  if (Number(eraTag) !== DIJKSTRA_ERA_TAG) {
-    throw new Error(`Unsupported era tag ${String(eraTag)}`);
-  }
-  // cbor2 unwraps tag 24 on decode unless told otherwise, so accept either form.
-  const payload = wrapped instanceof Tag ? wrapped.contents : wrapped;
-  if (!(payload instanceof Uint8Array)) {
-    throw new Error('Offer envelope does not carry sub-transaction bytes');
-  }
-  return payload;
-}
-
-// --- sets ---
-
-/** Tag 258 decodes to a JS Set; a plain array is also valid CDDL. Normalise both to an array. */
-export function asArray(value: unknown): unknown[] {
-  if (value instanceof Set) {
-    return [...value];
-  }
-  if (Array.isArray(value)) {
-    return value;
-  }
-  if (value instanceof Tag) {
-    return asArray(value.contents);
-  }
-  return value === undefined || value === null ? [] : [value];
-}
-
-/** Encodes a list as a CBOR set (tag 258), which is what the ledger expects for inputs. */
-export function asSet(values: unknown[]): Tag {
-  return new Tag(258, values);
-}
-
 // --- inputs ---
 
-export interface TxInput {
-  txHash: string;
-  index: number;
+export function makeInput(txHash: string, index: number): TxInput {
+  return new Serialization.TransactionInput(Cardano.TransactionId(txHash), BigInt(index));
 }
 
-export function decodeInput(raw: unknown): TxInput {
-  const [hash, index] = raw as [Uint8Array, number];
-  return { txHash: bytesToHex(hash), index: Number(index) };
+/** `txhash#index`, the same spelling cardano-cli uses for a UTxO. */
+export function inputRef(input: TxInput): string {
+  return `${input.transactionId()}#${input.index()}`;
 }
 
-export function encodeInput(input: TxInput): unknown {
-  return [hexToBytes(input.txHash), input.index];
+export function inputSet(inputs: TxInput[]): InputSet {
+  const set: InputSet = Serialization.CborSet.fromCore([], Serialization.TransactionInput.fromCore);
+  set.setValues(inputs);
+  return set;
 }
 
-export function readInputs(body: CborMap, key: number): TxInput[] {
-  return asArray(body.get(key)).map(decodeInput);
+// --- values and outputs ---
+
+/** SDK asset ids are policy id + hex asset name, the same spelling as our units. */
+export function fromSdkValue(value: Serialization.Value): Value {
+  return { lovelace: value.coin(), assets: new Map(value.multiasset() ?? []) };
 }
 
-// --- outputs ---
-
-export interface TxOutput {
-  /** Raw address bytes, kept as-is so we never re-encode bech32 we did not parse. */
-  address: Uint8Array;
-  value: Value;
-  /**
-   * Anything beyond address+value (datum, script ref) is preserved verbatim: the trailing
-   * items of an array output, or the whole map of a Babbage map output.
-   */
-  rest?: unknown;
+export function toSdkValue(value: Value): Serialization.Value {
+  const assets = value.assets.size > 0 ? new Map(value.assets as Map<Cardano.AssetId, bigint>) : undefined;
+  return new Serialization.Value(value.lovelace, assets);
 }
 
-function decodeValue(raw: unknown): Value {
-  const value = emptyValue();
-  if (typeof raw === 'bigint' || typeof raw === 'number') {
-    value.lovelace = BigInt(raw);
-    return value;
+export function outputValue(output: TxOutput): Value {
+  return fromSdkValue(output.amount());
+}
+
+export function makeOutput(address: string | Cardano.Address, value: Value): TxOutput {
+  const parsed = typeof address === 'string' ? Cardano.Address.fromBech32(address) : address;
+  return new Serialization.TransactionOutput(parsed, toSdkValue(value));
+}
+
+/** The same output carrying a different value. Its datum and script ref come along. */
+export function withValue(output: TxOutput, value: Value): TxOutput {
+  const updated = makeOutput(output.address(), value);
+  const datum = output.datum();
+  if (datum) {
+    updated.setDatum(datum);
   }
-  const [coin, multiasset] = raw as [bigint | number, Map<Uint8Array, Map<Uint8Array, bigint>>];
-  value.lovelace = BigInt(coin);
-  for (const [policy, assets] of multiasset) {
-    for (const [name, quantity] of assets) {
-      value.assets.set(`${bytesToHex(policy)}${bytesToHex(name)}`, BigInt(quantity));
-    }
+  const scriptRef = output.scriptRef();
+  if (scriptRef) {
+    updated.setScriptRef(scriptRef);
   }
-  return value;
+  return updated;
 }
 
-function encodeValue(value: Value): unknown {
-  if (value.assets.size === 0) {
-    return value.lovelace;
-  }
-  const multiasset = new Map<Uint8Array, Map<Uint8Array, bigint>>();
-  // Group by policy id, preserving the caller's asset ordering within each policy.
-  for (const [unit, quantity] of value.assets) {
-    const policyHex = unit.slice(0, 56);
-    const nameHex = unit.slice(56);
-    let existing: Map<Uint8Array, bigint> | undefined;
-    for (const [policy, assets] of multiasset) {
-      if (bytesToHex(policy) === policyHex) {
-        existing = assets;
-        break;
-      }
-    }
-    if (!existing) {
-      existing = new Map();
-      multiasset.set(hexToBytes(policyHex), existing);
-    }
-    existing.set(hexToBytes(nameHex), quantity);
-  }
-  return [value.lovelace, multiasset];
+/** The payment key hash behind an address, if its payment part is a key and not a script. */
+export function paymentKeyHash(address: Cardano.Address): string | undefined {
+  const payment = address.getProps().paymentPart;
+  return payment?.type === Cardano.CredentialType.KeyHash ? payment.hash : undefined;
 }
 
-export function decodeOutput(raw: unknown): TxOutput {
-  if (raw instanceof Map) {
-    // Babbage-style map output.
-    const map = raw as Map<number, unknown>;
-    return { address: map.get(0) as Uint8Array, value: decodeValue(map.get(1)), rest: raw };
-  }
-  const [address, value, ...rest] = raw as unknown[];
-  return { address: address as Uint8Array, value: decodeValue(value), rest: rest.length ? rest : undefined };
-}
-
-/**
- * Re-emits an output in the form it was decoded from: a map output keeps its map (so its
- * datum, script ref and key ordering survive), and anything else becomes the Alonzo-style
- * array, which is what cardano-cli produces for simple outputs.
- */
-export function encodeOutput(output: TxOutput): unknown {
-  if (output.rest instanceof Map) {
-    // Copying preserves key order, and re-setting 0 and 1 keeps them in their original slots.
-    const map = new Map(output.rest as Map<number, unknown>);
-    map.set(0, output.address);
-    map.set(1, encodeValue(output.value));
-    return map;
-  }
-  const base = [output.address, encodeValue(output.value)];
-  return Array.isArray(output.rest) ? [...base, ...output.rest] : base;
-}
-
-export function readOutputs(body: CborMap, key: number): TxOutput[] {
-  return asArray(body.get(key)).map(decodeOutput);
+export function parseSubTransactionBody(cborHex: string): SubTransactionBody {
+  return Serialization.SubTransactionBody.fromCbor(HexBlob(cborHex));
 }

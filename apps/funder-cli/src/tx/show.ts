@@ -1,42 +1,25 @@
 import { assetLabel, formatValue } from '../cardano/value.js';
 import { formatAda, formatAsset, plain, short, shortAddress } from '../log.js';
 import type { Value } from '../cardano/value.js';
-import {
-  asArray,
-  BODY_FEE,
-  BODY_INPUTS,
-  BODY_OUTPUTS,
-  BODY_SUB_TRANSACTIONS,
-  bytesToHex,
-  type DecodedTx,
-  readInputs,
-  readOutputs,
-  toBigInt,
-  type TxInput,
-  type TxOutput,
-} from './codec.js';
+import { outputValue, type Transaction, type TxInput, type TxOutput } from './codec.js';
 import { computeBalance, type ResolveInput } from './batch.js';
-import { decodeSubTransaction, imbalance, type SubTransaction, subTransactionSigners } from './subtx.js';
+import { imbalance, type SubTransaction, subTransactionSigners } from './subtx.js';
 
 export interface ShowLabels {
-  /** Address bytes (hex) -> a human label such as "caller" or "CES". */
+  /** Bech32 address -> a human label such as "caller" or "CES". */
   addresses?: Map<string, string>;
   /** Who built the batch. Omitted when the source was never recorded. */
   batchLabel?: string;
 }
 
-function labelFor(address: Uint8Array, labels?: Map<string, string>): string {
-  return labels?.get(bytesToHex(address)) ?? '';
-}
-
 function outputLine(output: TxOutput, labels?: Map<string, string>): string {
-  const label = labelFor(output.address, labels);
-  const addr = shortAddress(`addr(${bytesToHex(output.address).slice(0, 12)}…)`, 22, 0);
-  return `    ${addr.padEnd(24)} ${formatValue(output.value).padEnd(44)} ${label}`;
+  const address = output.address().toBech32();
+  const label = labels?.get(address) ?? '';
+  return `    ${shortAddress(address, 16, 6).padEnd(24)} ${formatValue(outputValue(output)).padEnd(44)} ${label}`;
 }
 
-function inputLine(input: TxInput, value: Value | undefined, labels?: Map<string, string>, label = ''): string {
-  const ref = `${short(input.txHash, 6)}#${input.index}`;
+function inputLine(input: TxInput, value: Value | undefined, label = ''): string {
+  const ref = `${short(input.transactionId(), 6)}#${input.index()}`;
   const rendered = value ? formatValue(value) : '(unresolved)';
   return `    ${ref.padEnd(24)} ${rendered.padEnd(44)} ${label}`;
 }
@@ -59,13 +42,14 @@ export function showSubTransaction(
   addresses?: Map<string, string>
 ): void {
   const lookup = resolveOrUndefined(resolve);
+  const body = sub.body();
   plain(heading);
   plain('  inputs');
-  for (const input of sub.inputs) {
-    plain(inputLine(input, lookup(input), addresses, 'caller'));
+  for (const input of body.inputs().values()) {
+    plain(inputLine(input, lookup(input), 'caller'));
   }
   plain('  outputs');
-  for (const output of sub.outputs) {
+  for (const output of body.outputs()) {
     plain(outputLine(output, addresses));
   }
 }
@@ -78,7 +62,14 @@ export function showImbalance(sub: SubTransaction, resolve: ResolveInput | undef
   plain('');
   plain('IMBALANCE (consumed − produced)');
   const lookup = resolveOrUndefined(resolve);
-  if (!resolve || sub.inputs.some((i) => !lookup(i))) {
+  if (
+    !resolve ||
+    sub
+      .body()
+      .inputs()
+      .values()
+      .some((i) => !lookup(i))
+  ) {
     plain('  unavailable: not every input could be looked up (spent, or --offline)');
     return;
   }
@@ -106,18 +97,19 @@ export function showImbalance(sub: SubTransaction, resolve: ResolveInput | undef
  * Renders a nested transaction. `cardano-cli debug transaction view` silently omits body key
  * 23, so without this the sub-transaction is invisible in every stock tool.
  */
-export function showTransaction(tx: DecodedTx, resolve: ResolveInput | undefined, labels: ShowLabels = {}): void {
-  const inputs = readInputs(tx.body, BODY_INPUTS);
-  const outputs = readOutputs(tx.body, BODY_OUTPUTS);
-  const fee = toBigInt(tx.body.get(BODY_FEE));
-  const subs = asArray(tx.body.get(BODY_SUB_TRANSACTIONS)).map((raw) => decodeSubTransaction(raw as unknown[]));
+export function showTransaction(tx: Transaction, resolve: ResolveInput | undefined, labels: ShowLabels = {}): void {
+  const body = tx.body();
+  const inputs = body.inputs().values();
+  const outputs = body.outputs();
+  const fee = body.fee();
+  const subs = [...(body.subTransactions()?.values() ?? [])];
 
   const lookup = resolveOrUndefined(resolve);
 
   plain(`TOP-LEVEL${labels.batchLabel ? `   ${labels.batchLabel}` : ''}`);
   plain('  inputs');
   for (const input of inputs) {
-    plain(inputLine(input, lookup(input), labels.addresses, 'CES'));
+    plain(inputLine(input, lookup(input), 'CES'));
   }
   plain('  outputs');
   for (const output of outputs) {
@@ -126,10 +118,10 @@ export function showTransaction(tx: DecodedTx, resolve: ResolveInput | undefined
   plain(`  fee${' '.repeat(18)}${formatAda(fee)} ADA`);
 
   subs.forEach((sub: SubTransaction, i: number) => {
-    const signers = subTransactionSigners(sub.items).map((k) => short(k, 4));
+    const signers = subTransactionSigners(sub).map((k) => short(k, 4));
     plain('');
     showSubTransaction(
-      `SUB-TRANSACTION ${i + 1}/${subs.length}   offer ${short(sub.bodyHash, 6)}    ` +
+      `SUB-TRANSACTION ${i + 1}/${subs.length}   offer ${short(sub.getId(), 6)}    ` +
         `signed by ${signers.join(', ') || '(none)'}`,
       sub,
       resolve,

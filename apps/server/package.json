@@ -51,7 +51,6 @@
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "@sundaeswap/capacity-exchange-providers": "workspace:^",
     "@utxorpc/spec": "0.19.2",
-    "cbor2": "^2.4.0",
     "dotenv": "17.2.3",
     "fastify": "^5.12.5",
     "fastify-plugin": "^6.0.0",
