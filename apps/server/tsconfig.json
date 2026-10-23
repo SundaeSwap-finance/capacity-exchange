@@ -18,6 +18,7 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"],
   "references": [
+    { "path": "../../packages/cardano-core" },
     { "path": "../../packages/midnight-core" },
     { "path": "../../packages/midnight-node" },
     { "path": "../../packages/providers" },
