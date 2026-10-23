@@ -2,17 +2,44 @@ import type { CardanoCli, ProtocolParams, Utxo } from '../cardano/cli.js';
 import { utxoRef } from '../cardano/cli.js';
 import { addValue, emptyValue, sumValues, unitToCliAsset, type Value } from '../cardano/value.js';
 import { assembleBatch, type AssembleResult, offerFee } from '../tx/batch.js';
+import { parseEnvelope } from '@capacity-exchange/cardano-core';
 import {
   assertRoundTrip,
-  decodeEnvelope,
+  cborSize,
   decodeTx,
-  FORBIDDEN_SUB_TX_KEYS,
   hexToBytes,
+  inputRef,
   readEnvelope,
+  type SubTransactionBody,
   type TxInput,
 } from '../tx/codec.js';
-import { decodeSubTransactionBytes, imbalance, type SubTransaction, verifyWitnesses } from '../tx/subtx.js';
+import { imbalance, type SubTransaction, verifyWitnesses } from '../tx/subtx.js';
 import { OfferRejected } from './protocol.js';
+
+/**
+ * Sub-transaction body fields the stand-in exchange refuses in an offer. It only carries offers
+ * that move value, and derives each offer's imbalance from inputs and outputs alone, so anything
+ * else that moves value would be mispriced. Donation and direct deposits matter most: both move
+ * lovelace where `computeBalance` cannot see it. The validity interval is allowed on purpose —
+ * it is how a caller bounds how long their UTxO stays committed to an offer.
+ *
+ * Fields that `sub_transaction_body` does not allow at all (a fee, collateral, nested
+ * sub-transactions) never get this far: the SDK refuses to parse them, so the offer is malformed.
+ */
+const FORBIDDEN_SUB_TX_FIELDS: Array<[string, (body: SubTransactionBody) => unknown]> = [
+  ['certificates', (b) => b.certs()],
+  ['withdrawals', (b) => b.withdrawals()],
+  ['mint', (b) => b.mint()],
+  ['a script data hash', (b) => b.scriptDataHash()],
+  ['guards', (b) => b.guards()],
+  ['voting procedures', (b) => b.votingProcedures()],
+  ['proposal procedures', (b) => b.proposalProcedures()],
+  ['a treasury value', (b) => b.currentTreasuryValue()],
+  ['a treasury donation', (b) => b.donation()],
+  ['required top-level guards', (b) => b.requiredTopLevelGuards()],
+  ['direct deposits', (b) => b.directDeposits()],
+  ['account balance intervals', (b) => b.accountBalanceIntervals()],
+];
 
 /**
  * The stand-in exchange: what a service does behind `POST /offers`, run locally because the
@@ -33,21 +60,16 @@ export interface ReceivedOffer {
  * whether Musashi accepts a validity interval in a sub-transaction is still open.
  */
 export function receiveOffer(envelopeHex: string): ReceivedOffer {
-  let subBytes: Uint8Array;
-  try {
-    subBytes = decodeEnvelope(hexToBytes(envelopeHex));
-  } catch (err) {
-    const message = (err as Error).message;
-    throw new OfferRejected(/Unsupported/.test(message) ? 'unsupported-version' : 'malformed', message);
+  const parsed = parseEnvelope(hexToBytes(envelopeHex));
+  if (parsed.status === 'unsupported-version') {
+    throw new OfferRejected('unsupported-version', 'unsupported envelope version or era');
   }
-
-  let sub: SubTransaction;
-  try {
-    sub = decodeSubTransactionBytes(subBytes);
-  } catch (err) {
-    throw new OfferRejected('malformed', (err as Error).message);
+  if (parsed.status === 'malformed') {
+    throw new OfferRejected('malformed', parsed.reason);
   }
-  if (sub.inputs.length === 0) {
+  const sub = parsed.value;
+  const body = sub.body();
+  if (body.inputs().size() === 0) {
     throw new OfferRejected('malformed', 'an offer needs at least one spend input');
   }
 
@@ -59,8 +81,8 @@ export function receiveOffer(envelopeHex: string): ReceivedOffer {
   }
 
   // Not malformed: sound offers, just not ones this service will price.
-  for (const [key, label] of FORBIDDEN_SUB_TX_KEYS) {
-    if (sub.body.has(key)) {
+  for (const [label, field] of FORBIDDEN_SUB_TX_FIELDS) {
+    if (field(body) !== undefined) {
       throw new OfferRejected('not-interested', `this service does not carry offers containing ${label}`);
     }
   }
@@ -96,11 +118,11 @@ export function verifyOffer(
   resolve: (input: TxInput) => Value | undefined,
   quote: QuoteTerms,
   pp: Pick<ProtocolParams, 'txFeeFixed' | 'txFeePerByte'>,
-  ownInputs: TxInput[] = []
+  ownUtxos: Utxo[] = []
 ): VerifiedOffer {
-  const own = new Set(ownInputs.map((i) => `${i.txHash}#${i.index}`));
-  for (const input of sub.inputs) {
-    const ref = `${input.txHash}#${input.index}`;
+  const own = new Set(ownUtxos.map(utxoRef));
+  for (const input of sub.body().inputs().values()) {
+    const ref = inputRef(input);
     if (own.has(ref)) {
       throw new OfferRejected('not-interested', `offer spends ${ref}, which belongs to this service`);
     }
@@ -125,7 +147,7 @@ export function verifyOffer(
     );
   }
 
-  const feeShare = offerFee(sub.bytes.length, pp.txFeeFixed, pp.txFeePerByte);
+  const feeShare = offerFee(cborSize(sub.toCbor()), pp.txFeeFixed, pp.txFeePerByte);
   if (lovelaceNeeded + feeShare > quote.capacity) {
     throw new OfferRejected(
       'not-interested',

@@ -1,12 +1,12 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
-import { CreateOfferRequest, OfferReply, OfferSchema } from '../../models/offer.js';
+import { CreateOfferRequest, OfferReply, MidnightOfferSchema } from '../../models/offer.js';
 import { replyWithOfferResult } from './offer-helpers.js';
 
 const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.post<{
     Body: typeof CreateOfferRequest.static;
     Reply: typeof OfferReply.static;
-  }>('/offers', OfferSchema, async (request, reply) => {
+  }>('/offers', MidnightOfferSchema, async (request, reply) => {
     if (!fastify.midnightOfferService) {
       return reply.notImplemented('DUST offers are not configured on this server');
     }

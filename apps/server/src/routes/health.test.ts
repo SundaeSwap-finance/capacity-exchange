@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import healthRoutes from './health.js';
 import type { AppConfig } from '../loadConfig.js';
-import type { CardanoChainStateService } from '../services/cardano-chain-state.js';
+import type { CardanoChainStateService } from '../services/cardano/chain-state.js';
 import type { MidnightWalletService, WalletSyncState } from '../services/midnight/wallet.js';
 
 type CardanoHealth = ReturnType<CardanoChainStateService['health']>;

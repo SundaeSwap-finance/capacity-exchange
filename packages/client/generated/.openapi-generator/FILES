@@ -1,5 +1,6 @@
 apis/DefaultApi.ts
 apis/index.ts
+docs/ApiCardanoOffersPost202Response.md
 docs/ApiMetricsGet200Response.md
 docs/ApiMetricsGet200ResponseCapacityInner.md
 docs/ApiMetricsGet200ResponseCapacityInnerContention.md
@@ -25,6 +26,7 @@ docs/HealthReadyGet200ResponseMidnightWallet.md
 docs/Price.md
 docs/PricesResponse.md
 index.ts
+models/ApiCardanoOffersPost202Response.ts
 models/ApiMetricsGet200Response.ts
 models/ApiMetricsGet200ResponseCapacityInner.ts
 models/ApiMetricsGet200ResponseCapacityInnerContention.ts
