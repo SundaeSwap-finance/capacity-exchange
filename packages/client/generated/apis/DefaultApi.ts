@@ -15,6 +15,7 @@
 
 import * as runtime from '../runtime.js';
 import type {
+  ApiCardanoOffersPost202Response,
   ApiMetricsGet200Response,
   ApiMidnightAdaOffersPostRequest,
   ApiMidnightOffersPost201Response,
@@ -28,6 +29,8 @@ import type {
   PricesResponse,
 } from '../models/index.js';
 import {
+    ApiCardanoOffersPost202ResponseFromJSON,
+    ApiCardanoOffersPost202ResponseToJSON,
     ApiMetricsGet200ResponseFromJSON,
     ApiMetricsGet200ResponseToJSON,
     ApiMidnightAdaOffersPostRequestFromJSON,
@@ -79,7 +82,7 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiCardanoOffersPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMidnightOffersPost201Response>> {
+    async apiCardanoOffersPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiCardanoOffersPost202Response>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -94,12 +97,12 @@ export class DefaultApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiMidnightOffersPost201ResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiCardanoOffersPost202ResponseFromJSON(jsonValue));
     }
 
     /**
      */
-    async apiCardanoOffersPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMidnightOffersPost201Response> {
+    async apiCardanoOffersPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiCardanoOffersPost202Response> {
         const response = await this.apiCardanoOffersPostRaw(initOverrides);
         return await response.value();
     }
