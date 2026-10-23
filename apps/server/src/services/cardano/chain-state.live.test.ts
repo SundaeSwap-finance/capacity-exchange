@@ -3,7 +3,7 @@ import pino from 'pino';
 import { createPromiseClient } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect } from '@utxorpc/spec';
-import { CardanoChainStateService, toBigInt } from './cardano-chain-state.js';
+import { CardanoChainStateService, toBigInt } from './chain-state.js';
 
 /**
  * Runs against a live UTxO RPC source such as Dolos, and is skipped without one:

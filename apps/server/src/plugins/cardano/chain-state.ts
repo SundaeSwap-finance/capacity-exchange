@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { CardanoChainStateService } from '../services/cardano-chain-state.js';
+import { CardanoChainStateService } from '../../services/cardano/chain-state.js';
 
 declare module 'fastify' {
   interface FastifyInstance {

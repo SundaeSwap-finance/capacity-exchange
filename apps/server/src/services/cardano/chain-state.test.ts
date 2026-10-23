@@ -15,7 +15,7 @@ vi.mock('@connectrpc/connect', () => ({
       : { readTip: mockReadTip, followTip: mockFollowTip },
 }));
 
-import { CardanoChainStateService, toBigInt } from './cardano-chain-state.js';
+import { CardanoChainStateService, toBigInt } from './chain-state.js';
 
 const logger = pino({ level: 'silent' });
 

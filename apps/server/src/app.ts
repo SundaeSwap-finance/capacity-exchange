@@ -3,12 +3,13 @@ import Fastify, { FastifyInstance, FastifyPluginAsync, FastifyServerOptions } fr
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import chainStatePlugin from './plugins/midnight/chain-state.js';
-import cardanoChainStatePlugin from './plugins/cardano-chain-state.js';
+import midnightChainStatePlugin from './plugins/midnight/chain-state.js';
+import cardanoChainStatePlugin from './plugins/cardano/chain-state.js';
 import walletPlugin from './plugins/midnight/wallet-utxo.js';
 import cesWalletProviderPlugin from './plugins/ces-wallet-provider.js';
 import cardanoPlugin from './plugins/cardano.js';
-import offerPlugin from './plugins/midnight/offer.js';
+import midnightOfferPlugin from './plugins/midnight/offer.js';
+import cardanoOfferPlugin from './plugins/cardano/offer.js';
 import sponsorPlugin from './plugins/midnight/sponsor.js';
 import pricesPlugin from './plugins/price.js';
 import peerPricesPlugin from './plugins/peer-price.js';
@@ -19,8 +20,9 @@ import errorHandler from './plugins/error-handler.js';
 import observability from './plugins/observability.js';
 import healthRoutes from './routes/health.js';
 import rootRoutes from './routes/root.js';
-import offerRoutes from './routes/midnight/offers.js';
-import adaOfferRoutes from './routes/midnight/adaOffers.js';
+import midnightOfferRoutes from './routes/midnight/offers.js';
+import midnightAdaOfferRoutes from './routes/midnight/adaOffers.js';
+import cardanoOfferRoutes from './routes/cardano/offers.js';
 import sponsorRoutes from './routes/midnight/sponsor.js';
 import priceRoutes, { assetPriceRoutes } from './routes/prices.js';
 import metricsRoutes from './routes/metrics.js';
@@ -42,7 +44,7 @@ export async function buildApp(
   app.register(cors, { origin: '*' });
   await app.register(errorHandler);
   await app.register(observability);
-  await app.register(chainStatePlugin);
+  await app.register(midnightChainStatePlugin);
   await app.register(cardanoChainStatePlugin);
   await app.register(walletPlugin);
   await app.register(pricesPlugin);
@@ -52,7 +54,8 @@ export async function buildApp(
   await app.register(quotePlugin);
   await app.register(metricsPlugin);
   await app.register(cardanoPlugin);
-  await app.register(offerPlugin);
+  await app.register(midnightOfferPlugin);
+  await app.register(cardanoOfferPlugin);
   await app.register(sponsorPlugin);
   await registerRoutes(app);
   return app;
@@ -64,8 +67,8 @@ const legacyMidnightRoutes: FastifyPluginAsync = async (app) => {
   app.addHook('onRoute', (route) => {
     route.schema = { ...route.schema, hide: true };
   });
-  await app.register(offerRoutes);
-  await app.register(adaOfferRoutes);
+  await app.register(midnightOfferRoutes);
+  await app.register(midnightAdaOfferRoutes);
   await app.register(sponsorRoutes);
 };
 
@@ -86,8 +89,9 @@ export async function registerRoutes(app: FastifyInstance) {
   app.register(priceRoutes, { prefix: '/api' });
   app.register(assetPriceRoutes('DUST'), { prefix: '/api/midnight' });
   app.register(assetPriceRoutes('ADA'), { prefix: '/api/cardano' });
-  app.register(offerRoutes, { prefix: '/api/midnight' });
-  app.register(adaOfferRoutes, { prefix: '/api/midnight' });
+  app.register(midnightOfferRoutes, { prefix: '/api/midnight' });
+  app.register(midnightAdaOfferRoutes, { prefix: '/api/midnight' });
+  app.register(cardanoOfferRoutes, { prefix: '/api/cardano' });
   app.register(sponsorRoutes, { prefix: '/api/midnight' });
   app.register(legacyMidnightRoutes, { prefix: '/api' });
   app.register(metricsRoutes, { prefix: '/api' });

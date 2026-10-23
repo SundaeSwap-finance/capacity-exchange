@@ -28,6 +28,7 @@
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1148.0",
     "@blockfrost/blockfrost-js": "^6.2.0",
+    "@capacity-exchange/cardano-core": "workspace:*",
     "@connectrpc/connect": "^1.7.0",
     "@connectrpc/connect-node": "^1.7.0",
     "@fastify/cors": "^11.3.1",
@@ -35,9 +36,9 @@
     "@fastify/swagger-ui": "^6.1.2",
     "@fastify/type-provider-typebox": "^6.1.0",
     "@midnight-ntwrk/ledger-v8": "8.1.0",
+    "@midnight-ntwrk/midnight-js": "4.1.1",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js": "4.1.1",
     "@midnight-ntwrk/wallet-sdk": "1.1.0",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.222.0",
