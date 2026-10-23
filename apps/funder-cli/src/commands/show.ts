@@ -1,20 +1,8 @@
 import { CardanoCli } from '../cardano/cli.js';
 import { emptyValue, type Value } from '../cardano/value.js';
 import type { Config } from '../config.js';
-import {
-  asArray,
-  BODY_INPUTS,
-  BODY_OUTPUTS,
-  BODY_SUB_TRANSACTIONS,
-  bytesToHex,
-  decodeTx,
-  readEnvelope,
-  readInputs,
-  readOutputs,
-  type TxInput,
-} from '../tx/codec.js';
+import { decodeTx, inputRef, readEnvelope, type TxInput } from '../tx/codec.js';
 import { showTransaction } from '../tx/show.js';
-import { decodeSubTransaction } from '../tx/subtx.js';
 import { batchSourceLabel, parseBatchSource } from './state.js';
 
 export interface ShowOptions {
@@ -34,19 +22,18 @@ export function runShow(config: Config, file: string, options: ShowOptions): voi
   }
 
   const cli = new CardanoCli(config);
-  const subs = asArray(tx.body.get(BODY_SUB_TRANSACTIONS)).map((raw) => decodeSubTransaction(raw as unknown[]));
-  const refs = [...readInputs(tx.body, BODY_INPUTS), ...subs.flatMap((s) => s.inputs)].map(
-    (i) => `${i.txHash}#${i.index}`
-  );
+  const body = tx.body();
+  const subs = body.subTransactions()?.values() ?? [];
+  const refs = [...body.inputs().values(), ...subs.flatMap((s) => s.body().inputs().values())].map(inputRef);
 
   const resolved = new Map<string, Value>();
   for (const utxo of cli.queryUtxoByRefs(refs)) {
     resolved.set(`${utxo.txHash}#${utxo.index}`, utxo.value);
   }
   const resolve = (input: TxInput): Value => {
-    const value = resolved.get(`${input.txHash}#${input.index}`);
+    const value = resolved.get(inputRef(input));
     if (!value) {
-      throw new Error(`unresolved input ${input.txHash}#${input.index}`);
+      throw new Error(`unresolved input ${inputRef(input)}`);
     }
     return value;
   };
@@ -54,8 +41,8 @@ export function runShow(config: Config, file: string, options: ShowOptions): voi
   // The top-level outputs are the exchange's. An offer's outputs go wherever its signer chose,
   // which the transaction does not say, so they are left unlabelled rather than guessed at.
   const addresses = new Map<string, string>();
-  for (const output of readOutputs(tx.body, BODY_OUTPUTS)) {
-    addresses.set(bytesToHex(output.address), 'CES');
+  for (const output of body.outputs()) {
+    addresses.set(output.address().toBech32(), 'CES');
   }
   showTransaction(tx, refs.every((r) => resolved.has(r)) ? resolve : undefined, {
     addresses,

@@ -43,13 +43,8 @@ export const CreateCardanoOfferResponse = Type.Object({
 export const CardanoOfferReply = Type.Union([CreateCardanoOfferResponse, ErrorResponse]);
 
 const cardanoOfferResponse = {
-  201: CreateOfferResponse,
+  202: CreateOfferResponse,
   400: ErrorResponse,
-  409: ErrorResponse,
-  410: ErrorResponse,
-  // Returned when the capacity asset this route settles (DUST) isn't configured
-  // on this server — e.g. an ADA-only server with no Midnight network.
-  501: ErrorResponse,
   500: ErrorResponse,
   503: ErrorResponse,
 };

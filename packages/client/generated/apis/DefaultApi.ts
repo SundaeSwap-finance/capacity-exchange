@@ -79,6 +79,33 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
+    async apiCardanoOffersPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiMidnightOffersPost201Response>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/cardano/offers`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiMidnightOffersPost201ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiCardanoOffersPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiMidnightOffersPost201Response> {
+        const response = await this.apiCardanoOffersPostRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
     async apiCardanoPricesGetRaw(requestParameters: ApiCardanoPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PricesResponse>> {
         if (requestParameters['amount'] == null) {
             throw new runtime.RequiredError(

@@ -2,8 +2,8 @@ import { CardanoCli, utxoRef } from '../cardano/cli.js';
 import type { Config } from '../config.js';
 import { formatValue } from '../cardano/value.js';
 import { formatAda, plain, step, warn, wrote } from '../log.js';
+import { makeOutput } from '../tx/codec.js';
 import { minUtxoLovelace } from '../tx/subtx.js';
-import { decodeBech32Address } from '../cardano/address.js';
 import { signingKeyPath, walletDir, workPath, writeJson, ARTIFACTS, type Selection } from './state.js';
 
 export interface BalanceOptions {
@@ -33,13 +33,12 @@ export function runBalance(config: Config, options: BalanceOptions): void {
   }
 
   const pp = cli.queryProtocolParams();
-  const addressBytes = decodeBech32Address(address);
   let total = 0n;
   let locked = 0n;
   for (const utxo of utxos) {
     total += utxo.value.lovelace;
     // Re-creating an output costs at least its minimum; only the excess is free for fees.
-    const required = minUtxoLovelace({ address: addressBytes, value: utxo.value }, pp.utxoCostPerByte);
+    const required = minUtxoLovelace(makeOutput(address, utxo.value), pp.utxoCostPerByte);
     locked += utxo.value.assets.size > 0 ? min(required, utxo.value.lovelace) : 0n;
   }
   const available = total - locked;

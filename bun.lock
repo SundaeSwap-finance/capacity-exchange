@@ -117,7 +117,6 @@
         "@scure/bip39": "^2.0.1",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
-        "cbor2": "^2.0.1",
         "commander": "^14.0.2",
         "dotenv": "17.2.3",
       },
@@ -143,10 +142,12 @@
         "ces-fund": "src/cli.ts",
       },
       "dependencies": {
+        "@capacity-exchange/cardano-core": "workspace:*",
+        "@cardano-sdk/core": "^0.47.1",
+        "@cardano-sdk/util": "^0.17.2",
         "@noble/curves": "^2.3.0",
         "@noble/hashes": "^2.3.0",
         "@sundaeswap/capacity-exchange-client": "workspace:^",
-        "cbor2": "^2.3.0",
         "commander": "^14.0.3",
       },
       "devDependencies": {
@@ -184,7 +185,6 @@
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
         "@sundaeswap/capacity-exchange-providers": "workspace:^",
         "@utxorpc/spec": "0.19.2",
-        "cbor2": "^2.4.0",
         "dotenv": "17.2.3",
         "fastify": "^5.12.5",
         "fastify-plugin": "^6.0.0",
@@ -619,8 +619,6 @@
     "@connectrpc/connect": ["@connectrpc/connect@1.7.0", "", { "peerDependencies": { "@bufbuild/protobuf": "^1.10.0" } }, "sha512-iNKdJRi69YP3mq6AePRT8F/HrxWCewrhxnLMNm0vpqXAR8biwzRtO6Hjx80C6UvtKJ5sFmffQT7I4Baecz389w=="],
 
     "@connectrpc/connect-node": ["@connectrpc/connect-node@1.7.0", "", { "dependencies": { "undici": "^5.28.4" }, "peerDependencies": { "@bufbuild/protobuf": "^1.10.0", "@connectrpc/connect": "1.7.0" } }, "sha512-6vaPIkG/NyhxlYgytLoR9KYbPhczEboFB2OYWkA9qvUz1K7efXfeGrlRxoLtpa+r8VxyIOw73w5ktNe743nD+A=="],
-
-    "@cto.af/wtf8": ["@cto.af/wtf8@0.0.6", "", {}, "sha512-xp/zbWLXuh2WBxi9tIc+Jep7BAwLu8ETTI8xN68ks10bxOBMISs/jcu9DBEkOeGXLaTKUbA0Y2Ficx/jmmPABg=="],
 
     "@dnsquery/dns-packet": ["@dnsquery/dns-packet@6.1.1", "", { "dependencies": { "@leichtgewicht/ip-codec": "^2.0.4", "utf8-codec": "^1.0.0" } }, "sha512-WXTuFvL3G+74SchFAtz3FgIYVOe196ycvGsMgvSH/8Goptb1qpIQtIuM4SOK9G9lhMWYpHxnXyy544ZhluFOew=="],
 
@@ -1441,8 +1439,6 @@
     "caniuse-lite": ["caniuse-lite@1.0.30001815", "", {}, "sha512-uDybUEyfgbyJJ93J1vikTylBX31AkdVYeVPeffMQpf8XN7hSfr0oZOn4VFOIMNvtU5+rHvC5Udg2TgtJKHm23Q=="],
 
     "cbor": ["cbor@9.0.2", "", { "dependencies": { "nofilter": "^3.1.0" } }, "sha512-JPypkxsB10s9QOWwa6zwPzqE1Md3vqpPc+cai4sAecuCsRyAtAl/pMyhPlMbT/xtPnm2dznJZYRLui57qiRhaQ=="],
-
-    "cbor2": ["cbor2@2.4.0", "", { "dependencies": { "@cto.af/wtf8": "0.0.6" } }, "sha512-s6+CPoEI6tgwasK2cWMTXt5sy8Yxo4vgRmKgkJSCdKDL/0bHU3aYJoYeHRX7/oywKYA3bxcpqEYkXkrdHe0+0Q=="],
 
     "chai": ["chai@6.3.0", "", {}, "sha512-XWAtwJ6OHO+tj0EKCs0Y2UamnyOxseZWltU4x2U2wh8g4AigdjwvtUjvLP2tqkA/avxHEtzxNaqGq/YGNwckKg=="],
 

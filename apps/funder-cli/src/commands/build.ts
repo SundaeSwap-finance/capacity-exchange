@@ -1,12 +1,11 @@
-import { encode } from 'cbor2';
+import { Serialization } from '@cardano-sdk/core';
 import { CardanoCli } from '../cardano/cli.js';
 import type { Config } from '../config.js';
 import { assetLabel, formatValue } from '../cardano/value.js';
-import { decodeBech32Address } from '../cardano/address.js';
 import { formatAsset, step, wrote } from '../log.js';
 import { offerFee, vkeyWitnessBytes } from '../tx/batch.js';
-import { bytesToHex } from '../tx/codec.js';
-import { buildOfferBody, minUtxoLovelace } from '../tx/subtx.js';
+import { cborSize, makeInput, makeOutput } from '../tx/codec.js';
+import { buildOfferBody, minUtxoLovelace, SubTransaction } from '../tx/subtx.js';
 import { ARTIFACTS, readJson, type Selection, type StoredDraft, workPath, writeJson } from './state.js';
 
 export interface BuildOptions {
@@ -57,18 +56,17 @@ export function runBuild(config: Config, options: BuildOptions): void {
 
   const pp = cli.queryProtocolParams();
   const lovelace = BigInt(selection.lovelace);
-  const callerAddress = decodeBech32Address(selection.address);
-  const change = { address: callerAddress, value: { lovelace: 0n, assets: new Map([[unit, leftover]]) } };
-  const changeLovelace = minUtxoLovelace(change, pp.utxoCostPerByte);
-  change.value.lovelace = changeLovelace;
+  const changeAssets = new Map([[unit, leftover]]);
+  const changeLovelace = minUtxoLovelace(
+    makeOutput(selection.address, { lovelace: 0n, assets: changeAssets }),
+    pp.utxoCostPerByte
+  );
+  const change = makeOutput(selection.address, { lovelace: changeLovelace, assets: changeAssets });
 
   // The recipient keeps the caller's own lovelace; the change output's minimum is what the
   // exchange has to supply on top of the fee.
-  const payment = {
-    address: decodeBech32Address(options.to),
-    value: { lovelace, assets: new Map([[unit, quantity]]) },
-  };
-  const input = { txHash: selection.txHash, index: selection.index };
+  const payment = makeOutput(options.to, { lovelace, assets: new Map([[unit, quantity]]) });
+  const input = makeInput(selection.txHash, selection.index);
   const body = buildOfferBody([input], [payment, change]);
 
   step(
@@ -81,7 +79,8 @@ export function runBuild(config: Config, options: BuildOptions): void {
   // Signed size: the body, an empty witness set grown by one vkey witness, and no aux data.
   // Taking the price out of the change can only shorten its token quantity, so this is an
   // upper bound on the size that will actually be signed.
-  const signedSize = encode([body, new Map(), null]).length + vkeyWitnessBytes(1);
+  const unsigned = new SubTransaction(body, new Serialization.TransactionWitnessSet());
+  const signedSize = cborSize(unsigned.toCbor()) + vkeyWitnessBytes(1);
   const feeShare = offerFee(signedSize, pp.txFeeFixed, pp.txFeePerByte);
   const capacity = changeLovelace + feeShare;
 
@@ -92,7 +91,7 @@ export function runBuild(config: Config, options: BuildOptions): void {
 
   const draftPath = workPath(config, ARTIFACTS.draft);
   const draft: StoredDraft = {
-    body: bytesToHex(encode(body)),
+    body: body.toCbor(),
     callerAddress: selection.address,
     capacity: capacity.toString(),
   };
