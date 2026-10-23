@@ -19,7 +19,7 @@ All URIs are relative to *http://localhost*
 
 ## apiCardanoOffersPost
 
-> ApiMidnightOffersPost201Response apiCardanoOffersPost()
+> ApiCardanoOffersPost202Response apiCardanoOffersPost()
 
 
 
@@ -54,7 +54,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**ApiMidnightOffersPost201Response**](ApiMidnightOffersPost201Response.md)
+[**ApiCardanoOffersPost202Response**](ApiCardanoOffersPost202Response.md)
 
 ### Authorization
 
@@ -69,12 +69,9 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-| **201** | Default Response |  -  |
+| **202** | Default Response |  -  |
 | **400** | Default Response |  -  |
-| **409** | Default Response |  -  |
-| **410** | Default Response |  -  |
 | **500** | Default Response |  -  |
-| **501** | Default Response |  -  |
 | **503** | Default Response |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

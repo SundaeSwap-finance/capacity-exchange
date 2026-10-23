@@ -1345,51 +1345,17 @@
     "/api/cardano/offers": {
       "post": {
         "responses": {
-          "201": {
+          "202": {
             "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "required": [
-                    "offerId",
-                    "offerAmount",
-                    "offerCurrency",
-                    "serializedTx",
-                    "expiresAt"
+                    "offerId"
                   ],
                   "properties": {
                     "offerId": {
-                      "type": "string"
-                    },
-                    "offerAmount": {
-                      "type": "string"
-                    },
-                    "offerCurrency": {
-                      "title": "Currency",
-                      "type": "object",
-                      "required": [
-                        "id",
-                        "type",
-                        "rawId"
-                      ],
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "type": {
-                          "type": "string"
-                        },
-                        "rawId": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "serializedTx": {
-                      "type": "string"
-                    },
-                    "expiresAt": {
-                      "format": "date-time",
                       "type": "string"
                     }
                   }
@@ -1423,85 +1389,7 @@
               }
             }
           },
-          "409": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "ErrorResponse",
-                  "type": "object",
-                  "required": [
-                    "error",
-                    "message"
-                  ],
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "ErrorResponse",
-                  "type": "object",
-                  "required": [
-                    "error",
-                    "message"
-                  ],
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "500": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "ErrorResponse",
-                  "type": "object",
-                  "required": [
-                    "error",
-                    "message"
-                  ],
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "501": {
             "description": "Default Response",
             "content": {
               "application/json": {
