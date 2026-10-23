@@ -43,7 +43,7 @@ export const CreateCardanoOfferResponse = Type.Object({
 export const CardanoOfferReply = Type.Union([CreateCardanoOfferResponse, ErrorResponse]);
 
 const cardanoOfferResponse = {
-  202: CreateOfferResponse,
+  202: CreateCardanoOfferResponse,
   400: ErrorResponse,
   500: ErrorResponse,
   503: ErrorResponse,
