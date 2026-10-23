@@ -53,6 +53,11 @@ const cardanoOfferResponse = {
 export const CardanoOfferSchema = {
   schema: {
     consumes: ['application/cbor'],
+    body: {
+      type: 'string',
+      format: 'binary',
+      description: 'CBOR-encoded offer envelope',
+    },
     response: cardanoOfferResponse,
   },
 };
