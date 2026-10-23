@@ -1,4 +1,4 @@
-import { SubTransaction } from './types';
+import { SubTransaction } from './types.js';
 import { Serialization } from '@cardano-sdk/core';
 import { HexBlob } from '@cardano-sdk/util';
 const { CborReader, CborTag, CborWriter } = Serialization;
