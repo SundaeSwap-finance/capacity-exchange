@@ -191,7 +191,7 @@ export class CardanoChainStateService implements ChainHealth {
         for await (const response of stream) {
           expectMessageWithin(STREAM_IDLE_TIMEOUT_MS, 'FollowTip stream went silent');
           this.streamError = null;
-          this.onAction(response.action);
+          await this.onAction(response.action);
           if (this.rollbackDepth > MAX_ROLLBACK_DEPTH) {
             this.streamError = `Cardano rolled back ${this.rollbackDepth} blocks, more than the ${MAX_ROLLBACK_DEPTH} the service can undo`;
             this.logger.error(
@@ -223,7 +223,7 @@ export class CardanoChainStateService implements ChainHealth {
     }
   }
 
-  private onAction(action: TipAction): void {
+  private async onAction(action: TipAction): Promise<void> {
     switch (action.case) {
       case 'apply': {
         this.rollbackDepth = 0;
@@ -236,7 +236,7 @@ export class CardanoChainStateService implements ChainHealth {
         try {
           const [header, transactions] = parseBlock(action.value.nativeBytes);
           for (const follower of this.followers) {
-            follower.onRollForward(header, transactions);
+            await follower.onRollForward(header, transactions);
           }
         } catch (err) {
           this.logger.error({ err }, 'CardanoChainStateService could not parse a block');
@@ -261,7 +261,7 @@ export class CardanoChainStateService implements ChainHealth {
         if (kept) {
           const header = tipHeader(kept);
           for (const follower of this.followers) {
-            follower.onRollBackward(header);
+            await follower.onRollBackward(header);
           }
         }
         return;
@@ -269,7 +269,7 @@ export class CardanoChainStateService implements ChainHealth {
       case 'reset': {
         const header = blockRefHeader(action.value);
         for (const follower of this.followers) {
-          follower.onRollBackward(header);
+          await follower.onRollBackward(header);
         }
         // The stream opens with a reset to the intersection it found; a reset to
         // an older tracked block rolls back the blocks after it.
