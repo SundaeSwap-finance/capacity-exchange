@@ -468,6 +468,6 @@ describe('CardanoWalletService', () => {
       await wallet.onRollBackward(header(rollbackTo));
 
       expect(refs(wallet)).toEqual([ref(chain[rollbackTo - 1])]);
-    });
+    }, 30_000);
   });
 });

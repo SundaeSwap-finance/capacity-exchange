@@ -142,7 +142,7 @@ describe('CardanoChainStateService', () => {
   });
 
   async function started(expectedStreams = 1) {
-    svc = new CardanoChainStateService('http://dolos.test', logger as never);
+    svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
     svc.start();
     await vi.waitFor(() => expect(streams).toHaveLength(expectedStreams));
     return svc;
@@ -324,7 +324,7 @@ describe('CardanoChainStateService', () => {
 
     async function followed() {
       const follower = { onRollForward: vi.fn(), onRollBackward: vi.fn() };
-      svc = new CardanoChainStateService('http://dolos.test', logger as never);
+      svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
       svc.addFollower(follower);
       svc.start();
       await vi.waitFor(() => expect(streams).toHaveLength(1));
@@ -452,7 +452,7 @@ describe('CardanoChainStateService', () => {
   it('does not throw on start when the source is down, and recovers when it returns', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockReadTip.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
-    svc = new CardanoChainStateService('http://dolos.test', logger as never);
+    svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
     svc.start();
 
     await vi.waitFor(() =>

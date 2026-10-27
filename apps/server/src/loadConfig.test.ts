@@ -21,6 +21,7 @@ vi.mock('./config/prices.js', async (importActual) => {
 import { loadConfig } from './loadConfig.js';
 import { loadPriceConfig } from './config/prices.js';
 import { createWalletResources } from './config/wallet.js';
+import { BlockId, Slot } from '@capacity-exchange/cardano-core';
 
 const BASE_ENV: Record<string, string> = {
   PRICE_CONFIG_FILE: 'unused.json',
@@ -140,5 +141,48 @@ describe('loadConfig — cardano', () => {
 
     const { config } = await loadConfig();
     expect(config.cardano).toBeDefined();
+    expect(config.cardano!.walletAddress.toBech32()).toEqual(process.env.CARDANO_WALLET_ADDRESS);
+    expect(config.cardano!.startingPoint).toBeUndefined();
+  });
+
+  it('parses a starting point', async () => {
+    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
+    process.env.CARDANO_WALLET_ADDRESS =
+      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
+    process.env.CARDANO_STARTING_POINT =
+      '123.abababababababababababababababababababababababababababababababab';
+
+    const { config } = await loadConfig();
+    expect(config.cardano).toBeDefined();
+    expect(config.cardano!.startingPoint).toEqual({
+      slot: Slot(123),
+      hash: BlockId('abababababababababababababababababababababababababababababababab'),
+    });
+  });
+
+  it('parses starting point "tip"', async () => {
+    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
+    process.env.CARDANO_WALLET_ADDRESS =
+      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
+    process.env.CARDANO_STARTING_POINT = 'tip';
+
+    const { config } = await loadConfig();
+    expect(config.cardano).toBeDefined();
+    expect(config.cardano!.startingPoint).toBeUndefined();
+  });
+
+  it.each([
+    '',
+    'genesis',
+    '123',
+    'abc.abababababababababababababababababababababababababababababababab',
+    '123.abab',
+  ])('rejects an invalid starting point %j', async (point) => {
+    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
+    process.env.CARDANO_WALLET_ADDRESS =
+      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
+    process.env.CARDANO_STARTING_POINT = point;
+
+    await expect(loadConfig()).rejects.toThrow('CARDANO_STARTING_POINT');
   });
 });

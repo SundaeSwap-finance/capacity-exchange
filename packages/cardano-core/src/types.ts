@@ -1,4 +1,5 @@
 import { Cardano, Serialization } from '@cardano-sdk/core';
+export { Point } from '@cardano-sdk/core';
 
 export type Address = Cardano.Address;
 export const Address = Cardano.Address;

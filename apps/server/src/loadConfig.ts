@@ -18,7 +18,7 @@ import {
 import { midnightEndpointOverrides, parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
-import { Address } from '@capacity-exchange/cardano-core';
+import { Address, BlockId, Point, Slot } from '@capacity-exchange/cardano-core';
 
 // All these fields are required together: a server either has a fully-configured
 // Midnight network or none of it.
@@ -31,6 +31,7 @@ export interface MidnightConfig {
 
 export interface CardanoConfig {
   utxorpcUrl: string;
+  startingPoint?: Point;
   walletAddress: Address;
 }
 
@@ -60,6 +61,14 @@ export interface ServerBootstrap {
   config: AppConfig;
   logger: pino.Logger;
 }
+
+const parsePoint = (point?: string): Point | undefined => {
+  if (!point || point === 'tip') {
+    return undefined;
+  }
+  const [rawSlot, rawHash] = point.split('.', 2);
+  return { slot: Slot(Number(rawSlot)), hash: BlockId(rawHash) };
+};
 
 /** Load env, create the logger, validate and build all server config. */
 export async function loadConfig(): Promise<ServerBootstrap> {
@@ -94,8 +103,10 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   let cardano: CardanoConfig | undefined;
   if (env.CARDANO_UTXORPC_URL && env.CARDANO_WALLET_ADDRESS) {
     const walletAddress = Address.fromBech32(env.CARDANO_WALLET_ADDRESS);
+    const startingPoint = parsePoint(env.CARDANO_STARTING_POINT);
     cardano = {
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
+      startingPoint,
       walletAddress,
     };
   }

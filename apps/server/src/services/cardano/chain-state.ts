@@ -9,6 +9,7 @@ import {
   BlockNo,
   parseBlock,
   PartialBlockHeader,
+  Point,
   Slot,
   Transaction,
 } from '@capacity-exchange/cardano-core';
@@ -66,6 +67,12 @@ export interface ChainFollower {
   onRollBackward(header: PartialBlockHeader): Promise<void>;
 }
 
+export interface CardanoChainStateServiceArgs {
+  url: string;
+  startingPoint?: Point;
+  logger: FastifyBaseLogger;
+}
+
 /**
  * Follows the Cardano tip and reads the protocol parameters over UTxO RPC.
  * The FollowTip stream is the source of truth for the tip: ReadTip only seeds
@@ -78,13 +85,14 @@ export class CardanoChainStateService implements ChainHealth {
   private readonly followers: ChainFollower[] = [];
   // Applied blocks, oldest first, so an undo can step back to the one before.
   private recent: CardanoTip[] = [];
+  private startingPoint?: Point;
   // Blocks rolled back since the last apply.
   private rollbackDepth = 0;
   private streamError: string | null = null;
   private readonly abort = new AbortController();
   private following?: Promise<void>;
 
-  constructor(url: string, logger: FastifyBaseLogger) {
+  constructor({ url, startingPoint, logger }: CardanoChainStateServiceArgs) {
     const transport = createGrpcTransport({
       httpVersion: '2',
       baseUrl: url,
@@ -94,6 +102,7 @@ export class CardanoChainStateService implements ChainHealth {
     this.query = createPromiseClient(queryConnect.QueryService, transport);
     this.sync = createPromiseClient(syncConnect.SyncService, transport);
     this.logger = logger;
+    this.startingPoint = startingPoint;
   }
 
   addFollower(follower: ChainFollower) {
@@ -163,15 +172,22 @@ export class CardanoChainStateService implements ChainHealth {
         }, ms);
       };
       try {
-        if (!this.recent.length) {
-          this.recent = [await this.readTip()];
+        const intersect = this.recent.slice(-INTERSECT_POINTS).reverse().map(toBlockRef);
+        if (!intersect.length) {
+          if (this.startingPoint) {
+            intersect.push({
+              slot: BigInt(this.startingPoint.slot),
+              hash: Buffer.from(this.startingPoint.hash, 'hex'),
+            });
+          } else {
+            const tip = await this.readTip();
+            this.recent.push(tip);
+            intersect.push(toBlockRef(tip));
+          }
           this.rollbackDepth = 0;
         }
         expectMessageWithin(FIRST_MESSAGE_TIMEOUT_MS, 'FollowTip sent nothing after connecting');
-        const stream = this.sync.followTip(
-          { intersect: this.recent.slice(-INTERSECT_POINTS).reverse().map(toBlockRef) },
-          { signal: attempt.signal },
-        );
+        const stream = this.sync.followTip({ intersect }, { signal: attempt.signal });
         for await (const response of stream) {
           expectMessageWithin(STREAM_IDLE_TIMEOUT_MS, 'FollowTip stream went silent');
           this.streamError = null;
