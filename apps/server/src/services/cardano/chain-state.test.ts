@@ -382,6 +382,34 @@ describe('CardanoChainStateService', () => {
       expect(s.tip()).toMatchObject({ slot: 90n, hash: hex(90) });
     });
 
+    it('stops following when no recent block intersects once followers hold state', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { s } = await followed();
+      streams[0].push(apply(101));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      streams[0].push(notFound());
+      await vi.waitFor(() =>
+        expect(s.health()).toMatchObject({ status: 'ko', error: /common block/ }),
+      );
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      expect(streams).toHaveLength(1);
+      expect(mockReadTip).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts again from the source tip when no block has reached followers', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      await followed();
+      mockReadTip.mockResolvedValue(tipResponse(500));
+
+      streams[0].push(notFound());
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      await vi.waitFor(() => expect(streams).toHaveLength(2));
+      expect(intersectSlots(1)).toEqual([500n]);
+    });
+
     it('does not roll followers back for blocks they never saw', async () => {
       const { s, follower } = await followed();
       streams[0].push(undo(100), undo(99));

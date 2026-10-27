@@ -88,6 +88,9 @@ export class CardanoChainStateService implements ChainHealth {
   private startingPoint?: Point;
   // Blocks rolled back since the last apply.
   private rollbackDepth = 0;
+  // Set once a block reaches followers: from then on, starting again from another
+  // point would leave their state out of step with the chain.
+  private followersHoldState = false;
   private streamError: string | null = null;
   private readonly abort = new AbortController();
   private following?: Promise<void>;
@@ -207,6 +210,15 @@ export class CardanoChainStateService implements ChainHealth {
           return;
         }
         if (errorCode(err) === GRPC_NOT_FOUND) {
+          if (this.followersHoldState) {
+            this.streamError =
+              'None of the recent blocks is on the source chain, so followers cannot roll back to a common block';
+            this.logger.error(
+              { err },
+              'CardanoChainStateService stopped following; restart to resume',
+            );
+            return;
+          }
           // Clearing makes the next attempt start from the source's tip.
           this.recent = [];
         }
@@ -227,6 +239,7 @@ export class CardanoChainStateService implements ChainHealth {
     switch (action.case) {
       case 'apply': {
         this.rollbackDepth = 0;
+        this.followersHoldState ||= this.followers.length > 0;
         this.recent.push(blockTip(action.value));
         if (this.recent.length > TRACKED_BLOCKS) {
           this.recent.shift();
