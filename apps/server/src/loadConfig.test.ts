@@ -128,6 +128,7 @@ describe('loadConfig — cardano', () => {
 
   beforeEach(() => {
     process.env = { ...savedEnv, ...BASE_ENV };
+    vi.mocked(loadPriceConfig).mockReset().mockReturnValue(ADA_ONLY);
   });
 
   afterEach(() => {
