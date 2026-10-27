@@ -107,10 +107,10 @@ class WalletTracker extends ChainIndex<Map<string, TransactionUnspentOutput>> {
       }
       return;
     }
-    applyTx(tx.getId(), txBody);
     for (const subTx of txBody.subTransactions()?.values() ?? []) {
       applyTx(subTx.getId(), subTx.body());
     }
+    applyTx(tx.getId(), txBody);
   }
 
   protected copyValue(
