@@ -210,7 +210,7 @@ tasks:
 
   test:integ:cardano:
     desc: Run Cardano integration tests against local Cardano devnet
-    deps: [_build:cardano-core]
+    deps: [_build:typescript]
     preconditions:
       - sh: bash -c '</dev/tcp/127.0.0.1/50051'
         msg: Dolos is not running on port 50051. Start it with docker compose -f testnet/cardano.yml up -d --wait

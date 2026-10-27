@@ -35,13 +35,6 @@ tasks:
     cmds:
       - bun run --filter @sundaeswap/capacity-exchange-nodejs build
 
-  # Narrow target for the Cardano tests: vitest resolves cardano-core to its build output.
-  cardano-core:
-    run: once
-    deps: [install]
-    cmds:
-      - bun run --filter @capacity-exchange/cardano-core build
-
   # Network-agnostic: the bundle's network is filled in at deploy by the demo's interpolate-index.
   webapp:
     deps: [typescript]
