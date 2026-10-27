@@ -37,6 +37,12 @@ export const ChainStatus = Type.Object({
   error: Type.Optional(Type.String()),
 });
 
+export const CardanoStatus = Type.Object({
+  ...ChainStatus.properties,
+  // A string, as amounts are elsewhere: lovelace can exceed a safe JSON number.
+  walletLovelace: Type.Optional(Type.String()),
+});
+
 /** A chain the server follows, as the readiness check sees it. */
 export interface ChainHealth {
   health(): Static<typeof ChainStatus>;
@@ -51,7 +57,7 @@ export const ReadyResponse = Type.Object({
   status: Type.Union([Type.Literal('syncing'), Type.Literal('ok'), Type.Literal('ko')]),
   // A chain is present only when this server is configured to use it.
   midnight: Type.Optional(MidnightStatus),
-  cardano: Type.Optional(ChainStatus),
+  cardano: Type.Optional(CardanoStatus),
 });
 
 // For /health/ready

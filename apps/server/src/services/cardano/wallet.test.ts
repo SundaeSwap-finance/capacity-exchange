@@ -206,6 +206,26 @@ describe('CardanoWalletService', () => {
     });
   });
 
+  it('totals the lovelace in its UTxOs', async () => {
+    const wallet = newWallet();
+    expect(wallet.lovelace()).toBe(0n);
+    const funding = tx({
+      inputs: [externalInput(10)],
+      outputs: [
+        output(WALLET_ADDRESS, 1_000_000n),
+        output(SOMEONE_ELSE, 7_000_000n),
+        output(enterpriseAddress(OURS), 2_500_000n),
+      ],
+    });
+    await wallet.onRollForward(header(1), [funding]);
+    expect(wallet.lovelace()).toBe(3_500_000n);
+
+    await wallet.onRollForward(header(2), [
+      tx({ inputs: [spend(funding, 0)], outputs: [output(SOMEONE_ELSE)] }),
+    ]);
+    expect(wallet.lovelace()).toBe(2_500_000n);
+  });
+
   describe('transactions that failed phase-2 validation', () => {
     it('leaves their inputs unspent and ignores their outputs', async () => {
       const wallet = newWallet();

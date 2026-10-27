@@ -3,6 +3,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import healthRoutes from './health.js';
 import type { AppConfig } from '../loadConfig.js';
 import type { CardanoChainStateService } from '../services/cardano/chain-state.js';
+import type { CardanoWalletService } from '../services/cardano/wallet.js';
 import type { MidnightWalletService, WalletSyncState } from '../services/midnight/wallet.js';
 
 type CardanoHealth = ReturnType<CardanoChainStateService['health']>;
@@ -17,7 +18,15 @@ function stubIndexer() {
   );
 }
 
-async function appWith({ wallet, cardano }: { wallet?: WalletSyncState; cardano?: CardanoHealth }) {
+async function appWith({
+  wallet,
+  cardano,
+  cardanoLovelace,
+}: {
+  wallet?: WalletSyncState;
+  cardano?: CardanoHealth;
+  cardanoLovelace?: bigint;
+}) {
   const app = Fastify({ logger: false });
   const midnight = wallet ? { endpoints: { indexerHttpUrl: INDEXER_URL } } : undefined;
   app.decorate('config', { midnight, capacityExchangeUrls: [] } as unknown as AppConfig);
@@ -28,6 +37,12 @@ async function appWith({ wallet, cardano }: { wallet?: WalletSyncState; cardano?
   app.decorate(
     'cardanoChainStateService',
     cardano ? ({ health: () => cardano } as unknown as CardanoChainStateService) : null,
+  );
+  app.decorate(
+    'cardanoWalletService',
+    cardanoLovelace === undefined
+      ? null
+      : ({ lovelace: () => cardanoLovelace } as unknown as CardanoWalletService),
   );
   await app.register(healthRoutes, { prefix: '/health' });
   await app.ready();
@@ -59,6 +74,22 @@ describe('GET /health/ready', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json().cardano).toEqual({ status: 'ok', slot: 2118000, tipAgeMs: 4000 });
+  });
+
+  it("reports the Cardano wallet's ADA in lovelace", async () => {
+    app = await appWith({
+      cardano: { status: 'ok', slot: 2118000, tipAgeMs: 4000 },
+      cardanoLovelace: 12_345_678_901_234_567_890n,
+    });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().cardano).toEqual({
+      status: 'ok',
+      slot: 2118000,
+      tipAgeMs: 4000,
+      walletLovelace: '12345678901234567890',
+    });
   });
 
   it('stays ready while the Cardano stream is down', async () => {

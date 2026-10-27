@@ -33,6 +33,15 @@ export class CardanoWalletService implements ChainFollower {
     return [...this.#tracker.currentValue().values()];
   }
 
+  /** The ADA held across the wallet's UTxOs, in lovelace. */
+  lovelace(): bigint {
+    let total = 0n;
+    for (const utxo of this.#tracker.currentValue().values()) {
+      total += utxo.output().amount().coin();
+    }
+    return total;
+  }
+
   async onRollForward(header: PartialBlockHeader, txs: Transaction[]) {
     for (const tx of txs) {
       this.#tracker.applyTransaction(header.slot, tx);
