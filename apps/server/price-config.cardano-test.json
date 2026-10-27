@@ -1,0 +1,17 @@
+{
+  "priceFormulas": {
+    "ADA": [
+      {
+        "currency": {
+          "type": "cardano:native",
+          "rawId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "basePrice": "101",
+        "rateNumerator": "11",
+        "rateDenominator": "1000"
+      }
+    ]
+  },
+  "sponsorAll": false,
+  "sponsoredContracts": []
+}

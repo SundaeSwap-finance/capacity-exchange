@@ -10,6 +10,7 @@ Name | Type
 `slot` | number
 `tipAgeMs` | number
 `error` | string
+`walletLovelace` | string
 
 ## Example
 
@@ -22,6 +23,7 @@ const example = {
   "slot": null,
   "tipAgeMs": null,
   "error": null,
+  "walletLovelace": null,
 } satisfies HealthReadyGet200ResponseCardano
 
 console.log(example)

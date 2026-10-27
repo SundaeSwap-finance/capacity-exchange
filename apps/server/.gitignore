@@ -2,6 +2,7 @@ price-config.*.json
 price-config-*.json
 !price-config.example.json
 !price-config.test.json
+!price-config.cardano-test.json
 !wallet-seed.test.hex
 .quote-secret-*.hex
 price-formulas.json

@@ -257,6 +257,9 @@
                         },
                         "error": {
                           "type": "string"
+                        },
+                        "walletLovelace": {
+                          "type": "string"
                         }
                       }
                     }
@@ -408,6 +411,9 @@
                         },
                         "error": {
                           "type": "string"
+                        },
+                        "walletLovelace": {
+                          "type": "string"
                         }
                       }
                     }
@@ -558,6 +564,9 @@
                           "type": "number"
                         },
                         "error": {
+                          "type": "string"
+                        },
+                        "walletLovelace": {
                           "type": "string"
                         }
                       }

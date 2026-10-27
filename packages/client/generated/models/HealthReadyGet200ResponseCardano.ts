@@ -43,6 +43,12 @@ export interface HealthReadyGet200ResponseCardano {
      * @memberof HealthReadyGet200ResponseCardano
      */
     error?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HealthReadyGet200ResponseCardano
+     */
+    walletLovelace?: string;
 }
 
 
@@ -79,6 +85,7 @@ export function HealthReadyGet200ResponseCardanoFromJSONTyped(json: any, ignoreD
         'slot': json['slot'] == null ? undefined : json['slot'],
         'tipAgeMs': json['tipAgeMs'] == null ? undefined : json['tipAgeMs'],
         'error': json['error'] == null ? undefined : json['error'],
+        'walletLovelace': json['walletLovelace'] == null ? undefined : json['walletLovelace'],
     };
 }
 
@@ -97,6 +104,7 @@ export function HealthReadyGet200ResponseCardanoToJSONTyped(value?: HealthReadyG
         'slot': value['slot'],
         'tipAgeMs': value['tipAgeMs'],
         'error': value['error'],
+        'walletLovelace': value['walletLovelace'],
     };
 }
 

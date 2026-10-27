@@ -31,6 +31,8 @@ services:
       CARDANO_NODE_NETWORK_ID: '42'
     volumes:
       - 'devnet:/devnet'
+      # The funded key, so tests can pay from it with cardano-cli.
+      - './cardano:/keys:ro'
     healthcheck:
       test: ['CMD-SHELL', 'cardano-cli query tip | jq -e ''.era == "Dijkstra" and .block > 0''']
       interval: 2s
