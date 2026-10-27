@@ -121,3 +121,24 @@ describe('loadConfig — optional Midnight configuration', () => {
     },
   );
 });
+
+describe('loadConfig — cardano', () => {
+  const savedEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env = { ...savedEnv, ...BASE_ENV };
+  });
+
+  afterEach(() => {
+    process.env = savedEnv;
+  });
+
+  it('parses cardano config', async () => {
+    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
+    process.env.CARDANO_WALLET_ADDRESS =
+      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
+
+    const { config } = await loadConfig();
+    expect(config.cardano).toBeDefined();
+  });
+});

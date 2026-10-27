@@ -1,3 +1,31 @@
-import { Serialization } from '@cardano-sdk/core';
+import { Cardano, Serialization } from '@cardano-sdk/core';
+
+export type Address = Cardano.Address;
+export const Address = Cardano.Address;
+export type BlockId = Cardano.BlockId;
+export const BlockId = Cardano.BlockId;
+export type BlockNo = Cardano.BlockNo;
+export const BlockNo = Cardano.BlockNo;
+export type Credential = Cardano.Credential;
+export type PartialBlockHeader = Cardano.PartialBlockHeader;
+export type PaymentAddress = Cardano.PaymentAddress;
+export const PaymentAddress = Cardano.PaymentAddress;
+export type Slot = Cardano.Slot;
+export const Slot = Cardano.Slot;
+export type TransactionId = Cardano.TransactionId;
+export const TransactionId = Cardano.TransactionId;
+
 export type SubTransaction = Serialization.SubTransaction;
 export const SubTransaction = Serialization.SubTransaction;
+export type SubTransactionBody = Serialization.SubTransactionBody;
+export const SubTransactionBody = Serialization.SubTransactionBody;
+export type Transaction = Serialization.Transaction;
+export const Transaction = Serialization.Transaction;
+export type TransactionBody = Serialization.TransactionBody;
+export const TransactionBody = Serialization.TransactionBody;
+export type TransactionInput = Serialization.TransactionInput;
+export const TransactionInput = Serialization.TransactionInput;
+export type TransactionOutput = Serialization.TransactionOutput;
+export const TransactionOutput = Serialization.TransactionOutput;
+export type TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
+export const TransactionUnspentOutput = Serialization.TransactionUnspentOutput;

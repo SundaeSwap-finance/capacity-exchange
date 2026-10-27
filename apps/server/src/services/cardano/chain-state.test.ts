@@ -47,14 +47,17 @@ const PARAMS_RESPONSE = {
 };
 
 const tipResponse = (slot: number, timestamp = Date.now()) => ({
-  tip: { slot: BigInt(slot), hash: hash(slot), timestamp: BigInt(timestamp) },
+  tip: { slot: BigInt(slot), height: BigInt(slot), hash: hash(slot), timestamp: BigInt(timestamp) },
 });
 
 function block(slot: number, timestamp = Date.now()) {
   return {
     chain: {
       case: 'cardano',
-      value: { header: { slot: BigInt(slot), hash: hash(slot) }, timestamp: BigInt(timestamp) },
+      value: {
+        header: { slot: BigInt(slot), height: BigInt(slot), hash: hash(slot) },
+        timestamp: BigInt(timestamp),
+      },
     },
     nativeBytes: new Uint8Array(),
   };
@@ -62,7 +65,7 @@ function block(slot: number, timestamp = Date.now()) {
 const apply = (slot: number) => ({ action: { case: 'apply', value: block(slot) } });
 const undo = (slot: number) => ({ action: { case: 'undo', value: block(slot) } });
 const reset = (slot: number) => ({
-  action: { case: 'reset', value: { slot: BigInt(slot), hash: hash(slot) } },
+  action: { case: 'reset', value: { slot: BigInt(slot), height: BigInt(slot), hash: hash(slot) } },
 });
 const notFound = () =>
   Object.assign(new Error('[not_found] none of the requested points intersect'), { code: 5 });
@@ -314,6 +317,53 @@ describe('CardanoChainStateService', () => {
     streams[0].push(reset(101));
 
     await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+  });
+
+  describe('followers', () => {
+    const header = (slot: number) => ({ blockNo: slot, slot, hash: hex(slot) });
+
+    async function followed() {
+      const follower = { onRollForward: vi.fn(), onRollBackward: vi.fn() };
+      svc = new CardanoChainStateService('http://dolos.test', logger as never);
+      svc.addFollower(follower);
+      svc.start();
+      await vi.waitFor(() => expect(streams).toHaveLength(1));
+      return { s: svc, follower };
+    }
+
+    it('rolls followers back to the block before an undone one', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(apply(101), apply(102), undo(102));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+    });
+
+    it('rolls followers back one block per undo', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(apply(101), apply(102), undo(102), undo(101));
+
+      await vi.waitFor(() =>
+        expect(follower.onRollBackward.mock.calls).toEqual([[header(101)], [header(100)]]),
+      );
+      expect(s.tip().slot).toBe(100n);
+    });
+
+    it('rolls followers back to the block a reset names', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(apply(101), apply(102), reset(101));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+    });
+
+    it('does not roll followers back for blocks they never saw', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(undo(100), undo(99));
+      await vi.waitFor(() => expect(() => s.tip()).toThrow(/no tip/));
+
+      expect(follower.onRollBackward).not.toHaveBeenCalled();
+    });
   });
 
   it('reports syncing while the tip is more than five minutes old', async () => {

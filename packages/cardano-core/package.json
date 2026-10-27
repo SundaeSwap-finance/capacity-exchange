@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@cardano-sdk/core": "^0.47.1",
+    "@cardano-sdk/crypto": "^0.4.7",
     "@cardano-sdk/util": "^0.17.2"
   },
   "devDependencies": {

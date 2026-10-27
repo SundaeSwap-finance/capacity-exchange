@@ -4,15 +4,21 @@ import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
 import type { Static } from '@sinclair/typebox';
 import type { ChainHealth, ChainStatus } from '../../models/health.js';
+import {
+  BlockId,
+  BlockNo,
+  parseBlock,
+  PartialBlockHeader,
+  Slot,
+  Transaction,
+} from '@capacity-exchange/cardano-core';
+import { MAX_ROLLBACK_DEPTH } from './utils.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;
 // Blocks arrive every ~20 s on average (active slot coefficient 0.05, 1 s
 // slots), so a tip this old means the source has stopped keeping up.
 const MAX_TIP_AGE_MS = 5 * 60_000;
-// The deepest rollback the service can undo: mainnet's security parameter k.
-// A deeper one stops the service, since its history does not reach back that far.
-const MAX_ROLLBACK_DEPTH = 2160;
 // One block more keeps a tip after a rollback of the full depth.
 const TRACKED_BLOCKS = MAX_ROLLBACK_DEPTH + 1;
 // Several points let a reconnect intersect even if the newest one was rolled
@@ -35,6 +41,7 @@ type TipAction = sync.FollowTipResponse['action'];
 
 export interface CardanoTip {
   slot: bigint;
+  height: bigint;
   /** Block hash, hex. */
   hash: string;
   timestamp: Date;
@@ -54,6 +61,11 @@ export interface CardanoProtocolParams {
   prices: { memory: Rational; steps: Rational };
 }
 
+export interface ChainFollower {
+  onRollForward(header: PartialBlockHeader, txs: Transaction[]): Promise<void>;
+  onRollBackward(header: PartialBlockHeader): Promise<void>;
+}
+
 /**
  * Follows the Cardano tip and reads the protocol parameters over UTxO RPC.
  * The FollowTip stream is the source of truth for the tip: ReadTip only seeds
@@ -63,6 +75,7 @@ export class CardanoChainStateService implements ChainHealth {
   private readonly query: PromiseClient<typeof queryConnect.QueryService>;
   private readonly sync: PromiseClient<typeof syncConnect.SyncService>;
   private readonly logger: FastifyBaseLogger;
+  private readonly followers: ChainFollower[] = [];
   // Applied blocks, oldest first, so an undo can step back to the one before.
   private recent: CardanoTip[] = [];
   // Blocks rolled back since the last apply.
@@ -81,6 +94,13 @@ export class CardanoChainStateService implements ChainHealth {
     this.query = createPromiseClient(queryConnect.QueryService, transport);
     this.sync = createPromiseClient(syncConnect.SyncService, transport);
     this.logger = logger;
+  }
+
+  addFollower(follower: ChainFollower) {
+    if (this.following) {
+      throw new Error('Cannot add followers after startup');
+    }
+    this.followers.push(follower);
   }
 
   /** Follows the tip; an unreachable source shows as `ko`. */
@@ -195,6 +215,16 @@ export class CardanoChainStateService implements ChainHealth {
         if (this.recent.length > TRACKED_BLOCKS) {
           this.recent.shift();
         }
+        // TODO: some blocks are not parsable with the current cardano-sdk version.
+        // Once that's updated, don't swallow errors here
+        try {
+          const [header, transactions] = parseBlock(action.value.nativeBytes);
+          for (const follower of this.followers) {
+            follower.onRollForward(header, transactions);
+          }
+        } catch (err) {
+          this.logger.error({ err }, 'CardanoChainStateService could not parse a block');
+        }
         return;
       }
       case 'undo': {
@@ -209,9 +239,22 @@ export class CardanoChainStateService implements ChainHealth {
         // window has not filled yet: there is no tip until the next apply.
         this.recent = at >= 0 ? this.recent.slice(0, at) : [];
         this.logger.info({ slot: undone.slot.toString() }, 'Cardano rollback: block undone');
+        // Followers roll back to the block they keep. With none tracked, the
+        // undone block is the seed tip or older, which followers never applied.
+        const kept = this.recent.at(-1);
+        if (kept) {
+          const header = tipHeader(kept);
+          for (const follower of this.followers) {
+            follower.onRollBackward(header);
+          }
+        }
         return;
       }
       case 'reset': {
+        const header = blockRefHeader(action.value);
+        for (const follower of this.followers) {
+          follower.onRollBackward(header);
+        }
         // The stream opens with a reset to the intersection it found; a reset to
         // an older tracked block rolls back the blocks after it.
         const at = lastIndexOfHash(this.recent, toHex(action.value.hash));
@@ -235,7 +278,12 @@ export class CardanoChainStateService implements ChainHealth {
     if (!tip) {
       throw new Error('UTxO RPC ReadTip returned no tip');
     }
-    return { slot: tip.slot, hash: toHex(tip.hash), timestamp: new Date(Number(tip.timestamp)) };
+    return {
+      slot: tip.slot,
+      height: tip.height,
+      hash: toHex(tip.hash),
+      timestamp: new Date(Number(tip.timestamp)),
+    };
   }
 }
 
@@ -246,8 +294,25 @@ function blockTip(block: sync.AnyChainBlock): CardanoTip {
   }
   return {
     slot: cardano.header.slot,
+    height: cardano.header.height,
     hash: toHex(cardano.header.hash),
     timestamp: new Date(Number(cardano.timestamp)),
+  };
+}
+
+function tipHeader(tip: CardanoTip): PartialBlockHeader {
+  return {
+    blockNo: BlockNo(Number(tip.height)),
+    slot: Slot(Number(tip.slot)),
+    hash: BlockId(tip.hash),
+  };
+}
+
+function blockRefHeader(blockRef: sync.BlockRef): PartialBlockHeader {
+  return {
+    blockNo: BlockNo(Number(blockRef.height)),
+    slot: Slot(Number(blockRef.slot)),
+    hash: BlockId(Buffer.from(blockRef.hash).toString('hex')),
   };
 }
 
