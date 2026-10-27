@@ -16,6 +16,7 @@ vi.mock('@connectrpc/connect', () => ({
 }));
 
 import { CardanoChainStateService, toBigInt } from './chain-state.js';
+import { BlockId, Slot, type Point } from '@capacity-exchange/cardano-core';
 
 const logger = pino({ level: 'silent' });
 
@@ -64,8 +65,16 @@ function block(slot: number, timestamp = Date.now()) {
 }
 const apply = (slot: number) => ({ action: { case: 'apply', value: block(slot) } });
 const undo = (slot: number) => ({ action: { case: 'undo', value: block(slot) } });
-const reset = (slot: number) => ({
-  action: { case: 'reset', value: { slot: BigInt(slot), height: BigInt(slot), hash: hash(slot) } },
+const reset = (slot: number, timestamp = Date.now()) => ({
+  action: {
+    case: 'reset',
+    value: {
+      slot: BigInt(slot),
+      height: BigInt(slot),
+      hash: hash(slot),
+      timestamp: BigInt(timestamp),
+    },
+  },
 });
 const notFound = () =>
   Object.assign(new Error('[not_found] none of the requested points intersect'), { code: 5 });
@@ -322,9 +331,13 @@ describe('CardanoChainStateService', () => {
   describe('followers', () => {
     const header = (slot: number) => ({ blockNo: slot, slot, hash: hex(slot) });
 
-    async function followed() {
+    async function followed(startingPoint?: Point) {
       const follower = { onRollForward: vi.fn(), onRollBackward: vi.fn() };
-      svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
+      svc = new CardanoChainStateService({
+        url: 'http://dolos.test',
+        startingPoint,
+        logger: logger as never,
+      });
       svc.addFollower(follower);
       svc.start();
       await vi.waitFor(() => expect(streams).toHaveLength(1));
@@ -355,6 +368,18 @@ describe('CardanoChainStateService', () => {
       await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
 
       expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+    });
+
+    it('rolls followers back to the starting point when its first block is undone', async () => {
+      const { s, follower } = await followed({ slot: Slot(90), hash: BlockId(hex(90)) });
+      expect(intersectSlots(0)).toEqual([90n]);
+      expect(mockReadTip).not.toHaveBeenCalled();
+      streams[0].push(reset(90), apply(91), undo(91));
+
+      await vi.waitFor(() =>
+        expect(follower.onRollBackward.mock.calls).toEqual([[header(90)], [header(90)]]),
+      );
+      expect(s.tip()).toMatchObject({ slot: 90n, hash: hex(90) });
     });
 
     it('does not roll followers back for blocks they never saw', async () => {

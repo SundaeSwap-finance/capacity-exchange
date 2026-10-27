@@ -275,7 +275,10 @@ export class CardanoChainStateService implements ChainHealth {
         // an older tracked block rolls back the blocks after it.
         const at = lastIndexOfHash(this.recent, toHex(action.value.hash));
         if (at < 0) {
-          this.recent = [];
+          // An untracked intersection, such as the configured starting point, is
+          // where followers start: tracking it lets undoing the first applied
+          // block roll them back to it.
+          this.recent = [refTip(action.value)];
           this.rollbackDepth = 0;
           return;
         }
@@ -313,6 +316,15 @@ function blockTip(block: sync.AnyChainBlock): CardanoTip {
     height: cardano.header.height,
     hash: toHex(cardano.header.hash),
     timestamp: new Date(Number(cardano.timestamp)),
+  };
+}
+
+function refTip(blockRef: sync.BlockRef): CardanoTip {
+  return {
+    slot: blockRef.slot,
+    height: blockRef.height,
+    hash: toHex(blockRef.hash),
+    timestamp: new Date(Number(blockRef.timestamp)),
   };
 }
 
