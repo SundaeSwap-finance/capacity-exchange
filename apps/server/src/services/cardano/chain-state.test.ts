@@ -410,6 +410,44 @@ describe('CardanoChainStateService', () => {
       expect(intersectSlots(1)).toEqual([500n]);
     });
 
+    it('reconnects from an older tracked block and rolls followers back to it', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { s, follower } = await followed();
+      for (let slot = 101; slot <= 140; slot++) {
+        streams[0].push(apply(slot));
+      }
+      await vi.waitFor(() => expect(s.tip().slot).toBe(140n));
+
+      streams[0].push(new Error('connection reset'));
+      await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko' }));
+      await vi.advanceTimersByTimeAsync(5_000);
+      await vi.waitFor(() => expect(streams).toHaveLength(2));
+      // The newest ten, then doubling gaps, then the oldest tracked block.
+      expect(intersectSlots(1)).toEqual([
+        140n,
+        139n,
+        138n,
+        137n,
+        136n,
+        135n,
+        134n,
+        133n,
+        132n,
+        131n,
+        129n,
+        125n,
+        117n,
+        101n,
+        100n,
+      ]);
+
+      streams[1].push(reset(117));
+
+      await vi.waitFor(() => expect(s.tip().slot).toBe(117n));
+      expect(follower.onRollBackward).toHaveBeenLastCalledWith(header(117));
+      expect(s.health().status).toBe('ok');
+    });
+
     it('does not roll followers back for blocks they never saw', async () => {
       const { s, follower } = await followed();
       streams[0].push(undo(100), undo(99));

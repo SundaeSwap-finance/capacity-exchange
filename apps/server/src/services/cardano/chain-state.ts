@@ -23,8 +23,9 @@ const MAX_TIP_AGE_MS = 5 * 60_000;
 // One block more keeps a tip after a rollback of the full depth.
 const TRACKED_BLOCKS = MAX_ROLLBACK_DEPTH + 1;
 // Several points let a reconnect intersect even if the newest one was rolled
-// back while the stream was down.
-const INTERSECT_POINTS = 10;
+// back while the stream was down: this many newest blocks, then exponentially
+// sparser ones back to the oldest tracked block, which followers can still undo to.
+const DENSE_INTERSECT_POINTS = 10;
 // Dolos opens every FollowTip stream with a reset, so silence this long after
 // connecting means the connection was accepted but is not being served.
 const FIRST_MESSAGE_TIMEOUT_MS = 15_000;
@@ -175,7 +176,7 @@ export class CardanoChainStateService implements ChainHealth {
         }, ms);
       };
       try {
-        const intersect = this.recent.slice(-INTERSECT_POINTS).reverse().map(toBlockRef);
+        const intersect = intersectPoints(this.recent).map(toBlockRef);
         if (!intersect.length) {
           if (this.startingPoint) {
             intersect.push({
@@ -374,6 +375,22 @@ function pause(ms: number, signal: AbortSignal): Promise<void> {
       { once: true },
     );
   });
+}
+
+/** Newest first: the latest blocks one by one, then doubling gaps back to the oldest. */
+function intersectPoints(tips: CardanoTip[]): CardanoTip[] {
+  const points: CardanoTip[] = [];
+  let step = 1;
+  for (let i = tips.length - 1; i >= 0; i -= step) {
+    points.push(tips[i]);
+    if (points.length >= DENSE_INTERSECT_POINTS) {
+      step *= 2;
+    }
+  }
+  if (tips.length && points.at(-1) !== tips[0]) {
+    points.push(tips[0]);
+  }
+  return points;
 }
 
 function lastIndexOfHash(tips: CardanoTip[], hash: string): number {
