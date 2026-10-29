@@ -1,5 +1,18 @@
 # @capacity-exchange/server
 
+## 2.1.0
+
+### Minor Changes
+
+- faacd24: Add an endpoint to accept user offers
+
+### Patch Changes
+
+- 457074c: The server tracks cardano UTXOs, and exposes them in the health endpoint
+- Updated dependencies [457074c]
+- Updated dependencies [faacd24]
+  - @capacity-exchange/cardano-core@1.0.1
+
 ## 2.0.0
 
 ### Major Changes

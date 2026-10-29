@@ -1,5 +1,11 @@
 # @capacity-exchange/demo-contracts
 
+## 1.0.4
+
+### Patch Changes
+
+- faacd24: Add an endpoint to accept user offers
+
 ## 1.0.3
 
 ### Patch Changes
