@@ -1,19 +1,12 @@
-import { blake2b } from '@noble/hashes/blake2.js';
-import { decode } from 'cbor2';
-import { decodeBech32Address } from '../cardano/address.js';
+import { parseEnvelope } from '@capacity-exchange/cardano-core';
+import { Serialization } from '@cardano-sdk/core';
 import { CardanoCli } from '../cardano/cli.js';
 import type { Value } from '../cardano/value.js';
 import type { Config } from '../config.js';
 import { plain } from '../log.js';
-import { bytesToHex, type CborMap, decodeEnvelope, hexToBytes, type TxInput } from '../tx/codec.js';
+import { hexToBytes, inputRef, parseSubTransactionBody, paymentKeyHash, type TxInput } from '../tx/codec.js';
 import { showImbalance, showSubTransaction } from '../tx/show.js';
-import {
-  decodeSubTransaction,
-  decodeSubTransactionBytes,
-  imbalance,
-  type SubTransaction,
-  verifyWitnesses,
-} from '../tx/subtx.js';
+import { imbalance, keyHash, SubTransaction, verifyWitnesses } from '../tx/subtx.js';
 import { readJson, type StoredDraft, type StoredOffer } from './state.js';
 
 export interface ShowOfferOptions {
@@ -30,7 +23,13 @@ export function runShowOffer(config: Config, file: string, options: ShowOfferOpt
   let sub: SubTransaction;
 
   if (parsed.envelope) {
-    sub = decodeSubTransactionBytes(decodeEnvelope(hexToBytes(parsed.envelope)));
+    const envelope = parseEnvelope(hexToBytes(parsed.envelope));
+    if (envelope.status !== 'ok') {
+      throw new Error(
+        `${file} does not carry a readable offer: ${envelope.status === 'malformed' ? envelope.reason : envelope.status}`
+      );
+    }
+    sub = envelope.value;
     let signers: string[] = [];
     let verdict: string;
     try {
@@ -40,23 +39,22 @@ export function runShowOffer(config: Config, file: string, options: ShowOfferOpt
       verdict = `✗ ${(err as Error).message}`;
     }
     // An output paying the signer's own key is theirs; nothing else can be said from the offer.
-    for (const signer of signers) {
-      const keyHash = bytesToHex(blake2b(hexToBytes(signer), { dkLen: 28 }));
-      for (const output of sub.outputs) {
-        if (bytesToHex(output.address.slice(1, 29)) === keyHash) {
-          addresses.set(bytesToHex(output.address), 'caller');
-        }
+    const signerHashes = new Set(signers.map(keyHash));
+    for (const output of sub.body().outputs()) {
+      const owner = paymentKeyHash(output.address());
+      if (owner && signerHashes.has(owner)) {
+        addresses.set(output.address().toBech32(), 'caller');
       }
     }
     plain(`OFFER (signed by ${signers.map((k) => `${k.slice(0, 4)}…`).join(', ') || 'nobody'})`);
-    plain(`  id       ${sub.bodyHash}`);
+    plain(`  id       ${sub.getId()}`);
     plain(`  ${verdict}`);
-    if (parsed.offerId && parsed.offerId !== sub.bodyHash) {
+    if (parsed.offerId && parsed.offerId !== sub.getId()) {
       plain(`  ✗ file says id ${parsed.offerId}, which is not what the envelope carries`);
     }
   } else if (parsed.body && parsed.callerAddress) {
-    sub = decodeSubTransaction([decode(hexToBytes(parsed.body)) as CborMap, new Map(), null]);
-    addresses.set(bytesToHex(decodeBech32Address(parsed.callerAddress)), 'caller');
+    sub = new SubTransaction(parseSubTransactionBody(parsed.body), new Serialization.TransactionWitnessSet());
+    addresses.set(parsed.callerAddress, 'caller');
     plain('OFFER DRAFT (unsigned; the price goes in at `commit`)');
   } else {
     throw new Error(
@@ -67,13 +65,17 @@ export function runShowOffer(config: Config, file: string, options: ShowOfferOpt
   // Before inclusion the inputs are unspent and can be priced; afterwards they cannot.
   const resolved = new Map<string, Value>();
   if (!options.offline) {
-    const refs = sub.inputs.map((i) => `${i.txHash}#${i.index}`);
+    const refs = sub.body().inputs().values().map(inputRef);
     for (const utxo of new CardanoCli(config).queryUtxoByRefs(refs)) {
       resolved.set(`${utxo.txHash}#${utxo.index}`, utxo.value);
     }
   }
-  const allResolved = sub.inputs.every((i) => resolved.has(`${i.txHash}#${i.index}`));
-  const resolve = allResolved ? (input: TxInput): Value => resolved.get(`${input.txHash}#${input.index}`)! : undefined;
+  const allResolved = sub
+    .body()
+    .inputs()
+    .values()
+    .every((i) => resolved.has(inputRef(i)));
+  const resolve = allResolved ? (input: TxInput): Value => resolved.get(inputRef(input))! : undefined;
 
   plain('');
   showSubTransaction('SUB-TRANSACTION', sub, resolve, addresses);

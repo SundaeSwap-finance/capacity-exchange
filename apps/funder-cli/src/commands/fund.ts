@@ -5,8 +5,8 @@ import { getOfferStatus, submitOffer } from '../ces/client.js';
 import { OFFERS_PATH, OfferRejected, type OfferStatus, stopsPolling } from '../ces/protocol.js';
 import { buildBatch, receiveOffer, selectFunding, verifyOffer } from '../ces/service.js';
 import { banner, check, formatAda, formatAsset, step, warn, wrote } from '../log.js';
-import { BODY_SUB_TRANSACTIONS, asArray, decodeTx, encodeTx, readEnvelope, writeEnvelope } from '../tx/codec.js';
-import { decodeSubTransaction, subTransactionSigners } from '../tx/subtx.js';
+import { decodeTx, encodeTx, inputRef, readEnvelope, type TxInput, writeEnvelope } from '../tx/codec.js';
+import { subTransactionSigners } from '../tx/subtx.js';
 import { reportWait } from './status.js';
 import {
   ARTIFACTS,
@@ -161,9 +161,10 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
   check(tag, 'envelope well-formed, era understood');
   check(tag, `${signers.length} witness(es) verify against the offer's body hash`);
   check(tag, 'moves value only: no certs, withdrawals, mint, votes, proposals or deposits');
-  step(tag, `202 Accepted — offer ${sub.bodyHash.slice(0, 8)}… received`);
-  if (sub.bodyHash !== offer.offerId) {
-    throw new Error(`offer.json says ${offer.offerId} but the envelope carries ${sub.bodyHash}`);
+  const offerId = sub.getId();
+  step(tag, `202 Accepted — offer ${offerId.slice(0, 8)}… received`);
+  if (offerId !== offer.offerId) {
+    throw new Error(`offer.json says ${offer.offerId} but the envelope carries ${offerId}`);
   }
 
   // Chain-state checks.
@@ -172,10 +173,11 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
   const address = cli.deriveAddress(signingKeyPath(wallet), walletDir(wallet));
   const ownUtxos = cli.queryUtxo(address);
   const resolved = new Map<string, Value>();
-  for (const utxo of [...cli.queryUtxoByRefs(sub.inputs.map((i) => `${i.txHash}#${i.index}`)), ...ownUtxos]) {
+  const subInputs = sub.body().inputs().values();
+  for (const utxo of [...cli.queryUtxoByRefs(subInputs.map(inputRef)), ...ownUtxos]) {
     resolved.set(utxoRef(utxo), utxo.value);
   }
-  const lookup = (i: { txHash: string; index: number }) => resolved.get(`${i.txHash}#${i.index}`);
+  const lookup = (i: TxInput) => resolved.get(inputRef(i));
 
   let verified;
   try {
@@ -192,7 +194,7 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
     }
     throw err;
   }
-  check(tag, `inputs unspent: ${sub.inputs.map((i) => `${i.txHash.slice(0, 6)}…#${i.index}`).join(', ')}`);
+  check(tag, `inputs unspent: ${subInputs.map((i) => `${i.transactionId().slice(0, 6)}…#${i.index()}`).join(', ')}`);
   step(
     tag,
     `imbalance: offers ${[...verified.offered].map(([u, q]) => `${formatAsset(q)} ${assetLabel(u)}`).join(', ')}, ` +
@@ -207,10 +209,10 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
 
   // Batch construction.
   const funding = selectFunding(ownUtxos, address);
-  const resolve = (i: { txHash: string; index: number }): Value => {
+  const resolve = (i: TxInput): Value => {
     const value = lookup(i);
     if (!value) {
-      throw new Error(`unresolved input ${i.txHash}#${i.index}`);
+      throw new Error(`unresolved input ${inputRef(i)}`);
     }
     return value;
   };
@@ -226,7 +228,7 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
   step(tag, `funding  ${utxoRef(funding).slice(0, 8)}…#${funding.index}  (${formatAda(funding.value.lovelace)} ADA)`);
   step(tag, 'offer inserted verbatim at body key 23');
   if (batch.declaredReferenceInputs.length > 0) {
-    const refs = batch.declaredReferenceInputs.map((i) => `${i.txHash.slice(0, 6)}…#${i.index}`);
+    const refs = batch.declaredReferenceInputs.map((i) => `${i.transactionId().slice(0, 6)}…#${i.index()}`);
     step(tag, `declared ${refs.join(', ')} as reference inputs so the node resolves them`);
   }
   step(
@@ -262,7 +264,5 @@ function runSimulated(config: Config, options: FundOptions, offer: StoredOffer, 
 
 function subSigners(path: string): string[] {
   const tx = decodeTx(readEnvelope(path).cborHex);
-  return asArray(tx.body.get(BODY_SUB_TRANSACTIONS)).flatMap((raw) =>
-    subTransactionSigners(decodeSubTransaction(raw as unknown[]).items)
-  );
+  return (tx.body().subTransactions()?.values() ?? []).flatMap(subTransactionSigners);
 }

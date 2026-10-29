@@ -1,10 +1,14 @@
 import { ErrorResponse } from '../src/models/common';
 import { HealthResponse, ReadyResponse } from '../src/models/health';
-import { CreateOfferRequest, CreateOfferResponse } from '../src/models/offer';
+import {
+  CreateCardanoOfferResponse,
+  CreateOfferRequest,
+  CreateOfferResponse,
+} from '../src/models/offer';
 import { PricesResponse } from '../src/models/prices';
 import { RootResponse } from '../src/models/root';
 
-export { CreateOfferResponse } from '../src/models/offer';
+export { CreateCardanoOfferResponse, CreateOfferResponse } from '../src/models/offer';
 export { PricesResponse } from '../src/models/prices';
 
 export interface ApiResponse<T> {
@@ -60,6 +64,22 @@ export class CapacityExchangeClient {
     const data = (await response.json()) as
       typeof CreateOfferResponse.static | typeof ErrorResponse.static;
     console.debug(`POST /api/midnight/offers -> ${response.status}`, data);
+    return { status: response.status, data };
+  }
+
+  async createCardanoOffer(
+    envelope: Uint8Array,
+  ): Promise<ApiResponse<typeof CreateCardanoOfferResponse.static | typeof ErrorResponse.static>> {
+    const response = await fetch(`${this.baseUrl}/api/cardano/offers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/cbor',
+      },
+      body: new Uint8Array(envelope),
+    });
+    const data = (await response.json()) as
+      typeof CreateCardanoOfferResponse.static | typeof ErrorResponse.static;
+    console.debug(`POST /api/cardano/offers -> ${response.status}`, data);
     return { status: response.status, data };
   }
 }

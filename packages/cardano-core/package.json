@@ -1,0 +1,23 @@
+{
+  "name": "@capacity-exchange/cardano-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cardano-sdk/core": "^0.47.1",
+    "@cardano-sdk/util": "^0.17.2"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.5"
+  }
+}

@@ -3,7 +3,7 @@ import { createPromiseClient, type PromiseClient } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
 import type { Static } from '@sinclair/typebox';
-import type { ChainHealth, ChainStatus } from '../models/health.js';
+import type { ChainHealth, ChainStatus } from '../../models/health.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;

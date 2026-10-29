@@ -4,8 +4,8 @@ import { CardanoCli } from '../cardano/cli.js';
 import { unitToCliAsset } from '../cardano/value.js';
 import type { Config } from '../config.js';
 import { formatAda, formatAsset, step, warn } from '../log.js';
+import { makeOutput } from '../tx/codec.js';
 import { minUtxoLovelace } from '../tx/subtx.js';
-import { decodeBech32Address } from '../cardano/address.js';
 import { ARTIFACTS, signingKeyPath, walletDir, workPath } from './state.js';
 
 export interface MintOptions {
@@ -48,10 +48,7 @@ export function runMint(config: Config, options: MintOptions): void {
 
   const quantity = BigInt(options.quantity);
   const pp = cli.queryProtocolParams();
-  const tokenOutput = {
-    address: decodeBech32Address(address),
-    value: { lovelace: 0n, assets: new Map([[unit, quantity]]) },
-  };
+  const tokenOutput = makeOutput(address, { lovelace: 0n, assets: new Map([[unit, quantity]]) });
   const minLovelace = minUtxoLovelace(tokenOutput, pp.utxoCostPerByte);
   step('mint', `token output pinned at its minimum: ${formatAda(minLovelace)} ADA`);
 
