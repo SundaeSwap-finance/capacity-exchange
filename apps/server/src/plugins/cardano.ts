@@ -12,12 +12,12 @@ export default fp(async (fastify: FastifyInstance) => {
   const {
     blockfrostApiKey: apiKey,
     blockfrostBaseUrl: baseUrl,
-    cardanoServerAddress: serverAddress,
+    cardanoWalletAddress: walletAddress,
   } = fastify.config;
 
   const service =
-    apiKey && baseUrl && serverAddress
-      ? new CardanoService(apiKey, baseUrl, fastify.log, serverAddress)
+    apiKey && baseUrl && walletAddress
+      ? new CardanoService(apiKey, baseUrl, fastify.log, walletAddress)
       : null;
 
   fastify.decorate('cardanoService', service);

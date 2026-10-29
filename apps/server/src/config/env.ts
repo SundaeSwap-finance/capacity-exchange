@@ -27,8 +27,15 @@ const AppEnvSchema = Type.Object({
   CAPACITY_EXCHANGE_PEER_URLS: Type.Optional(Type.String()),
   CARDANO_BLOCKFROST_API_KEY: Type.Optional(Type.String()),
   CARDANO_BLOCKFROST_BASE_URL: Type.Optional(Type.String()),
-  CARDANO_SERVER_ADDRESS: Type.Optional(Type.String()),
+  CARDANO_WALLET_ADDRESS: Type.Optional(Type.String()),
   CARDANO_UTXORPC_URL: Type.Optional(Type.String()),
+  CARDANO_STARTING_POINT: Type.Optional(
+    Type.Union([
+      Type.Literal('tip'),
+      // <slot>.<32-byte block hash, hex-encoded>
+      Type.String({ pattern: '^[0-9]+\\.[0-9a-fA-F]{64}$' }),
+    ]),
+  ),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -68,8 +75,9 @@ export function parseAppEnv(): AppEnv {
     CAPACITY_EXCHANGE_PEER_URLS: process.env.CAPACITY_EXCHANGE_PEER_URLS,
     CARDANO_BLOCKFROST_API_KEY: process.env.CARDANO_BLOCKFROST_API_KEY,
     CARDANO_BLOCKFROST_BASE_URL: process.env.CARDANO_BLOCKFROST_BASE_URL,
-    CARDANO_SERVER_ADDRESS: process.env.CARDANO_SERVER_ADDRESS,
+    CARDANO_WALLET_ADDRESS: process.env.CARDANO_WALLET_ADDRESS,
     CARDANO_UTXORPC_URL: process.env.CARDANO_UTXORPC_URL,
+    CARDANO_STARTING_POINT: process.env.CARDANO_STARTING_POINT,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS

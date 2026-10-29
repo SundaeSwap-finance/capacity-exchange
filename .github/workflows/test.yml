@@ -104,6 +104,9 @@ jobs:
       - name: Print devnet logs
         if: failure()
         run: docker compose -f testnet/cardano.yml logs --no-color --tail 200
+      - name: Print server logs
+        if: failure()
+        run: cat apps/server/*_server.log 2>/dev/null || true
 
   smoke:
     name: 'Smoke tests (${{ matrix.env }})'

@@ -18,7 +18,7 @@
     "clean": "rm -rf dist .sync_cache midnight-level-db .wallet-state",
     "test": "vitest run",
     "test:integ": "vitest run -c vitest.e2e.config.ts",
-    "test:integ:cardano": "vitest run cardano/chain-state.live",
+    "test:integ:cardano": "vitest run cardano/chain-state.live && vitest run -c vitest.e2e.cardano.config.ts",
     "run-servers": "bun scripts/run-servers.ts",
     "test:sponsor": "bun scripts/test-prove-and-sponsor.ts"
   },
@@ -60,6 +60,7 @@
     "rxjs": "7.8.2"
   },
   "devDependencies": {
+    "@cardano-sdk/core": "^0.47.1",
     "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0",
     "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
     "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",

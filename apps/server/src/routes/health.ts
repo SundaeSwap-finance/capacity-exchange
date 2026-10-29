@@ -14,7 +14,10 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     '/ready',
     ReadinessSchema,
     async (_request, reply): Promise<typeof ReadyResponse.static> => {
-      const cardano = fastify.cardanoChainStateService?.health();
+      const chain = fastify.cardanoChainStateService?.health();
+      const wallet = fastify.cardanoWalletService;
+      const cardano =
+        chain && wallet ? { ...chain, walletLovelace: wallet.lovelace().toString() } : chain;
 
       let midnight: typeof ReadyResponse.static.midnight;
       if (fastify.config.midnight && fastify.midnightWalletService) {

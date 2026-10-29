@@ -19,7 +19,10 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
   let svc: CardanoChainStateService;
 
   beforeAll(async () => {
-    svc = new CardanoChainStateService(url!, pino({ level: 'silent' }) as never);
+    svc = new CardanoChainStateService({
+      url: url!,
+      logger: pino({ level: 'silent' }) as never,
+    });
     svc.start();
     await vi.waitFor(() => expect(svc.health().status).toBe('ok'), { timeout: 30_000 });
   }, 40_000);

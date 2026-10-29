@@ -18,6 +18,7 @@ import {
 import { midnightEndpointOverrides, parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
+import { Address, BlockId, Point, Slot } from '@capacity-exchange/cardano-core';
 
 // All these fields are required together: a server either has a fully-configured
 // Midnight network or none of it.
@@ -28,9 +29,17 @@ export interface MidnightConfig {
   walletStateStore: WalletStateStore;
 }
 
+export interface CardanoConfig {
+  utxorpcUrl: string;
+  startingPoint?: Point;
+  walletAddress: Address;
+}
+
 export interface AppConfig {
   // Set only when `priceFormulas.DUST` is configured; an ADA-only server has no use for it.
   midnight?: MidnightConfig;
+  // Set only when all required fields are provided
+  cardano?: CardanoConfig;
   port: number;
   quoteTtlSeconds: number;
   offerTtlSeconds: number;
@@ -45,14 +54,21 @@ export interface AppConfig {
   capacityExchangeUrls: string[];
   blockfrostApiKey?: string;
   blockfrostBaseUrl?: string;
-  cardanoServerAddress?: string;
-  cardanoUtxorpcUrl?: string;
+  cardanoWalletAddress?: string;
 }
 
 export interface ServerBootstrap {
   config: AppConfig;
   logger: pino.Logger;
 }
+
+const parsePoint = (point?: string): Point | undefined => {
+  if (!point || point === 'tip') {
+    return undefined;
+  }
+  const [rawSlot, rawHash] = point.split('.', 2);
+  return { slot: Slot(Number(rawSlot)), hash: BlockId(rawHash) };
+};
 
 /** Load env, create the logger, validate and build all server config. */
 export async function loadConfig(): Promise<ServerBootstrap> {
@@ -84,8 +100,20 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     midnight = { networkId, endpoints, ...wallet };
   }
 
+  let cardano: CardanoConfig | undefined;
+  if (env.CARDANO_UTXORPC_URL && env.CARDANO_WALLET_ADDRESS) {
+    const walletAddress = Address.fromBech32(env.CARDANO_WALLET_ADDRESS);
+    const startingPoint = parsePoint(env.CARDANO_STARTING_POINT);
+    cardano = {
+      utxorpcUrl: env.CARDANO_UTXORPC_URL,
+      startingPoint,
+      walletAddress,
+    };
+  }
+
   const config: AppConfig = {
     midnight,
+    cardano,
     port: env.PORT,
     quoteTtlSeconds: env.QUOTE_TTL_SECONDS,
     offerTtlSeconds: env.OFFER_TTL_SECONDS,
@@ -99,8 +127,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     peer: priceConfig.peer,
     blockfrostApiKey: env.CARDANO_BLOCKFROST_API_KEY,
     blockfrostBaseUrl: env.CARDANO_BLOCKFROST_BASE_URL,
-    cardanoServerAddress: env.CARDANO_SERVER_ADDRESS,
-    cardanoUtxorpcUrl: env.CARDANO_UTXORPC_URL,
+    cardanoWalletAddress: env.CARDANO_WALLET_ADDRESS,
     capacityExchangeUrls: env.CAPACITY_EXCHANGE_PEER_URLS
       ? env.CAPACITY_EXCHANGE_PEER_URLS.split(',')
           .map((u) => u.trim())

@@ -8,18 +8,24 @@ const BASE_URL = 'http://localhost:3000';
 const CWD = process.cwd();
 const LOG_FILE = path.join(CWD, `${new Date().toISOString().replace(/:/g, '-')}_server.log`);
 
-export async function setup() {
+export function setup() {
+  return startServer('.env.test');
+}
+
+/** Starts the server with the given env file and waits until it reports ready. */
+export async function startServer(envFile: string) {
   if (serverProcess) {
     return;
   }
 
   console.log('Starting server');
   const logStream = createWriteStream(LOG_FILE, { flags: 'a' });
-  serverProcess = spawn('bun', ['src/server.ts'], {
+  // Bun would otherwise load a developer's .env first, and dotenv never overrides it.
+  serverProcess = spawn('bun', ['--no-env-file', 'src/server.ts'], {
     stdio: 'pipe',
     env: {
       ...process.env,
-      DOTENV_CONFIG_PATH: path.join(CWD, '.env.test'),
+      DOTENV_CONFIG_PATH: path.join(CWD, envFile),
     },
   });
   serverProcess.on('error', (err) => {

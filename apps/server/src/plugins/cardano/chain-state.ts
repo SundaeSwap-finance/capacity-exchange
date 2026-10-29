@@ -9,21 +9,29 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  const url = fastify.config.cardanoUtxorpcUrl;
-  if (!url) {
+  const cardano = fastify.config.cardano;
+  if (!cardano) {
     fastify.decorate('cardanoChainStateService', null);
     fastify.log.debug('CardanoChainStateService not configured (CARDANO_UTXORPC_URL is not set)');
     return;
   }
 
-  const service = new CardanoChainStateService(url, fastify.log);
-  service.start();
+  const service = new CardanoChainStateService({
+    url: cardano.utxorpcUrl,
+    startingPoint: cardano.startingPoint,
+    logger: fastify.log,
+  });
 
   fastify.decorate('cardanoChainStateService', service);
+
+  fastify.addHook('onReady', async () => {
+    service.start();
+    fastify.log.info('CardanoChainStateService started');
+  });
 
   fastify.addHook('onClose', async (instance) => {
     await instance.cardanoChainStateService?.stop();
   });
 
-  fastify.log.info("CardanoChainStateService init'd and started");
+  fastify.log.info("CardanoChainStateService init'd");
 });

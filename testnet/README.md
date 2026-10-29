@@ -27,6 +27,6 @@ docker compose -f cardano.yml up -d --wait
 docker compose -f cardano.yml down
 ```
 
-The key in `cardano/funded.skey` is pre-funded at `cardano/funded.addr`. To run cardano-cli against the node, use `docker exec cardano-devnet-node cardano-cli …`.
+The key in `cardano/funded.skey` is pre-funded at `cardano/funded.addr`. `cardano/server.addr` (key `cardano/server.skey`) is the wallet the Cardano e2e tests run the server with; it starts empty. To run cardano-cli against the node, use `docker exec cardano-devnet-node cardano-cli …`.
 
 Run the Cardano integration tests with `task test:integ:cardano`. A transaction submitted through Dolos can take up to a minute to reach the node.

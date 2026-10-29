@@ -16,6 +16,7 @@ vi.mock('@connectrpc/connect', () => ({
 }));
 
 import { CardanoChainStateService, toBigInt } from './chain-state.js';
+import { BlockId, Slot, type Point } from '@capacity-exchange/cardano-core';
 
 const logger = pino({ level: 'silent' });
 
@@ -47,22 +48,33 @@ const PARAMS_RESPONSE = {
 };
 
 const tipResponse = (slot: number, timestamp = Date.now()) => ({
-  tip: { slot: BigInt(slot), hash: hash(slot), timestamp: BigInt(timestamp) },
+  tip: { slot: BigInt(slot), height: BigInt(slot), hash: hash(slot), timestamp: BigInt(timestamp) },
 });
 
 function block(slot: number, timestamp = Date.now()) {
   return {
     chain: {
       case: 'cardano',
-      value: { header: { slot: BigInt(slot), hash: hash(slot) }, timestamp: BigInt(timestamp) },
+      value: {
+        header: { slot: BigInt(slot), height: BigInt(slot), hash: hash(slot) },
+        timestamp: BigInt(timestamp),
+      },
     },
     nativeBytes: new Uint8Array(),
   };
 }
 const apply = (slot: number) => ({ action: { case: 'apply', value: block(slot) } });
 const undo = (slot: number) => ({ action: { case: 'undo', value: block(slot) } });
-const reset = (slot: number) => ({
-  action: { case: 'reset', value: { slot: BigInt(slot), hash: hash(slot) } },
+const reset = (slot: number, timestamp = Date.now()) => ({
+  action: {
+    case: 'reset',
+    value: {
+      slot: BigInt(slot),
+      height: BigInt(slot),
+      hash: hash(slot),
+      timestamp: BigInt(timestamp),
+    },
+  },
 });
 const notFound = () =>
   Object.assign(new Error('[not_found] none of the requested points intersect'), { code: 5 });
@@ -139,7 +151,7 @@ describe('CardanoChainStateService', () => {
   });
 
   async function started(expectedStreams = 1) {
-    svc = new CardanoChainStateService('http://dolos.test', logger as never);
+    svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
     svc.start();
     await vi.waitFor(() => expect(streams).toHaveLength(expectedStreams));
     return svc;
@@ -316,6 +328,135 @@ describe('CardanoChainStateService', () => {
     await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
   });
 
+  describe('followers', () => {
+    const header = (slot: number) => ({ blockNo: slot, slot, hash: hex(slot) });
+
+    async function followed(startingPoint?: Point) {
+      const follower = { onRollForward: vi.fn(), onRollBackward: vi.fn() };
+      svc = new CardanoChainStateService({
+        url: 'http://dolos.test',
+        startingPoint,
+        logger: logger as never,
+      });
+      svc.addFollower(follower);
+      svc.start();
+      await vi.waitFor(() => expect(streams).toHaveLength(1));
+      return { s: svc, follower };
+    }
+
+    it('rolls followers back to the block before an undone one', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(apply(101), apply(102), undo(102));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+    });
+
+    it('rolls followers back one block per undo', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(apply(101), apply(102), undo(102), undo(101));
+
+      await vi.waitFor(() =>
+        expect(follower.onRollBackward.mock.calls).toEqual([[header(101)], [header(100)]]),
+      );
+      expect(s.tip().slot).toBe(100n);
+    });
+
+    it('rolls followers back to the block a reset names', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(apply(101), apply(102), reset(101));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+    });
+
+    it('rolls followers back to the starting point when its first block is undone', async () => {
+      const { s, follower } = await followed({ slot: Slot(90), hash: BlockId(hex(90)) });
+      expect(intersectSlots(0)).toEqual([90n]);
+      expect(mockReadTip).not.toHaveBeenCalled();
+      streams[0].push(reset(90), apply(91), undo(91));
+
+      await vi.waitFor(() =>
+        expect(follower.onRollBackward.mock.calls).toEqual([[header(90)], [header(90)]]),
+      );
+      expect(s.tip()).toMatchObject({ slot: 90n, hash: hex(90) });
+    });
+
+    it('stops following when no recent block intersects once followers hold state', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { s } = await followed();
+      streams[0].push(apply(101));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      streams[0].push(notFound());
+      await vi.waitFor(() =>
+        expect(s.health()).toMatchObject({ status: 'ko', error: /common block/ }),
+      );
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      expect(streams).toHaveLength(1);
+      expect(mockReadTip).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts again from the source tip when no block has reached followers', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      await followed();
+      mockReadTip.mockResolvedValue(tipResponse(500));
+
+      streams[0].push(notFound());
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      await vi.waitFor(() => expect(streams).toHaveLength(2));
+      expect(intersectSlots(1)).toEqual([500n]);
+    });
+
+    it('reconnects from an older tracked block and rolls followers back to it', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { s, follower } = await followed();
+      for (let slot = 101; slot <= 140; slot++) {
+        streams[0].push(apply(slot));
+      }
+      await vi.waitFor(() => expect(s.tip().slot).toBe(140n));
+
+      streams[0].push(new Error('connection reset'));
+      await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko' }));
+      await vi.advanceTimersByTimeAsync(5_000);
+      await vi.waitFor(() => expect(streams).toHaveLength(2));
+      // The newest ten, then doubling gaps, then the oldest tracked block.
+      expect(intersectSlots(1)).toEqual([
+        140n,
+        139n,
+        138n,
+        137n,
+        136n,
+        135n,
+        134n,
+        133n,
+        132n,
+        131n,
+        129n,
+        125n,
+        117n,
+        101n,
+        100n,
+      ]);
+
+      streams[1].push(reset(117));
+
+      await vi.waitFor(() => expect(s.tip().slot).toBe(117n));
+      expect(follower.onRollBackward).toHaveBeenLastCalledWith(header(117));
+      expect(s.health().status).toBe('ok');
+    });
+
+    it('does not roll followers back for blocks they never saw', async () => {
+      const { s, follower } = await followed();
+      streams[0].push(undo(100), undo(99));
+      await vi.waitFor(() => expect(() => s.tip()).toThrow(/no tip/));
+
+      expect(follower.onRollBackward).not.toHaveBeenCalled();
+    });
+  });
+
   it('reports syncing while the tip is more than five minutes old', async () => {
     mockReadTip.mockResolvedValue(tipResponse(100, Date.now() - 6 * 60_000));
     const s = await started();
@@ -402,7 +543,7 @@ describe('CardanoChainStateService', () => {
   it('does not throw on start when the source is down, and recovers when it returns', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockReadTip.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
-    svc = new CardanoChainStateService('http://dolos.test', logger as never);
+    svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
     svc.start();
 
     await vi.waitFor(() =>
