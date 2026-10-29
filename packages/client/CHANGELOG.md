@@ -1,5 +1,15 @@
 # @sundaeswap/capacity-exchange-client
 
+## 2.1.0
+
+### Minor Changes
+
+- faacd24: Add an endpoint to accept user offers
+
+### Patch Changes
+
+- 457074c: The server tracks cardano UTXOs, and exposes them in the health endpoint
+
 ## 2.0.0
 
 ### Major Changes
