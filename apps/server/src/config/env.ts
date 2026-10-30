@@ -29,6 +29,7 @@ const AppEnvSchema = Type.Object({
   CARDANO_BLOCKFROST_BASE_URL: Type.Optional(Type.String()),
   CARDANO_WALLET_ADDRESS: Type.Optional(Type.String()),
   CARDANO_UTXORPC_URL: Type.Optional(Type.String()),
+  CARDANO_HINTS_SKEY_FILE: Type.Optional(Type.String()),
   CARDANO_STARTING_POINT: Type.Optional(
     Type.Union([
       Type.Literal('tip'),
@@ -77,6 +78,7 @@ export function parseAppEnv(): AppEnv {
     CARDANO_BLOCKFROST_BASE_URL: process.env.CARDANO_BLOCKFROST_BASE_URL,
     CARDANO_WALLET_ADDRESS: process.env.CARDANO_WALLET_ADDRESS,
     CARDANO_UTXORPC_URL: process.env.CARDANO_UTXORPC_URL,
+    CARDANO_HINTS_SKEY_FILE: process.env.CARDANO_HINTS_SKEY_FILE,
     CARDANO_STARTING_POINT: process.env.CARDANO_STARTING_POINT,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,

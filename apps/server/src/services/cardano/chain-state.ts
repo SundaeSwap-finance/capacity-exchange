@@ -14,6 +14,7 @@ import {
   Transaction,
 } from '@capacity-exchange/cardano-core';
 import { MAX_ROLLBACK_DEPTH } from './utils.js';
+import type { Rational } from '../../utils/rational.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;
@@ -47,11 +48,6 @@ export interface CardanoTip {
   /** Block hash, hex. */
   hash: string;
   timestamp: Date;
-}
-
-export interface Rational {
-  numerator: bigint;
-  denominator: bigint;
 }
 
 /** The protocol parameters needed to price and size a Cardano transaction. */
