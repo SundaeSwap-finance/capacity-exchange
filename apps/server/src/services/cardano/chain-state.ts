@@ -1,17 +1,23 @@
 import { FastifyBaseLogger } from 'fastify';
-import { createPromiseClient, type PromiseClient } from '@connectrpc/connect';
+import { createClient, type Client } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
-import { queryConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
+import { queryConnect, submitConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
 import type { Static } from '@sinclair/typebox';
 import type { ChainHealth, ChainStatus } from '../../models/health.js';
 import {
   BlockId,
   BlockNo,
+  HexBlob,
   parseBlock,
   PartialBlockHeader,
   Point,
+  ProtocolParameters,
   Slot,
   Transaction,
+  TransactionId,
+  TransactionOutput,
+  TxIn,
+  Utxo,
 } from '@capacity-exchange/cardano-core';
 import { MAX_ROLLBACK_DEPTH } from './utils.js';
 
@@ -55,13 +61,16 @@ export interface Rational {
 }
 
 /** The protocol parameters needed to price and size a Cardano transaction. */
-export interface CardanoProtocolParams {
-  minFeeCoefficient: bigint;
-  minFeeConstant: bigint;
-  coinsPerUtxoByte: bigint;
-  maxTxSize: bigint;
-  prices: { memory: Rational; steps: Rational };
-}
+export type CardanoProtocolParams = Pick<
+  ProtocolParameters,
+  | 'coinsPerUtxoByte'
+  | 'maxTxSize'
+  | 'maxValueSize'
+  | 'minFeeCoefficient'
+  | 'minFeeConstant'
+  | 'prices'
+  | 'minFeeRefScriptCostPerByte'
+>;
 
 export interface ChainFollower {
   onRollForward(header: PartialBlockHeader, txs: Transaction[]): Promise<void>;
@@ -80,8 +89,9 @@ export interface CardanoChainStateServiceArgs {
  * where the stream starts, because Dolos serves it from state that can lag.
  */
 export class CardanoChainStateService implements ChainHealth {
-  private readonly query: PromiseClient<typeof queryConnect.QueryService>;
-  private readonly sync: PromiseClient<typeof syncConnect.SyncService>;
+  readonly #query: Client<typeof queryConnect.QueryService>;
+  readonly #sync: Client<typeof syncConnect.SyncService>;
+  readonly #submit: Client<typeof submitConnect.SubmitService>;
   private readonly logger: FastifyBaseLogger;
   private readonly followers: ChainFollower[] = [];
   // Applied blocks, oldest first, so an undo can step back to the one before.
@@ -103,8 +113,9 @@ export class CardanoChainStateService implements ChainHealth {
       pingIntervalMs: PING_INTERVAL_MS,
       pingTimeoutMs: PING_TIMEOUT_MS,
     });
-    this.query = createPromiseClient(queryConnect.QueryService, transport);
-    this.sync = createPromiseClient(syncConnect.SyncService, transport);
+    this.#query = createClient(queryConnect.QueryService, transport);
+    this.#sync = createClient(syncConnect.SyncService, transport);
+    this.#submit = createClient(submitConnect.SubmitService, transport);
     this.logger = logger;
     this.startingPoint = startingPoint;
   }
@@ -138,7 +149,7 @@ export class CardanoChainStateService implements ChainHealth {
 
   /** Reads the protocol params on each call: they can change at an epoch boundary. */
   public async protocolParams(): Promise<CardanoProtocolParams> {
-    const { values } = await this.query.readParams(
+    const { values } = await this.#query.readParams(
       {},
       { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
     );
@@ -146,6 +157,47 @@ export class CardanoChainStateService implements ChainHealth {
       throw new Error('UTxO RPC ReadParams returned no Cardano params');
     }
     return toProtocolParams(values.params.value);
+  }
+
+  public async resolveInputs(inputs: TxIn[]): Promise<Utxo[]> {
+    if (!inputs.length) {
+      return [];
+    }
+    const keys = inputs.map((input) => ({
+      hash: Buffer.from(input.txId, 'hex'),
+      index: input.index,
+    }));
+    const response = await this.#query.readUtxos(
+      { keys },
+      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
+    );
+    return response.items.flatMap((utxo) => {
+      const txoRef = utxo.txoRef;
+      if (!txoRef) {
+        throw new Error('Server did not populate txoRef');
+      }
+      const txIn: TxIn = {
+        txId: TransactionId.fromHexBlob(HexBlob.fromBytes(txoRef.hash)),
+        index: txoRef.index,
+      };
+      const txo = TransactionOutput.fromCbor(HexBlob.fromBytes(utxo.nativeBytes)).toCore();
+      return [[txIn as Utxo[0], txo]];
+    });
+  }
+
+  public async submit(tx: Transaction) {
+    const cbor = Buffer.from(tx.toCbor(), 'hex');
+    await this.#submit.submitTx(
+      {
+        tx: {
+          type: {
+            value: cbor,
+            case: 'raw',
+          },
+        },
+      },
+      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
+    );
   }
 
   health(): Static<typeof ChainStatus> {
@@ -191,7 +243,7 @@ export class CardanoChainStateService implements ChainHealth {
           this.rollbackDepth = 0;
         }
         expectMessageWithin(FIRST_MESSAGE_TIMEOUT_MS, 'FollowTip sent nothing after connecting');
-        const stream = this.sync.followTip({ intersect }, { signal: attempt.signal });
+        const stream = this.#sync.followTip({ intersect }, { signal: attempt.signal });
         for await (const response of stream) {
           expectMessageWithin(STREAM_IDLE_TIMEOUT_MS, 'FollowTip stream went silent');
           this.streamError = null;
@@ -307,7 +359,7 @@ export class CardanoChainStateService implements ChainHealth {
   }
 
   private async readTip(): Promise<CardanoTip> {
-    const { tip } = await this.sync.readTip({}, { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) });
+    const { tip } = await this.#sync.readTip({}, { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) });
     if (!tip) {
       throw new Error('UTxO RPC ReadTip returned no tip');
     }
@@ -408,19 +460,53 @@ function toBlockRef(tip: CardanoTip): Partial<sync.BlockRef> {
 
 export function toProtocolParams(p: cardano.PParams): CardanoProtocolParams {
   return {
-    minFeeCoefficient: toBigInt(p.minFeeCoefficient, 'minFeeCoefficient'),
-    minFeeConstant: toBigInt(p.minFeeConstant, 'minFeeConstant'),
-    coinsPerUtxoByte: toBigInt(p.coinsPerUtxoByte, 'coinsPerUtxoByte'),
-    maxTxSize: p.maxTxSize,
+    coinsPerUtxoByte: parseU5CBigInt(p, 'coinsPerUtxoByte'),
+    maxTxSize: parseBigInt(p, 'maxTxSize'),
+    maxValueSize: parseBigInt(p, 'maxValueSize'),
+    minFeeCoefficient: parseU5CBigInt(p, 'minFeeCoefficient'),
+    minFeeConstant: parseU5CBigInt(p, 'minFeeConstant'),
     prices: {
-      memory: toRational(p.prices?.memory, 'prices.memory'),
-      steps: toRational(p.prices?.steps, 'prices.steps'),
+      memory: fromRational(p.prices?.memory, 'prices.memory'),
+      steps: fromRational(p.prices?.steps, 'prices.steps'),
     },
+    minFeeRefScriptCostPerByte: String(
+      fromRational(p.minFeeScriptRefCostPerByte, 'minFeeRefScriptCostPerByte'),
+    ),
   };
 }
 
+export function parseBigInt<K extends keyof cardano.PParams>(
+  params: Record<K, bigint>,
+  key: K,
+): number {
+  return fromBigInt(params[key], key);
+}
+
 /** Decodes UTxO RPC's BigInt: an int64, or big-endian bytes for larger magnitudes. */
-export function toBigInt(value: cardano.BigInt | undefined, field: string): bigint {
+export function parseU5CBigInt<K extends keyof cardano.PParams>(
+  params: Partial<Record<K, cardano.BigInt>>,
+  key: K,
+): number {
+  const big = fromU5CBigInt(params[key], key);
+  return fromBigInt(big, key);
+}
+
+function fromRational(value: cardano.RationalNumber | undefined, field: string): number {
+  if (!value || !value.denominator) {
+    throw new Error(`Invalid rational value for ${field}`);
+  }
+  return value.numerator / value.denominator;
+}
+
+function fromBigInt(value: bigint, field: string): number {
+  if (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)) {
+    throw new Error(`Invalid value ${value} for protocol parameter ${field}`);
+  }
+  return Number(value);
+}
+
+/** Decodes UTxO RPC's BigInt: an int64, or big-endian bytes for larger magnitudes. */
+export function fromU5CBigInt(value: cardano.BigInt | undefined, field: string): bigint {
   const big = value?.bigInt;
   switch (big?.case) {
     case 'int':
@@ -433,16 +519,6 @@ export function toBigInt(value: cardano.BigInt | undefined, field: string): bigi
     default:
       throw new Error(`UTxO RPC protocol params are missing ${field}`);
   }
-}
-
-function toRational(
-  value: { numerator: number; denominator: number } | undefined,
-  field: string,
-): Rational {
-  if (!value) {
-    throw new Error(`UTxO RPC protocol params are missing ${field}`);
-  }
-  return { numerator: BigInt(value.numerator), denominator: BigInt(value.denominator) };
 }
 
 function bytesToBigInt(bytes: Uint8Array): bigint {

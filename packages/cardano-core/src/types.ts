@@ -1,21 +1,40 @@
 import { Cardano, Serialization } from '@cardano-sdk/core';
-export type { Point } from '@cardano-sdk/core';
+export { type Point, coalesceValueQuantities, subtractValueQuantities } from '@cardano-sdk/core';
+export { Ed25519PublicKeyHex, Ed25519SignatureHex } from '@cardano-sdk/crypto';
+export { HexBlob } from '@cardano-sdk/util';
 
 export type Address = Cardano.Address;
 export const Address = Cardano.Address;
+export type AssetId = Cardano.AssetId;
+export const AssetId = Cardano.AssetId;
 export type BlockId = Cardano.BlockId;
 export const BlockId = Cardano.BlockId;
 export type BlockNo = Cardano.BlockNo;
 export const BlockNo = Cardano.BlockNo;
+export const CertificateType = Cardano.CertificateType;
+export type CoreSubTransaction = Cardano.SubTransaction;
 export type Credential = Cardano.Credential;
 export type PartialBlockHeader = Cardano.PartialBlockHeader;
 export type PaymentAddress = Cardano.PaymentAddress;
 export const PaymentAddress = Cardano.PaymentAddress;
+export type ProtocolParameters = Cardano.ProtocolParameters;
+export type RewardAccount = Cardano.RewardAccount;
+export const RewardAccount = Cardano.RewardAccount;
 export type Slot = Cardano.Slot;
 export const Slot = Cardano.Slot;
 export type TransactionId = Cardano.TransactionId;
 export const TransactionId = Cardano.TransactionId;
+export type Tx = Cardano.Tx;
+export type TxIn = Cardano.TxIn;
+export type TxOut = Cardano.TxOut;
+export type Utxo = Cardano.Utxo;
+export type Value = Cardano.Value;
+export const isCertType = Cardano.isCertType;
+export const isRewardAccount = (address: string): address is RewardAccount => {
+  return Cardano.isRewardAccount(address);
+};
 
+export const CborSet = Serialization.CborSet;
 export type SubTransaction = Serialization.SubTransaction;
 export const SubTransaction = Serialization.SubTransaction;
 export type SubTransactionBody = Serialization.SubTransactionBody;
@@ -30,3 +49,5 @@ export type TransactionOutput = Serialization.TransactionOutput;
 export const TransactionOutput = Serialization.TransactionOutput;
 export type TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
 export const TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
+export type TransactionWitnessSet = Serialization.TransactionWitnessSet;
+export const TransactionWitnessSet = Serialization.TransactionWitnessSet;
