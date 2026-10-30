@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import pino from 'pino';
-import { createPromiseClient } from '@connectrpc/connect';
+import { createClient } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect } from '@utxorpc/spec';
-import { CardanoChainStateService, toBigInt } from './chain-state.js';
+import { CardanoChainStateService, fromU5CBigInt } from './chain-state.js';
 
 /**
  * Runs against a live UTxO RPC source such as Dolos, and is skipped without one:
@@ -34,12 +34,14 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
   it('reads protocol params a fee can be computed from', async () => {
     const params = await svc.protocolParams();
 
-    expect(params.minFeeCoefficient).toBeGreaterThan(0n);
-    expect(params.minFeeConstant).toBeGreaterThan(0n);
-    expect(params.coinsPerUtxoByte).toBeGreaterThan(0n);
-    expect(params.maxTxSize).toBeGreaterThan(0n);
-    expect(params.prices.memory.denominator).toBeGreaterThan(0n);
-    expect(params.prices.steps.denominator).toBeGreaterThan(0n);
+    expect(params.coinsPerUtxoByte).toBeGreaterThan(0);
+    expect(params.maxTxSize).toBeGreaterThan(0);
+    expect(params.maxValueSize).toBeGreaterThan(0);
+    expect(params.minFeeCoefficient).toBeGreaterThan(0);
+    expect(params.minFeeConstant).toBeGreaterThan(0);
+    expect(params.prices.memory).toBeGreaterThan(0);
+    expect(params.prices.steps).toBeGreaterThan(0);
+    expect(Number(params.minFeeRefScriptCostPerByte)).not.toBeNaN();
   });
 
   it(
@@ -57,7 +59,7 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
 
   it.skipIf(!addressHex)('finds the UTxOs at an address', async () => {
     const transport = createGrpcTransport({ httpVersion: '2', baseUrl: url! });
-    const query = createPromiseClient(queryConnect.QueryService, transport);
+    const query = createClient(queryConnect.QueryService, transport);
     const exactAddress = Buffer.from(addressHex!, 'hex');
     const { items } = await query.searchUtxos({
       predicate: {
@@ -68,7 +70,7 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
       const output = item.parsedState.case === 'cardano' ? item.parsedState.value : undefined;
-      expect(toBigInt(output?.coin, 'coin')).toBeGreaterThan(0n);
+      expect(fromU5CBigInt(output?.coin, 'coin')).toBeGreaterThan(0n);
     }
   });
 });

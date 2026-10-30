@@ -9,13 +9,13 @@ const { mockReadTip, mockReadParams, mockFollowTip, mockCreateTransport } = vi.h
 }));
 vi.mock('@connectrpc/connect-node', () => ({ createGrpcTransport: mockCreateTransport }));
 vi.mock('@connectrpc/connect', () => ({
-  createPromiseClient: (service: { typeName: string }) =>
+  createClient: (service: { typeName: string }) =>
     service.typeName.endsWith('QueryService')
       ? { readParams: mockReadParams }
       : { readTip: mockReadTip, followTip: mockFollowTip },
 }));
 
-import { CardanoChainStateService, toBigInt } from './chain-state.js';
+import { CardanoChainStateService, fromU5CBigInt } from './chain-state.js';
 import { BlockId, Slot, type Point } from '@capacity-exchange/cardano-core';
 
 const logger = pino({ level: 'silent' });
@@ -34,14 +34,16 @@ const PARAMS_RESPONSE = {
     params: {
       case: 'cardano',
       value: {
-        minFeeCoefficient: int(44n),
-        minFeeConstant: int(155381n),
         coinsPerUtxoByte: int(4310n),
         maxTxSize: 16384n,
+        maxValueSize: 5000n,
+        minFeeCoefficient: int(44n),
+        minFeeConstant: int(155381n),
         prices: {
           memory: { numerator: 577, denominator: 10000 },
           steps: { numerator: 721, denominator: 10000000 },
         },
+        minFeeScriptRefCostPerByte: { numerator: 15, denominator: 1 },
       },
     },
   },
@@ -173,21 +175,23 @@ describe('CardanoChainStateService', () => {
     const s = await started();
 
     expect(await s.protocolParams()).toEqual({
-      minFeeCoefficient: 44n,
-      minFeeConstant: 155381n,
-      coinsPerUtxoByte: 4310n,
-      maxTxSize: 16384n,
+      coinsPerUtxoByte: 4310,
+      maxTxSize: 16384,
+      maxValueSize: 5000,
+      minFeeCoefficient: 44,
+      minFeeConstant: 155381,
       prices: {
-        memory: { numerator: 577n, denominator: 10000n },
-        steps: { numerator: 721n, denominator: 10000000n },
+        memory: 0.0577,
+        steps: 0.0000721,
       },
+      minFeeRefScriptCostPerByte: '15',
     });
 
     const next = structuredClone(PARAMS_RESPONSE);
     next.values.params.value.minFeeConstant = int(200000n);
     mockReadParams.mockResolvedValue(next);
 
-    expect((await s.protocolParams()).minFeeConstant).toBe(200000n);
+    expect((await s.protocolParams()).minFeeConstant).toBe(200000);
     expect(mockReadParams).toHaveBeenCalledTimes(2);
   });
 
@@ -566,18 +570,18 @@ describe('CardanoChainStateService', () => {
   });
 });
 
-describe('toBigInt', () => {
+describe('fromU5CBigInt', () => {
   it('reads an int64, an unsigned bignum and a negative bignum', () => {
-    expect(toBigInt(int(5n) as never, 'f')).toBe(5n);
+    expect(fromU5CBigInt(int(5n) as never, 'f')).toBe(5n);
     expect(
-      toBigInt({ bigInt: { case: 'bigUInt', value: Uint8Array.of(1, 0) } } as never, 'f'),
+      fromU5CBigInt({ bigInt: { case: 'bigUInt', value: Uint8Array.of(1, 0) } } as never, 'f'),
     ).toBe(256n);
-    expect(toBigInt({ bigInt: { case: 'bigNInt', value: Uint8Array.of(0) } } as never, 'f')).toBe(
-      -1n,
-    );
+    expect(
+      fromU5CBigInt({ bigInt: { case: 'bigNInt', value: Uint8Array.of(0) } } as never, 'f'),
+    ).toBe(-1n);
   });
 
   it('throws when the field is missing', () => {
-    expect(() => toBigInt(undefined, 'minFeeConstant')).toThrow(/missing minFeeConstant/);
+    expect(() => fromU5CBigInt(undefined, 'minFeeConstant')).toThrow(/missing minFeeConstant/);
   });
 });

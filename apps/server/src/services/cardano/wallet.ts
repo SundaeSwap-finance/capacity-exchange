@@ -2,6 +2,7 @@ import {
   Address,
   Credential,
   PartialBlockHeader,
+  PaymentAddress,
   Slot,
   SubTransactionBody,
   Transaction,
@@ -10,23 +11,37 @@ import {
   TransactionInput,
   TransactionOutput,
   TransactionUnspentOutput,
+  isRewardAccount,
 } from '@capacity-exchange/cardano-core';
 import { ChainIndex } from './utils';
-import { ChainFollower } from './chain-state';
+import { CardanoChainStateService, ChainFollower } from './chain-state';
 
 const txInKey = (txIn: TransactionInput): string => {
   return `${txIn.transactionId()}:${txIn.index()}`;
 };
 
 export class CardanoWalletService implements ChainFollower {
+  #address: Address;
+  #chainState: CardanoChainStateService;
   #tracker: WalletTracker;
 
-  constructor(address: Address) {
+  constructor(address: Address, chainState: CardanoChainStateService) {
     const paymentCredential = address.getProps().paymentPart;
     if (!paymentCredential) {
       throw new Error('Address must contain payment credential');
     }
+    this.#address = address;
     this.#tracker = new WalletTracker(paymentCredential, Slot(0), []);
+    this.#chainState = chainState;
+    chainState.addFollower(this);
+  }
+
+  changeAddress(): PaymentAddress {
+    const changeAddress = this.#address.toBech32();
+    if (isRewardAccount(changeAddress)) {
+      throw new Error('Cannot send change to a reward account');
+    }
+    return changeAddress;
   }
 
   utxos(): TransactionUnspentOutput[] {
@@ -50,6 +65,12 @@ export class CardanoWalletService implements ChainFollower {
 
   async onRollBackward(header: PartialBlockHeader) {
     this.#tracker.rollBack(header.slot);
+  }
+
+  async signAndSubmitTx(tx: Transaction) {
+    // TODO: attach our signature
+    // TODO: flag any UTXOs spent by this transaction so we don't re-spend em
+    await this.#chainState.submit(tx);
   }
 }
 
