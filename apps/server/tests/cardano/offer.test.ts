@@ -1,12 +1,17 @@
 import { beforeAll, describe, it, expect } from 'vitest';
-import { serializeEnvelope, SubTransaction, TransactionId, TxIn } from '@capacity-exchange/cardano-core';
+import {
+  serializeEnvelope,
+  SubTransaction,
+  TransactionId,
+  TxIn,
+} from '@capacity-exchange/cardano-core';
 import { CLIENT } from '../utils.js';
 import { CreateCardanoOfferResponse } from '../client.js';
 import { fundServerWallet } from './devnet.js';
 
 type SubTxArgs = {
-  inputs?: TxIn[],
-}
+  inputs?: TxIn[];
+};
 function buildSubTx({ inputs }: SubTxArgs = {}): SubTransaction {
   return SubTransaction.fromCore({
     body: {
@@ -48,8 +53,8 @@ describe('Cardano Offer API', () => {
     expect(res.data).toMatchObject({ error: 'malformed' });
   });
 
-  it('rejects a subtx with nonexistent inputs', async () => {;
-    const subTx = buildSubTx({ inputs: [{ txId: TransactionId("00".repeat(32)), index: 0 }]});
+  it('rejects a subtx with nonexistent inputs', async () => {
+    const subTx = buildSubTx({ inputs: [{ txId: TransactionId('00'.repeat(32)), index: 0 }] });
     const res = await CLIENT.createCardanoOffer(serializeEnvelope(subTx));
     expect(res.status).toBe(400);
     expect(res.data).toMatchObject({ error: 'malformed' });
