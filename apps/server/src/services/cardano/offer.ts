@@ -66,7 +66,7 @@ export class CardanoOfferService {
       return buildTxResult;
     }
 
-    await this.#wallet.signAndSubmitTx(buildTxResult.response);
+    // TODO: sign and submit the tx
 
     const offerId = subTx.getId();
     return { status: 'ok', response: { offerId } };
