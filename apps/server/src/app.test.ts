@@ -11,6 +11,7 @@ const ADA_ONLY_CONFIG: AppConfig = {
   port: 0,
   quoteTtlSeconds: 300,
   offerTtlSeconds: 2,
+  cardanoPrices: [],
   priceFormulas: {
     ADA: [
       {

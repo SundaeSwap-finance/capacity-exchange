@@ -12,6 +12,7 @@ import {
   loadPriceConfig,
   pricedAssets,
   type CapacityFormulas,
+  type CardanoPairPrice,
   type PeerConfig,
   type SponsoredContract,
 } from './config/prices.js';
@@ -33,6 +34,8 @@ export interface CardanoConfig {
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
+  /** A cardano-cli signing key; with `cardanoPrices`, it enables `GET /api/cardano/hints`. */
+  hintsSkeyFile?: string;
 }
 
 export interface AppConfig {
@@ -47,6 +50,7 @@ export interface AppConfig {
   otelEndpoint?: string;
   otelMetricExportIntervalMs?: number;
   priceFormulas: CapacityFormulas;
+  cardanoPrices: CardanoPairPrice[];
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
   peer?: PeerConfig;
@@ -108,6 +112,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,
+      hintsSkeyFile: env.CARDANO_HINTS_SKEY_FILE,
     };
   }
 
@@ -121,6 +126,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     otelEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
     otelMetricExportIntervalMs: env.OTEL_METRIC_EXPORT_INTERVAL_MS,
     priceFormulas: priceConfig.priceFormulas,
+    cardanoPrices: priceConfig.cardano?.prices ?? [],
     quoteSecretFile: env.QUOTE_SECRET_FILE,
     sponsorAll: priceConfig.sponsorAll ?? false,
     sponsoredContracts: priceConfig.sponsoredContracts,

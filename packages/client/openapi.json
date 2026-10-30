@@ -1466,6 +1466,54 @@
         }
       }
     },
+    "/api/cardano/hints": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "CardanoHintsResponse",
+                  "type": "array",
+                  "items": {
+                    "pattern": "^[0-9a-f]+$",
+                    "description": "A CIP-0198 signed `hints` set, CBOR as lowercase hex",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "ErrorResponse",
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/midnight/sponsor": {
       "post": {
         "requestBody": {
