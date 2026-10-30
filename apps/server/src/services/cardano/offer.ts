@@ -112,9 +112,7 @@ export class CardanoOfferService {
     const DUMMY_SIGNATURE = Ed25519SignatureHex('00'.repeat(64));
 
     const sub = subTx.toCore();
-    const unspendable = new Set(
-      [...sub.body.inputs, ...(sub.body.referenceInputs ?? [])].map((txIn) => txInName(txIn)),
-    );
+    const unspendable = new Set(sub.body.inputs.map((txIn) => txInName(txIn)));
 
     // Our fee estimation logic assumes that all tx components were encoded canonically.
     // If the subtx wasn't encoded canonically, we'll underestimate its size and therefore its fees.
