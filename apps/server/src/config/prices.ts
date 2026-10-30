@@ -130,6 +130,15 @@ function checkCardanoCurrency(currency: RawCurrency, where: string): void {
   }
 }
 
+// The CIP's wire format carries `base` as a CBOR uint and a rate's parts as u64.
+const MAX_U64 = 2n ** 64n - 1n;
+
+function checkU64(value: string, where: string): void {
+  if (BigInt(value) > MAX_U64) {
+    throw new Error(`${where}: ${value} does not fit in 64 bits`);
+  }
+}
+
 /** Throws on the first CIP-0198 price pair the hints could not publish as configured. */
 export function checkCardanoPrices(prices: CardanoPairPrice[]): void {
   const pairs = new Set<string>();
@@ -146,7 +155,10 @@ export function checkCardanoPrices(prices: CardanoPairPrice[]): void {
       throw new Error(`${where}: a second price for the pair ${pair}`);
     }
     pairs.add(pair);
+    checkU64(price.base, `${where}.base`);
     price.tiers.forEach((tier, j) => {
+      checkU64(tier.perUnit.numerator, `${where}.tiers[${j}].perUnit.numerator`);
+      checkU64(tier.perUnit.denominator, `${where}.tiers[${j}].perUnit.denominator`);
       if (j > 0 && BigInt(tier.above) >= BigInt(price.tiers[j - 1].above)) {
         throw new Error(`${where}.tiers[${j}]: tiers must be listed by strictly falling 'above'`);
       }

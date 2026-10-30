@@ -52,6 +52,31 @@ describe('checkCardanoPrices', () => {
     const ada = { ...PAIR, spent: { type: 'cardano:ada' as const, rawId: 'lovelace' } };
     expect(() => checkCardanoPrices([ada])).toThrow(/empty rawId/);
   });
+
+  describe('64-bit limits', () => {
+    const MAX = (2n ** 64n - 1n).toString();
+    const OVER = (2n ** 64n).toString();
+    const withRate = (numerator: string, denominator: string): CardanoPairPrice => ({
+      ...PAIR,
+      tiers: [{ above: '0', perUnit: { numerator, denominator } }],
+    });
+
+    it('accepts values up to 2^64 - 1', () => {
+      expect(() => checkCardanoPrices([{ ...withRate(MAX, MAX), base: MAX }])).not.toThrow();
+    });
+
+    it('refuses a base over 64 bits', () => {
+      expect(() => checkCardanoPrices([{ ...PAIR, base: OVER }])).toThrow(/base: .* 64 bits/);
+    });
+
+    it('refuses a numerator over 64 bits', () => {
+      expect(() => checkCardanoPrices([withRate(OVER, '1')])).toThrow(/numerator: .* 64 bits/);
+    });
+
+    it('refuses a denominator over 64 bits', () => {
+      expect(() => checkCardanoPrices([withRate('1', OVER)])).toThrow(/denominator: .* 64 bits/);
+    });
+  });
 });
 
 const FORMULA = {
