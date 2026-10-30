@@ -310,15 +310,19 @@ export class CardanoOfferService {
     }
 
     // once those are covered, take care of ADA
+    // also make sure we spend at least one UTXO here
     unspent.sort(adaComparatorAsc);
     let adaStillNeeded =
-      topLevelAdaNeeded + needs.coins - spent.reduce((sum, o) => sum + o[1].value.coins, 0n);
-    while (adaStillNeeded > 0n && unspent.length) {
+      topLevelAdaNeeded +
+      needs.coins -
+      offers.coins -
+      spent.reduce((sum, o) => sum + o[1].value.coins, 0n);
+    while ((adaStillNeeded > 0n || !spent.length) && unspent.length) {
       const next = unspent.pop()!;
       spent.push(next);
       adaStillNeeded -= next[1].value.coins;
     }
-    if (adaStillNeeded > 0n) {
+    if (adaStillNeeded > 0n || !spent.length) {
       return { status: 'over-budget' };
     }
 
