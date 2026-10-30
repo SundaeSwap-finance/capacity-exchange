@@ -1,5 +1,6 @@
 import {
   AssetId,
+  CborSet,
   CertificateType,
   coalesceValueQuantities,
   CoreSubTransaction,
@@ -29,7 +30,6 @@ export interface OfferResponse {
 export type CreateOfferResult = { status: 'ok'; response: OfferResponse } | OfferError;
 
 export interface ValidationResponse {
-  sub: CoreSubTransaction;
   resolvedInputs: Utxo[];
 }
 export type ValidateResult<T> = { status: 'ok'; response: T } | OfferError;
@@ -61,7 +61,7 @@ export class CardanoOfferService {
     }
 
     const pparams = await this.#chainState.protocolParams();
-    const buildTxResult = this.buildTx(validateResult.response, pparams);
+    const buildTxResult = this.buildTx(subTx, validateResult.response, pparams);
     if (buildTxResult.status !== 'ok') {
       return buildTxResult;
     }
@@ -99,20 +99,28 @@ export class CardanoOfferService {
       return { status: 'malformed', reason: 'some inputs could not be resolved' };
     }
 
-    return { status: 'ok', response: { sub, resolvedInputs } };
+    return { status: 'ok', response: { resolvedInputs } };
   }
 
   buildTx(
-    { sub, resolvedInputs }: ValidationResponse,
+    subTx: SubTransaction,
+    { resolvedInputs }: ValidationResponse,
     pparams: CardanoProtocolParams,
   ): ValidateResult<Transaction> {
     const DUMMY_TX_ID = TransactionId('00'.repeat(32));
     const DUMMY_SIGNATURE_ID = Ed25519PublicKeyHex('00'.repeat(32));
     const DUMMY_SIGNATURE = Ed25519SignatureHex('00'.repeat(64));
 
+    const sub = subTx.toCore();
     const unspendable = new Set(
       [...sub.body.inputs, ...(sub.body.referenceInputs ?? [])].map((txIn) => txInName(txIn)),
     );
+
+    // Our fee estimation logic assumes that all tx components were encoded canonically.
+    // If the subtx wasn't encoded canonically, we'll underestimate its size and therefore its fees.
+    // Compare the passed-in bytes (from subTx) with canonically-reencoded bytes to see how much bigger it is.
+    const subSizeDelta =
+      BigInt(subTx.toCbor().length / 2) - BigInt(SubTransaction.fromCore(sub).toCbor().length / 2);
 
     const spendableUtxos: Utxo[] = this.#wallet
       .utxos()
@@ -148,9 +156,19 @@ export class CardanoOfferService {
         },
       };
 
-      const newFee = minFee(tx, utxos, pparams);
+      const newFee =
+        minFee(tx, utxos, pparams) +
+        (subSizeDelta > 0n ? subSizeDelta * BigInt(pparams.minFeeCoefficient) : 0n);
       if (newFee <= fee) {
         const fullTx = Transaction.fromCore(tx);
+
+        // attach the original subtx bytes here
+        const body = fullTx.body();
+        const subTransactions = CborSet.fromCore([], SubTransaction.fromCore);
+        subTransactions.setValues([subTx]);
+        body.setSubTransactions(subTransactions);
+        fullTx.setBody(body);
+
         if (fullTx.toCbor().length / 2 > pparams.maxTxSize) {
           return { status: 'malformed', reason: 'transaction too big' };
         }

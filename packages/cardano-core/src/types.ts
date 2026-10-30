@@ -34,6 +34,7 @@ export const isRewardAccount = (address: string): address is RewardAccount => {
   return Cardano.isRewardAccount(address);
 };
 
+export const CborSet = Serialization.CborSet;
 export type SubTransaction = Serialization.SubTransaction;
 export const SubTransaction = Serialization.SubTransaction;
 export type SubTransactionBody = Serialization.SubTransactionBody;

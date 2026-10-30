@@ -221,8 +221,6 @@ describe('CardanoOfferService.validateSubTx', () => {
     if (result.status !== 'ok') {
       return;
     }
-    expect(result.response.sub.body.inputs).toEqual(core.body.inputs);
-    expect(result.response.sub.body.outputs).toEqual(core.body.outputs);
     expect(result.response.resolvedInputs).toEqual(known);
     expect(chainState.resolveInputs).toHaveBeenCalledTimes(1);
   });
