@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import { cryptoReady, keyHashOf } from '@capacity-exchange/cardano-core';
+import { cryptoReady } from '@capacity-exchange/cardano-core';
 import { CardanoHintService, readHintSigner, toSchedules } from '../../services/cardano/hints.js';
 
 declare module 'fastify' {
@@ -23,13 +23,6 @@ export default fp(async (fastify: FastifyInstance) => {
 
   await cryptoReady();
   const signer = readHintSigner(cardano.registrationSkeyFile);
-  // Hints would otherwise be signed for one wallet while priced from another's balance.
-  const keyHash = Buffer.from(keyHashOf(signer.vkey)).toString('hex');
-  if (cardano.walletAddress.getProps().paymentPart?.hash !== keyHash) {
-    throw new Error(
-      `CARDANO_REGISTRATION_SKEY_FILE is not the payment key of CARDANO_WALLET_ADDRESS (key hash ${keyHash})`,
-    );
-  }
   const service = new CardanoHintService(schedules, wallet, signer);
   fastify.decorate('cardanoHintService', service);
   fastify.log.info("CardanoHintService init'd");
