@@ -1,5 +1,15 @@
 # @capacity-exchange/demo
 
+## 1.0.7
+
+### Patch Changes
+
+- Updated dependencies [283704b]
+- Updated dependencies [457074c]
+- Updated dependencies [faacd24]
+  - @sundaeswap/capacity-exchange-client@3.0.0
+  - @sundaeswap/capacity-exchange-providers@4.0.1
+
 ## 1.0.6
 
 ### Patch Changes
