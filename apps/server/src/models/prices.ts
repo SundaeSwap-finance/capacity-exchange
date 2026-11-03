@@ -43,8 +43,8 @@ export const PricesSchema = {
   },
 };
 
-// For /api/<chain>/prices: the same as /api/prices with the capacity asset fixed by the chain.
-export const AssetPricesSchema = {
+// For /api/midnight/prices: the same as /api/prices?currency=DUST.
+export const MidnightPricesSchema = {
   schema: {
     querystring: Type.Object({ amount: Amount }),
     response: {

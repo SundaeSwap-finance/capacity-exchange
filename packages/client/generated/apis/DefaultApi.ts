@@ -59,10 +59,6 @@ export interface ApiCardanoOffersPostRequest {
     body: Blob;
 }
 
-export interface ApiCardanoPricesGetRequest {
-    amount: string;
-}
-
 export interface ApiMidnightAdaOffersPostOperationRequest {
     apiMidnightAdaOffersPostRequest: ApiMidnightAdaOffersPostRequest;
 }
@@ -83,6 +79,33 @@ export interface ApiMidnightSponsorPostOperationRequest {
  * 
  */
 export class DefaultApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async apiCardanoHintsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/cardano/hints`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     */
+    async apiCardanoHintsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>> {
+        const response = await this.apiCardanoHintsGetRaw(initOverrides);
+        return await response.value();
+    }
 
     /**
      */
@@ -118,44 +141,6 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async apiCardanoOffersPost(requestParameters: ApiCardanoOffersPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiCardanoOffersPost202Response> {
         const response = await this.apiCardanoOffersPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     */
-    async apiCardanoPricesGetRaw(requestParameters: ApiCardanoPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PricesResponse>> {
-        if (requestParameters['amount'] == null) {
-            throw new runtime.RequiredError(
-                'amount',
-                'Required parameter "amount" was null or undefined when calling apiCardanoPricesGet().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['amount'] != null) {
-            queryParameters['amount'] = requestParameters['amount'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/cardano/prices`;
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => PricesResponseFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async apiCardanoPricesGet(requestParameters: ApiCardanoPricesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PricesResponse> {
-        const response = await this.apiCardanoPricesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

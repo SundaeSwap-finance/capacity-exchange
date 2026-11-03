@@ -13,7 +13,8 @@ export default fp((fastify: FastifyInstance) => {
 
   // TODO: Enforce that the price formulas have hex-strings that identify the
   // midnight-contract-minted token
-  const priceService = new PriceService(priceFormulas);
+  // ADA is priced by the CIP-0198 hints instead.
+  const priceService = new PriceService({ DUST: priceFormulas.DUST });
   fastify.log.info({ assets: priceService.listAssets() }, 'Capacity assets priced by this server');
   fastify.decorate('priceService', priceService);
 });

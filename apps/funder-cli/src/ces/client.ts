@@ -1,4 +1,3 @@
-import { Configuration, DefaultApi } from '@sundaeswap/capacity-exchange-client';
 import {
   OFFERS_PATH,
   OfferRejected,
@@ -35,18 +34,11 @@ function base(url: string): string {
   return url.replace(/\/$/, '');
 }
 
-function apiFor(url: string): DefaultApi {
-  return new DefaultApi(new Configuration({ basePath: base(url) }));
-}
-
 /** Asks one exchange what it would charge for `amount` lovelace of ADA capacity. */
-export async function fetchPrices(url: string, amount: bigint): Promise<InstanceQuote> {
-  const response = await apiFor(url).apiCardanoPricesGet({ amount: amount.toString() });
-  return {
-    url,
-    quoteId: response.quoteId,
-    prices: (response.prices ?? []) as unknown as Price[],
-  };
+export async function fetchPrices(url: string, _amount: bigint): Promise<InstanceQuote> {
+  throw new Error(
+    `${url} prices ADA through CIP-0198 hints at GET /api/cardano/hints, which this CLI does not read yet`
+  );
 }
 
 /** Fans out to every configured instance; a failing instance is reported, not fatal. */

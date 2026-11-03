@@ -1,6 +1,7 @@
 import { Cardano, Serialization } from '@cardano-sdk/core';
 export { type Point, coalesceValueQuantities, subtractValueQuantities } from '@cardano-sdk/core';
-export { Ed25519PublicKeyHex, Ed25519SignatureHex } from '@cardano-sdk/crypto';
+// Ed25519PublicKey.hash() runs on libsodium, which is usable once cryptoReady() resolves.
+export { Ed25519PublicKeyHex, Ed25519PublicKey, Ed25519SignatureHex, ready as cryptoReady } from '@cardano-sdk/crypto';
 export { HexBlob } from '@cardano-sdk/util';
 
 export type Address = Cardano.Address;
@@ -35,6 +36,8 @@ export const isRewardAccount = (address: string): address is RewardAccount => {
 };
 
 export const CborSet = Serialization.CborSet;
+export type CborWriter = Serialization.CborWriter;
+export const CborWriter = Serialization.CborWriter;
 export type SubTransaction = Serialization.SubTransaction;
 export const SubTransaction = Serialization.SubTransaction;
 export type SubTransactionBody = Serialization.SubTransactionBody;
