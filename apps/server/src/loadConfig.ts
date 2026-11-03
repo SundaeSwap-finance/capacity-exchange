@@ -18,6 +18,7 @@ import {
 import { midnightEndpointOverrides, parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
+import { readSigningKeyFile, type Ed25519KeyPair } from './config/cardanoKeys.js';
 import { Address, BlockId, Point, Slot } from '@capacity-exchange/cardano-core';
 
 // All these fields are required together: a server either has a fully-configured
@@ -33,8 +34,8 @@ export interface CardanoConfig {
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
-  /** A cardano-cli payment signing key; it signs the CIP-0198 price hints. */
-  registrationSkeyFile?: string;
+  /** Signs the CIP-0198 price hints */
+  registrationKeyPair?: Ed25519KeyPair;
 }
 
 export interface AppConfig {
@@ -123,7 +124,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,
-      registrationSkeyFile: env.CARDANO_REGISTRATION_SKEY_FILE,
+      registrationKeyPair: env.CARDANO_REGISTRATION_SKEY_FILE
+        ? readSigningKeyFile(env.CARDANO_REGISTRATION_SKEY_FILE)
+        : undefined,
     };
   }
 

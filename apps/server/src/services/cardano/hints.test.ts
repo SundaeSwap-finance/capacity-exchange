@@ -3,7 +3,8 @@ import { createPublicKey, verify } from 'crypto';
 import { fileURLToPath } from 'url';
 import { Serialization } from '@cardano-sdk/core';
 import { cryptoReady, encodeHintsBody, keyHashOf } from '@capacity-exchange/cardano-core';
-import { CardanoHintService, readHintSigner, toSchedules, type HintSigner } from './hints.js';
+import { CardanoHintService, toSchedules } from './hints.js';
+import { readSigningKeyFile } from '../../config/cardanoKeys.js';
 import type { AdaPriceFormula } from '../../config/prices.js';
 import type { Asset } from '../../utils/asset.js';
 import type { PriceSchedule } from './ladder.js';
@@ -30,20 +31,6 @@ function verifies(vkey: Uint8Array, message: Uint8Array, signature: Uint8Array):
   });
   return verify(null, message, key, signature);
 }
-
-describe('readHintSigner', () => {
-  it('derives the public key from a cardano-cli signing key', () => {
-    expect(hex(readHintSigner(SKEY_FILE).vkey)).toBe(VKEY_HEX);
-  });
-
-  it('signs with Ed25519 under that key', () => {
-    const signer = readHintSigner(SKEY_FILE);
-    const message = Buffer.from('hints');
-    const signature = signer.sign(message);
-    expect(signature).toHaveLength(64);
-    expect(verifies(signer.vkey, message, signature)).toBe(true);
-  });
-});
 
 describe('toSchedules', () => {
   const FORMULA: AdaPriceFormula = {
@@ -85,18 +72,15 @@ describe('CardanoHintService', () => {
     tiers: [{ above: 100_000_000n, perUnit: R }],
   };
   const NOW = 1_761_739_200_000;
-  // A fixed key, so a signer bug fails the signer tests rather than these.
-  const signer: HintSigner = {
-    vkey: Buffer.from(VKEY_HEX, 'hex'),
-    sign: (message) => readHintSigner(SKEY_FILE).sign(message),
-  };
+  const keyPair = readSigningKeyFile(SKEY_FILE);
+  const vkey = Buffer.from(VKEY_HEX, 'hex');
 
   const serviceWith = (lovelace: bigint) =>
-    new CardanoHintService([SCHEDULE], { lovelace: () => lovelace }, signer, () => NOW);
+    new CardanoHintService([SCHEDULE], { lovelace: () => lovelace }, keyPair, () => NOW);
 
   it('reads the balance once for every pair', () => {
     const lovelace = vi.fn(() => 700_000_000n);
-    const service = new CardanoHintService([SCHEDULE, SCHEDULE], { lovelace }, signer, () => NOW);
+    const service = new CardanoHintService([SCHEDULE, SCHEDULE], { lovelace }, keyPair, () => NOW);
     expect(service.currentPrices()).toHaveLength(2);
     expect(lovelace).toHaveBeenCalledOnce();
   });
@@ -133,11 +117,11 @@ describe('CardanoHintService', () => {
         encodeHintsBody({
           producedAt: BigInt(NOW),
           prices: service.currentPrices(),
-          registration: keyHashOf(signer.vkey),
-          issuerVkey: signer.vkey,
+          registration: keyHashOf(vkey),
+          issuerVkey: vkey,
         }),
       ),
     );
-    expect(verifies(signer.vkey, bodyBytes, signature)).toBe(true);
+    expect(verifies(vkey, bodyBytes, signature)).toBe(true);
   });
 });

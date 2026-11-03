@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import { fileURLToPath } from 'url';
 import { Address } from '@capacity-exchange/cardano-core';
 import hintsPlugin from './hints.js';
+import { readSigningKeyFile } from '../../config/cardanoKeys.js';
 import type { AppConfig } from '../../loadConfig.js';
 
 const KEYS = '../../../../../testnet/cardano';
@@ -16,7 +17,7 @@ async function startWith(walletAddress: string) {
     cardano: {
       utxorpcUrl: 'unused',
       walletAddress: Address.fromBech32(walletAddress),
-      registrationSkeyFile: keyFile('server.skey'),
+      registrationKeyPair: readSigningKeyFile(keyFile('server.skey')),
     },
     priceFormulas: {
       ADA: [

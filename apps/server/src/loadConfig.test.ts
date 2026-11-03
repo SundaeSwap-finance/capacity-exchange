@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { fileURLToPath } from 'url';
 import type { PriceConfig } from './config/prices.js';
 
 // loadConfig() calls dotenv's `config()` unconditionally. Real repo has a
@@ -50,7 +51,9 @@ const CARDANO_ENV: Record<string, string> = {
   CARDANO_UTXORPC_URL: 'https://poop.bike',
   CARDANO_WALLET_ADDRESS:
     'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy',
-  CARDANO_REGISTRATION_SKEY_FILE: 'unused.skey',
+  CARDANO_REGISTRATION_SKEY_FILE: fileURLToPath(
+    new URL('../../../testnet/cardano/server.skey', import.meta.url),
+  ),
 };
 
 const DUST_PRICED = priceConfigFor({
