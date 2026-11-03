@@ -1,6 +1,9 @@
 import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
+import { expect, vi } from 'vitest';
+import { ReadyResponse } from '../../src/models/health.js';
+import { CLIENT } from '../utils.js';
 
 /** The devnet from testnet/cardano.yml, driven through cardano-cli in its node container. */
 const NODE_CONTAINER = 'cardano-devnet-node';
@@ -59,4 +62,36 @@ export function fund(address: string, lovelace: bigint): string {
   );
   cardanoCli('transaction', 'submit', '--tx-file', `${file}.signed`);
   return JSON.parse(cardanoCli('transaction', 'txid', '--tx-file', `${file}.signed`)).txhash;
+}
+
+type CardanoStatus = NonNullable<typeof ReadyResponse.static.cardano>;
+
+export async function cardanoStatus(): Promise<CardanoStatus> {
+  const { cardano } = (await CLIENT.getReadiness()).data;
+  if (!cardano) {
+    throw new Error('The server reports no Cardano status; is it configured for Cardano?');
+  }
+  return cardano;
+}
+
+/**
+ * Pays `lovelace` to the server wallet and waits until the server has seen it.
+ * The wallet only sees blocks from where the server started following, so it
+ * cannot see funds paid before then: tests that need ADA must pay it this way.
+ */
+export async function fundServerWallet(lovelace: bigint): Promise<void> {
+  // Payments must wait until the server is following the tip.
+  await vi.waitFor(async () => expect((await cardanoStatus()).status).toBe('ok'), {
+    timeout: 30_000,
+  });
+  const before = BigInt((await cardanoStatus()).walletLovelace!);
+
+  fund(SERVER_ADDRESS, lovelace);
+
+  // A block every second; a missing payment usually means the server could not
+  // parse its block (see its log).
+  await vi.waitFor(
+    async () => expect(BigInt((await cardanoStatus()).walletLovelace!)).toBe(before + lovelace),
+    { timeout: 30_000 },
+  );
 }

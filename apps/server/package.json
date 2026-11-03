@@ -29,6 +29,7 @@
     "@aws-sdk/client-secrets-manager": "^3.1148.0",
     "@blockfrost/blockfrost-js": "^6.2.0",
     "@capacity-exchange/cardano-core": "workspace:*",
+    "@cardano-sdk/tx-construction": "^0.29.1",
     "@connectrpc/connect": "^1.7.0",
     "@connectrpc/connect-node": "^1.7.0",
     "@fastify/cors": "^11.3.1",

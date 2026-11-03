@@ -104,10 +104,16 @@ function refs(wallet: CardanoWalletService): string[] {
     .sort();
 }
 const ref = (tx: { getId(): Cardano.TransactionId }, index = 0) => `${tx.getId()}#${index}`;
+const chainStateMock = {
+  addFollower() {
+    // do nothing. it's simpler to manually call the roll forward/back methods.
+  },
+};
 
-const newWallet = () => new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS));
+const newWallet = () =>
+  new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS), chainStateMock as any);
 
-describe('CardanoWalletService', () => {
+describe('CardanoWalletService chain following', () => {
   it('starts with no UTxOs', () => {
     expect(newWallet().utxos()).toEqual([]);
   });
