@@ -93,7 +93,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     );
   }
 
-  // ADA sells only through the hints, which follow the Cardano wallet and are signed with its key.
+  // ADA sells only through the hints, which follow the Cardano wallet and are signed with the registration key.
   if (pricedAssets(priceConfig.priceFormulas).includes('ADA')) {
     for (const name of [
       'CARDANO_UTXORPC_URL',
