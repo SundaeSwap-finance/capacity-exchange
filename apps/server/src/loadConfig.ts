@@ -33,8 +33,8 @@ export interface CardanoConfig {
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
-  /** A cardano-cli payment signing key for `walletAddress`; it signs the CIP-0198 price hints. */
-  walletSkeyFile?: string;
+  /** A cardano-cli payment signing key; it signs the CIP-0198 price hints. */
+  registrationSkeyFile?: string;
 }
 
 export interface AppConfig {
@@ -97,7 +97,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     for (const name of [
       'CARDANO_UTXORPC_URL',
       'CARDANO_WALLET_ADDRESS',
-      'CARDANO_WALLET_SKEY_FILE',
+      'CARDANO_REGISTRATION_SKEY_FILE',
     ] as const) {
       if (!env[name]) {
         throw new Error(`${name} is required because priceFormulas.ADA is configured`);
@@ -123,7 +123,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,
-      walletSkeyFile: env.CARDANO_WALLET_SKEY_FILE,
+      registrationSkeyFile: env.CARDANO_REGISTRATION_SKEY_FILE,
     };
   }
 

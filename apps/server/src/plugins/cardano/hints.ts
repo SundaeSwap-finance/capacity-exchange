@@ -13,21 +13,21 @@ export default fp(async (fastify: FastifyInstance) => {
   const cardano = fastify.config.cardano;
   const schedules = toSchedules(fastify.config.priceFormulas.ADA ?? []);
   const wallet = fastify.cardanoWalletService;
-  if (!cardano?.walletSkeyFile || !schedules.length || !wallet) {
+  if (!cardano?.registrationSkeyFile || !schedules.length || !wallet) {
     fastify.decorate('cardanoHintService', null);
     fastify.log.debug(
-      'CardanoHintService not configured (needs the Cardano wallet, CARDANO_WALLET_SKEY_FILE and priceFormulas.ADA)',
+      'CardanoHintService not configured (needs the Cardano wallet, CARDANO_REGISTRATION_SKEY_FILE and priceFormulas.ADA)',
     );
     return;
   }
 
   await cryptoReady();
-  const signer = readHintSigner(cardano.walletSkeyFile);
+  const signer = readHintSigner(cardano.registrationSkeyFile);
   // Hints would otherwise be signed for one wallet while priced from another's balance.
   const keyHash = Buffer.from(keyHashOf(signer.vkey)).toString('hex');
   if (cardano.walletAddress.getProps().paymentPart?.hash !== keyHash) {
     throw new Error(
-      `CARDANO_WALLET_SKEY_FILE is not the payment key of CARDANO_WALLET_ADDRESS (key hash ${keyHash})`,
+      `CARDANO_REGISTRATION_SKEY_FILE is not the payment key of CARDANO_WALLET_ADDRESS (key hash ${keyHash})`,
     );
   }
   const service = new CardanoHintService(schedules, wallet, signer);

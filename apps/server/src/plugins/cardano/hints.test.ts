@@ -17,7 +17,7 @@ async function startWith(walletAddress: string) {
     cardano: {
       utxorpcUrl: 'unused',
       walletAddress: Address.fromBech32(walletAddress),
-      walletSkeyFile: keyFile('server.skey'),
+      registrationSkeyFile: keyFile('server.skey'),
     },
     priceFormulas: {
       ADA: [
