@@ -11,13 +11,14 @@ import type { NetworkId } from '@midnight-ntwrk/wallet-sdk-abstractions';
 import {
   loadPriceConfig,
   pricedAssets,
-  type CapacityFormulas,
+  type PriceFormulas,
   type PeerConfig,
   type SponsoredContract,
 } from './config/prices.js';
 import { midnightEndpointOverrides, parseAppEnv } from './config/env.js';
 import { createServerLogger } from './config/logger.js';
 import { createWalletResources } from './config/wallet.js';
+import { readSigningKeyFile, type Ed25519KeyPair } from './config/cardanoKeys.js';
 import { Address, BlockId, Point, Slot } from '@capacity-exchange/cardano-core';
 
 // All these fields are required together: a server either has a fully-configured
@@ -33,6 +34,8 @@ export interface CardanoConfig {
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
+  /** Signs the CIP-0198 price hints */
+  registrationKeyPair?: Ed25519KeyPair;
 }
 
 export interface AppConfig {
@@ -46,7 +49,7 @@ export interface AppConfig {
   otelServiceName?: string;
   otelEndpoint?: string;
   otelMetricExportIntervalMs?: number;
-  priceFormulas: CapacityFormulas;
+  priceFormulas: PriceFormulas;
   sponsorAll: boolean;
   sponsoredContracts: SponsoredContract[];
   peer?: PeerConfig;
@@ -90,6 +93,19 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     );
   }
 
+  // ADA sells only through the hints, which follow the Cardano wallet and are signed with the registration key.
+  if (pricedAssets(priceConfig.priceFormulas).includes('ADA')) {
+    for (const name of [
+      'CARDANO_UTXORPC_URL',
+      'CARDANO_WALLET_ADDRESS',
+      'CARDANO_REGISTRATION_SKEY_FILE',
+    ] as const) {
+      if (!env[name]) {
+        throw new Error(`${name} is required because priceFormulas.ADA is configured`);
+      }
+    }
+  }
+
   // both `dustPriced` and `MIDNIGHT_NETWORK` are required, so an ADA-only server
   // never sets up a wallet even if one of them is present.
   let midnight: MidnightConfig | undefined;
@@ -108,6 +124,9 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,
+      registrationKeyPair: env.CARDANO_REGISTRATION_SKEY_FILE
+        ? readSigningKeyFile(env.CARDANO_REGISTRATION_SKEY_FILE)
+        : undefined,
     };
   }
 

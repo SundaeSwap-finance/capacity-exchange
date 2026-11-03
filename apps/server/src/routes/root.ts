@@ -8,7 +8,10 @@ const rootRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
     return {
       name: packageName,
       version: packageVersion,
-      capacityAssets: fastify.priceService.listAssets(),
+      capacityAssets: [
+        ...fastify.priceService.listAssets(),
+        ...(fastify.cardanoHintService ? (['ADA'] as const) : []),
+      ],
       chains: {
         midnight: midnight && {
           network: midnight.networkId,

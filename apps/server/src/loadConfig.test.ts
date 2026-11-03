@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { fileURLToPath } from 'url';
 import type { PriceConfig } from './config/prices.js';
 
 // loadConfig() calls dotenv's `config()` unconditionally. Real repo has a
@@ -41,11 +42,19 @@ const ADA_ONLY = priceConfigFor({
     {
       currency: { type: 'cardano:ada', rawId: '' },
       basePrice: '0',
-      rateNumerator: '1',
-      rateDenominator: '1',
+      tiers: [{ above: '0', rateNumerator: '1', rateDenominator: '1' }],
     },
   ],
 });
+
+const CARDANO_ENV: Record<string, string> = {
+  CARDANO_UTXORPC_URL: 'https://poop.bike',
+  CARDANO_WALLET_ADDRESS:
+    'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy',
+  CARDANO_REGISTRATION_SKEY_FILE: fileURLToPath(
+    new URL('../../../testnet/cardano/server.skey', import.meta.url),
+  ),
+};
 
 const DUST_PRICED = priceConfigFor({
   DUST: [
@@ -62,7 +71,7 @@ describe('loadConfig — optional Midnight configuration', () => {
   const savedEnv = { ...process.env };
 
   beforeEach(() => {
-    process.env = { ...savedEnv, ...BASE_ENV };
+    process.env = { ...savedEnv, ...BASE_ENV, ...CARDANO_ENV };
     delete process.env.MIDNIGHT_NETWORK;
     delete process.env.MIDNIGHT_WALLET_STATE_DIR;
     vi.mocked(loadPriceConfig).mockReset();
@@ -127,7 +136,7 @@ describe('loadConfig — cardano', () => {
   const savedEnv = { ...process.env };
 
   beforeEach(() => {
-    process.env = { ...savedEnv, ...BASE_ENV };
+    process.env = { ...savedEnv, ...BASE_ENV, ...CARDANO_ENV };
     vi.mocked(loadPriceConfig).mockReset().mockReturnValue(ADA_ONLY);
   });
 
@@ -135,21 +144,34 @@ describe('loadConfig — cardano', () => {
     process.env = savedEnv;
   });
 
-  it('parses cardano config', async () => {
-    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
-    process.env.CARDANO_WALLET_ADDRESS =
-      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
+  it.each(['CARDANO_UTXORPC_URL', 'CARDANO_WALLET_ADDRESS', 'CARDANO_REGISTRATION_SKEY_FILE'])(
+    'throws if ADA is priced but %s is not set',
+    async (name) => {
+      delete process.env[name];
+      await expect(loadConfig()).rejects.toThrow(`${name} is required`);
+    },
+  );
+
+  it('does not need the Cardano wallet when ADA is not priced', async () => {
+    for (const name of Object.keys(CARDANO_ENV)) {
+      delete process.env[name];
+    }
+    process.env.MIDNIGHT_NETWORK = 'undeployed';
+    process.env.MIDNIGHT_WALLET_STATE_DIR = './.wallet-state-test';
+    vi.mocked(loadPriceConfig).mockReturnValue(DUST_PRICED);
 
     const { config } = await loadConfig();
+    expect(config.cardano).toBeUndefined();
+  });
+
+  it('parses cardano config', async () => {
+    const { config } = await loadConfig();
     expect(config.cardano).toBeDefined();
-    expect(config.cardano!.walletAddress.toBech32()).toEqual(process.env.CARDANO_WALLET_ADDRESS);
+    expect(config.cardano!.walletAddress.toBech32()).toEqual(CARDANO_ENV.CARDANO_WALLET_ADDRESS);
     expect(config.cardano!.startingPoint).toBeUndefined();
   });
 
   it('parses a starting point', async () => {
-    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
-    process.env.CARDANO_WALLET_ADDRESS =
-      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
     process.env.CARDANO_STARTING_POINT =
       '123.abababababababababababababababababababababababababababababababab';
 
@@ -162,9 +184,6 @@ describe('loadConfig — cardano', () => {
   });
 
   it('parses starting point "tip"', async () => {
-    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
-    process.env.CARDANO_WALLET_ADDRESS =
-      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
     process.env.CARDANO_STARTING_POINT = 'tip';
 
     const { config } = await loadConfig();
@@ -179,9 +198,6 @@ describe('loadConfig — cardano', () => {
     'abc.abababababababababababababababababababababababababababababababab',
     '123.abab',
   ])('rejects an invalid starting point %j', async (point) => {
-    process.env.CARDANO_UTXORPC_URL = 'https://poop.bike';
-    process.env.CARDANO_WALLET_ADDRESS =
-      'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy';
     process.env.CARDANO_STARTING_POINT = point;
 
     await expect(loadConfig()).rejects.toThrow('CARDANO_STARTING_POINT');

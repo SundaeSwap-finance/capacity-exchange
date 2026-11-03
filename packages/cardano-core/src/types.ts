@@ -30,3 +30,9 @@ export type TransactionOutput = Serialization.TransactionOutput;
 export const TransactionOutput = Serialization.TransactionOutput;
 export type TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
 export const TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
+
+export type CborWriter = Serialization.CborWriter;
+export const CborWriter = Serialization.CborWriter;
+
+// Ed25519PublicKey.hash() runs on libsodium, which is usable once cryptoReady() resolves.
+export { Ed25519PublicKey, ready as cryptoReady } from '@cardano-sdk/crypto';
