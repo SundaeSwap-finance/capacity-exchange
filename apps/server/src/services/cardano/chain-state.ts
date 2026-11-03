@@ -20,7 +20,6 @@ import {
   Utxo,
 } from '@capacity-exchange/cardano-core';
 import { MAX_ROLLBACK_DEPTH } from './utils.js';
-import type { Rational } from '../../utils/rational.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;
