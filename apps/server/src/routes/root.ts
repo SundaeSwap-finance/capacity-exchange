@@ -5,16 +5,13 @@ import { packageName, packageVersion } from '../packageInfo.js';
 const rootRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
   fastify.get('/', RootSchema, async (_request, _reply) => {
     const { midnight } = fastify.config;
-    const formulaAssets = fastify.priceService.listAssets();
-    // Hints sell ADA whether or not `priceFormulas` prices it.
-    const capacityAssets =
-      fastify.cardanoHintService && !formulaAssets.includes('ADA')
-        ? [...formulaAssets, 'ADA' as const]
-        : formulaAssets;
     return {
       name: packageName,
       version: packageVersion,
-      capacityAssets,
+      capacityAssets: [
+        ...fastify.priceService.listAssets(),
+        ...(fastify.cardanoHintService ? (['ADA'] as const) : []),
+      ],
       chains: {
         midnight: midnight && {
           network: midnight.networkId,

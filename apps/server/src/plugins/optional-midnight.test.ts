@@ -19,7 +19,6 @@ const NO_MIDNIGHT_CONFIG: AppConfig = {
   quoteTtlSeconds: 300,
   offerTtlSeconds: 2,
   priceFormulas: {},
-  cardanoPrices: [],
   sponsorAll: false,
   sponsoredContracts: [],
   quoteSecretFile: '.quote-secret.plugin-test.key',

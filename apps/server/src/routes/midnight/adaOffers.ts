@@ -22,7 +22,6 @@ const adaOfferRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       return reply.gone('Quote has expired. Please request a new price quote.');
     }
     // Offers settle by building a Midnight tx, so this route sells DUST capacity only.
-    // Other capacity assets are quotable but have no offer path yet.
     if (quoteResult.quote.currency !== 'DUST') {
       return reply.badRequest('Invalid currency');
     }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { randomBytes } from 'crypto';
-import priceRoutes, { assetPriceRoutes } from './prices.js';
+import priceRoutes, { midnightPriceRoutes } from './prices.js';
 import { PriceService } from '../services/price.js';
 import { QuoteService } from '../services/quote.js';
 import { useRouteTestApp } from './test-utils.js';
@@ -13,14 +13,6 @@ const priceService = new PriceService({
       currency: { type: 'midnight:shielded', rawId: 'lovelace' },
       basePrice: '1000',
       rateNumerator: '1',
-      rateDenominator: '1',
-    },
-  ],
-  ADA: [
-    {
-      currency: { type: 'cardano:native', rawId: 'deadbeef' },
-      basePrice: '500',
-      rateNumerator: '2',
       rateDenominator: '1',
     },
   ],
@@ -69,31 +61,6 @@ describe('GET /api/prices', () => {
     });
   });
 
-  it('prices ADA capacity from its own formulas, not DUST rates', async () => {
-    const res = await app.get().inject({
-      method: 'GET',
-      url: '/api/prices?currency=ADA&amount=1000',
-    });
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
-    // 500 + 1000 * 2/1 = 2500, whereas the DUST formula would give 2000.
-    expect(body.prices).toEqual([
-      {
-        amount: '2500',
-        currency: { id: 'cardano:native:deadbeef', type: 'cardano:native', rawId: 'deadbeef' },
-      },
-    ]);
-  });
-
-  it('stamps the requested asset into the quote', async () => {
-    const res = await app.get().inject({
-      method: 'GET',
-      url: '/api/prices?currency=ADA&amount=1000',
-    });
-    const result = quoteService.getQuote(res.json().quoteId);
-    expect(result.status === 'ok' && result.quote.currency).toBe('ADA');
-  });
-
   it('rejects an unknown capacity asset at the schema', async () => {
     const res = await app.get().inject({
       method: 'GET',
@@ -103,21 +70,9 @@ describe('GET /api/prices', () => {
   });
 });
 
-describe('GET /api/prices on a server that does not sell ADA', () => {
+describe('GET /api/prices for ADA, which the hints price instead', () => {
   const app = useRouteTestApp({
-    decorations: {
-      priceService: new PriceService({
-        DUST: [
-          {
-            currency: { type: 'midnight:shielded', rawId: 'lovelace' },
-            basePrice: '1000',
-            rateNumerator: '1',
-            rateDenominator: '1',
-          },
-        ],
-      }),
-      quoteService,
-    },
+    decorations: { priceService, quoteService },
     routes: { plugin: priceRoutes, prefix: '/api' },
   });
 
@@ -131,64 +86,36 @@ describe('GET /api/prices on a server that does not sell ADA', () => {
   });
 });
 
-describe.each([
-  { chain: 'midnight', asset: 'DUST' },
-  { chain: 'cardano', asset: 'ADA' },
-] as const)('GET /api/$chain/prices', ({ chain, asset }) => {
+describe('GET /api/midnight/prices', () => {
   const app = useRouteTestApp({
     decorations: { priceService, quoteService },
-    routes: { plugin: assetPriceRoutes(asset), prefix: `/api/${chain}` },
+    routes: { plugin: midnightPriceRoutes, prefix: '/api/midnight' },
   });
   const shared = useRouteTestApp({
     decorations: { priceService, quoteService },
     routes: { plugin: priceRoutes, prefix: '/api' },
   });
 
-  it(`answers the same as /api/prices?currency=${asset}`, async () => {
-    const res = await app.get().inject({ method: 'GET', url: `/api/${chain}/prices?amount=1000` });
+  it('answers the same as /api/prices?currency=DUST', async () => {
+    const res = await app.get().inject({ method: 'GET', url: '/api/midnight/prices?amount=1000' });
     const expected = await shared.get().inject({
       method: 'GET',
-      url: `/api/prices?currency=${asset}&amount=1000`,
+      url: '/api/prices?currency=DUST&amount=1000',
     });
 
     expect(res.statusCode).toBe(200);
     expect(res.json().prices).toEqual(expected.json().prices);
   });
 
-  it(`stamps ${asset} into the quote`, async () => {
-    const res = await app.get().inject({ method: 'GET', url: `/api/${chain}/prices?amount=1000` });
+  it('stamps DUST into the quote', async () => {
+    const res = await app.get().inject({ method: 'GET', url: '/api/midnight/prices?amount=1000' });
     const result = quoteService.getQuote(res.json().quoteId);
-    expect(result.status === 'ok' && result.quote.currency).toBe(asset);
+    expect(result.status === 'ok' && result.quote.currency).toBe('DUST');
     expect(result.status === 'ok' && result.quote.amount).toBe(1000n);
   });
 
   it('rejects a non-numeric amount at the schema', async () => {
-    const res = await app.get().inject({ method: 'GET', url: `/api/${chain}/prices?amount=abc` });
+    const res = await app.get().inject({ method: 'GET', url: '/api/midnight/prices?amount=abc' });
     expect(res.statusCode).toBe(400);
-  });
-});
-
-describe('GET /api/cardano/prices on a server that does not sell ADA', () => {
-  const app = useRouteTestApp({
-    decorations: {
-      priceService: new PriceService({
-        DUST: [
-          {
-            currency: { type: 'midnight:shielded', rawId: 'lovelace' },
-            basePrice: '1000',
-            rateNumerator: '1',
-            rateDenominator: '1',
-          },
-        ],
-      }),
-      quoteService,
-    },
-    routes: { plugin: assetPriceRoutes('ADA'), prefix: '/api/cardano' },
-  });
-
-  it('400s', async () => {
-    const res = await app.get().inject({ method: 'GET', url: '/api/cardano/prices?amount=1000' });
-    expect(res.statusCode).toBe(400);
-    expect(res.json().message).toContain('does not sell ADA');
   });
 });

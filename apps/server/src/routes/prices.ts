@@ -1,6 +1,6 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import type { FastifyInstance, FastifyReply } from 'fastify';
-import { AssetPricesSchema, PricesSchema } from '../models/prices.js';
+import { MidnightPricesSchema, PricesSchema } from '../models/prices.js';
 import type { CapacityAsset } from '../config/prices.js';
 
 /** Quotes `amount` of `asset` in every currency this server accepts for it. */
@@ -29,11 +29,9 @@ const priceRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
 
 export default priceRoutes;
 
-/** `GET /prices` for one chain's capacity asset; register it under that chain's prefix. */
-export function assetPriceRoutes(asset: CapacityAsset): FastifyPluginAsyncTypebox {
-  return async (fastify, _opts) => {
-    fastify.get('/prices', AssetPricesSchema, async (request, reply) =>
-      replyWithPrices(fastify, reply, asset, BigInt(request.query.amount)),
-    );
-  };
-}
+/** `GET /prices` for DUST; register it under `/api/midnight`. */
+export const midnightPriceRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
+  fastify.get('/prices', MidnightPricesSchema, async (request, reply) =>
+    replyWithPrices(fastify, reply, 'DUST', BigInt(request.query.amount)),
+  );
+};

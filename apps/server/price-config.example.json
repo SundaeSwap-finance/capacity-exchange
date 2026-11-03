@@ -18,8 +18,18 @@
           "rawId": "<policy-id><hex-asset-name>"
         },
         "basePrice": "1000000",
-        "rateNumerator": "11",
-        "rateDenominator": "1000"
+        "tiers": [
+          {
+            "above": "1000000000",
+            "rateNumerator": "11",
+            "rateDenominator": "1000"
+          },
+          {
+            "above": "100000000",
+            "rateNumerator": "13",
+            "rateDenominator": "1000"
+          }
+        ]
       }
     ]
   },

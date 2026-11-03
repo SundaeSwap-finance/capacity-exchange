@@ -20,9 +20,9 @@ function capacityAssetsWith(formulaAssets: CapacityAsset[], hints: boolean) {
 }
 
 describe('GET / capacityAssets', () => {
-  describe('with formulas only', () => {
+  describe('with DUST formulas only', () => {
     const read = capacityAssetsWith(['DUST'], false);
-    it('lists the formula assets', async () => {
+    it('lists DUST', async () => {
       expect(await read()).toEqual(['DUST']);
     });
   });
@@ -34,17 +34,10 @@ describe('GET / capacityAssets', () => {
     });
   });
 
-  describe('with hints and formulas for DUST', () => {
+  describe('with hints and DUST formulas', () => {
     const read = capacityAssetsWith(['DUST'], true);
-    it('adds ADA after the formula assets', async () => {
+    it('lists ADA after DUST', async () => {
       expect(await read()).toEqual(['DUST', 'ADA']);
-    });
-  });
-
-  describe('with hints and a formula for ADA', () => {
-    const read = capacityAssetsWith(['ADA'], true);
-    it('lists ADA once', async () => {
-      expect(await read()).toEqual(['ADA']);
     });
   });
 });

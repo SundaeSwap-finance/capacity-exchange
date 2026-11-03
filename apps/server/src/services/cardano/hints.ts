@@ -1,9 +1,10 @@
 import { createPrivateKey, createPublicKey, sign } from 'crypto';
 import { readFileSync } from 'fs';
 import { CborWriter, Ed25519PublicKey } from '@capacity-exchange/cardano-core';
-import type { CardanoPairPrice, RawCurrency } from '../../config/prices.js';
+import type { AdaPriceFormula } from '../../config/prices.js';
 import type { Asset } from '../../utils/asset.js';
 import { sliceTiers, type Price, type PriceSchedule } from './ladder.js';
+import type { CardanoWalletService } from './wallet.js';
 
 /** Signs CIP-0198 hint sets under the service's key. */
 export interface HintSigner {
@@ -50,11 +51,11 @@ export function readHintSigner(path: string): HintSigner {
 }
 
 /**
- * What fills a hint's `registration` field: the blake2b-224 hash of `vkey`. The CIP names a
+ * The blake2b-224 hash of `vkey`. It also fills a hint's `registration` field: the CIP names a
  * registration asset there, and an unregistered service has none. Needs `cryptoReady()` to
  * have resolved.
  */
-export function registrationOf(vkey: Uint8Array): Uint8Array {
+export function keyHashOf(vkey: Uint8Array): Uint8Array {
   return new Uint8Array(Buffer.from(Ed25519PublicKey.fromBytes(vkey).hash().hex(), 'hex'));
 }
 
@@ -115,23 +116,23 @@ export function encodeHints(bodyBytes: Uint8Array, signature: Uint8Array): Uint8
     .encode();
 }
 
-function toAsset(currency: RawCurrency): Asset {
+function toAsset(currency: AdaPriceFormula['currency']): Asset {
   return currency.type === 'cardano:ada'
     ? { type: 'ada' }
     : { type: 'native', unit: currency.rawId };
 }
 
-/** Converts price pairs that `checkCardanoPrices` accepted. */
-export function toSchedules(prices: CardanoPairPrice[]): PriceSchedule[] {
-  return prices.map((price) => ({
-    paid: toAsset(price.paid),
-    spent: toAsset(price.spent),
-    base: BigInt(price.base),
-    tiers: price.tiers.map((tier) => ({
+/** The schedules the ADA formulas that `checkAdaFormulas` accepted publish, each spending ADA. */
+export function toSchedules(formulas: AdaPriceFormula[]): PriceSchedule[] {
+  return formulas.map((formula) => ({
+    paid: toAsset(formula.currency),
+    spent: { type: 'ada' },
+    base: BigInt(formula.basePrice),
+    tiers: formula.tiers.map((tier) => ({
       above: BigInt(tier.above),
       perUnit: {
-        numerator: BigInt(tier.perUnit.numerator),
-        denominator: BigInt(tier.perUnit.denominator),
+        numerator: BigInt(tier.rateNumerator),
+        denominator: BigInt(tier.rateDenominator),
       },
     })),
   }));
@@ -141,19 +142,19 @@ export function toSchedules(prices: CardanoPairPrice[]): PriceSchedule[] {
 export class CardanoHintService {
   constructor(
     private readonly schedules: PriceSchedule[],
-    /** The service's current holding of an asset it spends. */
-    private readonly balance: (asset: Asset) => bigint,
+    private readonly wallet: Pick<CardanoWalletService, 'lovelace'>,
     private readonly signer: HintSigner,
     private readonly now: () => number = Date.now,
   ) {}
 
   /** Each schedule priced at the current balance; a pair whose ladder comes out empty is left out. */
   currentPrices(): Price[] {
+    const lovelace = this.wallet.lovelace();
     return this.schedules
       .map(({ tiers, ...pair }) => {
         return {
           ...pair,
-          ladder: sliceTiers(tiers, this.balance(pair.spent)),
+          ladder: sliceTiers(tiers, lovelace),
         };
       })
       .filter((p) => p.ladder.length > 0);
@@ -169,7 +170,7 @@ export class CardanoHintService {
       producedAt: BigInt(this.now()),
       prices,
       issuerVkey: this.signer.vkey,
-      registration: registrationOf(this.signer.vkey),
+      registration: keyHashOf(this.signer.vkey),
     };
     const bodyBytes = encodeHintsBody(body);
     const signature = this.signer.sign(bodyBytes);

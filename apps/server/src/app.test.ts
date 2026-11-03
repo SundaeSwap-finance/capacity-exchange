@@ -11,14 +11,12 @@ const ADA_ONLY_CONFIG: AppConfig = {
   port: 0,
   quoteTtlSeconds: 300,
   offerTtlSeconds: 2,
-  cardanoPrices: [],
   priceFormulas: {
     ADA: [
       {
         currency: { type: 'cardano:ada', rawId: '' },
         basePrice: '0',
-        rateNumerator: '1',
-        rateDenominator: '1',
+        tiers: [{ above: '0', rateNumerator: '1', rateDenominator: '1' }],
       },
     ],
   },
@@ -49,24 +47,16 @@ describe('buildApp — ADA-only server (no Midnight configuration)', () => {
     expect(res.json()).toEqual({ status: 'ok' });
   });
 
-  it('reports ADA as the only capacity asset and no Midnight chain from the root endpoint', async () => {
+  it('reports no Midnight chain from the root endpoint', async () => {
     const res = await app.inject({ method: 'GET', url: '/' });
     expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body.capacityAssets).toEqual(['ADA']);
-    expect(body.chains).toEqual({});
+    expect(res.json().chains).toEqual({});
   });
 
   it('serves metrics with no DUST capacity', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/metrics' });
     expect(res.statusCode).toBe(200);
     expect(res.json().capacity).toEqual([]);
-  });
-
-  it('still prices the capacity asset it actually sells (ADA)', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/cardano/prices?amount=1000000' });
-    expect(res.statusCode).toBe(200);
-    expect(res.json().prices).toBeInstanceOf(Array);
   });
 
   it('returns 501 for /api/midnight/sponsor, since there is no Midnight wallet to pay DUST fees with', async () => {

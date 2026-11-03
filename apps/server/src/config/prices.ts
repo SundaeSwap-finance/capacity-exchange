@@ -37,13 +37,45 @@ const RawPriceFormulaSchema = Type.Object({
   rateDenominator: Type.String(),
 });
 
+const AdaTierSchema = Type.Object(
+  {
+    above: Type.String(),
+    rateNumerator: Type.String(),
+    rateDenominator: Type.String(),
+  },
+  { additionalProperties: false },
+);
+
 /**
- * Price formulas grouped by the capacity asset they price.
- * Every asset is optional: a server that only sells DUST omits `ADA` entirely.
+ * An ADA price, published as CIP-0198 hints: each tier's rate applies while the wallet holds more
+ * lovelace than its `above`, and nothing is offered below the lowest `above`. A single tier above
+ * `0` is a flat rate.
  */
+const AdaPriceFormulaSchema = Type.Object(
+  {
+    currency: Type.Object({
+      type: Type.Union([Type.Literal('cardano:ada'), Type.Literal('cardano:native')]),
+      rawId: Type.String(),
+    }),
+    basePrice: Type.String(),
+    tiers: Type.Array(AdaTierSchema, { minItems: 1 }),
+  },
+  { additionalProperties: false },
+);
+
+/** Flat price formulas grouped by capacity asset, as `peer.maxPrices` caps what peers charge. */
 const CapacityFormulasSchema = Type.Object({
   DUST: Type.Optional(Type.Array(RawPriceFormulaSchema)),
   ADA: Type.Optional(Type.Array(RawPriceFormulaSchema)),
+});
+
+/**
+ * What the server sells at: DUST at {@link RawPriceFormulaSchema} rates, ADA through hints.
+ * Every asset is optional: a server that only sells DUST omits `ADA` entirely.
+ */
+const PriceFormulasSchema = Type.Object({
+  DUST: Type.Optional(Type.Array(RawPriceFormulaSchema)),
+  ADA: Type.Optional(Type.Array(AdaPriceFormulaSchema)),
 });
 
 const CircuitFilterSchema = Type.Union([
@@ -60,54 +92,24 @@ const PeerConfigSchema = Type.Object({
   maxPrices: CapacityFormulasSchema,
 });
 
-const Natural = Type.String({ pattern: '^\\d+$' });
-
-const RationalSchema = Type.Object({
-  numerator: Natural,
-  denominator: Type.String({ pattern: '^0*[1-9]\\d*$' }),
-});
-
-const CardanoTierSchema = Type.Object({
-  // Lovelace of the spent asset the service holds; the tier prices what it spends above this.
-  above: Natural,
-  // Units of the paid asset per unit spent.
-  perUnit: RationalSchema,
-});
-
-/**
- * One CIP-0198 price pair. Its published ladder is the part of `tiers` the service's current
- * balance of `spent` covers, so nothing is sold below the lowest tier's `above`.
- */
-const CardanoPairPriceSchema = Type.Object({
-  paid: RawCurrencySchema,
-  spent: RawCurrencySchema,
-  // Units of the paid asset charged per offer.
-  base: Natural,
-  tiers: Type.Array(CardanoTierSchema, { minItems: 1 }),
-});
-
-const CardanoPricingSchema = Type.Object({
-  prices: Type.Array(CardanoPairPriceSchema),
-});
-
 const PriceConfigSchema = Type.Object({
-  priceFormulas: CapacityFormulasSchema,
+  priceFormulas: PriceFormulasSchema,
   sponsorAll: Type.Optional(Type.Boolean()),
   sponsoredContracts: Type.Array(SponsoredContractSchema),
   peer: Type.Optional(PeerConfigSchema),
-  cardano: Type.Optional(CardanoPricingSchema),
 });
 
 export type RawCurrency = Static<typeof RawCurrencySchema>;
 export type RawPriceFormula = Static<typeof RawPriceFormulaSchema>;
+export type AdaPriceFormula = Static<typeof AdaPriceFormulaSchema>;
 export type CapacityFormulas = Static<typeof CapacityFormulasSchema>;
+export type PriceFormulas = Static<typeof PriceFormulasSchema>;
 export type SponsoredContract = Static<typeof SponsoredContractSchema>;
 export type PeerConfig = Static<typeof PeerConfigSchema>;
-export type CardanoPairPrice = Static<typeof CardanoPairPriceSchema>;
 export type PriceConfig = Static<typeof PriceConfigSchema>;
 
 /** The assets a formula group actually prices, skipping any present but empty. */
-export function pricedAssets(formulas: CapacityFormulas): CapacityAsset[] {
+export function pricedAssets(formulas: Partial<Record<CapacityAsset, unknown[]>>): CapacityAsset[] {
   return CAPACITY_ASSETS.filter((asset) => formulas[asset]?.length);
 }
 
@@ -115,52 +117,53 @@ export function pricedAssets(formulas: CapacityFormulas): CapacityAsset[] {
 const NATIVE_UNIT = /^[0-9a-f]{56}(?:[0-9a-f]{2}){0,32}$/;
 
 function checkCardanoCurrency(currency: RawCurrency, where: string): void {
-  if (currency.type === 'cardano:ada') {
-    if (currency.rawId !== '') {
-      throw new Error(`${where}: cardano:ada takes an empty rawId`);
-    }
-  } else if (currency.type === 'cardano:native') {
-    if (!NATIVE_UNIT.test(currency.rawId)) {
-      throw new Error(
-        `${where}: rawId must be a lowercase hex policy id followed by an asset name`,
-      );
-    }
-  } else {
-    throw new Error(`${where}: ${currency.type} is not a Cardano asset`);
+  if (currency.type === 'cardano:ada' && currency.rawId !== '') {
+    throw new Error(`${where}: cardano:ada takes an empty rawId`);
+  }
+  if (currency.type === 'cardano:native' && !NATIVE_UNIT.test(currency.rawId)) {
+    throw new Error(`${where}: rawId must be a lowercase hex policy id followed by an asset name`);
   }
 }
 
-// The CIP's wire format carries `base` as a CBOR uint and a rate's parts as u64.
+// The CIP's wire format carries a hint's base as a CBOR uint and a rate's parts as u64.
 const MAX_U64 = 2n ** 64n - 1n;
 
 function checkU64(value: string, where: string): void {
+  if (!/^\d+$/.test(value)) {
+    throw new Error(`${where}: ${JSON.stringify(value)} is not a whole number`);
+  }
   if (BigInt(value) > MAX_U64) {
     throw new Error(`${where}: ${value} does not fit in 64 bits`);
   }
 }
 
-/** Throws on the first CIP-0198 price pair the hints could not publish as configured. */
-export function checkCardanoPrices(prices: CardanoPairPrice[]): void {
-  const pairs = new Set<string>();
-  prices.forEach((price, i) => {
-    const where = `cardano.prices[${i}]`;
-    checkCardanoCurrency(price.paid, `${where}.paid`);
-    checkCardanoCurrency(price.spent, `${where}.spent`);
-    // The offer service can only supply ADA to a batch.
-    if (price.spent.type !== 'cardano:ada') {
-      throw new Error(`${where}.spent: only cardano:ada can be spent`);
+function checkRate(numerator: string, denominator: string, where: string): void {
+  checkU64(numerator, `${where}.rateNumerator`);
+  checkU64(denominator, `${where}.rateDenominator`);
+  if (BigInt(denominator) === 0n) {
+    throw new Error(`${where}.rateDenominator: must not be zero`);
+  }
+}
+
+/** Throws on the first ADA formula the CIP-0198 hints could not publish as configured. */
+export function checkAdaFormulas(formulas: AdaPriceFormula[]): void {
+  const priced = new Set<string>();
+  formulas.forEach((formula, i) => {
+    const where = `priceFormulas.ADA[${i}]`;
+    checkCardanoCurrency(formula.currency, `${where}.currency`);
+    // CIP-0198 readers reject a whole hint set that prices one pair twice.
+    const id = `${formula.currency.type}:${formula.currency.rawId}`;
+    if (priced.has(id)) {
+      throw new Error(`${where}.currency: ${id} is priced twice`);
     }
-    const pair = `${price.paid.type}:${price.paid.rawId}/${price.spent.type}:${price.spent.rawId}`;
-    if (pairs.has(pair)) {
-      throw new Error(`${where}: a second price for the pair ${pair}`);
-    }
-    pairs.add(pair);
-    checkU64(price.base, `${where}.base`);
-    price.tiers.forEach((tier, j) => {
-      checkU64(tier.perUnit.numerator, `${where}.tiers[${j}].perUnit.numerator`);
-      checkU64(tier.perUnit.denominator, `${where}.tiers[${j}].perUnit.denominator`);
-      if (j > 0 && BigInt(tier.above) >= BigInt(price.tiers[j - 1].above)) {
-        throw new Error(`${where}.tiers[${j}]: tiers must be listed by strictly falling 'above'`);
+    priced.add(id);
+    checkU64(formula.basePrice, `${where}.basePrice`);
+    formula.tiers.forEach((tier, j) => {
+      const at = `${where}.tiers[${j}]`;
+      checkU64(tier.above, `${at}.above`);
+      checkRate(tier.rateNumerator, tier.rateDenominator, at);
+      if (j > 0 && BigInt(tier.above) >= BigInt(formula.tiers[j - 1].above)) {
+        throw new Error(`${at}: tiers must be listed by strictly falling 'above'`);
       }
     });
   });
@@ -177,14 +180,14 @@ export function loadPriceConfig(filePath: string): PriceConfig {
       `Invalid price config in ${filePath}: ${err instanceof Error ? err.message : err}`,
     );
   }
-  // A server with no prices can sell nothing, which is never what an operator meant.
-  if (pricedAssets(config.priceFormulas).length === 0 && !config.cardano?.prices.length) {
+  // A server with no formulas can quote nothing, which is never what an operator meant.
+  if (pricedAssets(config.priceFormulas).length === 0) {
     throw new Error(
-      `Invalid price config in ${filePath}: priceFormulas must price at least one of ${CAPACITY_ASSETS.join(', ')}, or cardano.prices must be set`,
+      `Invalid price config in ${filePath}: priceFormulas must price at least one of ${CAPACITY_ASSETS.join(', ')}`,
     );
   }
   try {
-    checkCardanoPrices(config.cardano?.prices ?? []);
+    checkAdaFormulas(config.priceFormulas.ADA ?? []);
   } catch (err) {
     throw new Error(`Invalid price config in ${filePath}: ${(err as Error).message}`);
   }
