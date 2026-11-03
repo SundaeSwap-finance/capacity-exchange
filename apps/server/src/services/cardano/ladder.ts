@@ -1,5 +1,6 @@
 /** CIP-0198 price ladders: what a service publishes in its hints, and what an offer owes under them. */
 
+import type { Price, Rung } from '@capacity-exchange/cardano-core';
 import { sameAsset, type Asset } from '../../utils/asset.js';
 import {
   addRational,
@@ -8,6 +9,8 @@ import {
   ZERO,
   type Rational,
 } from '../../utils/rational.js';
+
+export type { Price, Rung };
 
 /** One tier of a configured price: the rate for what the service spends while its balance is above `above`. */
 export interface Tier {
@@ -23,22 +26,6 @@ export interface PriceSchedule {
   /** Units of the paid asset charged per offer. */
   base: bigint;
   tiers: Tier[];
-}
-
-export interface Rung {
-  /** Units of the spent asset at this rung, not cumulative. `null` is unbounded, and only allowed on the last rung. */
-  supply: bigint | null;
-  /** Units of the paid asset per unit spent. */
-  perUnit: Rational;
-}
-
-/** A CIP-0198 `price`: what a service charges in `paid` for what it spends of `spent`. */
-export interface Price {
-  paid: Asset;
-  spent: Asset;
-  base: bigint;
-  /** Filled in order. Never empty. */
-  ladder: Rung[];
 }
 
 /** What an offer makes the service spend of one asset. */

@@ -1,9 +1,6 @@
-/** An exact fraction of bigints. */
-export interface Rational {
-  numerator: bigint;
-  /** Always positive. */
-  denominator: bigint;
-}
+import type { Rational } from '@capacity-exchange/cardano-core';
+
+export type { Rational };
 
 export const ZERO: Rational = { numerator: 0n, denominator: 1n };
 
