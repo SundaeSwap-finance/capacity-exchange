@@ -1,6 +1,10 @@
 import {
   Address,
+  CborSet,
   Credential,
+  Ed25519PublicKeyHex,
+  Ed25519SignatureHex,
+  HexBlob,
   PartialBlockHeader,
   PaymentAddress,
   Slot,
@@ -11,10 +15,13 @@ import {
   TransactionInput,
   TransactionOutput,
   TransactionUnspentOutput,
+  VKeyWitness,
   isRewardAccount,
 } from '@capacity-exchange/cardano-core';
 import { ChainIndex } from './utils';
 import { CardanoChainStateService, ChainFollower } from './chain-state';
+import { Ed25519KeyPair } from '../../config/cardanoKeys';
+import { sign } from 'node:crypto';
 
 const txInKey = (txIn: TransactionInput): string => {
   return `${txIn.transactionId()}:${txIn.index()}`;
@@ -22,15 +29,17 @@ const txInKey = (txIn: TransactionInput): string => {
 
 export class CardanoWalletService implements ChainFollower {
   #address: Address;
+  #keys: Ed25519KeyPair;
   #chainState: CardanoChainStateService;
   #tracker: WalletTracker;
 
-  constructor(address: Address, chainState: CardanoChainStateService) {
+  constructor(address: Address, keys: Ed25519KeyPair, chainState: CardanoChainStateService) {
     const paymentCredential = address.getProps().paymentPart;
     if (!paymentCredential) {
       throw new Error('Address must contain payment credential');
     }
     this.#address = address;
+    this.#keys = keys;
     this.#tracker = new WalletTracker(paymentCredential, Slot(0), []);
     this.#chainState = chainState;
     chainState.addFollower(this);
@@ -68,9 +77,21 @@ export class CardanoWalletService implements ChainFollower {
   }
 
   async signAndSubmitTx(tx: Transaction) {
-    // TODO: attach our signature
     // TODO: flag any UTXOs spent by this transaction so we don't re-spend em
-    await this.#chainState.submit(tx);
+
+    const id = Buffer.from(tx.getId(), 'hex');
+    const vkey = Ed25519PublicKeyHex(HexBlob.fromBytes(this.#keys.publicKey));
+    const signature = Ed25519SignatureHex(HexBlob.fromBytes(sign(null, id, this.#keys.privateKey)));
+
+    const witnessSet = tx.witnessSet();
+    const values = [...(witnessSet.vkeys()?.values() ?? [])];
+    values.push(VKeyWitness.fromCore([vkey, signature]));
+    const newVkeys = CborSet.fromCore([], VKeyWitness.fromCore);
+    newVkeys.setValues(values);
+    witnessSet.setVkeys(newVkeys);
+    tx.setWitnessSet(witnessSet);
+
+    return await this.#chainState.submit(tx);
   }
 }
 

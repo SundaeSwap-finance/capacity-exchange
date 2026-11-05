@@ -37,7 +37,8 @@ export type ValidateResult<T> = { status: 'ok'; response: T } | OfferError;
 export type OfferError =
   | { status: 'malformed'; reason: string }
   | { status: 'unsupported-version' }
-  | { status: 'over-budget' };
+  | { status: 'over-budget' }
+  | { status: 'error'; reason: string };
 
 export class CardanoOfferService {
   #wallet: CardanoWalletService;
@@ -66,7 +67,10 @@ export class CardanoOfferService {
       return buildTxResult;
     }
 
-    // TODO: sign and submit the tx
+    const submitTxResponse = await this.#wallet.signAndSubmitTx(buildTxResult.response);
+    if (submitTxResponse.status !== 'ok') {
+      return submitTxResponse;
+    }
 
     const offerId = subTx.getId();
     return { status: 'ok', response: { offerId } };
@@ -74,6 +78,10 @@ export class CardanoOfferService {
 
   async validateSubTx(subTx: SubTransaction): Promise<ValidateResult<ValidationResponse>> {
     const sub = subTx.toCore();
+
+    if (!sub.body.inputs.length) {
+      return { status: 'malformed', reason: 'sub-tx has no inputs' };
+    }
 
     // Do not support funky forms of registration which rely on state queries.
     if (

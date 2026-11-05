@@ -17,7 +17,11 @@ export default fp(async (fastify: FastifyInstance) => {
     return;
   }
 
-  const service = new CardanoWalletService(cardano.walletAddress, chainStateService);
+  const service = new CardanoWalletService(
+    cardano.walletAddress,
+    cardano.walletKeyPair,
+    chainStateService,
+  );
   fastify.decorate('cardanoWalletService', service);
   fastify.log.info("CardanoWalletService init'd");
 });

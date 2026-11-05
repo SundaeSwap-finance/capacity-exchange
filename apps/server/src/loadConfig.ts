@@ -34,6 +34,7 @@ export interface CardanoConfig {
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
+  walletKeyPair: Ed25519KeyPair;
   /** Signs the CIP-0198 price hints */
   registrationKeyPair?: Ed25519KeyPair;
 }
@@ -98,6 +99,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     for (const name of [
       'CARDANO_UTXORPC_URL',
       'CARDANO_WALLET_ADDRESS',
+      'CARDANO_WALLET_SKEY_FILE',
       'CARDANO_REGISTRATION_SKEY_FILE',
     ] as const) {
       if (!env[name]) {
@@ -117,13 +119,14 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   }
 
   let cardano: CardanoConfig | undefined;
-  if (env.CARDANO_UTXORPC_URL && env.CARDANO_WALLET_ADDRESS) {
+  if (env.CARDANO_UTXORPC_URL && env.CARDANO_WALLET_ADDRESS && env.CARDANO_WALLET_SKEY_FILE) {
     const walletAddress = Address.fromBech32(env.CARDANO_WALLET_ADDRESS);
     const startingPoint = parsePoint(env.CARDANO_STARTING_POINT);
     cardano = {
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,
+      walletKeyPair: readSigningKeyFile(env.CARDANO_WALLET_SKEY_FILE),
       registrationKeyPair: env.CARDANO_REGISTRATION_SKEY_FILE
         ? readSigningKeyFile(env.CARDANO_REGISTRATION_SKEY_FILE)
         : undefined,

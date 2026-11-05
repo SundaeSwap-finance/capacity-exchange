@@ -110,8 +110,14 @@ const chainStateMock = {
   },
 };
 
+const walletKeyPair = {};
+
 const newWallet = () =>
-  new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS), chainStateMock as any);
+  new CardanoWalletService(
+    Address.fromBech32(WALLET_ADDRESS),
+    walletKeyPair as any,
+    chainStateMock as any,
+  );
 
 describe('CardanoWalletService chain following', () => {
   it('starts with no UTxOs', () => {
