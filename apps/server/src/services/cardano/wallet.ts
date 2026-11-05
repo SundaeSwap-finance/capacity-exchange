@@ -23,15 +23,70 @@ import { CardanoChainStateService, ChainFollower } from './chain-state';
 import { Ed25519KeyPair } from '../../config/cardanoKeys';
 import { sign } from 'node:crypto';
 
+interface OwnedOutput {
+  input: TransactionInput;
+  output: TransactionOutput;
+  validBefore: Slot | null;
+  dependsOn: string[];
+}
+type UtxoSet = Map<string, OwnedOutput>;
+
 const txInKey = (txIn: TransactionInput): string => {
   return `${txIn.transactionId()}:${txIn.index()}`;
 };
 
+const markSpent = (value: UtxoSet, input: TransactionInput) => {
+  value.delete(txInKey(input));
+};
+
+interface PendingOutputDetails {
+  validBefore: Slot;
+  dependsOn: string[];
+}
+
+const markCreated = (
+  value: UtxoSet,
+  paymentCredential: Credential,
+  output: TransactionOutput,
+  txId: TransactionId,
+  index: bigint,
+  details: PendingOutputDetails | null,
+) => {
+  const payTo = output.address().getProps().paymentPart;
+  if (!payTo || payTo.type !== paymentCredential.type || payTo.hash !== paymentCredential.hash) {
+    return;
+  }
+  const input = new TransactionInput(txId, index);
+  value.set(txInKey(input), {
+    input,
+    output,
+    ...(details || { validBefore: null, dependsOn: [] }),
+  });
+};
+
+const markOutputsCreated = (
+  value: UtxoSet,
+  paymentCredential: Credential,
+  txBody: TransactionBody | SubTransactionBody,
+  txId: TransactionId,
+  details: PendingOutputDetails | null,
+) => {
+  let index = 0n;
+  for (const output of txBody.outputs()) {
+    markCreated(value, paymentCredential, output, txId, index, details);
+    index += 1n;
+  }
+};
+
 export class CardanoWalletService implements ChainFollower {
   #address: Address;
+  #paymentCredential: Credential;
   #keys: Ed25519KeyPair;
   #chainState: CardanoChainStateService;
   #tracker: WalletTracker;
+  #reserved: Map<string, Slot>;
+  #pending: Map<string, OwnedOutput>;
+  #slot: Slot;
 
   constructor(address: Address, keys: Ed25519KeyPair, chainState: CardanoChainStateService) {
     const paymentCredential = address.getProps().paymentPart;
@@ -39,8 +94,12 @@ export class CardanoWalletService implements ChainFollower {
       throw new Error('Address must contain payment credential');
     }
     this.#address = address;
+    this.#paymentCredential = paymentCredential;
     this.#keys = keys;
     this.#tracker = new WalletTracker(paymentCredential, Slot(0), []);
+    this.#reserved = new Map();
+    this.#pending = new Map();
+    this.#slot = Slot(0);
     this.#chainState = chainState;
     chainState.addFollower(this);
   }
@@ -54,31 +113,55 @@ export class CardanoWalletService implements ChainFollower {
   }
 
   utxos(): TransactionUnspentOutput[] {
-    return [...this.#tracker.currentValue().values()];
+    const slot = this.#slot;
+    const live = new Map(this.#tracker.currentValue());
+    for (const [k, v] of this.#pending) {
+      if ((v.validBefore === null || v.validBefore > slot) && v.dependsOn.every(i => live.has(i))) {
+        live.set(k, v);
+      }
+    }
+    return [...live]
+      .filter(([k, _]) => !this.#reserved.has(k))
+      .map(([_, v]) => new TransactionUnspentOutput(v.input, v.output));
   }
 
   /** The ADA held across the wallet's UTxOs, in lovelace. */
   lovelace(): bigint {
     let total = 0n;
-    for (const utxo of this.#tracker.currentValue().values()) {
+    for (const utxo of this.utxos()) {
       total += utxo.output().amount().coin();
     }
     return total;
   }
 
   async onRollForward(header: PartialBlockHeader, txs: Transaction[]) {
+    this.#slot = header.slot;
     for (const tx of txs) {
       this.#tracker.applyTransaction(header.slot, tx);
+    }
+    // these entries appeared on chain or expired, they're not pending any more
+    for (const [key, value] of this.#pending) {
+      if (
+        (value.validBefore !== null && value.validBefore <= this.#slot) ||
+        this.#tracker.currentValue().has(key)
+      ) {
+        this.#pending.delete(key);
+      }
+    }
+    // these entries aren't reserved anymore
+    for (const [key, value] of this.#reserved) {
+      if (value <= this.#slot) {
+        this.#reserved.delete(key);
+      }
     }
   }
 
   async onRollBackward(header: PartialBlockHeader) {
+    this.#slot = header.slot;
     this.#tracker.rollBack(header.slot);
   }
 
   async signAndSubmitTx(tx: Transaction) {
-    // TODO: flag any UTXOs spent by this transaction so we don't re-spend em
-
     const id = Buffer.from(tx.getId(), 'hex');
     const vkey = Ed25519PublicKeyHex(HexBlob.fromBytes(this.#keys.publicKey));
     const signature = Ed25519SignatureHex(HexBlob.fromBytes(sign(null, id, this.#keys.privateKey)));
@@ -91,48 +174,74 @@ export class CardanoWalletService implements ChainFollower {
     witnessSet.setVkeys(newVkeys);
     tx.setWitnessSet(witnessSet);
 
-    return await this.#chainState.submit(tx);
+    const txBody = tx.body();
+    const until = txBody.ttl() ?? Slot(this.#slot + 20);
+
+    for (const input of txBody.inputs().values()) {
+      this.#reserved.set(txInKey(input), until);
+    }
+    const result = await this.#chainState.submit(tx);
+    if (result.status === 'ok') {
+      const details = {
+        validBefore: until,
+        dependsOn: txBody
+          .inputs()
+          .values()
+          .map((i) => txInKey(i))
+          .filter((k) => this.#pending.has(k)),
+      };
+      markOutputsCreated(this.#pending, this.#paymentCredential, txBody, tx.getId(), details);
+      for (const subTx of txBody.subTransactions()?.values() ?? []) {
+        markOutputsCreated(
+          this.#pending,
+          this.#paymentCredential,
+          subTx.body(),
+          subTx.getId(),
+          details,
+        );
+      }
+    } else {
+      for (const input of tx.body().inputs().values()) {
+        this.#reserved.delete(txInKey(input));
+      }
+    }
+    return result;
   }
 }
 
-class WalletTracker extends ChainIndex<Map<string, TransactionUnspentOutput>> {
+class WalletTracker extends ChainIndex<UtxoSet> {
   #paymentCredential: Credential;
   constructor(
     paymentCredential: Credential,
     startSlot: Slot,
     startUtxos: TransactionUnspentOutput[],
   ) {
-    super(startSlot, new Map(startUtxos.map((utxo) => [txInKey(utxo.input()), utxo] as const)));
+    super(
+      startSlot,
+      new Map(
+        startUtxos.map(
+          (utxo) =>
+            [
+              txInKey(utxo.input()),
+              {
+                input: utxo.input(),
+                output: utxo.output(),
+                validBefore: null,
+                dependsOn: [],
+              },
+            ] as const,
+        ),
+      ),
+    );
     this.#paymentCredential = paymentCredential;
   }
 
-  protected doApplyTransaction(tx: Transaction, value: Map<string, TransactionUnspentOutput>) {
-    const markSpent = (input: TransactionInput) => {
-      const key = `${input.transactionId()}:${input.index()}`;
-      value.delete(key);
-    };
-    const markCreated = (output: TransactionOutput, txId: TransactionId, index: bigint) => {
-      const payTo = output.address().getProps().paymentPart;
-      if (
-        !payTo ||
-        payTo.type !== this.#paymentCredential.type ||
-        payTo.hash !== this.#paymentCredential.hash
-      ) {
-        return;
-      }
-      const input = new TransactionInput(txId, index);
-      value.set(txInKey(input), new TransactionUnspentOutput(input, output));
-    };
-
+  protected doApplyTransaction(tx: Transaction, value: UtxoSet) {
     const applyTx = (txId: TransactionId, txBody: TransactionBody | SubTransactionBody) => {
       for (const input of txBody.inputs().values()) {
-        markSpent(input);
+        markSpent(value, input);
       }
-      let index = 0n;
-      for (const output of txBody.outputs()) {
-        markCreated(output, txId, index);
-        index++;
-      }
+      markOutputsCreated(value, this.#paymentCredential, txBody, txId, null);
     };
 
     const txBody = tx.body();
@@ -141,11 +250,18 @@ class WalletTracker extends ChainIndex<Map<string, TransactionUnspentOutput>> {
       // only spends its collateral and creates its collateral return, which
       // follows the regular outputs.
       for (const input of txBody.collateral()?.values() ?? []) {
-        markSpent(input);
+        markSpent(value, input);
       }
       const collateralReturn = txBody.collateralReturn();
       if (collateralReturn) {
-        markCreated(collateralReturn, tx.getId(), BigInt(txBody.outputs().length));
+        markCreated(
+          value,
+          this.#paymentCredential,
+          collateralReturn,
+          tx.getId(),
+          BigInt(txBody.outputs().length),
+          null,
+        );
       }
       return;
     }
@@ -155,9 +271,7 @@ class WalletTracker extends ChainIndex<Map<string, TransactionUnspentOutput>> {
     applyTx(tx.getId(), txBody);
   }
 
-  protected copyValue(
-    value: Map<string, TransactionUnspentOutput>,
-  ): Map<string, TransactionUnspentOutput> {
+  protected copyValue(value: UtxoSet): UtxoSet {
     return new Map(value);
   }
 }
