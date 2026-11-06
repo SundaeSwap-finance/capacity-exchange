@@ -139,13 +139,21 @@ export class CardanoWalletService implements ChainFollower {
 
   async onRollForward(header: PartialBlockHeader, txs: Transaction[]) {
     this.#slot = header.slot;
+    const landed = new Set<string>();
     for (const tx of txs) {
       this.#tracker.applyTransaction(header.slot, tx);
+      landed.add(tx.getId());
+      for (const subTx of tx.body().subTransactions()?.values() ?? []) {
+        landed.add(subTx.getId());
+      }
     }
-    // these entries appeared on chain or expired, they're not pending any more
+    // these entries appeared on chain or expired, they're not pending any more.
+    // Match on the landed tx ids too: an output created and spent within the
+    // same block never shows up in the tracker.
     for (const [key, value] of this.#pending) {
       if (
         (value.validBefore !== null && value.validBefore <= this.#slot) ||
+        landed.has(value.input.transactionId()) ||
         this.#tracker.currentValue().has(key)
       ) {
         this.#pending.delete(key);

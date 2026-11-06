@@ -724,6 +724,17 @@ describe('CardanoWalletService submitting transactions', () => {
       expect(refs(wallet)).toEqual([ref(child, 1)]);
     });
 
+    it('forgets the change a child spent when both land in the same block', async () => {
+      // The child expires first, so its reservation of the parent's change goes away
+      // while the parent's pending entry would still be live.
+      const { wallet, parent, child } = await submitChain(300, 100);
+
+      await wallet.onRollForward(header(20), [parent, child]);
+      await wallet.onRollForward(header(100), []);
+
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
+
     it("hides a child's outputs while a rollback undoes the parent's block", async () => {
       const { wallet, parent, child } = await submitChain(100, 110);
       await wallet.onRollForward(header(20), [parent]);
