@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Cardano } from '@cardano-sdk/core';
-import { SubTransaction } from '@capacity-exchange/cardano-core';
+import {
+  Ed25519PublicKeyHex,
+  Ed25519SignatureHex,
+  Slot,
+  SubTransaction,
+  TransactionUnspentOutput,
+} from '@capacity-exchange/cardano-core';
+import { minFee } from '@cardano-sdk/tx-construction';
 import { CardanoOfferService } from './offer.js';
 
 const hash28 = (byte: number) => byte.toString(16).padStart(2, '0').repeat(28);
@@ -779,5 +786,99 @@ describe('CardanoOfferService.findImbalance', () => {
       offers: { coins: 389_000_000n, assets: new Map([[TOKEN_A, 5n]]) },
       needs: { coins: 0n, assets: new Map([[TOKEN_B, 5n]]) },
     });
+  });
+});
+
+describe('CardanoOfferService.buildTx', () => {
+  const PPARAMS = {
+    coinsPerUtxoByte: 4310,
+    maxTxSize: 16384,
+    maxValueSize: 5000,
+    minFeeCoefficient: 44,
+    minFeeConstant: 155381,
+    prices: { memory: 0.0577, steps: 0.0000721 },
+    minFeeRefScriptCostPerByte: '15',
+  } as const;
+  const TIP_SLOT = 1000;
+  const TTL = 300;
+
+  const SUB_INPUT = utxo(txIn(30), 5_000_000n);
+  const WALLET_UTXO = utxo(txIn(40), 10_000_000n);
+
+  const newBuilder = (walletUtxos: Cardano.Utxo[] = [WALLET_UTXO]) => {
+    const wallet = {
+      utxos: () => walletUtxos.map((u) => TransactionUnspentOutput.fromCore(u)),
+      changeAddress: () => ADDRESS,
+    };
+    const chainState = { tip: () => ({ slot: Slot(TIP_SLOT) }) };
+    return new CardanoOfferService(wallet as any, chainState as any, TTL);
+  };
+
+  /** A sub-tx spending SUB_INPUT, which offers the service what its outputs leave over. */
+  const offeringSubTx = (body: Partial<Cardano.SubTransactionBody> = {}) =>
+    SubTransaction.fromCore(subTx({ inputs: [txIn(30)], outputs: [txOut(2_000_000n)], ...body }));
+
+  const build = (sub: SubTransaction, builder = newBuilder()) => {
+    const result = builder.buildTx(sub, { resolvedInputs: [SUB_INPUT] }, PPARAMS as any);
+    if (result.status !== 'ok') {
+      throw new Error(`buildTx failed: ${JSON.stringify(result)}`);
+    }
+    return result.response;
+  };
+
+  it('sets the TTL to the configured number of slots past the tip', () => {
+    const tx = build(offeringSubTx());
+
+    expect(tx.body().ttl()).toBe(TIP_SLOT + TTL);
+  });
+
+  it("caps the TTL at the sub-tx's own TTL", () => {
+    const tx = build(
+      offeringSubTx({ validityInterval: { invalidHereafter: Slot(TIP_SLOT + 10) } }),
+    );
+
+    expect(tx.body().ttl()).toBe(TIP_SLOT + 10);
+  });
+
+  it("keeps the default TTL when the sub-tx's TTL is later", () => {
+    const tx = build(
+      offeringSubTx({ validityInterval: { invalidHereafter: Slot(TIP_SLOT + 10_000) } }),
+    );
+
+    expect(tx.body().ttl()).toBe(TIP_SLOT + TTL);
+  });
+
+  it('pays at least the minimum fee for the transaction it returns, once signed', () => {
+    const tx = build(offeringSubTx());
+
+    // The wallet adds exactly one vkey witness before submitting.
+    const signed = tx.toCore();
+    signed.witness.signatures = new Map([
+      [Ed25519PublicKeyHex('00'.repeat(32)), Ed25519SignatureHex('00'.repeat(64))],
+    ]);
+    const required = minFee(signed, [SUB_INPUT, WALLET_UTXO], PPARAMS as any);
+
+    expect(tx.body().fee()).toBeGreaterThanOrEqual(required);
+  });
+
+  it('attaches the original sub-tx bytes', () => {
+    const sub = offeringSubTx();
+
+    const tx = build(sub);
+
+    const [attached] = tx.body().subTransactions()!.values();
+    expect(attached.toCbor()).toBe(sub.toCbor());
+  });
+
+  it("does not spend the sub-tx's inputs itself, even if the wallet holds them", () => {
+    const tx = build(offeringSubTx(), newBuilder([SUB_INPUT, WALLET_UTXO]));
+
+    expect(tx.body().inputs().toCore()).toEqual([txIn(40)]);
+  });
+
+  it('returns no witnesses, leaving signing to the wallet', () => {
+    const tx = build(offeringSubTx());
+
+    expect(tx.witnessSet().vkeys()?.size() ?? 0).toBe(0);
   });
 });

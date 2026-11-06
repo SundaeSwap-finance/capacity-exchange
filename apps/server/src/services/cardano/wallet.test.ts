@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Cardano } from '@cardano-sdk/core';
 import {
   Address,
@@ -10,6 +10,8 @@ import {
 } from '@capacity-exchange/cardano-core';
 import { CardanoWalletService } from './wallet.js';
 import { MAX_ROLLBACK_DEPTH } from './utils.js';
+import { seedToSigningKey } from '../../config/cardanoKeys.js';
+import type { SubmitTxResult } from './chain-state.js';
 
 const hash28 = (byte: number) => byte.toString(16).padStart(2, '0').repeat(28);
 const hash32 = (byte: number) => byte.toString(16).padStart(2, '0').repeat(32);
@@ -59,13 +61,14 @@ interface TxSpec {
   collaterals?: Cardano.TxIn[];
   collateralReturn?: Cardano.TxOut;
   isValid?: boolean;
+  ttl?: number;
 }
 
 // The id passed to fromCore is ignored by getId(), which hashes the body.
 const PLACEHOLDER_ID = Cardano.TransactionId(hash32(0));
 
 function tx(
-  { inputs, outputs, collaterals, collateralReturn, isValid }: TxSpec,
+  { inputs, outputs, collaterals, collateralReturn, isValid, ttl }: TxSpec,
   subTransactions: TxSpec[] = [],
 ): Transaction {
   return Transaction.fromCore({
@@ -77,6 +80,7 @@ function tx(
       collaterals,
       collateralReturn,
       fee: 200_000n,
+      validityInterval: ttl === undefined ? undefined : { invalidHereafter: Slot(ttl) },
       subTransactions: subTransactions.length
         ? subTransactions.map((sub) => ({
             body: { inputs: sub.inputs, outputs: sub.outputs },
@@ -104,20 +108,17 @@ function refs(wallet: CardanoWalletService): string[] {
     .sort();
 }
 const ref = (tx: { getId(): Cardano.TransactionId }, index = 0) => `${tx.getId()}#${index}`;
-const chainStateMock = {
-  addFollower() {
-    // do nothing. it's simpler to manually call the roll forward/back methods.
-  },
-};
+const walletKeyPair = seedToSigningKey(new Uint8Array(32).fill(7));
 
-const walletKeyPair = {};
-
-const newWallet = () =>
-  new CardanoWalletService(
-    Address.fromBech32(WALLET_ADDRESS),
-    walletKeyPair as any,
-    chainStateMock as any,
-  );
+const newWallet = (
+  submit: (tx: Transaction) => Promise<SubmitTxResult> = async () => ({ status: 'ok' }),
+) =>
+  new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS), walletKeyPair, {
+    addFollower() {
+      // do nothing. it's simpler to manually call the roll forward/back methods.
+    },
+    submit: vi.fn(submit),
+  } as any);
 
 describe('CardanoWalletService chain following', () => {
   it('starts with no UTxOs', () => {
@@ -501,5 +502,237 @@ describe('CardanoWalletService chain following', () => {
 
       expect(refs(wallet)).toEqual([ref(chain[rollbackTo - 1])]);
     }, 30_000);
+  });
+});
+
+describe('CardanoWalletService submitting transactions', () => {
+  /** A wallet holding one confirmed UTxO per entry in `coins`, funded in slot 10. */
+  async function fundedWallet(
+    submit?: (tx: Transaction) => Promise<SubmitTxResult>,
+    coins: bigint[] = [10_000_000n],
+  ) {
+    const wallet = newWallet(submit);
+    const funding = tx({
+      inputs: [externalInput(10)],
+      outputs: coins.map((c) => output(WALLET_ADDRESS, c)),
+    });
+    await wallet.onRollForward(header(10), [funding]);
+    return { wallet, funding };
+  }
+
+  /** A transaction spending `inputs`, paying someone else and returning change to the wallet. */
+  const payment = (inputs: Cardano.TxIn[], ttl: number) =>
+    tx({ inputs, outputs: [output(SOMEONE_ELSE), output(WALLET_ADDRESS)], ttl });
+
+  it('signs the transaction with the wallet key before submitting it', async () => {
+    let submitted: Transaction | undefined;
+    const { wallet, funding } = await fundedWallet(async (t) => {
+      submitted = t;
+      return { status: 'ok' };
+    });
+
+    await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+
+    const vkeys = [...(submitted!.witnessSet().vkeys()?.values() ?? [])];
+    expect(vkeys.map((w) => w.vkey())).toEqual([
+      Buffer.from(walletKeyPair.publicKey).toString('hex'),
+    ]);
+  });
+
+  it('reserves the inputs while the submission is in flight', async () => {
+    let finish!: (result: SubmitTxResult) => void;
+    const { wallet, funding } = await fundedWallet(
+      () => new Promise((resolve) => (finish = resolve)),
+      [5_000_000n, 5_000_000n],
+    );
+
+    const submitting = wallet.signAndSubmitTx(payment([spend(funding, 0)], 100));
+    expect(refs(wallet)).toEqual([ref(funding, 1)]);
+
+    finish({ status: 'ok' });
+    await submitting;
+  });
+
+  it('keeps the inputs reserved and tracks change once submitted', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = payment([spend(funding)], 100);
+
+    const result = await wallet.signAndSubmitTx(t);
+
+    expect(result).toEqual({ status: 'ok' });
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+  });
+
+  it('counts pending change, and not reserved inputs, in its lovelace', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = tx({
+      inputs: [spend(funding)],
+      outputs: [output(SOMEONE_ELSE, 4_000_000n), output(WALLET_ADDRESS, 3_000_000n)],
+      ttl: 100,
+    });
+
+    await wallet.signAndSubmitTx(t);
+
+    expect(wallet.lovelace()).toBe(3_000_000n);
+  });
+
+  it('tracks pending outputs of sub-transactions under their own ids', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = tx({ inputs: [spend(funding)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
+      { inputs: [externalInput(20)], outputs: [output(SOMEONE_ELSE), output(WALLET_ADDRESS)] },
+    ]);
+
+    await wallet.signAndSubmitTx(t);
+
+    expect(refs(wallet)).toEqual([ref(subTx(t, 0), 1)]);
+  });
+
+  it('frees the inputs and tracks nothing when submission fails', async () => {
+    const { wallet, funding } = await fundedWallet(async () => ({
+      status: 'error',
+      reason: 'rejected',
+    }));
+
+    const result = await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+
+    expect(result).toEqual({ status: 'error', reason: 'rejected' });
+    expect(refs(wallet)).toEqual([ref(funding)]);
+  });
+
+  it('frees the inputs when submission times out', async () => {
+    const { wallet, funding } = await fundedWallet(async () => ({
+      status: 'error',
+      reason: 'submission timed out',
+    }));
+
+    await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+
+    expect(refs(wallet)).toEqual([ref(funding)]);
+  });
+
+  it('reserves inputs until the TTL passes if the transaction never lands', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = payment([spend(funding)], 100);
+    await wallet.signAndSubmitTx(t);
+
+    await wallet.onRollForward(header(99), []);
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+
+    await wallet.onRollForward(header(100), []);
+    expect(refs(wallet)).toEqual([ref(funding)]);
+  });
+
+  it('reserves inputs for 20 slots past the tip when the transaction has no TTL', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = tx({ inputs: [spend(funding)], outputs: [output(WALLET_ADDRESS)] });
+    await wallet.signAndSubmitTx(t);
+
+    await wallet.onRollForward(header(29), []);
+    expect(refs(wallet)).toEqual([ref(t)]);
+
+    await wallet.onRollForward(header(30), []);
+    expect(refs(wallet)).toEqual([ref(funding)]);
+  });
+
+  it('replaces pending outputs with confirmed ones when the transaction lands', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = payment([spend(funding)], 100);
+    await wallet.signAndSubmitTx(t);
+
+    await wallet.onRollForward(header(20), [t]);
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+
+    // Confirmed outputs no longer expire with the transaction's TTL.
+    await wallet.onRollForward(header(200), []);
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+  });
+
+  it('keeps reservations and pending outputs through a rollback', async () => {
+    const { wallet, funding } = await fundedWallet();
+    await wallet.onRollForward(header(20), [
+      tx({ inputs: [externalInput(11)], outputs: [output(SOMEONE_ELSE)] }),
+    ]);
+    const t = payment([spend(funding)], 100);
+    await wallet.signAndSubmitTx(t);
+
+    await wallet.onRollBackward(header(10));
+
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+  });
+
+  describe('chaining', () => {
+    /** Submits a parent paying change to the wallet, then a child spending that change. */
+    async function submitChain(parentTtl: number, childTtl: number) {
+      const { wallet, funding } = await fundedWallet();
+      const parent = payment([spend(funding)], parentTtl);
+      await wallet.signAndSubmitTx(parent);
+      const child = payment([spend(parent, 1)], childTtl);
+      await wallet.signAndSubmitTx(child);
+      return { wallet, funding, parent, child };
+    }
+
+    it('spends pending change in a child transaction', async () => {
+      const { wallet, child } = await submitChain(100, 110);
+
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
+
+    it('keeps the change a child spent reserved when the parent lands', async () => {
+      const { wallet, parent, child } = await submitChain(100, 110);
+
+      await wallet.onRollForward(header(20), [parent]);
+
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
+
+    it("keeps a child's outputs past the parent's TTL once the parent lands", async () => {
+      const { wallet, parent, child } = await submitChain(100, 110);
+      await wallet.onRollForward(header(20), [parent]);
+
+      await wallet.onRollForward(header(105), []);
+
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
+
+    it("drops a child's outputs when the parent expires without landing", async () => {
+      const { wallet, funding } = await submitChain(100, 110);
+
+      await wallet.onRollForward(header(100), []);
+
+      // The child can never land, so its outputs are gone; its only input
+      // was the parent's change, so nothing else comes back.
+      expect(refs(wallet)).toEqual([ref(funding)]);
+    });
+
+    it('drops every descendant when an ancestor expires', async () => {
+      const { wallet, funding, child } = await submitChain(100, 110);
+      const grandchild = payment([spend(child, 1)], 120);
+      await wallet.signAndSubmitTx(grandchild);
+      expect(refs(wallet)).toEqual([ref(grandchild, 1)]);
+
+      await wallet.onRollForward(header(100), []);
+
+      expect(refs(wallet)).toEqual([ref(funding)]);
+    });
+
+    it('tracks a parent and child landing in the same block', async () => {
+      const { wallet, parent, child } = await submitChain(100, 110);
+
+      await wallet.onRollForward(header(20), [parent, child]);
+      await wallet.onRollForward(header(200), []);
+
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
+
+    it("hides a child's outputs while a rollback undoes the parent's block", async () => {
+      const { wallet, parent, child } = await submitChain(100, 110);
+      await wallet.onRollForward(header(20), [parent]);
+
+      await wallet.onRollBackward(header(10));
+      expect(refs(wallet)).toEqual([]);
+
+      await wallet.onRollForward(header(21), [parent]);
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
   });
 });
