@@ -187,22 +187,23 @@ export class CardanoWalletService implements ChainFollower {
 
     const txBody = tx.body();
     const until = txBody.ttl() ?? Slot(this.#slot + 20);
+    const subTxs = [...(txBody.subTransactions()?.values() ?? [])];
+    // Every input the transaction consumes, sub-transactions included.
+    const inputKeys = [txBody, ...subTxs.map((subTx) => subTx.body())].flatMap((body) =>
+      [...body.inputs().values()].map(txInKey),
+    );
 
-    for (const input of txBody.inputs().values()) {
-      this.#reserved.set(txInKey(input), until);
+    for (const key of inputKeys) {
+      this.#reserved.set(key, until);
     }
     const result = await this.#chainState.submit(tx);
     if (result.status === 'ok') {
       const details = {
         validBefore: until,
-        dependsOn: txBody
-          .inputs()
-          .values()
-          .map((i) => txInKey(i))
-          .filter((k) => this.#pending.has(k)),
+        dependsOn: inputKeys.filter((k) => this.#pending.has(k)),
       };
       markOutputsCreated(this.#pending, this.#paymentCredential, txBody, tx.getId(), details);
-      for (const subTx of txBody.subTransactions()?.values() ?? []) {
+      for (const subTx of subTxs) {
         markOutputsCreated(
           this.#pending,
           this.#paymentCredential,
@@ -217,8 +218,8 @@ export class CardanoWalletService implements ChainFollower {
       // spending them again; we'll stop tracking them once they
       // appear on-chain, and this way we don't accidentally lock
       // them for no reason until the TTL expires
-      for (const input of tx.body().inputs().values()) {
-        this.#reserved.delete(txInKey(input));
+      for (const key of inputKeys) {
+        this.#reserved.delete(key);
       }
     }
     return result;

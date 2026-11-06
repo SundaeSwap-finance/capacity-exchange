@@ -587,6 +587,48 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(subTx(t, 0), 1)]);
   });
 
+  it('reserves wallet UTxOs spent by a sub-transaction', async () => {
+    const { wallet, funding } = await fundedWallet(undefined, [5_000_000n, 5_000_000n]);
+    const t = tx({ inputs: [spend(funding, 0)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
+      { inputs: [spend(funding, 1)], outputs: [output(SOMEONE_ELSE)] },
+    ]);
+
+    await wallet.signAndSubmitTx(t);
+
+    expect(refs(wallet)).toEqual([]);
+  });
+
+  it('frees wallet UTxOs spent by a sub-transaction when submission fails', async () => {
+    const { wallet, funding } = await fundedWallet(
+      async () => ({ status: 'error', reason: 'rejected' }),
+      [5_000_000n, 5_000_000n],
+    );
+    const t = tx({ inputs: [spend(funding, 0)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
+      { inputs: [spend(funding, 1)], outputs: [output(SOMEONE_ELSE)] },
+    ]);
+
+    await wallet.signAndSubmitTx(t);
+
+    expect(refs(wallet)).toEqual([ref(funding, 0), ref(funding, 1)].sort());
+  });
+
+  it("drops a sub-transaction's outputs when pending change it spends expires", async () => {
+    const { wallet, funding } = await fundedWallet(undefined, [5_000_000n, 5_000_000n]);
+    const parent = payment([spend(funding, 0)], 100);
+    await wallet.signAndSubmitTx(parent);
+    const child = tx({ inputs: [spend(funding, 1)], outputs: [output(SOMEONE_ELSE)], ttl: 110 }, [
+      { inputs: [spend(parent, 1)], outputs: [output(WALLET_ADDRESS)] },
+    ]);
+    await wallet.signAndSubmitTx(child);
+    expect(refs(wallet)).toEqual([ref(subTx(child, 0))]);
+
+    await wallet.onRollForward(header(100), []);
+
+    // The parent never landed, so neither can the child; only funding#0 comes back,
+    // since funding#1 stays reserved by the child until its own TTL.
+    expect(refs(wallet)).toEqual([ref(funding, 0)]);
+  });
+
   it('frees the inputs and tracks nothing when submission fails', async () => {
     const { wallet, funding } = await fundedWallet(async () => ({
       status: 'error',
