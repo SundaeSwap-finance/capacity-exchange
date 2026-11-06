@@ -702,6 +702,30 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(t, 1)]);
   });
 
+  it('hides change while a rollback undoes the block that funded it', async () => {
+    const wallet = newWallet();
+    const funding = tx({ inputs: [externalInput(10)], outputs: [output(WALLET_ADDRESS)] });
+    await wallet.onRollForward(header(10), [funding]);
+    const t = payment([spend(funding)], 100);
+    await wallet.signAndSubmitTx(t);
+
+    await wallet.onRollBackward(header(5));
+    expect(refs(wallet)).toEqual([]);
+
+    await wallet.onRollForward(header(11), [funding]);
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+  });
+
+  it('drops change when a rival transaction spends its input on chain', async () => {
+    const { wallet, funding } = await fundedWallet();
+    await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+
+    const rival = tx({ inputs: [spend(funding)], outputs: [output(SOMEONE_ELSE)] });
+    await wallet.onRollForward(header(20), [rival]);
+
+    expect(refs(wallet)).toEqual([]);
+  });
+
   describe('chaining', () => {
     /** Submits a parent paying change to the wallet, then a child spending that change. */
     async function submitChain(parentTtl: number, childTtl: number) {
@@ -775,6 +799,34 @@ describe('CardanoWalletService submitting transactions', () => {
       await wallet.onRollForward(header(100), []);
 
       expect(refs(wallet)).toEqual([ref(child, 1)]);
+    });
+
+    it('keeps depending on a parent which lands while the child is being submitted', async () => {
+      let finish: ((result: SubmitTxResult) => void) | undefined;
+      let deferNextSubmit = false;
+      const { wallet, funding } = await fundedWallet(async () => {
+        if (!deferNextSubmit) {
+          return { status: 'ok' };
+        }
+        return new Promise((resolve) => (finish = resolve));
+      });
+      const parent = payment([spend(funding)], 100);
+      await wallet.signAndSubmitTx(parent);
+
+      deferNextSubmit = true;
+      const child = payment([spend(parent, 1)], 110);
+      const submitting = wallet.signAndSubmitTx(child);
+      await wallet.onRollForward(header(20), [parent]);
+      finish!({ status: 'ok' });
+      await submitting;
+      expect(refs(wallet)).toEqual([ref(child, 1)]);
+
+      // The parent's block is undone and the parent never lands again. Once its TTL
+      // passes, the funding it reserved comes back, but the child's change does not.
+      await wallet.onRollBackward(header(10));
+      await wallet.onRollForward(header(100), []);
+
+      expect(refs(wallet)).toEqual([ref(funding)]);
     });
 
     it("hides a child's outputs while a rollback undoes the parent's block", async () => {

@@ -193,15 +193,16 @@ export class CardanoWalletService implements ChainFollower {
       [...body.inputs().values()].map(txInKey),
     );
 
+    // Track all UTXOs this depends on, in case they get rolled back or otherwise disappear
+    const confirmed = this.#tracker.currentValue();
+    const dependsOn = inputKeys.filter((k) => confirmed.has(k) || this.#pending.has(k));
+
     for (const key of inputKeys) {
       this.#reserved.set(key, until);
     }
     const result = await this.#chainState.submit(tx);
     if (result.status === 'ok') {
-      const details = {
-        validBefore: until,
-        dependsOn: inputKeys.filter((k) => this.#pending.has(k)),
-      };
+      const details = { validBefore: until, dependsOn };
       markOutputsCreated(this.#pending, this.#paymentCredential, txBody, tx.getId(), details);
       for (const subTx of subTxs) {
         markOutputsCreated(
