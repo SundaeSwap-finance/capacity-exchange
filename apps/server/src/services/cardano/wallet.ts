@@ -19,7 +19,7 @@ import {
   isRewardAccount,
 } from '@capacity-exchange/cardano-core';
 import { ChainIndex } from './utils';
-import { CardanoChainStateService, ChainFollower } from './chain-state';
+import { CardanoChainStateService, ChainFollower, SubmitTxResult } from './chain-state';
 import { Ed25519KeyPair } from '../../config/cardanoKeys';
 import { sign } from 'node:crypto';
 
@@ -178,7 +178,7 @@ export class CardanoWalletService implements ChainFollower {
     this.#tracker.rollBack(header.slot);
   }
 
-  async signAndSubmitTx(tx: Transaction) {
+  async signAndSubmitTx(tx: Transaction): Promise<SubmitTxResult> {
     const id = Buffer.from(tx.getId(), 'hex');
     const vkey = Ed25519PublicKeyHex(HexBlob.fromBytes(this.#keys.publicKey));
     const signature = Ed25519SignatureHex(HexBlob.fromBytes(sign(null, id, this.#keys.privateKey)));
@@ -192,7 +192,10 @@ export class CardanoWalletService implements ChainFollower {
     tx.setWitnessSet(witnessSet);
 
     const txBody = tx.body();
-    const until = txBody.ttl() ?? Slot(this.#slot + 20);
+    const until = txBody.ttl();
+    if (!until) {
+      return { status: 'error', reason: 'transaction has no TTL' };
+    }
     const subTxs = [...(txBody.subTransactions()?.values() ?? [])];
     // Every input the transaction consumes, sub-transactions included.
     const inputKeys = [txBody, ...subTxs.map((subTx) => subTx.body())].flatMap((body) =>

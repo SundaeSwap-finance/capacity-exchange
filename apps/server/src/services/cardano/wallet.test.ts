@@ -664,16 +664,11 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(funding)]);
   });
 
-  it('reserves inputs for 20 slots past the tip when the transaction has no TTL', async () => {
+  it('fails when the transaction has no TTL', async () => {
     const { wallet, funding } = await fundedWallet();
     const t = tx({ inputs: [spend(funding)], outputs: [output(WALLET_ADDRESS)] });
-    await wallet.signAndSubmitTx(t);
-
-    await wallet.onRollForward(header(29), []);
-    expect(refs(wallet)).toEqual([ref(t)]);
-
-    await wallet.onRollForward(header(30), []);
-    expect(refs(wallet)).toEqual([ref(funding)]);
+    const result = await wallet.signAndSubmitTx(t);
+    expect(result).toMatchObject({ status: 'error', reason: 'transaction has no TTL' });
   });
 
   it('replaces pending outputs with confirmed ones when the transaction lands', async () => {
