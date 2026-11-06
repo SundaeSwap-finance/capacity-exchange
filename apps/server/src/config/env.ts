@@ -38,6 +38,7 @@ const AppEnvSchema = Type.Object({
       Type.String({ pattern: '^[0-9]+\\.[0-9a-fA-F]{64}$' }),
     ]),
   ),
+  CARDANO_TRANSACTION_TTL_SLOTS: Type.Optional(Type.Number()),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -82,6 +83,9 @@ export function parseAppEnv(): AppEnv {
     CARDANO_UTXORPC_URL: process.env.CARDANO_UTXORPC_URL,
     CARDANO_REGISTRATION_SKEY_FILE: process.env.CARDANO_REGISTRATION_SKEY_FILE,
     CARDANO_STARTING_POINT: process.env.CARDANO_STARTING_POINT,
+    CARDANO_TRANSACTION_TTL_SLOTS: process.env.CARDANO_TRANSACTION_TTL_SLOTS
+      ? Number(process.env.CARDANO_TRANSACTION_TTL_SLOTS)
+      : undefined,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS

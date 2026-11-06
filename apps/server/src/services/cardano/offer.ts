@@ -8,6 +8,7 @@ import {
   Ed25519SignatureHex,
   isCertType,
   parseEnvelope,
+  Slot,
   subtractValueQuantities,
   SubTransaction,
   Transaction,
@@ -43,10 +44,12 @@ export type OfferError =
 export class CardanoOfferService {
   #wallet: CardanoWalletService;
   #chainState: CardanoChainStateService;
+  #ttl: number;
 
-  constructor(wallet: CardanoWalletService, chainState: CardanoChainStateService) {
+  constructor(wallet: CardanoWalletService, chainState: CardanoChainStateService, ttl: number) {
     this.#wallet = wallet;
     this.#chainState = chainState;
+    this.#ttl = ttl;
   }
 
   async createOffer(envelope: Uint8Array): Promise<CreateOfferResult> {
@@ -148,11 +151,16 @@ export class CardanoOfferService {
       }
       const [inputs, outputs] = selectInputResult.response;
 
+      const subTtl = sub.body.validityInterval?.invalidHereafter;
+      const defaultTtl = Slot(Number(this.#chainState.tip().slot) + this.#ttl);
+      const ttl = subTtl && subTtl < defaultTtl ? subTtl : defaultTtl;
+
       const tx: Tx = {
         id: DUMMY_TX_ID, // ignored,
         body: {
           inputs,
           outputs,
+          validityInterval: { invalidHereafter: ttl },
           subTransactions: [sub],
           fee,
         },

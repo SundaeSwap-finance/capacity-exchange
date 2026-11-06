@@ -37,6 +37,7 @@ export interface CardanoConfig {
   walletKeyPair: Ed25519KeyPair;
   /** Signs the CIP-0198 price hints */
   registrationKeyPair?: Ed25519KeyPair;
+  transactionTtl: number;
 }
 
 export interface AppConfig {
@@ -130,6 +131,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       registrationKeyPair: env.CARDANO_REGISTRATION_SKEY_FILE
         ? readSigningKeyFile(env.CARDANO_REGISTRATION_SKEY_FILE)
         : undefined,
+      transactionTtl: env.CARDANO_TRANSACTION_TTL_SLOTS ?? 300,
     };
   }
 

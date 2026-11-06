@@ -9,7 +9,11 @@ declare module 'fastify' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  if (!fastify.cardanoWalletService || !fastify.cardanoChainStateService) {
+  if (
+    !fastify.config.cardano ||
+    !fastify.cardanoWalletService ||
+    !fastify.cardanoChainStateService
+  ) {
     fastify.decorate('cardanoOfferService', null);
     fastify.log.debug('CardanoOfferService not configured');
     return;
@@ -17,6 +21,7 @@ export default fp(async (fastify: FastifyInstance) => {
   const service = new CardanoOfferService(
     fastify.cardanoWalletService,
     fastify.cardanoChainStateService,
+    fastify.config.cardano.transactionTtl,
   );
   fastify.decorate('cardanoOfferService', service);
   fastify.log.info("CardanoOfferService init'd");

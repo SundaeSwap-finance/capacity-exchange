@@ -61,7 +61,7 @@ const newService = (
 ) => {
   const chainState = { resolveInputs: vi.fn(resolveInputs) };
 
-  const service = new CardanoOfferService({} as any, chainState as any);
+  const service = new CardanoOfferService({} as any, chainState as any, 300);
   return { service, chainState };
 };
 

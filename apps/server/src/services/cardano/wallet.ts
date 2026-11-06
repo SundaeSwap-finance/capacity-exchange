@@ -116,7 +116,10 @@ export class CardanoWalletService implements ChainFollower {
     const slot = this.#slot;
     const live = new Map(this.#tracker.currentValue());
     for (const [k, v] of this.#pending) {
-      if ((v.validBefore === null || v.validBefore > slot) && v.dependsOn.every(i => live.has(i))) {
+      if (
+        (v.validBefore === null || v.validBefore > slot) &&
+        v.dependsOn.every((i) => live.has(i))
+      ) {
         live.set(k, v);
       }
     }
@@ -201,6 +204,11 @@ export class CardanoWalletService implements ChainFollower {
         );
       }
     } else {
+      // If submission returned an error, the TX may or may not
+      // have reached the mempool. Free the inputs so we can try
+      // spending them again; we'll stop tracking them once they
+      // appear on-chain, and this way we don't accidentally lock
+      // them for no reason until the TTL expires
       for (const input of tx.body().inputs().values()) {
         this.#reserved.delete(txInKey(input));
       }
