@@ -726,6 +726,32 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([]);
   });
 
+  it('reserves inputs again when a rollback returns to before the TTL', async () => {
+    const { wallet, funding } = await fundedWallet();
+    await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+    await wallet.onRollForward(header(100), []);
+    expect(refs(wallet)).toEqual([ref(funding)]);
+
+    // The new fork's blocks may come before slot 100, so the payment could still land.
+    await wallet.onRollBackward(header(10));
+    expect(refs(wallet)).toEqual([]);
+
+    await wallet.onRollForward(header(100), []);
+    expect(refs(wallet)).toEqual([ref(funding)]);
+  });
+
+  it('does not let a restored reservation hide inputs once the payment lands', async () => {
+    const { wallet, funding } = await fundedWallet();
+    const t = payment([spend(funding)], 100);
+    await wallet.signAndSubmitTx(t);
+    await wallet.onRollForward(header(100), []);
+    await wallet.onRollBackward(header(10));
+
+    await wallet.onRollForward(header(50), [t]);
+
+    expect(refs(wallet)).toEqual([ref(t, 1)]);
+  });
+
   describe('chaining', () => {
     /** Submits a parent paying change to the wallet, then a child spending that change. */
     async function submitChain(parentTtl: number, childTtl: number) {

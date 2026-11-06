@@ -124,7 +124,7 @@ export class CardanoWalletService implements ChainFollower {
       }
     }
     return [...live]
-      .filter(([k, _]) => !this.#reserved.has(k))
+      .filter(([k, _]) => !this.#isReserved(k))
       .map(([_, v]) => new TransactionUnspentOutput(v.input, v.output));
   }
 
@@ -159,12 +159,18 @@ export class CardanoWalletService implements ChainFollower {
         this.#pending.delete(key);
       }
     }
-    // these entries aren't reserved anymore
-    for (const [key, value] of this.#reserved) {
-      if (value <= this.#slot) {
+    // prune any TXOs which have been reserved for longer than tracked history
+    const oldestSlot = this.#tracker.oldestSlot();
+    for (const [key, until] of this.#reserved) {
+      if (until <= oldestSlot) {
         this.#reserved.delete(key);
       }
     }
+  }
+
+  #isReserved(key: string): boolean {
+    const until = this.#reserved.get(key);
+    return until !== undefined && until > this.#slot;
   }
 
   async onRollBackward(header: PartialBlockHeader) {
