@@ -28,6 +28,7 @@ const AppEnvSchema = Type.Object({
   CARDANO_BLOCKFROST_API_KEY: Type.Optional(Type.String()),
   CARDANO_BLOCKFROST_BASE_URL: Type.Optional(Type.String()),
   CARDANO_WALLET_ADDRESS: Type.Optional(Type.String()),
+  CARDANO_WALLET_SKEY_FILE: Type.Optional(Type.String()),
   CARDANO_UTXORPC_URL: Type.Optional(Type.String()),
   CARDANO_REGISTRATION_SKEY_FILE: Type.Optional(Type.String()),
   CARDANO_STARTING_POINT: Type.Optional(
@@ -37,6 +38,7 @@ const AppEnvSchema = Type.Object({
       Type.String({ pattern: '^[0-9]+\\.[0-9a-fA-F]{64}$' }),
     ]),
   ),
+  CARDANO_TRANSACTION_TTL_SLOTS: Type.Optional(Type.Number({ minimum: 1 })),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
@@ -77,9 +79,13 @@ export function parseAppEnv(): AppEnv {
     CARDANO_BLOCKFROST_API_KEY: process.env.CARDANO_BLOCKFROST_API_KEY,
     CARDANO_BLOCKFROST_BASE_URL: process.env.CARDANO_BLOCKFROST_BASE_URL,
     CARDANO_WALLET_ADDRESS: process.env.CARDANO_WALLET_ADDRESS,
+    CARDANO_WALLET_SKEY_FILE: process.env.CARDANO_WALLET_SKEY_FILE,
     CARDANO_UTXORPC_URL: process.env.CARDANO_UTXORPC_URL,
     CARDANO_REGISTRATION_SKEY_FILE: process.env.CARDANO_REGISTRATION_SKEY_FILE,
     CARDANO_STARTING_POINT: process.env.CARDANO_STARTING_POINT,
+    CARDANO_TRANSACTION_TTL_SLOTS: process.env.CARDANO_TRANSACTION_TTL_SLOTS
+      ? Number(process.env.CARDANO_TRANSACTION_TTL_SLOTS)
+      : undefined,
     OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_METRIC_EXPORT_INTERVAL_MS: process.env.OTEL_METRIC_EXPORT_INTERVAL_MS

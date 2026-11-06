@@ -44,6 +44,12 @@ const offerRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
           message: 'exceeds the available budget',
         });
       }
+      if (result.status === 'error') {
+        return reply.code(500).send({
+          error: 'not-ready',
+          message: result.reason,
+        });
+      }
       return reply.code(202).send(result.response);
     },
   );

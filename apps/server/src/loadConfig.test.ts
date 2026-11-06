@@ -51,6 +51,9 @@ const CARDANO_ENV: Record<string, string> = {
   CARDANO_UTXORPC_URL: 'https://poop.bike',
   CARDANO_WALLET_ADDRESS:
     'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy',
+  CARDANO_WALLET_SKEY_FILE: fileURLToPath(
+    new URL('../../../testnet/cardano/server.skey', import.meta.url),
+  ),
   CARDANO_REGISTRATION_SKEY_FILE: fileURLToPath(
     new URL('../../../testnet/cardano/server.skey', import.meta.url),
   ),
@@ -144,13 +147,15 @@ describe('loadConfig — cardano', () => {
     process.env = savedEnv;
   });
 
-  it.each(['CARDANO_UTXORPC_URL', 'CARDANO_WALLET_ADDRESS', 'CARDANO_REGISTRATION_SKEY_FILE'])(
-    'throws if ADA is priced but %s is not set',
-    async (name) => {
-      delete process.env[name];
-      await expect(loadConfig()).rejects.toThrow(`${name} is required`);
-    },
-  );
+  it.each([
+    'CARDANO_UTXORPC_URL',
+    'CARDANO_WALLET_ADDRESS',
+    'CARDANO_WALLET_SKEY_FILE',
+    'CARDANO_REGISTRATION_SKEY_FILE',
+  ])('throws if ADA is priced but %s is not set', async (name) => {
+    delete process.env[name];
+    await expect(loadConfig()).rejects.toThrow(`${name} is required`);
+  });
 
   it('does not need the Cardano wallet when ADA is not priced', async () => {
     for (const name of Object.keys(CARDANO_ENV)) {

@@ -18,6 +18,8 @@ async function startWith(walletAddress: string) {
       utxorpcUrl: 'unused',
       walletAddress: Address.fromBech32(walletAddress),
       registrationKeyPair: readSigningKeyFile(keyFile('server.skey')),
+      walletKeyPair: readSigningKeyFile(keyFile('server.skey')),
+      transactionTtl: 300,
     },
     priceFormulas: {
       ADA: [

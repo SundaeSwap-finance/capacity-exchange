@@ -24,6 +24,10 @@ export function readSigningKeyFile(path: string): Ed25519KeyPair {
     throw new Error(`${path} does not hold a 32-byte Ed25519 seed`);
   }
   const seed = Buffer.from(envelope.cborHex.slice(4), 'hex');
+  return seedToSigningKey(seed);
+}
+
+export function seedToSigningKey(seed: Uint8Array): Ed25519KeyPair {
   const privateKey = createPrivateKey({
     key: Buffer.concat([ED25519_PKCS8_PREFIX, seed]),
     format: 'der',

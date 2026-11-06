@@ -54,3 +54,5 @@ export type TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
 export const TransactionUnspentOutput = Serialization.TransactionUnspentOutput;
 export type TransactionWitnessSet = Serialization.TransactionWitnessSet;
 export const TransactionWitnessSet = Serialization.TransactionWitnessSet;
+export type VKeyWitness = Serialization.VkeyWitness;
+export const VKeyWitness = Serialization.VkeyWitness;

@@ -1,5 +1,5 @@
 import { FastifyBaseLogger } from 'fastify';
-import { createClient, type Client } from '@connectrpc/connect';
+import { ConnectError, createClient, type Client } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect, submitConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
 import type { Static } from '@sinclair/typebox';
@@ -77,6 +77,8 @@ export interface CardanoChainStateServiceArgs {
   startingPoint?: Point;
   logger: FastifyBaseLogger;
 }
+
+export type SubmitTxResult = { status: 'ok' } | { status: 'error'; reason: string };
 
 /**
  * Follows the Cardano tip and reads the protocol parameters over UTxO RPC.
@@ -180,19 +182,31 @@ export class CardanoChainStateService implements ChainHealth {
     });
   }
 
-  public async submit(tx: Transaction) {
+  public async submit(tx: Transaction): Promise<SubmitTxResult> {
     const cbor = Buffer.from(tx.toCbor(), 'hex');
-    await this.#submit.submitTx(
-      {
-        tx: {
-          type: {
-            value: cbor,
-            case: 'raw',
+    const signal = AbortSignal.timeout(RPC_TIMEOUT_MS);
+    try {
+      await this.#submit.submitTx(
+        {
+          tx: {
+            type: {
+              value: cbor,
+              case: 'raw',
+            },
           },
         },
-      },
-      { signal: AbortSignal.timeout(RPC_TIMEOUT_MS) },
-    );
+        { signal },
+      );
+    } catch (err) {
+      if (err instanceof ConnectError) {
+        return { status: 'error', reason: err.rawMessage };
+      }
+      if (signal.aborted) {
+        return { status: 'error', reason: 'submission timed out' };
+      }
+      return { status: 'error', reason: err instanceof Error ? err.message : String(err) };
+    }
+    return { status: 'ok' };
   }
 
   health(): Static<typeof ChainStatus> {
