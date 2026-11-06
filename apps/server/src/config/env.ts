@@ -38,7 +38,7 @@ const AppEnvSchema = Type.Object({
       Type.String({ pattern: '^[0-9]+\\.[0-9a-fA-F]{64}$' }),
     ]),
   ),
-  CARDANO_TRANSACTION_TTL_SLOTS: Type.Optional(Type.Number()),
+  CARDANO_TRANSACTION_TTL_SLOTS: Type.Optional(Type.Number({ minimum: 1 })),
 });
 
 export type AppEnv = Static<typeof AppEnvSchema>;
