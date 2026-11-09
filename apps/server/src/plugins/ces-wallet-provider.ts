@@ -26,6 +26,9 @@ export default fp(async (fastify: FastifyInstance) => {
 
   const { indexerHttpUrl, indexerWsUrl } = fastify.config.midnight.endpoints;
   const chainStateProvider = indexerChainStateProvider(indexerHttpUrl, indexerWsUrl);
+  fastify.addHook('onClose', async () => {
+    await chainStateProvider.dispose();
+  });
 
   const { midnightWalletService, peerPriceService, log } = fastify;
 

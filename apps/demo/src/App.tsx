@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from 'react';
-import { setNetworkId as setMidnightNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { resolveNetworkConfig, NetworkConfigProvider, readAppConfig } from './config';
 import { useSeedWallet, useExtensionWallet } from './features/wallet';
 import { useActiveWallet } from './features/wallet';
@@ -43,9 +42,6 @@ function App() {
   const appConfig = useMemo(readAppConfig, []);
   const { networkId } = appConfig;
   const mockDemoEnabled = isMockDemoEnabled(appConfig);
-  useEffect(() => {
-    setMidnightNetworkId(networkId);
-  }, [networkId]);
 
   const currentConfig = useMemo(() => resolveNetworkConfig(appConfig), [appConfig]);
 

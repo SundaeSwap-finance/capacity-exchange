@@ -1,9 +1,9 @@
 import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
-
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 export function createMockWalletProvider(): WalletProvider {
   return {
+    supportedEras: ['v9'],
     getCoinPublicKey: () => 'mock-coin-public-key' as any,
     getEncryptionPublicKey: () => 'mock-encryption-public-key' as any,
     balanceTx: async () => {

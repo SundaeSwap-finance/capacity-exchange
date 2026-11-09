@@ -1,5 +1,6 @@
 import type { ChainStateProvider } from './chainStateProvider.js';
 import { ledger, registryEntries, toSrvName, type DomainName } from '@sundaeswap/capacity-exchange-registry';
+import { queryContractState } from '@sundaeswap/capacity-exchange-core';
 
 interface DohSrvRecord {
   data: string; // "priority weight port target"
@@ -86,7 +87,7 @@ export async function fetchRegistryCesUrls(
   chainStateProvider: ChainStateProvider,
   registryAddress: string
 ): Promise<string[]> {
-  const contractState = await chainStateProvider.queryContractState(registryAddress);
+  const contractState = await queryContractState(chainStateProvider, registryAddress);
   if (!contractState) {
     throw new Error(`No contract state found at registry address ${registryAddress}`);
   }

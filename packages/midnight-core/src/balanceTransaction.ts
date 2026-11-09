@@ -1,33 +1,29 @@
-import { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
+import type { UnboundTx, UnprovenTx } from '@midnight-ntwrk/wallet-sdk';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import { WalletConnection } from './walletFacade.js';
-import {
-  type SignatureEnabled,
-  type Proof,
-  type PreBinding,
-  type Binding,
-  Transaction,
-  FinalizedTransaction,
-  UnprovenTransaction,
-} from '@midnight-ntwrk/ledger-v8';
 import { hexToBytes, uint8ArrayToHex } from './hex.js';
+import { toFinalized, toUnbound, toUnproven, toWalletTx, type UnboundTransaction } from './walletTx.js';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
 type TokenKindsToBalance = 'all' | ('shielded' | 'unshielded' | 'dust')[];
 
-async function signUnprovenTransaction(ctx: WalletConnection, tx: UnprovenTransaction) {
-  if (!tx.intents?.size) {
+async function signUnprovenTransaction(ctx: WalletConnection, tx: UnprovenTx): Promise<UnprovenTx> {
+  if (!toUnproven(tx).intents?.size) {
     return tx;
   }
-  return ctx.walletFacade.signUnprovenTransaction(tx, (data) => ctx.keys.unshieldedKeystore.signData(data));
+  return ctx.walletFacade.signUnprovenTransaction(tx, ctx.keys.unshieldedKeystore.signDataAsync);
 }
 
-async function signUnboundTransaction(ctx: WalletConnection, tx: UnboundTransaction): Promise<UnboundTransaction> {
-  if (!tx.intents?.size) {
+async function signUnboundTransaction(ctx: WalletConnection, tx: UnboundTx): Promise<UnboundTx> {
+  if (!toUnbound(tx).intents?.size) {
     return tx;
   }
-  return ctx.walletFacade.signUnboundTransaction(tx, (data) => ctx.keys.unshieldedKeystore.signData(data));
+  return ctx.walletFacade.signUnboundTransaction(tx, ctx.keys.unshieldedKeystore.signDataAsync);
 }
+
+const balanceOptions = (ttl: Date, tokenKindsToBalance: TokenKindsToBalance) =>
+  tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance };
 
 export async function balanceUnboundTransaction(
   ctx: WalletConnection,
@@ -35,17 +31,16 @@ export async function balanceUnboundTransaction(
   ttl: Date,
   tokenKindsToBalance: TokenKindsToBalance
 ): Promise<FinalizedTransaction> {
-  const { walletFacade, keys } = ctx;
+  const { walletFacade } = ctx;
   const recipe = await walletFacade.balanceUnboundTransaction(
-    tx,
-    { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
+    toWalletTx(walletFacade, 'Unbound', tx),
+    balanceOptions(ttl, tokenKindsToBalance)
   );
   recipe.baseTransaction = await signUnboundTransaction(ctx, recipe.baseTransaction);
   if (recipe.balancingTransaction) {
     recipe.balancingTransaction = await signUnprovenTransaction(ctx, recipe.balancingTransaction);
   }
-  return await walletFacade.finalizeRecipe(recipe);
+  return toFinalized(await walletFacade.finalizeRecipe(recipe));
 }
 
 export async function balanceFinalizedTransaction(
@@ -54,16 +49,15 @@ export async function balanceFinalizedTransaction(
   ttl: Date,
   tokenKindsToBalance: TokenKindsToBalance
 ): Promise<FinalizedTransaction> {
-  const { walletFacade, keys } = ctx;
+  const { walletFacade } = ctx;
   const recipe = await walletFacade.balanceFinalizedTransaction(
-    tx,
-    { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    tokenKindsToBalance === 'all' ? { ttl } : { ttl, tokenKindsToBalance }
+    toWalletTx(walletFacade, 'Finalized', tx),
+    balanceOptions(ttl, tokenKindsToBalance)
   );
   if (recipe.balancingTransaction) {
     recipe.balancingTransaction = await signUnprovenTransaction(ctx, recipe.balancingTransaction);
   }
-  return await walletFacade.finalizeRecipe(recipe);
+  return toFinalized(await walletFacade.finalizeRecipe(recipe));
 }
 
 function makeBalanceFunctionsWithTokenKinds(
@@ -73,12 +67,7 @@ function makeBalanceFunctionsWithTokenKinds(
 ) {
   return {
     async balanceUnsealedTransaction(txHex: string): Promise<{ tx: string }> {
-      const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
-        'signature',
-        'proof',
-        'pre-binding',
-        hexToBytes(txHex)
-      );
+      const tx = toUnbound({ serialize: () => hexToBytes(txHex) });
       const balanced = await balanceUnboundTransaction(
         connection,
         tx,
@@ -88,12 +77,7 @@ function makeBalanceFunctionsWithTokenKinds(
       return { tx: uint8ArrayToHex(balanced.serialize()) };
     },
     async balanceSealedTransaction(txHex: string): Promise<{ tx: string }> {
-      const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-        'signature',
-        'proof',
-        'binding',
-        hexToBytes(txHex)
-      ).bind();
+      const tx = toFinalized({ serialize: () => hexToBytes(txHex) });
       const balanced = await balanceFinalizedTransaction(
         connection,
         tx,

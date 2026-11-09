@@ -32,12 +32,12 @@
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "@sundaeswap/capacity-exchange-registry": "workspace:^",
     "commander": "^14.0.2",
-    "@midnight-ntwrk/compact-js": "2.5.1",
-    "@midnight-ntwrk/compact-runtime": "0.15.0",
-    "@midnight-ntwrk/ledger-v8": "8.1.0",
-    "@midnight-ntwrk/midnight-js": "4.1.1",
-    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
-    "@midnight-ntwrk/wallet-sdk": "1.1.0"
+    "@midnight-ntwrk/compact-js": "3.0.0",
+    "@midnight-ntwrk/compact-runtime": "0.21.0",
+    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnight-ntwrk/midnight-js": "5.0.0",
+    "@midnightntwrk/onchain-runtime-v4": "4.0.0",
+    "@midnight-ntwrk/wallet-sdk": "2.0.0"
   },
   "devDependencies": {
     "@types/node": "22.10.7",

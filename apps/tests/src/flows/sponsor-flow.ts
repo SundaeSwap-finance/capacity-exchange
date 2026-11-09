@@ -28,36 +28,40 @@ export async function runSponsorFlow(
   const ctx = await buildFlowCtx(networkId, flowConfig);
   logger.info('Starting sponsor flow: mint tokens via CES sponsorship');
 
-  const sponsoredProvider = createSponsoredProvider(ctx, cesUrl);
+  try {
+    const sponsoredProvider = createSponsoredProvider(ctx, cesUrl);
 
-  const providers = {
-    ...buildProviders<TokenMintContract>(ctx, CompiledContract.getCompiledAssetsPath(CompiledTokenMintContract)),
-    walletProvider: sponsoredProvider,
-  };
+    const providers = {
+      ...buildProviders<TokenMintContract>(ctx, CompiledContract.getCompiledAssetsPath(CompiledTokenMintContract)),
+      walletProvider: sponsoredProvider,
+    };
 
-  const { privateStateId, initialPrivateState } = generatePrivateState();
+    const { privateStateId, initialPrivateState } = generatePrivateState();
 
-  await findDeployedContract(providers, {
-    compiledContract: CompiledTokenMintContract,
-    contractAddress: tokenMintAddress,
-    privateStateId,
-    initialPrivateState,
-  });
+    await findDeployedContract(providers, {
+      compiledContract: CompiledTokenMintContract,
+      contractAddress: tokenMintAddress,
+      privateStateId,
+      initialPrivateState,
+    });
 
-  const balancedTx = await proveAndSponsor(providers, tokenMintAddress, privateStateId, mintAmount);
+    const balancedTx = await proveAndSponsor(providers, tokenMintAddress, privateStateId, mintAmount);
 
-  logger.info('Submitting sponsored transaction');
-  const txId = await providers.midnightProvider.submitTx(balancedTx);
+    logger.info('Submitting sponsored transaction');
+    const txId = await providers.midnightProvider.submitTx(balancedTx);
 
-  logger.info({ txId }, 'Waiting for confirmation');
-  const result = await providers.publicDataProvider.watchForTxData(txId);
+    logger.info({ txId }, 'Waiting for confirmation');
+    const result = await providers.publicDataProvider.watchForTxData(txId);
 
-  if (result.status !== SucceedEntirely) {
-    throw new Error(`Sponsored mint failed with status: ${result.status}`);
+    if (result.status !== SucceedEntirely) {
+      throw new Error(`Sponsored mint failed with status: ${result.status}`);
+    }
+
+    logger.info('Sponsor flow completed successfully');
+    return { txId, status: result.status };
+  } finally {
+    await ctx.dispose();
   }
-
-  logger.info('Sponsor flow completed successfully');
-  return { txId, status: result.status };
 }
 
 function createSponsoredProvider(ctx: AppContext, cesUrl: string) {

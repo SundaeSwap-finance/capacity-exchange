@@ -1,4 +1,3 @@
-import { setNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { redactUrl } from '@sundaeswap/capacity-exchange-core';
 import { AppContext, createAppContext } from './appContext.js';
 import { AppConfig, buildAppConfig, resolveEnv } from './appConfig.js';
@@ -18,7 +17,6 @@ export async function withAppContext<T>(config: AppConfig, fn: (ctx: AppContext)
     endpoints: { ...config.network.endpoints, nodeUrl: redactUrl(config.network.endpoints.nodeUrl) },
   };
   logger.info('Config:', { network: loggableNetwork, wallet: loggableWallet });
-  setNetworkId(config.network.networkId);
   logger.info('Starting app context...');
   const ctx = await createAppContext(config);
   logger.info('App context ready');
@@ -26,7 +24,7 @@ export async function withAppContext<T>(config: AppConfig, fn: (ctx: AppContext)
     return await fn(ctx);
   } finally {
     try {
-      await ctx.walletContext.walletFacade.stop();
+      await ctx.dispose();
     } catch (err) {
       logger.warn({ err: err instanceof Error ? err : String(err) }, 'Wallet facade stop failed');
     }

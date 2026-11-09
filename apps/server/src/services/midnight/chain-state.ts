@@ -1,6 +1,6 @@
 import { FastifyBaseLogger } from 'fastify';
 import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
 
 const TIP_POLL_INTERVAL_MS = 2_000;
 const LEDGER_PARAMS_POLL_INTERVAL_MS = 60_000;

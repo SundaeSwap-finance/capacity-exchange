@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { createEphemeralAppContext, createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { readDisclosureAtTx } from '@sundaeswap/capacity-exchange-coupler/operations';
+import { LedgerTransaction } from '@midnight-ntwrk/midnight-js/types';
 import { buildCounterIncrementTx } from '../local/counter.js';
 import { fakeCardanoResolver, inMemoryEscrowLocker, escrowCheckingCapacity } from '../local/stubs.js';
 import { prepareCoupling } from '../coupling/prepare.js';
@@ -33,7 +34,7 @@ export async function runCapture(
 
     const captured = await captureCoupling({
       prepareOne: async () => prepareCoupling(deps, await buildCounterIncrementTx(userApp, counterAddress)),
-      submitTx: (tx) => userApp.midnightProvider.submitTx(tx),
+      submitTx: (tx) => userApp.midnightProvider.submitTx(LedgerTransaction.seal('v9', 'Finalized', tx)),
       // A capture records whatever landed, so neither a failed wait nor an expired one is fatal:
       // say so and let the read decide.
       awaitInclusion: async (txId) => {
@@ -55,7 +56,7 @@ export async function runCapture(
     return { couplerAddress, txId: captured.txId, total: fixture.couplings.length };
   } finally {
     try {
-      await userApp.walletContext.walletFacade.stop();
+      await ctx.dispose();
     } catch (err) {
       logger.warn({ err: err instanceof Error ? err : String(err) }, 'User wallet facade stop failed');
     }

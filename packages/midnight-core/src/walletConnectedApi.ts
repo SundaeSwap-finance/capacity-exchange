@@ -1,12 +1,11 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { SignatureEnabled, Proof, PreBinding, Binding } from '@midnight-ntwrk/ledger-v8';
-import { Transaction } from '@midnight-ntwrk/ledger-v8';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import { hexToBytes, uint8ArrayToHex } from './hex.js';
 import { toNetworkIdEnum, resolveEndpoints } from './networks.js';
 import { createWalletFromMnemonic, type CreateWalletFromMnemonicOptions } from './wallet.js';
 import type { WalletConnection } from './walletFacade.js';
 import type { StateStore } from './stateStore.js';
+import { toWalletTx } from './walletTx.js';
 
 const DEFAULT_BALANCE_TTL_MS = 5 * 60 * 1000;
 
@@ -29,8 +28,8 @@ export function createConnectedAPI(
   networkId: string,
   proofServerUrl?: string
 ): ConnectedAPI {
-  const { walletFacade, keys } = connection;
-  const { shieldedSecretKeys, dustSecretKey } = keys;
+  const { walletFacade } = connection;
+  const txFromHex = (txHex: string) => ({ serialize: () => hexToBytes(txHex) });
   const enumId = toNetworkIdEnum(networkId);
   const endpoints = resolveEndpoints(enumId, { proofServerUrl });
 
@@ -67,28 +66,16 @@ export function createConnectedAPI(
       return [];
     },
     async balanceUnsealedTransaction(txHex: string) {
-      const txBytes = hexToBytes(txHex);
-      const tx = Transaction.deserialize<SignatureEnabled, Proof, PreBinding>(
-        'signature',
-        'proof',
-        'pre-binding',
-        txBytes
-      );
+      const tx = toWalletTx(walletFacade, 'Unbound', txFromHex(txHex));
       const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-      const recipe = await walletFacade.balanceUnboundTransaction(tx, { shieldedSecretKeys, dustSecretKey }, { ttl });
+      const recipe = await walletFacade.balanceUnboundTransaction(tx, { ttl });
       const finalized = await walletFacade.finalizeRecipe(recipe);
       return { tx: uint8ArrayToHex(finalized.serialize()) };
     },
     async balanceSealedTransaction(txHex: string) {
-      const txBytes = hexToBytes(txHex);
-      const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-        'signature',
-        'proof',
-        'binding',
-        txBytes
-      ).bind();
+      const tx = toWalletTx(walletFacade, 'Finalized', txFromHex(txHex));
       const ttl = new Date(Date.now() + DEFAULT_BALANCE_TTL_MS);
-      const recipe = await walletFacade.balanceFinalizedTransaction(tx, { shieldedSecretKeys, dustSecretKey }, { ttl });
+      const recipe = await walletFacade.balanceFinalizedTransaction(tx, { ttl });
       const finalized = await walletFacade.finalizeRecipe(recipe);
       return { tx: uint8ArrayToHex(finalized.serialize()) };
     },
@@ -102,14 +89,7 @@ export function createConnectedAPI(
       throw new Error('signData is not supported for mnemonic-based wallets');
     },
     async submitTransaction(txHex: string) {
-      const txBytes = hexToBytes(txHex);
-      const tx = Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-        'signature',
-        'proof',
-        'binding',
-        txBytes
-      ).bind();
-      await walletFacade.submitTransaction(tx);
+      await walletFacade.submitTransaction(toWalletTx(walletFacade, 'Finalized', txFromHex(txHex)));
     },
     async getProvingProvider() {
       throw new Error('getProvingProvider is not supported for mnemonic-based wallets');

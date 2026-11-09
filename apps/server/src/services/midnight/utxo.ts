@@ -1,9 +1,10 @@
-import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
+import type { DustFullInfo, UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v2';
 import { FastifyBaseLogger } from 'fastify';
 import type { CapacitySource } from '../metrics.js';
 import { MidnightWalletService } from './wallet.js';
 import { MidnightChainStateService } from './chain-state.js';
 import { LRUCache } from 'lru-cache';
+import { availableDustCoins } from '@sundaeswap/capacity-exchange-core';
 
 export interface UtxoLockInfo {
   id: string;
@@ -78,10 +79,7 @@ export class MidnightUtxoService implements CapacitySource {
     if (!walletState) {
       return 0;
     }
-    const availableCoins = walletState.capabilities.coinsAndBalances.getAvailableCoins(
-      walletState.state,
-      new Date(),
-    );
+    const availableCoins = availableDustCoins(walletState, new Date());
     return availableCoins.length;
   }
 
@@ -110,11 +108,7 @@ export class MidnightUtxoService implements CapacitySource {
       return { status: 'illegal-state', error: "Wallet is sync'd but no wallet state" };
     }
 
-    //const utxos = walletState.availableCoins;
-    const utxos = walletState.capabilities.coinsAndBalances.getAvailableCoins(
-      walletState.state,
-      ctime,
-    );
+    const utxos = availableDustCoins(walletState, ctime);
     this.logger.debug({ utxos }, 'Got DUST wallet UTxOs');
 
     const selectedUtxo = utxos.find((utxoInfo) => {

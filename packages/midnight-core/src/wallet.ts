@@ -38,7 +38,7 @@ async function waitForSync(walletFacade: WalletFacade, timeoutMs?: number): Prom
 
 export async function startAndSyncWallet(connection: WalletConnection, syncTimeoutMs?: number): Promise<void> {
   const { walletFacade, keys } = connection;
-  await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
+  await walletFacade.start(keys.seeds);
   await waitForSync(walletFacade, syncTimeoutMs);
 }
 

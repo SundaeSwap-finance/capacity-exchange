@@ -1,4 +1,6 @@
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+// graphql must load before the indexer provider; see midnight-core's graphqlFirst.ts.
+import 'graphql';
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
 import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
@@ -13,13 +15,18 @@ import { getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
 export interface ChainStateProvider {
   queryContractState: PublicDataProvider['queryContractState'];
   getLedgerParameters(): Promise<LedgerParameters>;
+  dispose: () => Promise<void>;
 }
 
 /** Builds a {@link ChainStateProvider} backed by a Midnight indexer. */
 export function indexerChainStateProvider(indexerUri: string, indexerWsUri: string): ChainStateProvider {
-  const publicDataProvider = indexerPublicDataProvider(indexerUri, indexerWsUri);
+  const publicDataProvider = indexerPublicDataProvider({
+    queryURL: indexerUri,
+    subscriptionURL: indexerWsUri,
+  });
   return {
     queryContractState: (addr, cfg) => publicDataProvider.queryContractState(addr, cfg),
     getLedgerParameters: () => getLedgerParameters(indexerUri),
+    dispose: () => publicDataProvider.dispose(),
   };
 }

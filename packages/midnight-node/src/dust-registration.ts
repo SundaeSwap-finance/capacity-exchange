@@ -15,7 +15,7 @@ async function registerCoinsForDust(
   const recipe = await walletFacade.registerNightUtxosForDustGeneration(
     coins,
     keys.unshieldedKeystore.getPublicKey(),
-    (payload) => keys.unshieldedKeystore.signData(payload),
+    keys.unshieldedKeystore.signDataAsync,
     dustAddress
   );
   // Registration transactions pay fees from generated dust — no separate fee balancing needed.
@@ -92,17 +92,12 @@ export async function deregisterAllFromDust(
   const recipe = await walletFacade.deregisterFromDustGeneration(
     registered,
     keys.unshieldedKeystore.getPublicKey(),
-    (payload) => keys.unshieldedKeystore.signData(payload)
+    keys.unshieldedKeystore.signDataAsync
   );
 
   // Deregistration recipes need fee balancing before submission
   const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
-  const { shieldedSecretKeys, dustSecretKey } = keys;
-  const balancedRecipe = await walletFacade.balanceUnprovenTransaction(
-    recipe.transaction,
-    { shieldedSecretKeys, dustSecretKey },
-    { ttl }
-  );
+  const balancedRecipe = await walletFacade.balanceUnprovenTransaction(recipe.transaction, { ttl });
 
   const finalized = await walletFacade.finalizeRecipe(balancedRecipe);
   await walletFacade.submitTransaction(finalized);

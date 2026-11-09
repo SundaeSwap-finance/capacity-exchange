@@ -8,7 +8,7 @@
         "@capacity-exchange/archive-tools": "workspace:^",
         "@changesets/cli": "^3.0.3",
         "@eslint/js": "^9.39.5",
-        "@midnight-ntwrk/midnight-js-compact": "4.1.1",
+        "@midnight-ntwrk/midnight-js-compact": "5.0.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
         "@types/node": "^25.9.9",
@@ -29,13 +29,13 @@
       "version": "0.1.0",
       "dependencies": {
         "@capacity-exchange/demo-contracts": "workspace:^",
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-node-zk-config-provider": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-coupler": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
@@ -74,13 +74,13 @@
         "@capacity-exchange/archive-tools": "workspace:^",
         "@fontsource/geist": "^5.2.8",
         "@fontsource/space-mono": "^5.2.9",
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/dapp-connector-api": "4.0.1",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/dapp-connector-api": "4.1.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@sundaeswap/capacity-exchange-client": "workspace:^",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-providers": "workspace:^",
@@ -110,9 +110,9 @@
       "name": "@capacity-exchange/demo-contracts",
       "version": "1.0.3",
       "dependencies": {
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@scure/bip32": "2.0.1",
         "@scure/bip39": "^2.0.1",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
@@ -122,8 +122,8 @@
       },
       "devDependencies": {
         "@eslint/js": "^9.39.2",
-        "@midnight-ntwrk/midnight-js-compact": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/midnight-js-compact": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
         "@sundaeswap/capacity-exchange-client": "workspace:^",
         "@types/node": "22.10.7",
         "@types/ws": "^8.18.1",
@@ -170,11 +170,11 @@
         "@fastify/swagger": "^9.9.2",
         "@fastify/swagger-ui": "^6.1.2",
         "@fastify/type-provider-typebox": "^6.1.0",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@opentelemetry/api": "^1.9.1",
         "@opentelemetry/exporter-metrics-otlp-http": "^0.222.0",
         "@opentelemetry/resources": "^2.12.0",
@@ -196,12 +196,12 @@
       },
       "devDependencies": {
         "@cardano-sdk/core": "^0.47.1",
-        "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0",
-        "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0",
-        "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
-        "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2",
-        "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0",
-        "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.1.0",
+        "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0",
+        "@midnight-ntwrk/wallet-sdk-address-format": "4.0.0",
+        "@midnight-ntwrk/wallet-sdk-facade": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk-runtime": "2.0.0",
+        "@midnight-ntwrk/wallet-sdk-shielded": "4.0.0",
+        "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "4.0.0",
         "@types/node": "22.10.7",
         "typescript": "^5.9.3",
         "unplugin-swc": "^1.6.0",
@@ -213,11 +213,11 @@
       "version": "1.0.5",
       "dependencies": {
         "@capacity-exchange/demo-contracts": "workspace:^",
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@sundaeswap/capacity-exchange-client": "workspace:^",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
@@ -236,12 +236,12 @@
       "name": "@capacity-exchange/example-react-vite",
       "version": "1.0.4",
       "dependencies": {
-        "@midnight-ntwrk/dapp-connector-api": "4.0.1",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+        "@midnight-ntwrk/dapp-connector-api": "4.1.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-level-private-state-provider": "5.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@sundaeswap/capacity-exchange-react-sdk": "workspace:^",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
@@ -300,61 +300,66 @@
       "name": "@sundaeswap/capacity-exchange-coupler",
       "version": "0.2.5",
       "dependencies": {
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-providers": "workspace:^",
       },
       "devDependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js-compact": "4.1.1",
+        "@midnight-ntwrk/midnight-js-compact": "5.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@types/node": "22.10.7",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18",
       },
       "peerDependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
       },
     },
     "packages/midnight-core": {
       "name": "@sundaeswap/capacity-exchange-core",
       "version": "2.1.0",
       "dependencies": {
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/dapp-connector-api": "^4.1.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
         "@scure/bip39": "^2.0.1",
+        "graphql": "^17.0.1",
         "rxjs": "^7.5",
       },
       "devDependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18",
       },
       "peerDependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
       },
     },
     "packages/midnight-node": {
       "name": "@sundaeswap/capacity-exchange-nodejs",
       "version": "2.2.0",
       "dependencies": {
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
-        "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-level-private-state-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-node-zk-config-provider": "5.0.0",
+        "@midnight-ntwrk/midnight-js-protocol": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "dotenv": "17.2.3",
+        "graphql": "^17.0.1",
         "rxjs": "^7.5",
         "ws": "^8.18.1",
       },
@@ -368,11 +373,12 @@
       "name": "@sundaeswap/capacity-exchange-providers",
       "version": "4.0.0",
       "dependencies": {
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
         "@sundaeswap/capacity-exchange-client": "workspace:^",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-registry": "workspace:^",
+        "graphql": "^17.0.1",
       },
       "devDependencies": {
         "@eslint/js": "^9.39.2",
@@ -387,16 +393,16 @@
         "vitest": "^4.0.18",
       },
       "peerDependencies": {
-        "@midnight-ntwrk/dapp-connector-api": "4.0.1",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
+        "@midnight-ntwrk/dapp-connector-api": "4.1.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
       },
     },
     "packages/react-sdk": {
       "name": "@sundaeswap/capacity-exchange-react-sdk",
       "version": "2.1.3",
       "dependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@sundaeswap/capacity-exchange-providers": "workspace:^",
       },
       "devDependencies": {
@@ -413,34 +419,34 @@
       "name": "@sundaeswap/capacity-exchange-registry",
       "version": "3.0.2",
       "dependencies": {
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/onchain-runtime-v4": "4.0.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
       },
       "devDependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js-compact": "4.1.1",
+        "@midnight-ntwrk/midnight-js-compact": "5.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
         "@types/node": "22.10.7",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18",
       },
       "peerDependencies": {
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
       },
     },
     "packages/registry-node": {
       "name": "@sundaeswap/capacity-exchange-registry-nodejs",
       "version": "3.0.1",
       "dependencies": {
-        "@midnight-ntwrk/compact-js": "2.5.1",
-        "@midnight-ntwrk/compact-runtime": "0.15.0",
-        "@midnight-ntwrk/ledger-v8": "8.1.0",
-        "@midnight-ntwrk/midnight-js": "4.1.1",
-        "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
-        "@midnight-ntwrk/wallet-sdk": "1.1.0",
+        "@midnight-ntwrk/compact-js": "3.0.0",
+        "@midnight-ntwrk/compact-runtime": "0.21.0",
+        "@midnight-ntwrk/midnight-js": "5.0.0",
+        "@midnight-ntwrk/wallet-sdk": "2.0.0",
+        "@midnightntwrk/ledger-v9": "1.0.0",
+        "@midnightntwrk/onchain-runtime-v4": "4.0.0",
         "@sundaeswap/capacity-exchange-core": "workspace:^",
         "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
         "@sundaeswap/capacity-exchange-registry": "workspace:^",
@@ -454,8 +460,8 @@
     },
   },
   "overrides": {
-    "@midnight-ntwrk/ledger-v8": "8.1.0",
-    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/onchain-runtime-v4": "4.0.0",
     "fast-uri": "^4.1.5",
     "js-yaml": "^4.3.2",
     "qs": "^6.16.0",
@@ -635,7 +641,7 @@
 
     "@dnsquery/dns-packet": ["@dnsquery/dns-packet@6.1.1", "", { "dependencies": { "@leichtgewicht/ip-codec": "^2.0.4", "utf8-codec": "^1.0.0" } }, "sha512-WXTuFvL3G+74SchFAtz3FgIYVOe196ycvGsMgvSH/8Goptb1qpIQtIuM4SOK9G9lhMWYpHxnXyy544ZhluFOew=="],
 
-    "@effect/platform": ["@effect/platform@0.95.0", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.4", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.20.0" } }, "sha512-WDlRiWRSWlmhCPq09bvAofK0qr5vM4yNklXjoJdZHmugKRRTpN/Okn3ODnjgM/Kb/4hjMrRyrsUeH/Brieq7KA=="],
+    "@effect/platform": ["@effect/platform@0.97.2", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.10", "multipasta": "^0.2.8" }, "peerDependencies": { "effect": "^3.22.2" } }, "sha512-fof9J+pId374/b1WAt0P1H8QmvulzpHTjS6SUHiG20U/sFjkBUS5vGMy1/XfdTAVKX1IY+Z87dFhi/RFDfgBPQ=="],
 
     "@emurgo/cardano-message-signing-nodejs": ["@emurgo/cardano-message-signing-nodejs@1.1.0", "", {}, "sha512-PQRc8K8wZshEdmQenNUzVtiI8oJNF/1uAnBhidee5C4o1l2mDLOW+ur46HWHIFKQ6x8mSJTllcjMscHgzju0gQ=="],
 
@@ -803,71 +809,75 @@
 
     "@manypkg/tools": ["@manypkg/tools@2.1.2", "", { "dependencies": { "jju": "^1.4.0", "tinyglobby": "^0.2.13", "yaml": "^2.9.0" } }, "sha512-6QEf6yqFbETdwGITKq57aYoPfX/3K8XFNwsAlx0C1M7o8cb79sv1M3w+tWuWvIcSbNqrLF7OD7YpZMVVz335hQ=="],
 
-    "@midnight-ntwrk/compact-js": ["@midnight-ntwrk/compact-js@2.5.1", "", { "dependencies": { "@effect/platform": "^0.95.0", "@midnight-ntwrk/compact-runtime": "0.16.0", "@midnight-ntwrk/ledger-v8": "^8.0.3", "@midnight-ntwrk/platform-js": "^2.2.4", "effect": "^3.20.0", "tslib": "^2.8.1" } }, "sha512-UO0+tDiRadYFO2kaUu9PIhAOISvDKvmiyh9vSOyKEZLj3AUAY1qmmHm/oQrzPqrkiWHO0Rnln/j/zZ5dvc5vxg=="],
+    "@midnight-ntwrk/compact-js": ["@midnight-ntwrk/compact-js@3.0.0", "", { "dependencies": { "@effect/platform": "^0.97.0", "@midnight-ntwrk/compact-runtime": "0.21.0", "@midnight-ntwrk/platform-js": "^3.0.0", "@midnightntwrk/ledger-v8": "8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "@midnightntwrk/onchain-runtime-v4": "4.0.0", "@noble/hashes": "^2.4.0", "compact-runtime-ledger8": "npm:@midnight-ntwrk/compact-runtime@0.16.0", "effect": "^3.22.1", "tslib": "^2.8.1" } }, "sha512-W7uZjICxfVDQJeeNpLYEIey93yuujFlK2377Eo7VrNLTUKp/CVpV8cs1ytyICHhkC8LYtFZMYVZ0ddCS9pXYPQ=="],
 
-    "@midnight-ntwrk/compact-runtime": ["@midnight-ntwrk/compact-runtime@0.15.0", "", { "dependencies": { "@midnight-ntwrk/onchain-runtime-v3": "^3.0.0", "@types/object-inspect": "^1.8.1", "object-inspect": "^1.12.3" } }, "sha512-6+odrxb83ZZwF29SqNBBgaOR3hf5ej4KZVGibDwdXta9+uiv6qYW0fMrsKP9S+c2AqvY+vEb5NEFFI54lA7G5A=="],
+    "@midnight-ntwrk/compact-runtime": ["@midnight-ntwrk/compact-runtime@0.21.0", "", { "dependencies": { "@midnightntwrk/onchain-runtime-v4": "^4.0.0-rc.3", "@noble/curves": "^2.2.0", "@noble/hashes": "^2.0.1", "@types/object-inspect": "^1.8.1", "object-inspect": "^1.12.3" } }, "sha512-M0tAjLul3nUhdAz8ZLV7BrNGR59Rg2l05pMOBwywPKlyJGqxsVhwB6+mpXXb6hnsgIJlwNQoezqLmaqnFM4S0g=="],
 
-    "@midnight-ntwrk/dapp-connector-api": ["@midnight-ntwrk/dapp-connector-api@4.0.1", "", {}, "sha512-IstRo8xfmlJlGgUcAJeRzPUmGCp0/xZR3/bfTOk33MHrzbGmB79r/zYziGavcclo1pkkoBHAodX4vz3xgFxczw=="],
+    "@midnight-ntwrk/dapp-connector-api": ["@midnight-ntwrk/dapp-connector-api@4.1.0", "", {}, "sha512-tt7Wy6wgIlCq03NwQ71g0Hb1xEKR8BajPcEBiFZgaeTB2pb3nfNBF7bParcmYnouHQTZ1FuRNmFL3LbLb3n2fQ=="],
 
-    "@midnight-ntwrk/ledger-v8": ["@midnight-ntwrk/ledger-v8@8.1.0", "", {}, "sha512-rwOVP5kBwACpYmmY6+oLeaiM3e5gHscRMjbZUOntOC5QdtqLdpeep6eQW1OngI+sxjjdVoGg2eE16sLf+DAHmQ=="],
+    "@midnight-ntwrk/midnight-js": ["@midnight-ntwrk/midnight-js@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-contracts": "5.0.0", "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0" } }, "sha512-F3k2uN16RuJMPU4CXUXXNvnnwmUo7kAO292QWrqfFPeCxsKEDFMrQis5cUFJM2qVLx90YKG9+1ZYeNjOjsq0zg=="],
 
-    "@midnight-ntwrk/midnight-js": ["@midnight-ntwrk/midnight-js@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-contracts": "4.1.1", "@midnight-ntwrk/midnight-js-network-id": "4.1.1", "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1" } }, "sha512-n6g3+NA3umlZ0FT/lU7VktKyhaYcJsrh3Jcr50pHkUZw5wMqy0gncWZklQmp8qU8F6/igy5LywKZ30PIL3wOHA=="],
+    "@midnight-ntwrk/midnight-js-compact": ["@midnight-ntwrk/midnight-js-compact@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-utils": "5.0.0" }, "bin": { "run-compactc": "dist/run-compactc.cjs", "fetch-compactc": "dist/fetch-compact.mjs" } }, "sha512-si0zTKYQ7ONivUFPY2v2vdqdVZGXa9v+2DE3i93qYJ36RNWmQB/lxVgeHft2qVOZA6Ew1Z27zKSO0+M67Ik45Q=="],
 
-    "@midnight-ntwrk/midnight-js-compact": ["@midnight-ntwrk/midnight-js-compact@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-utils": "4.1.1" }, "bin": { "fetch-compactc": "dist/fetch-compact.mjs", "run-compactc": "dist/run-compactc.cjs" } }, "sha512-z2JEkM40JDGiGHiwADIpY5geSNCHxIqGVQlPGSjbo2Za0MBHPdweBrlDPdkmYTB+ifkhre/xtv3rMmLdZe2g6g=="],
+    "@midnight-ntwrk/midnight-js-contracts": ["@midnight-ntwrk/midnight-js-contracts@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0", "effect": "^3.22.1" } }, "sha512-zh4XVEMjzuQ31xSv6PLHCcHZ9UigUfsSYAMvNWJt5lAKdQp8fZBQu93Yy04QIocKChdu/4lw1Hm03kOGHJty4A=="],
 
-    "@midnight-ntwrk/midnight-js-contracts": ["@midnight-ntwrk/midnight-js-contracts@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-network-id": "4.1.1", "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1" } }, "sha512-vHeKyaj9RXTx+Cep3YpIRgg2EWkzibO4gxI7k/rYpXmGXc3waetrR5sb9FPR7v9SUX00/zf/sYbLp1NZhwZbjg=="],
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": ["@midnight-ntwrk/midnight-js-fetch-zk-config-provider@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0", "cross-fetch": "^4.1.0" } }, "sha512-S3C76aceRo8FDHe66QaZWjMO+K1snMWnhNlsXsBCx7ljy65Cg3LGGKz3AhV1++YKx56Qv3cQ34NUc4DyW/h1ww=="],
 
-    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": ["@midnight-ntwrk/midnight-js-fetch-zk-config-provider@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1", "cross-fetch": "^4.1.0" } }, "sha512-d9vPAXjCvbe3KdPDBwp8Cp4HXwdo9jfCjeyJjJPfIDHCctXrIQ7btu+CqY1+bgV05FHVMOBLjJ9TS2tc2xdwrw=="],
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": ["@midnight-ntwrk/midnight-js-http-client-proof-provider@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0", "cross-fetch": "^4.1.0", "fetch-retry": "^6.0.0" } }, "sha512-UKYCKyRlkSq38hxVEh9idUnpRoC7qmCGiEH55NsAOJYOkMn9T+C0cu4DPGPPDXkslXkp/rxf8BC9RG3K3rwd9w=="],
 
-    "@midnight-ntwrk/midnight-js-http-client-proof-provider": ["@midnight-ntwrk/midnight-js-http-client-proof-provider@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-contracts": "4.1.1", "@midnight-ntwrk/midnight-js-network-id": "4.1.1", "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1", "cross-fetch": "^4.1.0", "fetch-retry": "^6.0.0" } }, "sha512-Q2VNRTvuWlf3MbjV7C3asuLHeFwtZMdh6t5Z+u8c8RDpejW9GhKaSjlJ2zgJII5ckE8/cocPEDwt3GKBebGHWA=="],
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": ["@midnight-ntwrk/midnight-js-indexer-public-data-provider@5.0.0", "", { "dependencies": { "@apollo/client": "^4.2.12", "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0", "buffer": "^6.0.3", "cross-fetch": "^4.1.0", "graphql": "^17.0.1", "graphql-ws": "^6.0.8", "isomorphic-ws": "^5.0.0", "rxjs": "^7.8.2", "ws": "^8.20.0" } }, "sha512-I2LHUiv2YCexTjIcZ0yfvcSfXk2wmMYiG08iqsPplmSbCh1N+ffzq8oRHwleCGNIDMLmWDi1yjATK/r8PUAx5A=="],
 
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": ["@midnight-ntwrk/midnight-js-indexer-public-data-provider@4.1.1", "", { "dependencies": { "@apollo/client": "^4.2.0", "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/midnight-js-network-id": "4.1.1", "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1", "buffer": "^6.0.3", "cross-fetch": "^4.1.0", "graphql": "^16.14.0", "graphql-ws": "^6.0.8", "isomorphic-ws": "^5.0.0", "rxjs": "^7.8.2", "ws": "^8.20.0" } }, "sha512-50CjiYqw/msRintyfkuNrJl1v4Zj+AaBFmV2uLjY/zpkPop4VBFH4QZSrtKsG1ljT9vzWsxU7Eo4Tn1tgKkPlA=="],
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": ["@midnight-ntwrk/midnight-js-level-private-state-provider@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0", "@noble/ciphers": "^2.4.0", "@noble/hashes": "^2.4.0", "abstract-level": "^3.1.1", "buffer": "^6.0.3", "level": "^10.0.0", "superjson": "^2.2.6" } }, "sha512-Oic7SW8pcTV243K8eIBCyHTLN1qjWR0vIiGwue16hMSzvsh7wCmd0ujZC6kuSeXryj5liiSA+1qORM7U/HSSnQ=="],
 
-    "@midnight-ntwrk/midnight-js-level-private-state-provider": ["@midnight-ntwrk/midnight-js-level-private-state-provider@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1", "@noble/ciphers": "^2.2.0", "@noble/hashes": "^2.2.0", "abstract-level": "^3.1.1", "buffer": "^6.0.3", "level": "^10.0.0", "superjson": "^2.2.6" } }, "sha512-i+1lXJ4rcRGERnOPXHc3/Oh5ef7X/yb6p51bOAUjITazdPPcuU8qTeTeFgX+lPhWTGxROb9/pgrrVPH9G0FxSw=="],
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": ["@midnight-ntwrk/midnight-js-node-zk-config-provider@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnight-ntwrk/midnight-js-utils": "5.0.0" } }, "sha512-4A8KSVqIs7K6zN0GP0vaIX501TKqA6N3JftPLajNkyYFnbRQ4IpCTusknxbcOFw0f1EwCL9dnJsxq76rWu1M/w=="],
 
-    "@midnight-ntwrk/midnight-js-network-id": ["@midnight-ntwrk/midnight-js-network-id@4.1.1", "", {}, "sha512-g49IBK0In1Jt2wKgi18rUvoy1ShGVrfb/VvgWALkc9Noc6+4MX5NTLVg5zqu+CyO2waIGb5lqDPnAhTD9wPAOQ=="],
+    "@midnight-ntwrk/midnight-js-protocol": ["@midnight-ntwrk/midnight-js-protocol@5.0.0", "", { "dependencies": { "@midnight-ntwrk/compact-js": "3.0.0", "@midnight-ntwrk/compact-runtime": "0.21.0", "@midnight-ntwrk/onchain-runtime-v3": "^3.0.0", "@midnight-ntwrk/platform-js": "3.0.0", "@midnightntwrk/ledger-v8": "8.1.3", "@midnightntwrk/ledger-v9": "1.0.0", "@midnightntwrk/onchain-runtime-v4": "4.0.0", "compact-runtime-ledger8": "npm:@midnight-ntwrk/compact-runtime@0.16.0", "effect": "^3.22.1" } }, "sha512-Z73hYQ8zfYJlaVaWuPjfRxBvBaRsKzrAtMVmwPTZzstOu/YTzv5FsQdTtNCYUxrGANrcUX1fiftg/qRXj4KVzA=="],
 
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": ["@midnight-ntwrk/midnight-js-node-zk-config-provider@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-types": "4.1.1", "@midnight-ntwrk/midnight-js-utils": "4.1.1" } }, "sha512-fbBhLBhU/BjrQRnRJCcmKkhYRLlSqJyXEhq72vMS6vlKXprmDmAjlVV62+bn1aiAlNY9FXl1rrrMUFKQUmuZFg=="],
+    "@midnight-ntwrk/midnight-js-types": ["@midnight-ntwrk/midnight-js-types@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "effect": "^3.22.1", "pino": "^10.3.1", "rxjs": "^7.8.2" } }, "sha512-RN5y4h5ZXEih2xlsVH1+2/3ThRBfe/qGJUjHuxTY4VyhqjZaJ8i9ycArm66a9sLFb6psdkYCREnsopEdvFibrA=="],
 
-    "@midnight-ntwrk/midnight-js-protocol": ["@midnight-ntwrk/midnight-js-protocol@4.1.1", "", { "dependencies": { "@midnight-ntwrk/compact-js": "2.5.1", "@midnight-ntwrk/compact-runtime": "0.16.0", "@midnight-ntwrk/ledger-v8": "8.1.0", "@midnight-ntwrk/onchain-runtime-v3": "3.0.0", "@midnight-ntwrk/platform-js": "2.2.4" } }, "sha512-JH1010ir3YrawKsA4C08aIXWpFGHrCrAaBkZFbn+xh+iwOX5Ss0WU4//mDSEnHvQN0wD6GTc2JwUfKYFaS2CcA=="],
-
-    "@midnight-ntwrk/midnight-js-types": ["@midnight-ntwrk/midnight-js-types@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "effect": "^3.20.0", "pino": "^10.3.1", "rxjs": "^7.8.2" } }, "sha512-MPT7YToXN2EsDtOOVSJonYZSZ4eqmdVgftBfH56w+tmZM0sZt9u+Mq18uuBQl9ebpTXnp8o7WqeISbgPMxTBcQ=="],
-
-    "@midnight-ntwrk/midnight-js-utils": ["@midnight-ntwrk/midnight-js-utils@4.1.1", "", { "dependencies": { "@midnight-ntwrk/midnight-js-network-id": "4.1.1", "@midnight-ntwrk/midnight-js-protocol": "4.1.1", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.0" } }, "sha512-b65QADd2FaZbWXe9D3fe9mSGmPlP1DTRMGSruJqhl9fOTNxBhQIzIKs0j/eL9Kv77dVeGDYgQdbV+JkDj3j5Qg=="],
+    "@midnight-ntwrk/midnight-js-utils": ["@midnight-ntwrk/midnight-js-utils@5.0.0", "", { "dependencies": { "@midnight-ntwrk/midnight-js-protocol": "5.0.0", "@midnight-ntwrk/midnight-js-types": "5.0.0", "@midnightntwrk/wallet-sdk-address-format": "4.0.0", "@noble/hashes": "^2.4.0" } }, "sha512-/hrcn+9kYH1hed9QspMUmGiisTauJ7aVSzXmHwci2LD9icIfh045mKkFw8zRQCnWq9dYZ1CMj//aaBPyIp3MjA=="],
 
     "@midnight-ntwrk/onchain-runtime-v3": ["@midnight-ntwrk/onchain-runtime-v3@3.0.0", "", {}, "sha512-HbFbUOsvgpEFy1OT0Ni2LMFk4jnMQS1em+H+Mof/B3DpnNKl0Lkx5QiulKOc6pyU4KPEagOqx4fYNyVXFwgZ7g=="],
 
-    "@midnight-ntwrk/platform-js": ["@midnight-ntwrk/platform-js@2.2.4", "", { "dependencies": { "@effect/platform": "^0.95.0", "effect": "^3.20.0", "tslib": "^2.8.1" } }, "sha512-6mrYKSSE8kPgn/5rQ2xofDJk1yAZZRdLOO6Yelweuh5GOnOGz7Qw4venDG/c4TRqtV9ouFp+F5j7ta8aprMinw=="],
+    "@midnight-ntwrk/platform-js": ["@midnight-ntwrk/platform-js@3.0.0", "", { "dependencies": { "@effect/platform": "^0.96.1", "effect": "^3.21.0", "tslib": "^2.8.1" } }, "sha512-cAOpmWURUELDKmcNf8/mZjDtxkqg6ShjV6v0KY7mmwMWkieDEERq/TRmK5cMJgUqMi6nCWjwLZqOmPB07B8Y4A=="],
 
-    "@midnight-ntwrk/wallet-sdk": ["@midnight-ntwrk/wallet-sdk@1.1.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.2", "@midnight-ntwrk/wallet-sdk-capabilities": "^3.3.1", "@midnight-ntwrk/wallet-sdk-dust-wallet": "^4.1.0", "@midnight-ntwrk/wallet-sdk-facade": "^4.0.1", "@midnight-ntwrk/wallet-sdk-hd": "^3.0.2", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-node-client": "^1.1.2", "@midnight-ntwrk/wallet-sdk-prover-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-runtime": "^1.0.4", "@midnight-ntwrk/wallet-sdk-shielded": "^3.0.1", "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "^3.1.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0" } }, "sha512-izZ75+jPa47sI6mJtUvr7f8sSg2zayjMABgsjTYyMcE+ff3C58HKJKCKkUezhO/X0RwtDdi81jLUxohrWjmDoA=="],
+    "@midnight-ntwrk/wallet-sdk": ["@midnight-ntwrk/wallet-sdk@2.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "4.0.0", "@midnight-ntwrk/wallet-sdk-capabilities": "4.0.0", "@midnight-ntwrk/wallet-sdk-dust-wallet": "5.0.0", "@midnight-ntwrk/wallet-sdk-facade": "5.0.0", "@midnight-ntwrk/wallet-sdk-hd": "4.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-node-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-prover-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-runtime": "2.0.0", "@midnight-ntwrk/wallet-sdk-shielded": "4.0.0", "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "4.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0" } }, "sha512-JF01GwbO4+Gv8E9+koXgRZxf7+U/crRmi/T3+8M/tVcmjV/DV0vzMkOuLteHh3nnHC4CtxypTy02E1s32AL39A=="],
 
-    "@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.0.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-urmdK+lpw/gmX3mKjN3p9rVUn6Ba3TyHVEYN5oAXc0na4NkHsvvhgxcn9t4Oh9FYoYWuUA0xDiiLJsAkO05b/A=="],
+    "@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@3.0.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-uRgKIrWcpedIz2wVqnKzs1/8MZEXKusMZNCYFAC1Pv7DttSfyU8HRyJaqUTeZN3ayu1nmNnlGGVBZdYx0Y0HEQ=="],
 
-    "@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@3.1.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@scure/base": "^2.0.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-X/MQnbyQQ1SoFVJrxhczkHza1SMJghp3Eo49nXXnHZw2qKUUmpiNa8Hx3MYFq36NXi3m3gsMH7rW0bilMFvdhw=="],
+    "@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@4.0.0", "", { "dependencies": { "@midnightntwrk/ledger-v9": "^1.0.0", "@scure/base": "^2.4.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-ZeoVu/eNsBqvEwp4fnwB8AoJ93zkwCu2u+t5JQ9wTvGfqYEPSwaM1AzerWQpKC6uxg9NVk7juwyQe9L8az0img=="],
 
-    "@midnight-ntwrk/wallet-sdk-capabilities": ["@midnight-ntwrk/wallet-sdk-capabilities@3.3.1", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-node-client": "^1.1.2", "@midnight-ntwrk/wallet-sdk-prover-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "@midnight-ntwrk/zkir-v2": "^2.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-V//D0wEKN0++XE+pKsXy6U5aH5/1+AoLdCl7Zp1RZilrdABffiywbJ0ZER/ePiTCG93ltDTz7L73WDyEJy6wPA=="],
+    "@midnight-ntwrk/wallet-sdk-capabilities": ["@midnight-ntwrk/wallet-sdk-capabilities@4.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-node-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-prover-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "@midnightntwrk/zkir-v2": "^2.2.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-hJ+gF+d+d17lyiWpinfwsWl9RTDY5UF9GWdFMPpG72EDt4B5JSaPBNKeW+7uX8KKkCIFewJfM+Nf1fYA/AnsiQ=="],
 
-    "@midnight-ntwrk/wallet-sdk-dust-wallet": ["@midnight-ntwrk/wallet-sdk-dust-wallet@4.1.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.2", "@midnight-ntwrk/wallet-sdk-capabilities": "^3.3.1", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-runtime": "^1.0.4", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-RA+Zvb3a4LmyxMFOuHJUZ2I7WbtDHLyKVk1++4q/w3WH/G9dMMyv0H/dxsxjSnIlX9km1Ibf6dxYN4I3fmG9XQ=="],
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": ["@midnight-ntwrk/wallet-sdk-dust-wallet@5.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "4.0.0", "@midnight-ntwrk/wallet-sdk-capabilities": "4.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-runtime": "2.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-J02iG4z1TQ/TvuGqbDC+Z6+DlnXL/EpOASU9V6dWRiHpAAkfF24xWcLiwzxcYDhMfj7DWaVS0VxM9GccLTsJyA=="],
 
-    "@midnight-ntwrk/wallet-sdk-facade": ["@midnight-ntwrk/wallet-sdk-facade@3.0.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.0", "@midnight-ntwrk/wallet-sdk-capabilities": "^3.2.0", "@midnight-ntwrk/wallet-sdk-dust-wallet": "^3.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-shielded": "^2.1.0", "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "^2.1.0", "rxjs": "^7.8.2" } }, "sha512-UrMHh0JI5eBKI6NcyWQ8r90CLAMF3cxnGWvChEpdTGYVQmK6LleBkXsFvfDJhORMjd+RB1aOt+oG5bEpY1o/9g=="],
+    "@midnight-ntwrk/wallet-sdk-facade": ["@midnight-ntwrk/wallet-sdk-facade@5.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "4.0.0", "@midnight-ntwrk/wallet-sdk-capabilities": "4.0.0", "@midnight-ntwrk/wallet-sdk-dust-wallet": "5.0.0", "@midnight-ntwrk/wallet-sdk-hd": "4.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-shielded": "4.0.0", "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "4.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-d2wf8wTsxX3d24yKRlFd/RaiuPUvxYIVah/ZftZHbm9hjOIezwUT6AGNLqZTucFnkPsvQrM1CH2fmErlhzvbiA=="],
 
-    "@midnight-ntwrk/wallet-sdk-hd": ["@midnight-ntwrk/wallet-sdk-hd@3.0.2", "", { "dependencies": { "@scure/bip32": "^2.0.1", "@scure/bip39": "^2.0.1" } }, "sha512-GdzZsfURF4WBh+bmSiimwOnj2vLjtd1pvMUJjRtY3OOnnr1mSesuX9//UPzb0fCjU1ZMCNb6UK7M2YcI4Gef4A=="],
+    "@midnight-ntwrk/wallet-sdk-hd": ["@midnight-ntwrk/wallet-sdk-hd@4.0.0", "", { "dependencies": { "@scure/bip32": "^2.0.1", "@scure/bip39": "^2.0.1" } }, "sha512-TPDjg+k98wJbcdu2xicCSXC6giO+2LROkVtaELdWvW3k3sWfzQ208VzM71kO+0d4RLr2EUp6P5870SX2LlPhWg=="],
 
-    "@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.2", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-GokfgV1lOhF1h341cuglp1VoTT/+yEDuYIbiPex29JJkFrjOXdJfCKPoROySBtyIyI65lnEBAXBT0+AOBjPzhA=="],
+    "@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@2.0.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "effect": "^3.19.19", "fflate": "^0.8.2", "graphql": "^17.0.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-rYfT3sXGPoRF7yS47n2RuluTPEeppXv6P0j3bZVVw9uAjt6dMnqe6sorEInik8TBRb1AtVwF7+BY5zUbWYGivQ=="],
 
-    "@midnight-ntwrk/wallet-sdk-node-client": ["@midnight-ntwrk/wallet-sdk-node-client@1.1.2", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "@polkadot/api": "^16.5.4", "@polkadot/types": "^16.5.4", "@polkadot/util": "^14.0.1", "@types/bn.js": "^5.2.0", "bn.js": "^5.2.3", "effect": "^3.19.19" } }, "sha512-nV6lg1M0QQOGss9JiofwO3+bcI+kQIoGV36F+KwyDMgUjAH2nT2/m3SbhLDGizwvJwgniWMuZQV6k/YZ7nCcWA=="],
+    "@midnight-ntwrk/wallet-sdk-node-client": ["@midnight-ntwrk/wallet-sdk-node-client@2.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@polkadot/api": "^16.5.4", "@polkadot/types": "^16.5.4", "@polkadot/util": "^14.0.1", "@types/bn.js": "^5.2.0", "bn.js": "^5.2.3", "effect": "^3.19.19" }, "peerDependencies": { "@effect/platform": "^0.97.2", "@midnight-ntwrk/wallet-sdk-prover-client": "2.0.0", "@midnightntwrk/ledger-v9": "^1.0.0", "tar-stream": "^3.2.2", "testcontainers": "^11.12.0" }, "optionalPeers": ["@effect/platform", "@midnight-ntwrk/wallet-sdk-prover-client", "@midnightntwrk/ledger-v9", "tar-stream", "testcontainers"] }, "sha512-xiYr+Kn3Y/FLh3SXT7NudpF0LRf/8SKLHeoS87o9rVWbenKTTpzWKjzb3TuHl/VU4ZFX0l9pP+/kTcHLV/Aa7w=="],
 
-    "@midnight-ntwrk/wallet-sdk-prover-client": ["@midnight-ntwrk/wallet-sdk-prover-client@1.2.2", "", { "dependencies": { "@effect/platform": "^0.96.0", "@midnight-ntwrk/ledger-v8": "^8.1.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "@midnight-ntwrk/zkir-v2": "^2.1.0", "effect": "^3.19.19", "web-worker": "^1.5.0" } }, "sha512-Xbniz3S/ab1uxiEJd3OaBxLkDfygPIAWgNZfApwAeac/U8yUVUjrqJ9aWyruztMY2MZHN7QxUjlcAWDK84hX3A=="],
+    "@midnight-ntwrk/wallet-sdk-prover-client": ["@midnight-ntwrk/wallet-sdk-prover-client@2.0.0", "", { "dependencies": { "@effect/platform": "^0.97.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "@midnightntwrk/zkir-v2": "^2.2.0", "effect": "^3.19.19", "web-worker": "^1.5.0" } }, "sha512-k/LVHhyr5rrdRRGYC7JpyNQrv4ReXarnXPkiKqB6sioXM3kb12OoEqf85dH33/kbX6Gn1RVmoz+tw0KBv/AUCA=="],
 
-    "@midnight-ntwrk/wallet-sdk-runtime": ["@midnight-ntwrk/wallet-sdk-runtime@1.0.2", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-AcDNF2TsH8U/2twe/pYPAEyal9mOCr9TUkViODoaNzeoRSz2HPTO81wGEfD89t5Lf+GS8xkaT2ju3Il30goOtg=="],
+    "@midnight-ntwrk/wallet-sdk-runtime": ["@midnight-ntwrk/wallet-sdk-runtime@2.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-COgA1dT1zpKk+SIjHptmV94DYnflr7ycGFIstcV830rHRKQhmPiPZMWfFHIAxzs7W/tWPlFFQMLZWFNBgiNlkw=="],
 
-    "@midnight-ntwrk/wallet-sdk-shielded": ["@midnight-ntwrk/wallet-sdk-shielded@2.1.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0", "@midnight-ntwrk/wallet-sdk-capabilities": "3.2.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "1.2.0", "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-Qy0jeBqFso0hc2clpv5GAqscKS2b/1JBqjBhJzamsiqaCbZauaD+CbhaxGdpyc0s+WBDBuc7UnkbVDVQadWG0g=="],
+    "@midnight-ntwrk/wallet-sdk-shielded": ["@midnight-ntwrk/wallet-sdk-shielded@4.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "4.0.0", "@midnight-ntwrk/wallet-sdk-capabilities": "4.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-runtime": "2.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-wjLIozD2ujhQn0OZdQd0IgU0xBON99LQLGo33RdD5N7uLRBEGsxQ+cY0FSB41SO8CkpmOY7VhrwhLLrx78UUww=="],
 
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": ["@midnight-ntwrk/wallet-sdk-unshielded-wallet@2.1.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0", "@midnight-ntwrk/wallet-sdk-capabilities": "3.2.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "1.2.0", "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-d+IZLTAQ0rJzqvJraaixcFOg+AgDX/D/g+EAjTTrsaB+RCfU/E2jD8iWPIPl0NnG239p9uB0PuPcxbpGHlefNg=="],
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": ["@midnight-ntwrk/wallet-sdk-unshielded-wallet@4.0.0", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "3.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "4.0.0", "@midnight-ntwrk/wallet-sdk-capabilities": "4.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "2.0.0", "@midnight-ntwrk/wallet-sdk-runtime": "2.0.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.3.0", "@midnightntwrk/ledger-v8": "^8.1.3", "@midnightntwrk/ledger-v9": "^1.0.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-Vh2CEOrZuP2cR/GAXpPc8YFpij9gRs5meJswfO+TY/C1NbUadPaDBneFZD1z5Ry8P1pxmGGzM6r6OSamALwQiQ=="],
 
-    "@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.2.1", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-K85cpwKGpAbc4hb7EnlxyGOHNqYLFYZwsxm3AMjIdDglxWYCn04HmuTQiq5SQyWc5WlAgSMomQBGGg4z3vlp4A=="],
+    "@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.3.0", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-xrTKy2XkCMoVU+p9DQNtGxR8767smRU7zfeepd4zz46ORAeYHiCCgpXZOckt4TIEECMpEiqjWkjS5P9V6Bgc2w=="],
 
-    "@midnight-ntwrk/zkir-v2": ["@midnight-ntwrk/zkir-v2@2.1.1", "", {}, "sha512-U3sh3kM8bj3BPqWov5o6ewLcq6SJ/tscJD5wATG6LVzqlKWUVudeb7QzUUHXmzeV8XMGgt97+lol/Gnc101Eqw=="],
+    "@midnightntwrk/ledger-v8": ["@midnightntwrk/ledger-v8@8.1.3", "", {}, "sha512-IJL8WtiXSe9484qTwsC46piTQxMOk7ybCQwYSeCfLKGujsXCJu3Xw/n8npglZN6Jt9NOVQbScn6V+xb4SvGNmQ=="],
+
+    "@midnightntwrk/ledger-v9": ["@midnightntwrk/ledger-v9@1.0.0", "", {}, "sha512-0o45+ypO1Yo2PRcP6fqp9YgqTwceNEyl+o9X81VIVWVjZNOIbK0z7ztVKxrECiPQq/WgpQWrrVu66GfLvjZZww=="],
+
+    "@midnightntwrk/onchain-runtime-v4": ["@midnightntwrk/onchain-runtime-v4@4.0.0", "", {}, "sha512-JpsmaZ2/OSDCkQ8o2321f1n1B0B95acogA/HWSgR6zvRrsRMj+wjh6OebE5LD7JnUj8xVoloZysMjaTTpaQYlQ=="],
+
+    "@midnightntwrk/wallet-sdk-address-format": ["@midnightntwrk/wallet-sdk-address-format@4.0.0", "", { "dependencies": { "@midnightntwrk/ledger-v9": "^1.0.0", "@scure/base": "^2.4.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-EwDK+aEocpVk/jHwcjuFxK+0VKRUwqfmXdkTooyeOPfoep9DYYAD3m2fZH+60oy8P+VdLZ0bFeB2e+146l82ug=="],
+
+    "@midnightntwrk/zkir-v2": ["@midnightntwrk/zkir-v2@2.2.0", "", {}, "sha512-bF96JgzZtzf3HLLEeoHwuCjofNUZThAEnQTVZRLJKNHui9dyENwpjUup7/xryZCBR+z1EETYA4G/lSO6eFWEcg=="],
 
     "@msgpackr-extract/msgpackr-extract-darwin-arm64": ["@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ=="],
 
@@ -1495,6 +1505,8 @@
 
     "commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
+    "compact-runtime-ledger8": ["@midnight-ntwrk/compact-runtime@0.16.0", "", { "dependencies": { "@midnight-ntwrk/onchain-runtime-v3": "^3.0.0", "@types/object-inspect": "^1.8.1", "object-inspect": "^1.12.3" } }, "sha512-UR8+MI5zol+gkne17ZZru8xmZNf11xMgQJkiLT9KWsF+QD8Wuz1WONaqQLL0RAZ2aN2XlRsBFd0ViKDVh8prFw=="],
+
     "compare-versions": ["compare-versions@6.1.1", "", {}, "sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg=="],
 
     "concat-map": ["concat-map@0.0.1", "", {}, "sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg=="],
@@ -1683,6 +1695,8 @@
 
     "fetch-retry": ["fetch-retry@6.0.0", "", {}, "sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag=="],
 
+    "fflate": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
+
     "figures": ["figures@3.2.0", "", { "dependencies": { "escape-string-regexp": "^1.0.5" } }, "sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg=="],
 
     "file-entry-cache": ["file-entry-cache@8.0.0", "", { "dependencies": { "flat-cache": "^4.0.0" } }, "sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ=="],
@@ -1751,7 +1765,7 @@
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
 
-    "graphql": ["graphql@16.14.2", "", {}, "sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA=="],
+    "graphql": ["graphql@17.1.0", "", {}, "sha512-JKCOa7rSQNrket/JFhuua86hljUO+IIpyUHfKxlKD6FEfbrLX8jc1FDrA0KPKI+s8OspBCF/5npYccAICHXPpQ=="],
 
     "graphql-http": ["graphql-http@1.23.1", "", { "peerDependencies": { "graphql": ">=0.11 <=17" } }, "sha512-h6AcykL7+xp22QvOnK0fu1eHk9AZG1ngF71rk0ZGuGupnjm1yqXRFrZ/eMv4Q1FTCWILJ5o6hVAxzt3S8/wPHQ=="],
 
@@ -2485,57 +2499,13 @@
 
     "@libp2p/interface/uint8arraylist": ["uint8arraylist@3.0.2", "", { "dependencies": { "uint8arrays": "^6.0.0" } }, "sha512-LDVoq9BQaGJzGDUovEnoX6rpKCvnY/Jbtws4ikwnBzjRbq5qBAFpBZevUEbSmMM87aO0Sp+wOZy2ZXf5yODmXQ=="],
 
-    "@midnight-ntwrk/compact-js/@midnight-ntwrk/compact-runtime": ["@midnight-ntwrk/compact-runtime@0.16.0", "", { "dependencies": { "@midnight-ntwrk/onchain-runtime-v3": "^3.0.0", "@types/object-inspect": "^1.8.1", "object-inspect": "^1.12.3" } }, "sha512-UR8+MI5zol+gkne17ZZru8xmZNf11xMgQJkiLT9KWsF+QD8Wuz1WONaqQLL0RAZ2aN2XlRsBFd0ViKDVh8prFw=="],
-
-    "@midnight-ntwrk/midnight-js-protocol/@midnight-ntwrk/compact-runtime": ["@midnight-ntwrk/compact-runtime@0.16.0", "", { "dependencies": { "@midnight-ntwrk/onchain-runtime-v3": "^3.0.0", "@types/object-inspect": "^1.8.1", "object-inspect": "^1.12.3" } }, "sha512-UR8+MI5zol+gkne17ZZru8xmZNf11xMgQJkiLT9KWsF+QD8Wuz1WONaqQLL0RAZ2aN2XlRsBFd0ViKDVh8prFw=="],
-
     "@midnight-ntwrk/midnight-js-types/pino": ["pino@10.4.0", "", { "dependencies": { "@pinojs/redact": "^0.4.0", "atomic-sleep": "^1.0.0", "on-exit-leak-free": "^2.1.0", "pino-abstract-transport": "^3.0.0", "pino-std-serializers": "^7.0.0", "process-warning": "^5.0.0", "quick-format-unescaped": "^4.0.3", "real-require": "^1.0.0", "safe-stable-stringify": "^2.3.1", "sonic-boom": "^4.0.1", "thread-stream": "^4.0.0" }, "bin": { "pino": "bin.js" } }, "sha512-bk1ZMTwG/Vymx+zPoa28MhNzucFvXJWp3csrSuxuHPSMeUettaCoQ5Jvg07mtC4JGNpcfTwz41oVCnNgBK9+vA=="],
 
-    "@midnight-ntwrk/midnight-js-utils/@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@3.1.2", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@scure/base": "^2.0.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-SRkgwmKFOZSUR25iurAB8U7kTKF7AljSl+tMkuuj8Pthc/l0yIg+/q1rFSozJ0Nz9FJRhshazDyrL0l84fOabg=="],
+    "@midnight-ntwrk/platform-js/@effect/platform": ["@effect/platform@0.96.3", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.10", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.21.5" } }, "sha512-LzvIj4HYE++TcTv/cVTCI/GRvQTV0ymwRmgjZMzNB5dU4OS05pTN36RKN0npiOm5orLJgw4yjIv1dNZoYGh/vg=="],
 
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
+    "@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.4.0", "", {}, "sha512-thZ1TuJwFwBblOhgsjDKvvGirBxNp+wSvY/DR6tJBJOTDhdAAcHJ8Vbr2eFnqaxeca4+t0i9KBf+uHYGWwZORg=="],
 
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@3.1.2", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@scure/base": "^2.0.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-SRkgwmKFOZSUR25iurAB8U7kTKF7AljSl+tMkuuj8Pthc/l0yIg+/q1rFSozJ0Nz9FJRhshazDyrL0l84fOabg=="],
-
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-facade": ["@midnight-ntwrk/wallet-sdk-facade@4.0.1", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.2", "@midnight-ntwrk/wallet-sdk-capabilities": "^3.3.1", "@midnight-ntwrk/wallet-sdk-dust-wallet": "^4.1.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-shielded": "^3.0.1", "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "^3.1.0", "rxjs": "^7.8.2" } }, "sha512-m1AgeoS+jQrj2h5jQRIKv4UT61sWBF5S5PtzGi8/gweug3XYqPlkxJBZKZzS2078QDi9ToH/epWQeoUEqzKhvw=="],
-
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-runtime": ["@midnight-ntwrk/wallet-sdk-runtime@1.0.4", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-Sc3mAkiCCNSI/BCrOtPoQDb+1rZlcr/Is9w90hRJJ8XT/7kdcmoekoctupXBLtc5UCeDX1FqUs2hz60CnwLoZA=="],
-
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-shielded": ["@midnight-ntwrk/wallet-sdk-shielded@3.0.1", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.2", "@midnight-ntwrk/wallet-sdk-capabilities": "^3.3.1", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-runtime": "^1.0.4", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-/jNIXz1T4JvJNG67s1tODTPqb2lnBAZ2TuocZQmFj9N0hG2LYtA35Tm6sFUpy68HfPnxdyEWarK27Wj0VRbEsA=="],
-
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-unshielded-wallet": ["@midnight-ntwrk/wallet-sdk-unshielded-wallet@3.1.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-address-format": "^3.1.2", "@midnight-ntwrk/wallet-sdk-capabilities": "^3.3.1", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.2", "@midnight-ntwrk/wallet-sdk-runtime": "^1.0.4", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-GujzejaxF7Z1Pqmfp2uyz2mmtLb4ImIoL4njeh+3XLeSfJLedpizXi2WrHmcINO/z4x3pXTw3qU98dF04j97eA=="],
-
-    "@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.0.0", "", {}, "sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w=="],
-
-    "@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
-
-    "@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
-
-    "@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@3.1.2", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@scure/base": "^2.0.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-SRkgwmKFOZSUR25iurAB8U7kTKF7AljSl+tMkuuj8Pthc/l0yIg+/q1rFSozJ0Nz9FJRhshazDyrL0l84fOabg=="],
-
-    "@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-runtime": ["@midnight-ntwrk/wallet-sdk-runtime@1.0.4", "", { "dependencies": { "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-Sc3mAkiCCNSI/BCrOtPoQDb+1rZlcr/Is9w90hRJJ8XT/7kdcmoekoctupXBLtc5UCeDX1FqUs2hz60CnwLoZA=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@3.1.2", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.1.0", "@scure/base": "^2.0.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-SRkgwmKFOZSUR25iurAB8U7kTKF7AljSl+tMkuuj8Pthc/l0yIg+/q1rFSozJ0Nz9FJRhshazDyrL0l84fOabg=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet": ["@midnight-ntwrk/wallet-sdk-dust-wallet@3.0.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-abstractions": "2.0.0", "@midnight-ntwrk/wallet-sdk-address-format": "3.1.0", "@midnight-ntwrk/wallet-sdk-capabilities": "3.2.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "1.2.0", "@midnight-ntwrk/wallet-sdk-runtime": "1.0.2", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-7xkaOyPby5uVPfZ16X06xj0Jct5oDjpzXCsTYb7JFYK0v3zaEoWeyQUI1O/3J8/EJBRIlQwCpKNnQWMBPvsOlA=="],
-
-    "@midnight-ntwrk/wallet-sdk-node-client/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
-
-    "@midnight-ntwrk/wallet-sdk-prover-client/@effect/platform": ["@effect/platform@0.96.3", "", { "dependencies": { "find-my-way-ts": "^0.1.6", "msgpackr": "^1.11.10", "multipasta": "^0.2.7" }, "peerDependencies": { "effect": "^3.21.5" } }, "sha512-LzvIj4HYE++TcTv/cVTCI/GRvQTV0ymwRmgjZMzNB5dU4OS05pTN36RKN0npiOm5orLJgw4yjIv1dNZoYGh/vg=="],
-
-    "@midnight-ntwrk/wallet-sdk-runtime/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.1.0", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-iTxP+VKPGtjhZWVY4AmliYf1WYwRVaPJsvdub7/BZYXg7gOoH9H3DsXGY64aPYwA3ZXuUm/Cjiy0Ak6CnkB5XQ=="],
-
-    "@midnight-ntwrk/wallet-sdk-shielded/@midnight-ntwrk/wallet-sdk-capabilities": ["@midnight-ntwrk/wallet-sdk-capabilities@3.2.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-node-client": "^1.1.0", "@midnight-ntwrk/wallet-sdk-prover-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.1.0", "@midnight-ntwrk/zkir-v2": "^2.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-3S06DbFJ/I+2Zn30jG98a9T3xPxtBwRjm4fCiYnsn8CEcNgH8XINhVimpItWLakeCAviGRA2x7M93phk9u7hbw=="],
-
-    "@midnight-ntwrk/wallet-sdk-shielded/@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-VzwJ0LTBcUWqr5H4a56DhT6zpLYLjg/H6vRrwKYEz3EhQTKLGnQ7d2PKS0Z0QcKGEXOHzeeSmI41FsvG4FbTAQ=="],
-
-    "@midnight-ntwrk/wallet-sdk-shielded/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.1.0", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-iTxP+VKPGtjhZWVY4AmliYf1WYwRVaPJsvdub7/BZYXg7gOoH9H3DsXGY64aPYwA3ZXuUm/Cjiy0Ak6CnkB5XQ=="],
-
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet/@midnight-ntwrk/wallet-sdk-capabilities": ["@midnight-ntwrk/wallet-sdk-capabilities@3.2.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-node-client": "^1.1.0", "@midnight-ntwrk/wallet-sdk-prover-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.1.0", "@midnight-ntwrk/zkir-v2": "^2.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-3S06DbFJ/I+2Zn30jG98a9T3xPxtBwRjm4fCiYnsn8CEcNgH8XINhVimpItWLakeCAviGRA2x7M93phk9u7hbw=="],
-
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet/@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-VzwJ0LTBcUWqr5H4a56DhT6zpLYLjg/H6vRrwKYEz3EhQTKLGnQ7d2PKS0Z0QcKGEXOHzeeSmI41FsvG4FbTAQ=="],
-
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.1.0", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-iTxP+VKPGtjhZWVY4AmliYf1WYwRVaPJsvdub7/BZYXg7gOoH9H3DsXGY64aPYwA3ZXuUm/Cjiy0Ak6CnkB5XQ=="],
+    "@midnightntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.4.0", "", {}, "sha512-thZ1TuJwFwBblOhgsjDKvvGirBxNp+wSvY/DR6tJBJOTDhdAAcHJ8Vbr2eFnqaxeca4+t0i9KBf+uHYGWwZORg=="],
 
     "@mswjs/interceptors/@open-draft/deferred-promise": ["@open-draft/deferred-promise@2.2.0", "", {}, "sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA=="],
 
@@ -2661,6 +2631,8 @@
 
     "miller-rabin/bn.js": ["bn.js@4.12.5", "", {}, "sha512-3aRg6/JxfffFD+OlOjOFR3Vo79l39ooBTFucxx+MT3dhCtzn3EmiUPQo+6/OZuI2jbXi3YKgmiTFBgChQMwIRQ=="],
 
+    "msw/graphql": ["graphql@16.14.2", "", {}, "sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA=="],
+
     "msw/yargs": ["yargs@17.7.3", "", { "dependencies": { "cliui": "^8.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "require-directory": "^2.1.1", "string-width": "^4.2.3", "y18n": "^5.0.5", "yargs-parser": "^21.1.1" } }, "sha512-GZtjxm/J/4TSxuL3FNYjCmLktBTnIw/rVmKSIyKeYAZpmJB2ig9VauCC5xsa82GNKVKDAqpOn3KVzNt0zmrU0g=="],
 
     "node-stdlib-browser/buffer": ["buffer@5.7.1", "", { "dependencies": { "base64-js": "^1.3.1", "ieee754": "^1.1.13" } }, "sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ=="],
@@ -2743,34 +2715,6 @@
 
     "@midnight-ntwrk/midnight-js-types/pino/thread-stream": ["thread-stream@4.2.0", "", { "dependencies": { "real-require": "^1.0.0" } }, "sha512-e2zZ96wSChazBsbENf/Pcm/4swHt2cEKQ92rhUjkL9GCKiTDJIaTBenjE/m9DXi0QBmTMDkFDdOomUy20A1tDQ=="],
 
-    "@midnight-ntwrk/midnight-js-utils/@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.0.0", "", {}, "sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w=="],
-
-    "@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.0.0", "", {}, "sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.0.0", "", {}, "sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-address-format": ["@midnight-ntwrk/wallet-sdk-address-format@3.1.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@scure/base": "^2.0.0", "@subsquid/scale-codec": "^4.0.1" } }, "sha512-X/MQnbyQQ1SoFVJrxhczkHza1SMJghp3Eo49nXXnHZw2qKUUmpiNa8Hx3MYFq36NXi3m3gsMH7rW0bilMFvdhw=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-capabilities": ["@midnight-ntwrk/wallet-sdk-capabilities@3.2.0", "", { "dependencies": { "@midnight-ntwrk/ledger-v8": "^8.0.2", "@midnight-ntwrk/wallet-sdk-abstractions": "^2.0.0", "@midnight-ntwrk/wallet-sdk-indexer-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-node-client": "^1.1.0", "@midnight-ntwrk/wallet-sdk-prover-client": "^1.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.1.0", "@midnight-ntwrk/zkir-v2": "^2.1.0", "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-3S06DbFJ/I+2Zn30jG98a9T3xPxtBwRjm4fCiYnsn8CEcNgH8XINhVimpItWLakeCAviGRA2x7M93phk9u7hbw=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "1.1.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-VzwJ0LTBcUWqr5H4a56DhT6zpLYLjg/H6vRrwKYEz3EhQTKLGnQ7d2PKS0Z0QcKGEXOHzeeSmI41FsvG4FbTAQ=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.1.0", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-iTxP+VKPGtjhZWVY4AmliYf1WYwRVaPJsvdub7/BZYXg7gOoH9H3DsXGY64aPYwA3ZXuUm/Cjiy0Ak6CnkB5XQ=="],
-
-    "@midnight-ntwrk/wallet-sdk-shielded/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
-
-    "@midnight-ntwrk/wallet-sdk-shielded/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.2", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-GokfgV1lOhF1h341cuglp1VoTT/+yEDuYIbiPex29JJkFrjOXdJfCKPoROySBtyIyI65lnEBAXBT0+AOBjPzhA=="],
-
-    "@midnight-ntwrk/wallet-sdk-shielded/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.2.1", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-K85cpwKGpAbc4hb7EnlxyGOHNqYLFYZwsxm3AMjIdDglxWYCn04HmuTQiq5SQyWc5WlAgSMomQBGGg4z3vlp4A=="],
-
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
-
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.2", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-GokfgV1lOhF1h341cuglp1VoTT/+yEDuYIbiPex29JJkFrjOXdJfCKPoROySBtyIyI65lnEBAXBT0+AOBjPzhA=="],
-
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.2.1", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-K85cpwKGpAbc4hb7EnlxyGOHNqYLFYZwsxm3AMjIdDglxWYCn04HmuTQiq5SQyWc5WlAgSMomQBGGg4z3vlp4A=="],
-
-    "@midnight-ntwrk/wallet-sdk/@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.0.0", "", {}, "sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w=="],
-
     "@multiformats/dns/uint8arrays/multiformats": ["multiformats@14.0.5", "", {}, "sha512-vbIm83F2yZ1pWJGS0yl0ysracIvv56LtbrIyiIQHoLdYDJOMoLfVFsXhh9DUH4SFdkdkFhucyWniihsNzVEjkQ=="],
 
     "@nuxtjs/opencollective/chalk/supports-color": ["supports-color@7.2.0", "", { "dependencies": { "has-flag": "^4.0.0" } }, "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw=="],
@@ -2832,14 +2776,6 @@
     "@inquirer/select/@inquirer/core/strip-ansi/ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
 
     "@inquirer/select/@inquirer/core/wrap-ansi/string-width": ["string-width@4.2.3", "", { "dependencies": { "emoji-regex": "^8.0.0", "is-fullwidth-code-point": "^3.0.0", "strip-ansi": "^6.0.1" } }, "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-address-format/@scure/base": ["@scure/base@2.0.0", "", {}, "sha512-3E1kpuZginKkek01ovG8krQ0Z44E3DHPjc5S2rjJw9lZn3KSQOs8S7wqikF/AH7iRanHypj85uGyxk0XAyC37w=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-abstractions": ["@midnight-ntwrk/wallet-sdk-abstractions@2.1.0", "", { "dependencies": { "effect": "^3.19.19" } }, "sha512-mMcHFBrNxlZhurknS9J979HhrHQ0EsKdm6Kwaq7SAk/tStLOU2/sAoQzLUzzxr8Y60PcilTJdIKhaCgaydPATg=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-indexer-client": ["@midnight-ntwrk/wallet-sdk-indexer-client@1.2.2", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@midnight-ntwrk/wallet-sdk-utilities": "^1.2.0", "effect": "^3.19.19", "graphql": "^16.13.0", "graphql-http": "^1.22.4", "graphql-ws": "^6.0.7" } }, "sha512-GokfgV1lOhF1h341cuglp1VoTT/+yEDuYIbiPex29JJkFrjOXdJfCKPoROySBtyIyI65lnEBAXBT0+AOBjPzhA=="],
-
-    "@midnight-ntwrk/wallet-sdk-facade/@midnight-ntwrk/wallet-sdk-dust-wallet/@midnight-ntwrk/wallet-sdk-capabilities/@midnight-ntwrk/wallet-sdk-utilities": ["@midnight-ntwrk/wallet-sdk-utilities@1.2.1", "", { "dependencies": { "effect": "^3.19.19", "rxjs": "^7.8.2" } }, "sha512-K85cpwKGpAbc4hb7EnlxyGOHNqYLFYZwsxm3AMjIdDglxWYCn04HmuTQiq5SQyWc5WlAgSMomQBGGg4z3vlp4A=="],
 
     "@typescript-eslint/typescript-estree/minimatch/brace-expansion/balanced-match": ["balanced-match@4.0.4", "", {}, "sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA=="],
 

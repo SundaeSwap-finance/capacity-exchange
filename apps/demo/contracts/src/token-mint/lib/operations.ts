@@ -10,9 +10,11 @@ import {
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
-import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
+import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+
+const Bytes32Descriptor = new CompactTypeBytes(32);
 
 const logger = createLogger(import.meta);
 

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js/types';
-import { type CoinPublicKey, type EncPublicKey } from '@midnight-ntwrk/ledger-v8';
+import { type CoinPublicKey, type EncPublicKey } from '@midnightntwrk/ledger-v9';
 import type { BalanceSealedTransaction, BalanceUnsealedTransaction } from '@sundaeswap/capacity-exchange-providers';
 import type { SeedWalletConnection, ExtensionWalletConnection, WalletConnection } from '../wallet/types';
 import { useWalletInfo } from '../wallet/useWalletInfo';

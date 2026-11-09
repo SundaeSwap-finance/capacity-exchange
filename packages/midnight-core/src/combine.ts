@@ -3,7 +3,7 @@
  * program (one call per leg), buildOffer the money (each spend paired with its
  * matching mint as an in-tx transient, which binds independent calls together).
  * fragment.ts wraps these into per-party fragments. All wasm-boundary
- * translation into ledger-v8 types lives in toLedger.ts.
+ * translation into ledger-v9 types lives in toLedger.ts.
  */
 import {
   PreTranscript,
@@ -20,7 +20,7 @@ import {
   type UnprovenOutput,
   type ContractOperation,
   type LedgerParameters,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import { communicationCommitmentRandomness } from '@midnight-ntwrk/compact-runtime';
 import { asLedgerProofData, toLedgerContractState, toLedgerCoin, toLedgerTransientCoin } from './toLedger.js';
 import { uint8ArrayToHex } from './hex.js';

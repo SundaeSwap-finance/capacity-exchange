@@ -5,7 +5,7 @@ import { BASE_TIME, COLLATERAL, MAX_VALIDITY, defaultEntry, futureDate } from '.
 
 function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffects']>): bigint {
   let total = 0n;
-  for (const [, amount] of effects.unshieldedOutputs) {
+  for (const [, amount] of effects?.unshieldedOutputs ?? []) {
     total += amount;
   }
   return total;
@@ -13,12 +13,12 @@ function getUnshieldedOutputTotal(effects: ReturnType<RegistrySimulator['getEffe
 
 // Invariant: the contract's unshielded balance always equals registry.size() * collateralAmount
 describe('collateral conservation', () => {
-  it('register receives collateral as native token', () => {
+  it('register receives collateral as native token', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    const effects = sim.register(defaultEntry());
+    const effects = await sim.register(defaultEntry());
     const inputs = [...effects.unshieldedInputs.entries()];
     expect(inputs).toHaveLength(1);
     const [tokenType, amount] = inputs[0];
@@ -26,15 +26,15 @@ describe('collateral conservation', () => {
     expect(amount).toBe(COLLATERAL);
   });
 
-  it('deregister sends collateral to the specified recipient', () => {
+  it('deregister sends collateral to the specified recipient', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     const registryKey = [...sim.getLedger().registry][0][0];
     const recipient = makeRecipient();
-    const effects = sim.deregister(registryKey, recipient);
+    const effects = await sim.deregister(registryKey, recipient);
 
     expect(getUnshieldedOutputTotal(effects)).toBe(COLLATERAL);
 
@@ -49,128 +49,128 @@ describe('collateral conservation', () => {
     });
   });
 
-  it('balance tracks registration count', () => {
+  it('balance tracks registration count', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
     const keyC = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
     sim.useKey(keyC);
-    sim.register(defaultEntry({ domainName: toDomainName('c.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('c.example.com') }));
 
     expect(sim.getLedger().registry.size()).toBe(3n);
 
     // Advance past expiry so anyone can deregister any entry
     sim.setBlockTime(BASE_TIME + MAX_VALIDITY + 1n);
     const firstKey = [...sim.getLedger().registry][0][0];
-    sim.deregister(firstKey);
+    await sim.deregister(firstKey);
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
 
-  it('register, deregister, re-register cycle', () => {
+  it('register, deregister, re-register cycle', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     expect(sim.getLedger().registry.size()).toBe(1n);
 
     const registryKey = [...sim.getLedger().registry][0][0];
-    sim.deregister(registryKey);
+    await sim.deregister(registryKey);
     expect(sim.getLedger().registry.size()).toBe(0n);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 });
 
 // Invariant: every key in the registry is derived from a distinct secret key
 describe('registry key uniqueness', () => {
-  it('two different keys can both register', () => {
+  it('two different keys can both register', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
 
-  it('same key cannot register twice', () => {
+  it('same key cannot register twice', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
 
-    expect(() => sim.register(defaultEntry())).toThrow(/you already have an entry registered/);
+    await expect(sim.register(defaultEntry())).rejects.toThrow(/you already have an entry registered/);
   });
 
-  it('can re-register after deregistering', () => {
+  it('can re-register after deregistering', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     const registryKey = [...sim.getLedger().registry][0][0];
-    sim.deregister(registryKey);
+    await sim.deregister(registryKey);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 });
 
 // Invariant: every domain name in the registry is unique
 describe('domain name uniqueness', () => {
-  it('two different keys cannot register the same domain name', () => {
+  it('two different keys cannot register the same domain name', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     sim.useKey(keyB);
 
-    expect(() => sim.register(defaultEntry())).toThrow(/domain name already registered/);
+    await expect(sim.register(defaultEntry())).rejects.toThrow(/domain name already registered/);
   });
 
-  it('a deregistered address is available again', () => {
+  it('a deregistered address is available again', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     const registryKey = [...sim.getLedger().registry][0][0];
-    sim.deregister(registryKey);
+    await sim.deregister(registryKey);
 
     sim.useKey(keyB);
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 
-  it('two different domain names can both register', () => {
+  it('two different domain names can both register', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('a.example.com') }));
     sim.useKey(keyB);
-    sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
+    await sim.register(defaultEntry({ domainName: toDomainName('b.example.com') }));
 
     expect(sim.getLedger().registry.size()).toBe(2n);
   });
@@ -178,43 +178,43 @@ describe('domain name uniqueness', () => {
 
 // Invariant: no entry can have an expiry more than maximumRegistrationPeriod ahead of the block time
 describe('validity bounded', () => {
-  it('register at exact max boundary succeeds', () => {
+  it('register at exact max boundary succeeds', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY) }));
+    await sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY) }));
     expect(sim.getLedger().registry.size()).toBe(1n);
   });
 
-  it('register past max boundary fails', () => {
+  it('register past max boundary fails', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    expect(() => sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY + 1n) }))).toThrow(
+    await expect(sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY + 1n) }))).rejects.toThrow(
       /period cannot be larger/
     );
   });
 
-  it('renewRegistration past max boundary fails', () => {
+  it('renewRegistration past max boundary fails', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
 
-    expect(() => sim.renewRegistration(futureDate(MAX_VALIDITY + 1n))).toThrow(/period cannot be larger/);
+    await expect(sim.renewRegistration(futureDate(MAX_VALIDITY + 1n))).rejects.toThrow(/period cannot be larger/);
   });
 
-  it('renewRegistration within max boundary succeeds', () => {
+  it('renewRegistration within max boundary succeeds', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY - 100n) }));
+    await sim.register(defaultEntry({ expiry: futureDate(MAX_VALIDITY - 100n) }));
 
-    sim.renewRegistration(futureDate(MAX_VALIDITY));
+    await sim.renewRegistration(futureDate(MAX_VALIDITY));
 
     const [, raw] = [...sim.getLedger().registry][0];
     const entry = entryFromContract(raw);
@@ -224,64 +224,64 @@ describe('validity bounded', () => {
 
 // Invariant: a non-expired entry can only be renewed or removed by the holder of the corresponding secret key
 describe('ownership', () => {
-  it('owner can deregister before expiry', () => {
+  it('owner can deregister before expiry', async () => {
     const key = randomSecretKey();
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, key);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, key);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     const registryKey = [...sim.getLedger().registry][0][0];
 
-    sim.deregister(registryKey);
+    await sim.deregister(registryKey);
     expect(sim.getLedger().registry.size()).toBe(0n);
   });
 
-  it('non-owner cannot deregister before expiry', () => {
+  it('non-owner cannot deregister before expiry', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
     const registryKey = [...sim.getLedger().registry][0][0];
 
     sim.useKey(keyB);
-    expect(() => sim.deregister(registryKey)).toThrow(/you can only deregister your own entry/);
+    await expect(sim.deregister(registryKey)).rejects.toThrow(/you can only deregister your own entry/);
   });
 
-  it('renewRegistration with wrong key fails', () => {
+  it('renewRegistration with wrong key fails', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
-    sim.register(defaultEntry());
+    await sim.register(defaultEntry());
 
     sim.useKey(keyB);
-    expect(() => sim.renewRegistration(futureDate(MAX_VALIDITY))).toThrow(/you don't have a registered server/);
+    await expect(sim.renewRegistration(futureDate(MAX_VALIDITY))).rejects.toThrow(/you don't have a registered server/);
   });
 });
 
 // Invariant: an expired entry can always be removed by anyone
 describe('liveness', () => {
-  it('anyone can deregister an expired entry', () => {
+  it('anyone can deregister an expired entry', async () => {
     const keyA = randomSecretKey();
     const keyB = randomSecretKey();
 
-    const sim = new RegistrySimulator(COLLATERAL, MAX_VALIDITY, keyA);
+    const sim = await RegistrySimulator.create(COLLATERAL, MAX_VALIDITY, keyA);
     sim.setBlockTime(BASE_TIME);
 
     const expiry = futureDate(100n);
-    sim.register(defaultEntry({ expiry }));
+    await sim.register(defaultEntry({ expiry }));
     const registryKey = [...sim.getLedger().registry][0][0];
 
     // Advance past expiry
     sim.setBlockTime(BASE_TIME + 101n);
 
     sim.useKey(keyB);
-    sim.deregister(registryKey);
+    await sim.deregister(registryKey);
     expect(sim.getLedger().registry.size()).toBe(0n);
   });
 });

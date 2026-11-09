@@ -1,16 +1,28 @@
-import { use, useCallback, useMemo } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   CapacityExchangeRoot,
+  ChainStateProvider,
   indexerChainStateProvider,
   useCapacityExchangeWalletProvider,
   useSponsoredTransactionsWalletProvider,
 } from '@sundaeswap/capacity-exchange-react-sdk';
-import { CostModel, FinalizedTransaction, Transaction, UnprovenTransaction } from '@midnight-ntwrk/ledger-v8';
+import { Transaction, type ProvingProvider } from '@midnightntwrk/ledger-v9';
 import { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
-import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import {
+  IndexerPublicDataProvider,
+  indexerPublicDataProvider,
+} from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { MidnightProviders, UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
+import {
+  LedgerTransaction,
+  createLedger9MidnightProvider,
+  createLedger9ProofProvider,
+  zkConfigToProvingKeyMaterial,
+  type MidnightProviders,
+  type UnboundTx,
+  type ZKConfigProvider,
+} from '@midnight-ntwrk/midnight-js/types';
 import { useMockWallet } from './mocks/wallet';
 
 async function getWalletDetails(wallet: ConnectedAPI, zkConfigProvider: ZKConfigProvider<string>) {
@@ -33,9 +45,20 @@ function useProviders<PCK extends string>(
   const [addresses, configuration, provingProvider] = use(walletDetailsPromise);
 
   const publicDataProvider = useMemo(
-    () => indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri),
+    () =>
+      indexerPublicDataProvider({
+        queryURL: configuration.indexerUri,
+        subscriptionURL: configuration.indexerWsUri,
+      }),
     [configuration.indexerUri, configuration.indexerWsUri]
   );
+  const oldPublicDataProvider = useRef<IndexerPublicDataProvider | null>(null);
+  useEffect(() => {
+    if (oldPublicDataProvider.current && oldPublicDataProvider.current !== publicDataProvider) {
+      oldPublicDataProvider.current.dispose();
+      oldPublicDataProvider.current = publicDataProvider;
+    }
+  });
 
   // Provides on-chain state the SDK needs: contract state for the registry lookup
   // and current ledger parameters for fee estimation. The indexer URIs are
@@ -44,6 +67,13 @@ function useProviders<PCK extends string>(
     () => indexerChainStateProvider(configuration.indexerUri, configuration.indexerWsUri),
     [configuration.indexerUri, configuration.indexerWsUri]
   );
+  const oldChainStateProvider = useRef<ChainStateProvider | null>(null);
+  useEffect(() => {
+    if (oldChainStateProvider.current && oldChainStateProvider.current !== chainStateProvider) {
+      oldChainStateProvider.current.dispose();
+      oldChainStateProvider.current = chainStateProvider;
+    }
+  });
 
   // This wallet provider will not actually spend DUST from the user's wallet.
   // Instead, it will reach out to a capacity-exchange server,
@@ -74,20 +104,20 @@ function useProviders<PCK extends string>(
       privateStoragePasswordProvider: () => storagePassword,
     });
 
-    const proofProvider = {
-      proveTx(tx: UnprovenTransaction) {
-        return tx.prove(provingProvider, CostModel.initialCostModel());
-      },
+    // The wallet proves; the ledger also asks for key material by location, which the
+    // dApp's own zk config provider serves.
+    const ledgerProvingProvider: ProvingProvider = {
+      check: (preimage, keyLocation) => provingProvider.check(preimage, keyLocation),
+      prove: (preimage, keyLocation, binding) => provingProvider.prove(preimage, keyLocation, binding),
+      lookupKey: async (keyLocation) => zkConfigToProvingKeyMaterial(await zkConfigProvider.get(keyLocation as PCK)),
     };
+    const proofProvider = createLedger9ProofProvider(ledgerProvingProvider);
 
-    const midnightProvider = {
-      async submitTx(tx: FinalizedTransaction) {
-        const id = tx.identifiers()[0];
-        const bytes = Buffer.from(tx.serialize()).toString('hex');
-        await wallet.submitTransaction(bytes);
-        return id;
-      },
-    };
+    const midnightProvider = createLedger9MidnightProvider(async (tx) => {
+      const id = tx.deserialize({ v9: Transaction }).identifiers()[0];
+      await wallet.submitTransaction(Buffer.from(tx.serialize()).toString('hex'));
+      return id;
+    });
 
     return {
       privateStateProvider,
@@ -96,14 +126,15 @@ function useProviders<PCK extends string>(
       proofProvider,
       walletProvider,
       midnightProvider,
+      config: { networkId: configuration.networkId, ttlSeconds: 5 * 60 },
     };
-  }, [wallet, zkConfigProvider, walletProvider, publicDataProvider]);
+  }, [wallet, zkConfigProvider, walletProvider, publicDataProvider, provingProvider, configuration.networkId]);
 }
 
-async function buildTx(providers: MidnightProviders): Promise<UnboundTransaction> {
+async function buildTx(providers: MidnightProviders): Promise<UnboundTx> {
   // Building an empty transaction. Your dApp will probably be more interesting!
-  const unprovenTx = Transaction.fromParts('preview');
-  return providers.proofProvider.proveTx(unprovenTx);
+  const unprovenTx = Transaction.fromParts(providers.config.networkId);
+  return providers.proofProvider.proveTx(LedgerTransaction.seal('v9', 'Unproven', unprovenTx));
 }
 
 function MockFlow() {

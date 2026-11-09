@@ -9,15 +9,15 @@ import {
   type Bindingish,
   type Transaction,
   Intent,
-} from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+} from '@midnightntwrk/ledger-v9';
+import { LedgerTransaction, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { MidnightUtxoService, type WalletUnavailableResult } from './utxo.js';
 import { MidnightTxService } from './tx.js';
 import { MetricsService } from '../metrics.js';
 import { MidnightChainStateService } from './chain-state.js';
 import type { SponsoredContract } from '../../config/prices.js';
 import { isCapacityExchangeError } from '@sundaeswap/capacity-exchange-providers';
-
+import { toFinalized, type UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 export type SponsorTxResult =
   | { status: 'ok'; tx: FinalizedTransaction; specksCommitted: bigint }
   | { status: 'ineligible' }
@@ -94,7 +94,9 @@ export class MidnightSponsorService {
         'Insufficient dust funds; fallback to other CES peers for dust sponsorship...',
       );
       try {
-        const tx = await this.cesWalletProvider.balanceTx(userTx);
+        const tx = toFinalized(
+          await this.cesWalletProvider.balanceTx(LedgerTransaction.seal('v9', 'Unbound', userTx)),
+        );
         return { status: 'ok', tx, specksCommitted: estimatedSpecks };
       } catch (err) {
         if (!isCapacityExchangeError(err)) {

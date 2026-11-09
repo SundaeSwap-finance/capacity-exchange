@@ -1,10 +1,13 @@
-import { buildOffer, buildFragmentTx } from '@sundaeswap/capacity-exchange-core';
-import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction, PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
+import { buildOffer, buildFragmentTx, proveV9 } from '@sundaeswap/capacity-exchange-core';
+import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
+import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
 import { buildRevealLeg, buildAbsorbLeg, burnOutputBuilder } from './couplerLegs.js';
 import { type CouplingRequest } from './couplingParams.js';
 import { type CouplerContext } from './context.js';
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
+
+const Bytes32Descriptor = new CompactTypeBytes(32);
 
 export interface PrepareUserFragmentParams {
   couplerAddress: string;
@@ -53,17 +56,16 @@ export async function prepareUserFragment(
   context.logger.info('Proving reveal fragment...');
   const walletProvider = { getCoinPublicKey: () => context.coinPublicKey };
   const absorbLeg = await buildAbsorbLeg(walletProvider, context.publicDataProvider, couplerAddress, h, hPrime, nonce);
-  privateStateProvider.setContractAddress(couplerAddress);
   const revealProviders = {
     walletProvider,
     publicDataProvider: context.publicDataProvider,
     privateStateProvider,
   };
   const { leg: revealLeg, hs } = await buildRevealLeg(revealProviders, couplerAddress, swapId, s, nonce);
-  const revealFragment = buildFragmentTx([revealLeg], ttl, ledgerParameters, {
+  const revealFragment = buildFragmentTx(context.networkId, [revealLeg], ttl, ledgerParameters, {
     offer: buildOffer([revealLeg, absorbLeg], burnOutputBuilder),
   });
-  const proven = await context.proofProvider.proveTx(revealFragment);
+  const proven = await proveV9(context.proofProvider, revealFragment);
 
   return { proven, request: { h, hPrime, nonce, vFeeSpecks }, hs };
 }

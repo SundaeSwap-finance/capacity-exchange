@@ -23,20 +23,25 @@
     "build:watch": "tsc -b --watch",
     "clean": "rm -rf dist",
     "balances": "bun src/cli/balances.ts",
-    "split-night": "bun src/cli/split-night.ts"
+    "split-night": "bun src/cli/split-night.ts",
+    "rotate-verifier-keys": "bun src/cli/rotate-verifier-keys.ts"
   },
   "dependencies": {
     "@sundaeswap/capacity-exchange-core": "workspace:^",
-    "@midnight-ntwrk/compact-js": "2.5.1",
-    "@midnight-ntwrk/midnight-js": "4.1.1",
-    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
-    "@midnight-ntwrk/wallet-sdk": "1.1.0",
+    "@midnight-ntwrk/compact-js": "3.0.0",
+    "@midnight-ntwrk/compact-runtime": "0.21.0",
+    "@midnight-ntwrk/midnight-js": "5.0.0",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "5.0.0",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "5.0.0",
+    "@midnight-ntwrk/midnight-js-protocol": "5.0.0",
+    "@midnight-ntwrk/wallet-sdk": "2.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.0",
     "dotenv": "17.2.3",
     "rxjs": "^7.5",
-    "ws": "^8.18.1"
+    "ws": "^8.18.1",
+    "graphql": "^17.0.1"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",

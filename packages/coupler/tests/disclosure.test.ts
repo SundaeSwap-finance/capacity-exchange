@@ -11,7 +11,7 @@ import {
   type ContractCall,
   type Op,
   type AlignedValue,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { extractDisclosed, couplingDomainSep, findCoupling, type Disclosure } from '../src/lib/disclosure.js';

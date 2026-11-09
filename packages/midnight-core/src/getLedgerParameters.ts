@@ -1,4 +1,4 @@
-import { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import { LedgerParameters } from '@midnightntwrk/ledger-v9';
 import { indexerQuery } from './indexer.js';
 
 const query = `

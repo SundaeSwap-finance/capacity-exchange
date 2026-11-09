@@ -1,6 +1,8 @@
 import { firstValueFrom } from 'rxjs';
 import { createEphemeralAppContext, createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { readDisclosureAtTx, dustUtxoId } from '@sundaeswap/capacity-exchange-coupler/operations';
+import { LedgerTransaction } from '@midnight-ntwrk/midnight-js/types';
+import { availableDustCoins } from '@sundaeswap/capacity-exchange-core';
 import { awaitInclusion } from '../chain/awaitInclusion.js';
 import { failedAssertions } from './assertions.js';
 import { oneTransaction, runCouplings } from '../coupling/submit.js';
@@ -25,7 +27,7 @@ async function dustBalanceAt(app: AppContext, at: Date): Promise<bigint> {
 /** The dust UTxOs a wallet can still spend, by id. */
 async function availableDustUtxos(app: AppContext): Promise<Set<string>> {
   const dust = (await firstValueFrom(app.walletContext.walletFacade.state())).dust;
-  const coins = dust.capabilities.coinsAndBalances.getAvailableCoins(dust.state, new Date());
+  const coins = availableDustCoins(dust, new Date());
   return new Set(coins.map(dustUtxoId));
 }
 
@@ -60,7 +62,7 @@ async function submitCouplings(deps: E2eDeps, count: number) {
   }
   const indexerUrl = deps.userApp.config.network.endpoints.indexerHttpUrl;
   const run = await runCouplings(oneTransaction(bounds, funded), {
-    submitTx: (tx) => deps.userApp.midnightProvider.submitTx(tx),
+    submitTx: (tx) => deps.userApp.midnightProvider.submitTx(LedgerTransaction.seal('v9', 'Finalized', tx)),
     awaitInclusion: (txId) => awaitInclusion(deps.userApp, txId, (reason: string) => logger.warn(reason)),
     readDisclosure: (txId) => readDisclosureAtTx(indexerUrl, deps.couplerAddress, txId),
   });
@@ -127,7 +129,7 @@ export async function runE2e(
     return report;
   } finally {
     try {
-      await userApp.walletContext.walletFacade.stop();
+      await ctx.dispose();
     } catch (err) {
       logger.warn({ err: err instanceof Error ? err : String(err) }, 'User wallet facade stop failed');
     }

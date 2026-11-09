@@ -1,6 +1,17 @@
+// graphql must load before the indexer provider; see midnight-core's graphqlFirst.ts.
+import 'graphql';
 import * as crypto from 'crypto';
-import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
-import { MidnightProvider, PrivateStateProvider, PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
+import {
+  IndexerPublicDataProvider,
+  indexerPublicDataProvider,
+} from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import {
+  createLedger9MidnightProvider,
+  type MidnightProvider,
+  type PrivateStateProvider,
+  type PublicDataProvider,
+} from '@midnight-ntwrk/midnight-js/types';
+import { toFinalized, toWalletTx } from '@sundaeswap/capacity-exchange-core';
 import type { AppConfig, NetworkConfig } from './appConfig.js';
 import { checkWebSocket, checkIndexerFreshness, checkProofServer } from './connectivity.js';
 import { loadChainSnapshot } from './chainSnapshot.js';
@@ -12,9 +23,12 @@ const EPHEMERAL_SYNC_TIMEOUT_MS = 600_000;
 
 /** Public data provider for read-only callers; no wallet bootstrap. */
 // TODO: wrap in `withNetworkContext` helper.
-export function createPublicDataProvider(network: NetworkConfig): PublicDataProvider {
+export function createPublicDataProvider(network: NetworkConfig): IndexerPublicDataProvider {
   const { indexerHttpUrl, indexerWsUrl } = network.endpoints;
-  return indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl);
+  return indexerPublicDataProvider({
+    queryURL: indexerHttpUrl,
+    subscriptionURL: indexerWsUrl,
+  });
 }
 
 export interface AppContext {
@@ -23,6 +37,7 @@ export interface AppContext {
   publicDataProvider: PublicDataProvider;
   midnightProvider: MidnightProvider;
   walletContext: WalletContext;
+  dispose: () => Promise<void>;
 }
 
 export async function createAppContext(config: AppConfig): Promise<AppContext> {
@@ -32,19 +47,26 @@ export async function createAppContext(config: AppConfig): Promise<AppContext> {
 
   const walletContext = await createWalletContext(config);
 
-  const midnightProvider: MidnightProvider = {
-    async submitTx(tx) {
-      await walletContext.walletFacade.submitTransaction(tx);
-      return tx.identifiers()[0];
-    },
-  };
+  const { walletFacade } = walletContext;
+  const midnightProvider = createLedger9MidnightProvider(async (tx) => {
+    await walletFacade.submitTransaction(toWalletTx(walletFacade, 'Finalized', tx));
+    return toFinalized(tx).identifiers()[0];
+  });
+
+  const publicDataProvider = indexerPublicDataProvider({
+    queryURL: indexerHttpUrl,
+    subscriptionURL: indexerWsUrl,
+  });
 
   return {
     config,
     privateStateProvider: createPrivateStateProvider(),
-    publicDataProvider: indexerPublicDataProvider(indexerHttpUrl, indexerWsUrl),
+    publicDataProvider,
     midnightProvider,
     walletContext,
+    dispose: async () => {
+      await Promise.all([walletFacade.stop(), publicDataProvider.dispose()]);
+    },
   };
 }
 

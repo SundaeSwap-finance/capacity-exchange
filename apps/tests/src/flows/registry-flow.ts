@@ -1,6 +1,6 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
-import { getNightBalance } from '@sundaeswap/capacity-exchange-core';
+import { getNightBalance, queryContractState } from '@sundaeswap/capacity-exchange-core';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk/address-format';
 import {
   computeRegistryKey,
@@ -30,18 +30,22 @@ export async function runRegistryFlow(networkId: string, flowConfig: FlowCtxConf
   logger.info('Building registry-flow AppContext');
   const ctx = await buildFlowCtx(networkId, flowConfig);
 
-  const { contractAddress: registryAddress } = await deployRegistry(ctx);
+  try {
+    const { contractAddress: registryAddress } = await deployRegistry(ctx);
 
-  logger.info({ registryAddress }, 'Starting registry flow');
+    logger.info({ registryAddress }, 'Starting registry flow');
 
-  const balanceBefore = await assertSufficientCollateral(ctx, registryAddress);
-  const { secretKey, registryKey } = await registerEntry(ctx, registryAddress);
-  await waitForKeyPresent(ctx, registryAddress, secretKey, registryKey);
-  await deregisterEntry(ctx, networkId, registryAddress, secretKey);
-  await waitForKeyAbsent(ctx, registryAddress, secretKey, registryKey);
-  await waitForCollateralRefund(ctx, balanceBefore);
+    const balanceBefore = await assertSufficientCollateral(ctx, registryAddress);
+    const { secretKey, registryKey } = await registerEntry(ctx, registryAddress);
+    await waitForKeyPresent(ctx, registryAddress, secretKey, registryKey);
+    await deregisterEntry(ctx, networkId, registryAddress, secretKey);
+    await waitForKeyAbsent(ctx, registryAddress, secretKey, registryKey);
+    await waitForCollateralRefund(ctx, balanceBefore);
 
-  return { registryAddress, registeredDomainName: TEST_DOMAIN_NAME };
+    return { registryAddress, registeredDomainName: TEST_DOMAIN_NAME };
+  } finally {
+    await ctx.dispose();
+  }
 }
 
 const REGISTRY_COLLATERAL = 1000n;
@@ -146,7 +150,7 @@ async function registryContainsKey(
   registryAddress: string,
   secretKey: RegistrySecretKey
 ): Promise<boolean> {
-  const contractState = await ctx.publicDataProvider.queryContractState(registryAddress);
+  const contractState = await queryContractState(ctx.publicDataProvider, registryAddress);
   if (!contractState) {
     throw new Error(`No contract state found at registry address ${registryAddress}`);
   }
@@ -158,7 +162,7 @@ async function registryContainsKey(
 }
 
 async function getContractCollateralAmount(ctx: AppContext, registryAddress: string): Promise<bigint> {
-  const contractState = await ctx.publicDataProvider.queryContractState(registryAddress);
+  const contractState = await queryContractState(ctx.publicDataProvider, registryAddress);
   if (!contractState) {
     throw new Error(`No contract state found at registry address ${registryAddress}`);
   }

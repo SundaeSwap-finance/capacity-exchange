@@ -4,11 +4,10 @@ import {
   type Proof,
   type Binding,
   type FinalizedTransaction,
-} from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
+} from '@midnightntwrk/ledger-v9';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import type { CesApi } from './exchangeApi.js';
-
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 /**
  * Sends a proven (unbound) transaction to the CES for sponsorship.
  * The server validates eligibility, builds a dust tx, merges, binds, and returns the finalized transaction.

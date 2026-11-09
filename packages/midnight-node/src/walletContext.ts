@@ -104,6 +104,6 @@ export async function createWalletContext(config: AppConfig): Promise<WalletCont
   logger.info('Wallets synced');
 
   const { walletFacade, keys } = synced;
-  const walletProvider = new DustWalletProvider(walletFacade, keys.shieldedSecretKeys, keys.dustSecretKey);
+  const walletProvider = new DustWalletProvider(walletFacade, keys.shieldedSecretKeys);
   return { walletFacade, walletProvider, keys };
 }

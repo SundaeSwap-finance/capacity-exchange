@@ -2,8 +2,8 @@ import { createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { getLedgerParameters, inMemoryPrivateStateProvider, type Logger } from '@sundaeswap/capacity-exchange-core';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
+import { LedgerTransaction, type ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
 import {
   indexerChainStateProvider,
   type CapacityExchangeConfig,
@@ -20,6 +20,7 @@ import {
   type ForeignCapacity,
 } from '@sundaeswap/capacity-exchange-coupler/operations';
 import { COUPLER_OUT_DIR } from '../chain/contract.js';
+import { toFinalized, type UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 
 const logger = createLogger(import.meta);
 
@@ -30,10 +31,14 @@ export function couplerContextFromAppContext(
   logger: Logger
 ): CouplerContext {
   return {
+    networkId: ctx.config.network.networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
     publicDataProvider: ctx.publicDataProvider,
     midnightProvider: ctx.midnightProvider,
-    proofProvider: httpClientProofProvider(ctx.config.network.endpoints.proofServerUrl, zkConfigProvider),
+    proofProvider: httpClientProofProvider({
+      url: ctx.config.network.endpoints.proofServerUrl,
+      zkConfigProvider,
+    }),
     getLedgerParameters: () => getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl),
     logger,
   };
@@ -93,5 +98,6 @@ function buildWalletProvider(deps: CouplingDeps) {
 /** Fund one transaction by coupling, exactly as a dapp would: hand a normal op to `balanceTx` and
  *  get a bound tx back. Returns the bound tx so the caller decides when and how to submit. */
 export async function prepareCoupling(deps: CouplingDeps, userTx: UnboundTransaction): Promise<FinalizedTransaction> {
-  return buildWalletProvider(deps).balanceTx(userTx);
+  const balanced = await buildWalletProvider(deps).balanceTx(LedgerTransaction.seal('v9', 'Unbound', userTx));
+  return toFinalized(balanced);
 }

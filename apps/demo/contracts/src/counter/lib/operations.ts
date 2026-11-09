@@ -4,7 +4,7 @@ import {
   submitCallTxDirect,
   deployContractWithDryRun,
 } from '@sundaeswap/capacity-exchange-nodejs';
-import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
+import { queryContractState, toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
@@ -55,7 +55,7 @@ export interface QueryOutput {
 
 export async function query(ctx: AppContext, contractAddress: string): Promise<QueryOutput> {
   logger.info(`Querying counter at ${contractAddress}...`);
-  const contractState = await ctx.publicDataProvider.queryContractState(contractAddress);
+  const contractState = await queryContractState(ctx.publicDataProvider, contractAddress);
 
   if (!contractState) {
     throw new Error(`Contract not found at address: ${contractAddress}`);

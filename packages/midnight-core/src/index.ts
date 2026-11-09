@@ -12,6 +12,16 @@ export {
 export { DUST_PARAMS, COST_PARAMS } from './params.js';
 export { deriveWalletKeys, type WalletKeys } from './keys.js';
 export { DustWalletProvider } from './dustWalletProvider.js';
+export { dustCoreState, availableDustCoins } from './dustCore.js';
+export {
+  toUnproven,
+  toUnbound,
+  toFinalized,
+  toWalletTx,
+  walletFinalizedToMidnight,
+  proveV9,
+  type UnboundTransaction,
+} from './walletTx.js';
 export { resolveWalletConfig, type WalletConfig } from './walletConfig.js';
 export { createWallet, type CreateWalletOptions, type DustMode, type WalletConnection } from './walletFacade.js';
 export {
@@ -87,8 +97,9 @@ export { queryTxRaw } from './txRaw.js';
 export { waitForState } from './waitForState.js';
 export { type TxResult, toTxResult } from './txResult.js';
 export { createConnectedAPI, createConnectedAPIFromMnemonic } from './walletConnectedApi.js';
-export { buildMidnightProviders, type BrowserProviderConfig } from './contractProviders.js';
+export { buildMidnightProviders, DEFAULT_TX_TTL_SECONDS, type BrowserProviderConfig } from './contractProviders.js';
 export { buildUnprovenCallTx, verifyCircuitVerifierKey } from './preflight.js';
+export { queryContractState } from './queryContractState.js';
 export { connectedApiProvidersAdapter, type BaseProviders, type WalletIdentity } from './connectedApiProviders.js';
 export {
   buildSyntheticWalletState,
