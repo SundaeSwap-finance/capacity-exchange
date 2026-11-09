@@ -105,6 +105,7 @@ export async function findAndIncrementCounter(
       chainStateProvider: {
         queryContractState: (addr, cfg) => publicData.queryContractState(addr, cfg),
         getLedgerParameters: () => getLedgerParameters(config.indexerUrl),
+        dispose: async () => {},
       },
       additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
       promptForCurrency,
