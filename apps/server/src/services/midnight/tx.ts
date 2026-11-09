@@ -1,6 +1,7 @@
 import {
   DustActions,
   Intent,
+  type LedgerParameters,
   PreProof,
   createShieldedCoinInfo,
   SignatureEnabled,
@@ -62,6 +63,29 @@ export class MidnightTxService {
       [dust],
     );
     return intent;
+  }
+
+  /**
+   * Estimates the fee (with margin) of `userTx` once merged with a dust-only tx spending `dust`.
+   * Unlike `userTx.feesWithMargin`, this includes the cost of the dust spend itself. Proofs are
+   * erased rather than generated, so this is cheap and synchronous.
+   */
+  estimateFeeWithDustSpend(
+    userTx: UnboundTransaction,
+    dust: UnprovenDustSpend,
+    ctime: Date,
+    ttl: Date,
+    ledgerParams: LedgerParameters,
+    margin: number,
+  ): bigint {
+    const intent = this.buildDustIntent(dust, ctime, ttl);
+    const dustTx = Transaction.fromPartsRandomized(
+      this.#networkId,
+      undefined,
+      undefined,
+      intent,
+    ).eraseProofs();
+    return userTx.eraseProofs().merge(dustTx).feesWithMargin(ledgerParams, margin);
   }
 
   async proveTx(tx: UnprovenTransaction): Promise<UnboundTransaction> {
