@@ -59,6 +59,13 @@ export interface CouplingDeps {
   resolver: CesApiResolver;
 }
 
+/** Fee margin, in blocks, for sizing the dust a coupling funds. The provider prices only the user
+ *  tx, but the coupler submits it merged with the reveal and absorb calls, a dust spend and an
+ *  offer, which on ledger 9 costs about 8x as much. Each block of margin is a factor of about
+ *  1.046 (the ledger's max price adjustment), so 55 blocks is about 12x. A stopgap so e2e and
+ *  capture runs fund enough. The proper fix prices the coupling overhead into the quote. */
+const COUPLING_FEE_MARGIN_BLOCKS = 55;
+
 /** The real capacityExchangeWalletProvider, wired so the only foreign currency is the quoted ADA
  *  and the bridgeless payer runs the coupler against the injected escrow and capacity. */
 function buildWalletProvider(deps: CouplingDeps) {
@@ -85,6 +92,7 @@ function buildWalletProvider(deps: CouplingDeps) {
       throw new Error('native balance unused on the cardano path');
     },
     chainStateProvider: indexerChainStateProvider(endpoints.indexerHttpUrl, endpoints.indexerWsUrl),
+    margin: COUPLING_FEE_MARGIN_BLOCKS,
     promptForCurrency: async (prices): Promise<CurrencySelectionResult> => {
       const ada = prices.find((p) => p.price.currency.type === CARDANO_ADA);
       return ada ? { status: 'selected', exchangePrice: ada } : { status: 'no-eligible' };
