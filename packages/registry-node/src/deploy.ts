@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { sampleSigningKey, type SigningKey } from '@midnight-ntwrk/compact-runtime';
 import { deployContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { AppContext, buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 import {
@@ -16,6 +17,9 @@ const logger = createLogger(import.meta);
 export interface DeployOutput {
   contractAddress: string;
   secretKey: string;
+  /** The contract maintenance authority's key, needed to rotate verifier keys. Save it as JSON for
+   *  rotate-verifier-keys --signing-key-file. */
+  maintenanceSigningKey: SigningKey;
   txHash: string;
 }
 
@@ -30,11 +34,15 @@ export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Pr
   const secretKey: RegistrySecretKey = generateRandomSecretKey();
 
   const initialPrivateState = createPrivateState(secretKey);
+  // Sampled here rather than by deployContract so it can be returned: otherwise its only copy is
+  // the local private state store, and losing that leaves the contract unmaintainable.
+  const maintenanceSigningKey = sampleSigningKey();
 
   const deployed = await deployContract(providers, {
     compiledContract: CompiledRegistryContract,
     privateStateId,
     initialPrivateState,
+    signingKey: maintenanceSigningKey,
     args: constructorArgs(args),
   });
 
@@ -44,6 +52,7 @@ export async function deploy(ctx: AppContext, args: RegistryConstructorArgs): Pr
   return {
     contractAddress,
     secretKey: Buffer.from(secretKey).toString('hex'),
+    maintenanceSigningKey,
     txHash: deployed.deployTxData.public.txHash,
   };
 }
