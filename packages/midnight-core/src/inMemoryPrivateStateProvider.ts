@@ -40,7 +40,9 @@ export function inMemoryPrivateStateProvider(): PrivateStateProvider {
       };
     },
     async clearAll() {
-      statesByContract.clear();
+      for (const states of statesByContract.values()) {
+        states.clear();
+      }
     },
     async setSigningKey(address, key) {
       signingKeys.set(address, key);
