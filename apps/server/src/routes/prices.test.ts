@@ -4,6 +4,8 @@ import priceRoutes, { midnightPriceRoutes } from './prices.js';
 import { PriceService } from '../services/price.js';
 import { QuoteService } from '../services/quote.js';
 import { useRouteTestApp } from './test-utils.js';
+import { LedgerParameters } from '@midnightntwrk/ledger-v9';
+import { feeUnitSpecks } from '../services/midnight/fee-unit.js';
 
 const quoteService = new QuoteService(10, randomBytes(32));
 
@@ -20,7 +22,7 @@ const priceService = new PriceService({
 
 describe('GET /api/prices', () => {
   const app = useRouteTestApp({
-    decorations: { priceService, quoteService },
+    decorations: { priceService, quoteService, config: { offerFeeOverheadUnits: 0 } },
     routes: { plugin: priceRoutes, prefix: '/api' },
   });
 
@@ -72,7 +74,7 @@ describe('GET /api/prices', () => {
 
 describe('GET /api/prices for ADA, which the hints price instead', () => {
   const app = useRouteTestApp({
-    decorations: { priceService, quoteService },
+    decorations: { priceService, quoteService, config: { offerFeeOverheadUnits: 0 } },
     routes: { plugin: priceRoutes, prefix: '/api' },
   });
 
@@ -88,11 +90,11 @@ describe('GET /api/prices for ADA, which the hints price instead', () => {
 
 describe('GET /api/midnight/prices', () => {
   const app = useRouteTestApp({
-    decorations: { priceService, quoteService },
+    decorations: { priceService, quoteService, config: { offerFeeOverheadUnits: 0 } },
     routes: { plugin: midnightPriceRoutes, prefix: '/api/midnight' },
   });
   const shared = useRouteTestApp({
-    decorations: { priceService, quoteService },
+    decorations: { priceService, quoteService, config: { offerFeeOverheadUnits: 0 } },
     routes: { plugin: priceRoutes, prefix: '/api' },
   });
 
@@ -117,5 +119,35 @@ describe('GET /api/midnight/prices', () => {
   it('rejects a non-numeric amount at the schema', async () => {
     const res = await app.get().inject({ method: 'GET', url: '/api/midnight/prices?amount=abc' });
     expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('GET /api/midnight/prices - with offer fee overhead', () => {
+  const params = LedgerParameters.initialParameters();
+  const app = useRouteTestApp({
+    decorations: {
+      priceService,
+      quoteService,
+      config: { offerFeeOverheadUnits: 2, midnight: { networkId: 'undeployed' } },
+      midnightChainStateService: { ledgerParameters: () => params },
+    },
+    routes: { plugin: midnightPriceRoutes, prefix: '/api/midnight' },
+  });
+
+  it('prices and quotes the requested specks plus the overhead at current fee prices', async () => {
+    const overhead = 2n * feeUnitSpecks(params, 'undeployed');
+    expect(overhead).toBeGreaterThan(0n);
+
+    const res = await app.get().inject({ method: 'GET', url: '/api/midnight/prices?amount=1000' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    // basePrice 1000 + (1000 + overhead) specks at 1:1
+    expect(body.prices[0].amount).toBe((2000n + overhead).toString());
+
+    const result = quoteService.getQuote(body.quoteId);
+    if (result.status !== 'ok') {
+      throw new Error(`unexpected quote status ${result.status}`);
+    }
+    expect(result.quote.amount).toBe(1000n + overhead);
   });
 });
