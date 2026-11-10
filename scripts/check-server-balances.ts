@@ -21,8 +21,6 @@ import { withAppContext, buildAppConfig, resolveEnv } from '@sundaeswap/capacity
 const argv = process.argv.slice(2);
 
 let network = '';
-let server1File = '';
-let server1IsSeed = false;
 let walletStateDir = '';
 let chainSnapshotDir = '';
 const fundedWallets: { file: string; isSeed: boolean }[] = [];
@@ -47,11 +45,11 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 
-const { file: server1File, isSeed: server1IsSeed } = fundedWallets.shift();
+const { file: server1File, isSeed: server1IsSeed } = fundedWallets.shift()!;
 
 if (!network || !server1File || !walletStateDir) {
   console.error(
-    'Usage: check-server-balances.ts --network <n> --server1-mnemonic|--server1-seed <file> --wallet-state-dir <dir> [--chain-snapshot-dir <dir>] [--mnemonic|--seed <file>]...'
+    'Usage: check-server-balances.ts --network <n> --wallet-state-dir <dir> [--chain-snapshot-dir <dir>] [--mnemonic|--seed <file>]...'
   );
   process.exit(1);
 }
