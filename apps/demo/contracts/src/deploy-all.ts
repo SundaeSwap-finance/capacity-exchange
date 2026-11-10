@@ -4,10 +4,27 @@ import { deploy as deployCounter } from './counter/lib/operations.js';
 import { deploy as deployTokenMint } from './token-mint/lib/operations.js';
 import { saveContractsConfig, ContractsConfig } from './lib/contracts-config.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import type { SigningKey } from '@midnight-ntwrk/compact-runtime';
 
 const logger = createLogger(import.meta);
 
-async function main(): Promise<ContractsConfig> {
+interface MaintenanceKeyOutput {
+  contractAddress: string;
+  signingKey: SigningKey;
+  /** Absent when the key was not stored in Secrets Manager. */
+  secretArn?: string;
+}
+
+/**
+ * The CLI output. The maintenance keys are kept apart from `config`, which is saved and copied to
+ * the browser-facing demo: they are printed here so they are never lost, but never saved with it.
+ */
+interface DeployAllOutput {
+  config: ContractsConfig;
+  maintenanceKeys: { tokenMint: MaintenanceKeyOutput; counter: MaintenanceKeyOutput };
+}
+
+async function main(): Promise<DeployAllOutput> {
   program
     .name('deploy-all')
     .description('Deploy all contracts and save config')
@@ -63,7 +80,21 @@ async function main(): Promise<ContractsConfig> {
     logger.info('=== Dry run complete — config not saved ===');
   }
 
-  return config;
+  return {
+    config,
+    maintenanceKeys: {
+      tokenMint: {
+        contractAddress: tokenMintResult.contractAddress,
+        signingKey: tokenMintResult.maintenanceSigningKey,
+        secretArn: tokenMintResult.maintenanceKeySecretArn,
+      },
+      counter: {
+        contractAddress: counterResult.contractAddress,
+        signingKey: counterResult.maintenanceSigningKey,
+        secretArn: counterResult.maintenanceKeySecretArn,
+      },
+    },
+  };
 }
 
 runCli(main, { pretty: true });
