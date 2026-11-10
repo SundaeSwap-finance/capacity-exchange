@@ -28,18 +28,22 @@ if (!outFile || !tokenColor || !tokenMintAddress) {
   process.exit(1);
 }
 
+// About 1 token per trillion specks. Ledger v9 fees run to ~1e14 specks per tx, and the CI
+// runner wallet only mints 1,000,000 tokens per run, so this keeps prices in the hundreds.
+const RATE_DENOMINATOR = '1000000000000';
+
 const shieldedFormula = {
   currency: { type: 'midnight:shielded', rawId: tokenColor },
   basePrice: '101',
-  rateNumerator: '11',
-  rateDenominator: '1000',
+  rateNumerator: '1',
+  rateDenominator: RATE_DENOMINATOR,
 };
 
 const unshieldedFormula = {
   currency: { type: 'midnight:unshielded', rawId: unshieldedTokenColor },
   basePrice: '101',
-  rateNumerator: '11',
-  rateDenominator: '1000',
+  rateNumerator: '1',
+  rateDenominator: RATE_DENOMINATOR,
 };
 
 const dustFormulas: unknown[] = [shieldedFormula];
