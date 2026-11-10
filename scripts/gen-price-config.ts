@@ -6,7 +6,7 @@
  *   bun scripts/gen-price-config.ts <outFile> <tokenColor> <tokenMintAddress> \
  *     [--with-peer-max-prices] [--unshielded-token-color <color>]
  *
- * --with-peer-max-prices          Include a peer.maxPrices section (same values as priceFormulas).
+ * --with-peer-max-prices          Include a peer.maxPrices section (priceFormulas plus headroom for offer fees).
  *                                 Required for the no-dust server to enable DUST fallback via peers.
  * --unshielded-token-color <color> Also add an unshielded price formula for the given token color.
  */
@@ -63,8 +63,17 @@ const config: Record<string, unknown> = {
   sponsoredContracts: [{ contractAddress: tokenMintAddress, circuits: { type: 'all' } }],
 };
 
+// A peer's quote covers the fees its offer adds on top of the DUST we ask for, while our cap
+// is evaluated at the DUST we ask for alone. So the cap needs headroom for that overhead
+// (~400–800 tokens at ledger v9 fees and the rate above); 10,000 leaves plenty.
+const PEER_MAX_PRICE_HEADROOM = 10_000n;
+
 if (withPeerMaxPrices) {
-  config.peer = { maxPrices: priceFormulas };
+  const maxPriceFormulas = dustFormulas.map((formula) => {
+    const { basePrice } = formula as { basePrice: string };
+    return { ...(formula as object), basePrice: (BigInt(basePrice) + PEER_MAX_PRICE_HEADROOM).toString() };
+  });
+  config.peer = { maxPrices: { DUST: maxPriceFormulas } };
 }
 
 writeFileSync(outFile, JSON.stringify(config, null, 2) + '\n');
