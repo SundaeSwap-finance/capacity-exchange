@@ -1,4 +1,4 @@
-import { use, useCallback, useEffect, useMemo, useRef } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CapacityExchangeRoot,
   ChainStateProvider,
@@ -33,48 +33,49 @@ async function getWalletDetails(wallet: ConnectedAPI, zkConfigProvider: ZKConfig
   ]);
 }
 
+type WalletDetails = Awaited<ReturnType<typeof getWalletDetails>>;
+
+interface IndexerProviders {
+  publicDataProvider: IndexerPublicDataProvider;
+  chainStateProvider: ChainStateProvider;
+}
+
+// Indexer-backed providers hold open connections, so they must be disposed when no longer needed.
+// Creating them inside an effect ties each instance to one effect run: the cleanup disposes them
+// when the component unmounts or the indexer changes, and StrictMode's replay gets fresh instances.
+// Returns null until the providers for the current indexer are ready.
+function useIndexerProviders(indexerUri: string, indexerWsUri: string): IndexerProviders | null {
+  const [state, setState] = useState<{ indexerUri: string; indexerWsUri: string; providers: IndexerProviders } | null>(
+    null
+  );
+  useEffect(() => {
+    const providers: IndexerProviders = {
+      publicDataProvider: indexerPublicDataProvider({ queryURL: indexerUri, subscriptionURL: indexerWsUri }),
+      // Provides on-chain state the SDK needs: contract state for the registry lookup
+      // and current ledger parameters for fee estimation.
+      chainStateProvider: indexerChainStateProvider(indexerUri, indexerWsUri),
+    };
+    setState({ indexerUri, indexerWsUri, providers });
+    return () => {
+      void Promise.all([providers.publicDataProvider.dispose(), providers.chainStateProvider.dispose()]);
+    };
+  }, [indexerUri, indexerWsUri]);
+
+  // Don't hand out providers created for a previous indexer; they have already been disposed.
+  if (!state || state.indexerUri !== indexerUri || state.indexerWsUri !== indexerWsUri) {
+    return null;
+  }
+  return state.providers;
+}
+
 // Builds a set of Providers which work with Midnight APIs.
 // This includes a WalletProvider which reaches out to the capacity exchange.
 function useProviders<PCK extends string>(
   wallet: ConnectedAPI,
-  zkConfigProvider: ZKConfigProvider<PCK>
+  zkConfigProvider: ZKConfigProvider<PCK>,
+  [addresses, configuration, provingProvider]: WalletDetails,
+  { publicDataProvider, chainStateProvider }: IndexerProviders
 ): MidnightProviders<PCK> {
-  // NB: fetching information from a wallet is asynchronous,
-  // and will prompt the user for permission. Wrap this hook in suspense.
-  const walletDetailsPromise = useMemo(() => getWalletDetails(wallet, zkConfigProvider), [wallet, zkConfigProvider]);
-  const [addresses, configuration, provingProvider] = use(walletDetailsPromise);
-
-  const publicDataProvider = useMemo(
-    () =>
-      indexerPublicDataProvider({
-        queryURL: configuration.indexerUri,
-        subscriptionURL: configuration.indexerWsUri,
-      }),
-    [configuration.indexerUri, configuration.indexerWsUri]
-  );
-  const oldPublicDataProvider = useRef<IndexerPublicDataProvider | null>(null);
-  useEffect(() => {
-    if (oldPublicDataProvider.current && oldPublicDataProvider.current !== publicDataProvider) {
-      oldPublicDataProvider.current.dispose();
-    }
-    oldPublicDataProvider.current = publicDataProvider;
-  });
-
-  // Provides on-chain state the SDK needs: contract state for the registry lookup
-  // and current ledger parameters for fee estimation. The indexer URIs are
-  // available from your wallet's configuration.
-  const chainStateProvider = useMemo(
-    () => indexerChainStateProvider(configuration.indexerUri, configuration.indexerWsUri),
-    [configuration.indexerUri, configuration.indexerWsUri]
-  );
-  const oldChainStateProvider = useRef<ChainStateProvider | null>(null);
-  useEffect(() => {
-    if (oldChainStateProvider.current && oldChainStateProvider.current !== chainStateProvider) {
-      oldChainStateProvider.current.dispose();
-    }
-    oldChainStateProvider.current = chainStateProvider;
-  });
-
   // This wallet provider will not actually spend DUST from the user's wallet.
   // Instead, it will reach out to a capacity-exchange server,
   // to request dust from a Liquidity Provider.
@@ -142,9 +143,40 @@ function MockFlow() {
   // They don't need DUST, but may need to send or receive shielded or unshielded tokens.
   const wallet: ConnectedAPI = useMockWallet();
 
-  // These providers are used by most Midnight transaction-building APIs.
   const zkConfigProvider = useMemo(() => new FetchZkConfigProvider(window.location.origin), []);
-  const providers = useProviders(wallet, zkConfigProvider);
+
+  // NB: fetching information from a wallet is asynchronous,
+  // and will prompt the user for permission. Wrap this component in suspense.
+  const walletDetailsPromise = useMemo(() => getWalletDetails(wallet, zkConfigProvider), [wallet, zkConfigProvider]);
+  const walletDetails = use(walletDetailsPromise);
+
+  // The indexer URIs are available from your wallet's configuration.
+  const [, configuration] = walletDetails;
+  const indexerProviders = useIndexerProviders(configuration.indexerUri, configuration.indexerWsUri);
+  if (!indexerProviders) {
+    return null;
+  }
+
+  return (
+    <TransactionFlow
+      wallet={wallet}
+      zkConfigProvider={zkConfigProvider}
+      walletDetails={walletDetails}
+      indexerProviders={indexerProviders}
+    />
+  );
+}
+
+interface TransactionFlowProps {
+  wallet: ConnectedAPI;
+  zkConfigProvider: ZKConfigProvider<string>;
+  walletDetails: WalletDetails;
+  indexerProviders: IndexerProviders;
+}
+
+function TransactionFlow({ wallet, zkConfigProvider, walletDetails, indexerProviders }: TransactionFlowProps) {
+  // These providers are used by most Midnight transaction-building APIs.
+  const providers = useProviders(wallet, zkConfigProvider, walletDetails, indexerProviders);
 
   // Here's how to use them to submit a transaction manually!
   const buildAndSubmitTx = useCallback(async () => {
