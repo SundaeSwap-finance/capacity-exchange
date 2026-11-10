@@ -40,7 +40,7 @@
     "@sundaeswap/capacity-exchange-nodejs": "workspace:^",
     "@midnight-ntwrk/compact-js": "3.0.0",
     "@midnight-ntwrk/compact-runtime": "0.21.0",
-    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.1",
     "@scure/bip32": "2.0.1",
     "@scure/bip39": "^2.0.1",
     "commander": "^14.0.2",

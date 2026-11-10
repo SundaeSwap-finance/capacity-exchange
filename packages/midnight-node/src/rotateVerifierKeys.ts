@@ -38,8 +38,11 @@ const CURRENT_VERSION = 'v4';
  *   proved with either toolchain verify while both are present, so nothing is ever uncallable.
  * - `remove-legacy`: drop the pre-fork (`v3`) keys once the new ones are in place, so the ledger
  *   stops accepting proofs from the old toolchain.
+ * - `reinsert`: testing only. Replace each circuit's current (`v4`) key with the identical local
+ *   key, removing and re-inserting it in one update. A no-op for the contract, but it exercises
+ *   the full signed maintenance path on a contract deployed after the fork, which has no `v3` keys.
  */
-export type RotationMode = 'insert' | 'remove-legacy';
+export type RotationMode = 'insert' | 'remove-legacy' | 'reinsert';
 
 export interface RotateVerifierKeysOptions {
   contractAddress: string;
@@ -200,6 +203,14 @@ function planUpdates(
         continue;
       }
       const vk = new ContractOperationVersionedVerifierKey(CURRENT_VERSION, local.get(circuit)!);
+      updates.push(new VerifierKeyInsert(circuit, vk));
+    } else if (mode === 'reinsert') {
+      if (status !== 'matches-local') {
+        // Only a contract already on the local keys can be reinserted without changing anything.
+        throw new Error(`Circuit '${circuit}' does not have the local key on chain; reinsert only replaces identical keys`);
+      }
+      const vk = new ContractOperationVersionedVerifierKey(CURRENT_VERSION, local.get(circuit)!);
+      updates.push(new VerifierKeyRemove(circuit, new ContractOperationVersion(CURRENT_VERSION)));
       updates.push(new VerifierKeyInsert(circuit, vk));
     } else {
       if (status !== 'matches-local') {

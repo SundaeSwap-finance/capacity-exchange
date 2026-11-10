@@ -36,7 +36,7 @@
     "@fastify/swagger": "^9.9.2",
     "@fastify/swagger-ui": "^6.1.2",
     "@fastify/type-provider-typebox": "^6.1.0",
-    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.1",
     "@midnight-ntwrk/midnight-js": "5.0.0",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0",
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",

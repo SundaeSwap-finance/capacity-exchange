@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.1.0",
-    "@midnightntwrk/ledger-v9": "1.0.0"
+    "@midnightntwrk/ledger-v9": "1.0.1"
   },
   "devDependencies": {
     "commander": "^14.0.2",

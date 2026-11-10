@@ -30,7 +30,7 @@
   "overrides": {
     "whatwg-url": "14.1.1",
     "tr46": "5.1.1",
-    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.1",
     "@midnightntwrk/onchain-runtime-v4": "4.0.0",
     "fast-uri": "^4.1.5",
     "qs": "^6.16.0",

@@ -36,13 +36,13 @@
     "@sundaeswap/capacity-exchange-providers": "workspace:^"
   },
   "devDependencies": {
-    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.1",
     "@midnight-ntwrk/midnight-js-compact": "5.0.0",
     "@types/node": "22.10.7",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "@midnightntwrk/ledger-v9": "1.0.0"
+    "@midnightntwrk/ledger-v9": "1.0.1"
   }
 }

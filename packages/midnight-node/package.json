@@ -37,7 +37,7 @@
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "5.0.0",
     "@midnight-ntwrk/midnight-js-protocol": "5.0.0",
     "@midnight-ntwrk/wallet-sdk": "2.0.0",
-    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.1",
     "dotenv": "17.2.3",
     "rxjs": "^7.5",
     "ws": "^8.18.1",

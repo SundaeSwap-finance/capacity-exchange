@@ -25,7 +25,7 @@
     "@midnight-ntwrk/compact-js": "3.0.0",
     "@midnight-ntwrk/compact-runtime": "0.21.0",
     "@midnight-ntwrk/dapp-connector-api": "4.1.0",
-    "@midnightntwrk/ledger-v9": "1.0.0",
+    "@midnightntwrk/ledger-v9": "1.0.1",
     "@midnight-ntwrk/midnight-js": "5.0.0",
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
     "@midnight-ntwrk/wallet-sdk": "2.0.0",

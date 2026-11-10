@@ -15,6 +15,7 @@ interface Options {
   signingKeyFile: string;
   circuits?: string[];
   removeLegacy?: boolean;
+  reinsert?: boolean;
   dryRun?: boolean;
 }
 
@@ -36,12 +37,18 @@ function main(): Promise<RotateVerifierKeysResult> {
     .addOption(
       new Option('--remove-legacy', 'Remove the pre-fork (v3) keys instead; requires the insert to have landed')
     )
+    .addOption(
+      new Option(
+        '--reinsert',
+        'Testing only: remove and re-insert each current (v4) key unchanged, exercising the maintenance path'
+      ).conflicts('removeLegacy')
+    )
     .option('--dry-run', 'Prove and balance the maintenance transaction without submitting it')
     .parse();
 
   const [networkId] = program.args;
   const opts = program.opts<Options>();
-  const mode: RotationMode = opts.removeLegacy ? 'remove-legacy' : 'insert';
+  const mode: RotationMode = opts.reinsert ? 'reinsert' : opts.removeLegacy ? 'remove-legacy' : 'insert';
   const signingKey = parseSigningKey(fs.readFileSync(opts.signingKeyFile, 'utf-8'));
 
   return withAppContextFromEnv(networkId, (ctx) =>
