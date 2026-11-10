@@ -5,7 +5,7 @@ import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client
 import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import { LedgerTransaction, type ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
 import {
-  indexerChainStateProvider,
+  type ChainStateProvider,
   type CapacityExchangeConfig,
   type CurrencySelectionResult,
 } from '@sundaeswap/capacity-exchange-providers';
@@ -66,6 +66,16 @@ export interface CouplingDeps {
  *  capture runs fund enough. The proper fix prices the coupling overhead into the quote. */
 const COUPLING_FEE_MARGIN_BLOCKS = 55;
 
+/** Chain reads over the app's own public-data provider, so a coupling opens no indexer client of
+ *  its own. The app owns that provider's lifecycle, so dispose is a no-op here. */
+function appChainStateProvider(userApp: AppContext, context: CouplerContext): ChainStateProvider {
+  return {
+    queryContractState: (addr, cfg) => userApp.publicDataProvider.queryContractState(addr, cfg),
+    getLedgerParameters: context.getLedgerParameters,
+    dispose: async () => {},
+  };
+}
+
 /** The real capacityExchangeWalletProvider, wired so the only foreign currency is the quoted ADA
  *  and the bridgeless payer runs the coupler against the injected escrow and capacity. */
 function buildWalletProvider(deps: CouplingDeps) {
@@ -80,7 +90,6 @@ function buildWalletProvider(deps: CouplingDeps) {
     capacity,
     privateStateProvider: inMemoryPrivateStateProvider(),
   });
-  const endpoints = userApp.config.network.endpoints;
   const config: CapacityExchangeConfig = {
     networkId: userApp.config.network.networkName,
     coinPublicKey: userApp.walletContext.walletProvider.getCoinPublicKey(),
@@ -91,7 +100,7 @@ function buildWalletProvider(deps: CouplingDeps) {
     balanceSealedTransaction: async () => {
       throw new Error('native balance unused on the cardano path');
     },
-    chainStateProvider: indexerChainStateProvider(endpoints.indexerHttpUrl, endpoints.indexerWsUrl),
+    chainStateProvider: appChainStateProvider(userApp, context),
     margin: COUPLING_FEE_MARGIN_BLOCKS,
     promptForCurrency: async (prices): Promise<CurrencySelectionResult> => {
       const ada = prices.find((p) => p.price.currency.type === CARDANO_ADA);
