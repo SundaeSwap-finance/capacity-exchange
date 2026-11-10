@@ -1,6 +1,12 @@
 import { program } from 'commander';
 import { parsePositiveNumber } from '@sundaeswap/capacity-exchange-core';
-import { runCli, withAppContextFromEnv, requireEnvVar, resolveEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import {
+  runCli,
+  withAppContextFromEnv,
+  requireEnvVar,
+  resolveEnv,
+  shouldStoreMaintenanceKey,
+} from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy, DeployOutput } from '../deploy.js';
 
 const DEFAULT_PERIOD_DAYS: Record<string, number> = {
@@ -18,10 +24,18 @@ function main(): Promise<DeployOutput> {
       '[registrationPeriod]',
       'max registration period in days (default: 30 for mainnet, 0.5 for preview/preprod)'
     )
+    .option(
+      '--no-maintenance-key-secret',
+      'Do not store the maintenance signing key in Secrets Manager (refused on mainnet)'
+    )
     .parse();
 
   const networkId = requireEnvVar(resolveEnv(), 'NETWORK_ID');
   const [collateral, registrationPeriod] = program.processedArgs;
+  const store = shouldStoreMaintenanceKey(
+    networkId,
+    program.opts<{ maintenanceKeySecret: boolean }>().maintenanceKeySecret
+  );
 
   const defaultDays = DEFAULT_PERIOD_DAYS[networkId] ?? 0.5;
   const days = registrationPeriod ? parsePositiveNumber('registrationPeriod', registrationPeriod) : defaultDays;
@@ -34,7 +48,7 @@ function main(): Promise<DeployOutput> {
     `set arguments: ${JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value))}`
   );
 
-  return withAppContextFromEnv(networkId, (ctx) => deploy(ctx, args));
+  return withAppContextFromEnv(networkId, (ctx) => deploy(ctx, args, store));
 }
 
 runCli(main);

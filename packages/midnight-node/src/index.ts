@@ -47,3 +47,12 @@ export {
   type RotationMode,
   type CircuitKeyStatus,
 } from './rotateVerifierKeys.js';
+export {
+  sampleMaintenanceKey,
+  recordDeployment,
+  shouldStoreMaintenanceKey,
+  fetchSecretString,
+  findMaintenanceKeySecret,
+  type MaintenanceKey,
+  type SampleMaintenanceKeyOptions,
+} from './maintenanceKeySecret.js';

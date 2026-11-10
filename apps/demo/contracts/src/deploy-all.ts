@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { runCli, shouldStoreMaintenanceKey, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { deploy as deployCounter } from './counter/lib/operations.js';
 import { deploy as deployTokenMint } from './token-mint/lib/operations.js';
 import { saveContractsConfig, ContractsConfig } from './lib/contracts-config.js';
@@ -13,10 +13,15 @@ async function main(): Promise<ContractsConfig> {
     .description('Deploy all contracts and save config')
     .argument('<networkId>', 'Network ID (e.g., undeployed, preview)')
     .option('--dry-run', 'Build, prove, and balance transactions without submitting')
+    .option(
+      '--no-maintenance-key-secret',
+      'Do not store the maintenance signing keys in Secrets Manager (refused on mainnet)'
+    )
     .parse();
 
   const [networkId] = program.args;
-  const { dryRun } = program.opts<{ dryRun?: boolean }>();
+  const { dryRun, maintenanceKeySecret } = program.opts<{ dryRun?: boolean; maintenanceKeySecret: boolean }>();
+  const store = shouldStoreMaintenanceKey(networkId, maintenanceKeySecret);
 
   if (dryRun) {
     logger.info('*** DRY RUN MODE — transactions will not be submitted ***');
@@ -24,13 +29,13 @@ async function main(): Promise<ContractsConfig> {
 
   logger.info('=== Deploying Token Mint Contract ===');
   const tokenMintResult = await withAppContextFromEnv(networkId, async (ctx) => {
-    return deployTokenMint(ctx, undefined, dryRun);
+    return deployTokenMint(ctx, undefined, dryRun, store);
   });
   logger.info(`Token mint deployed at ${tokenMintResult.contractAddress}`);
 
   logger.info('=== Deploying Counter Contract ===');
   const counterResult = await withAppContextFromEnv(networkId, async (ctx) => {
-    return deployCounter(ctx, dryRun);
+    return deployCounter(ctx, dryRun, store);
   });
   logger.info(`Counter deployed at ${counterResult.contractAddress}`);
 

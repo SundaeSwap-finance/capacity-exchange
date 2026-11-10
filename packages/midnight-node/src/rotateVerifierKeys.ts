@@ -207,7 +207,9 @@ function planUpdates(
     } else if (mode === 'reinsert') {
       if (status !== 'matches-local') {
         // Only a contract already on the local keys can be reinserted without changing anything.
-        throw new Error(`Circuit '${circuit}' does not have the local key on chain; reinsert only replaces identical keys`);
+        throw new Error(
+          `Circuit '${circuit}' does not have the local key on chain; reinsert only replaces identical keys`
+        );
       }
       const vk = new ContractOperationVersionedVerifierKey(CURRENT_VERSION, local.get(circuit)!);
       updates.push(new VerifierKeyRemove(circuit, new ContractOperationVersion(CURRENT_VERSION)));

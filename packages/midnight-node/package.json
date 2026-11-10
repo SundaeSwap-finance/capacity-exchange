@@ -27,6 +27,7 @@
     "rotate-verifier-keys": "bun src/cli/rotate-verifier-keys.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1148.0",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
     "@midnight-ntwrk/compact-js": "3.0.0",
     "@midnight-ntwrk/compact-runtime": "0.21.0",
