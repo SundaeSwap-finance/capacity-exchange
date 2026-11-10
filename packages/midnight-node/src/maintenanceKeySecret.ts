@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { sampleSigningKey, type SigningKey } from '@midnight-ntwrk/compact-runtime';
 import type { SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 import { createLogger } from './createLogger.js';
@@ -86,6 +87,8 @@ export interface SampleMaintenanceKeyOptions {
 /**
  * Names a new key's secret. Every deploy gets its own secret, since each deployed contract keeps its
  * own key for as long as it lives; rotate-verifier-keys finds it by contract address, not by name.
+ * The timestamp keeps names readable and sortable; the random suffix keeps deploys started in the
+ * same second from colliding, which would make CreateSecret reject one of them.
  */
 function maintenanceKeySecretName(networkId: string, contract: string): string {
   // Secret names allow `/_+=.@-` but not `:`.
@@ -93,7 +96,8 @@ function maintenanceKeySecretName(networkId: string, contract: string): string {
     .toISOString()
     .replace(/\.\d+Z$/, 'Z')
     .replace(/:/g, '-');
-  return `capacity-exchange/${networkId}/maintenance-keys/${contract}/${stamp}`;
+  const suffix = randomBytes(4).toString('hex');
+  return `capacity-exchange/${networkId}/maintenance-keys/${contract}/${stamp}-${suffix}`;
 }
 
 /**
