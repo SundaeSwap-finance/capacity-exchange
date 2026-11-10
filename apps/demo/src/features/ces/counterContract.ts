@@ -131,6 +131,6 @@ export async function findAndIncrementCounter(
       circuitId: 'increment' as CounterCircuitId,
     });
   } finally {
-    await Promise.all(disposeTasks.map(dispose => dispose()));
+    await Promise.all(disposeTasks.map((dispose) => dispose()));
   }
 }
