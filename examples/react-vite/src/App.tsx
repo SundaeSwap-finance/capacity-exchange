@@ -56,8 +56,8 @@ function useProviders<PCK extends string>(
   useEffect(() => {
     if (oldPublicDataProvider.current && oldPublicDataProvider.current !== publicDataProvider) {
       oldPublicDataProvider.current.dispose();
-      oldPublicDataProvider.current = publicDataProvider;
     }
+    oldPublicDataProvider.current = publicDataProvider;
   });
 
   // Provides on-chain state the SDK needs: contract state for the registry lookup
@@ -71,8 +71,8 @@ function useProviders<PCK extends string>(
   useEffect(() => {
     if (oldChainStateProvider.current && oldChainStateProvider.current !== chainStateProvider) {
       oldChainStateProvider.current.dispose();
-      oldChainStateProvider.current = chainStateProvider;
     }
+    oldChainStateProvider.current = chainStateProvider;
   });
 
   // This wallet provider will not actually spend DUST from the user's wallet.

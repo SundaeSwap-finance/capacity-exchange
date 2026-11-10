@@ -56,7 +56,7 @@ export async function runCapture(
     return { couplerAddress, txId: captured.txId, total: fixture.couplings.length };
   } finally {
     try {
-      await ctx.dispose();
+      await userApp.dispose();
     } catch (err) {
       logger.warn({ err: err instanceof Error ? err : String(err) }, 'User wallet facade stop failed');
     }

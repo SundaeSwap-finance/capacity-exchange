@@ -95,6 +95,7 @@ export async function findAndIncrementCounter(
     queryURL: config.indexerUrl,
     subscriptionURL: config.indexerWsUrl,
   });
+  const disposeTasks = [() => publicData.dispose()];
   try {
     const cesWalletProvider = capacityExchangeWalletProvider({
       networkId: config.networkId,
@@ -118,6 +119,7 @@ export async function findAndIncrementCounter(
       '/midnight/counter',
       config
     );
+    disposeTasks.push(() => contractProviders.dispose());
 
     await findDeployedContract(contractProviders, {
       compiledContract: compiledCounterContract,
@@ -129,6 +131,6 @@ export async function findAndIncrementCounter(
       circuitId: 'increment' as CounterCircuitId,
     });
   } finally {
-    await publicData.dispose();
+    await Promise.all(disposeTasks);
   }
 }

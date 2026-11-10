@@ -129,7 +129,7 @@ export async function runE2e(
     return report;
   } finally {
     try {
-      await ctx.dispose();
+      await userApp.dispose();
     } catch (err) {
       logger.warn({ err: err instanceof Error ? err : String(err) }, 'User wallet facade stop failed');
     }
