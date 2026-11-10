@@ -7,22 +7,30 @@ import {
 import { queryContractState, toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledCounterContract, Counter, CounterContract } from './contract.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
+import { sampleSigningKey, type SigningKey } from '@midnight-ntwrk/compact-runtime';
 
 const logger = createLogger(import.meta);
 
 export interface DeployOutput {
   contractAddress: string;
+  /** The contract maintenance authority's key, needed to rotate verifier keys. Save it as JSON for
+   *  rotate-verifier-keys --signing-key-file. */
+  maintenanceSigningKey: SigningKey;
   txHash: string;
 }
 
 export async function deploy(ctx: AppContext, dryRun = false): Promise<DeployOutput> {
   logger.info(`Deploying counter contract${dryRun ? ' (DRY RUN)' : ''}...`);
   const providers = buildProviders<CounterContract>(ctx, './counter/out');
+  // Sampled here rather than by deployContract so it can be returned: otherwise its only copy is
+  // the local private state store, and losing that leaves the contract unmaintainable.
+  const maintenanceSigningKey = sampleSigningKey();
 
   const deployed = await deployContractWithDryRun(
     providers,
     {
       compiledContract: CompiledCounterContract,
+      signingKey: maintenanceSigningKey,
     },
     dryRun
   );
@@ -30,6 +38,7 @@ export async function deploy(ctx: AppContext, dryRun = false): Promise<DeployOut
   logger.info(`Counter deployed at ${deployed.deployTxData.public.contractAddress}`);
   return {
     contractAddress: deployed.deployTxData.public.contractAddress,
+    maintenanceSigningKey,
     txHash: deployed.deployTxData.public.txHash,
   };
 }

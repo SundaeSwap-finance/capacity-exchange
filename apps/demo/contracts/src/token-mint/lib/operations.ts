@@ -10,7 +10,7 @@ import {
 import { toTxResult, type TxResult } from '@sundaeswap/capacity-exchange-core';
 import { CompiledTokenMintContract, TokenMintContract } from './contract.js';
 import { deriveTokenColor, getShieldedBalance } from '@sundaeswap/capacity-exchange-core';
-import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
+import { persistentHash, CompactTypeBytes, sampleSigningKey, type SigningKey } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
 import { createLogger } from '@sundaeswap/capacity-exchange-nodejs';
 
@@ -25,6 +25,9 @@ export interface DeployOutput {
   derivedTokenColor: string;
   privateStateId: string;
   adminKeyHash: string;
+  /** The contract maintenance authority's key, needed to rotate verifier keys. Save it as JSON for
+   *  rotate-verifier-keys --signing-key-file. */
+  maintenanceSigningKey: SigningKey;
 }
 
 export function generateTokenColor(): string {
@@ -62,6 +65,9 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
   logger.info(`Generated private state ID: ${privateStateId}`);
   const initialPrivateState = createPrivateState(crypto.randomBytes(32), adminSecretKey);
   logger.info('Created initial private state');
+  // Sampled here rather than by deployContract so it can be returned: otherwise its only copy is
+  // the local private state store, and losing that leaves the contract unmaintainable.
+  const maintenanceSigningKey = sampleSigningKey();
 
   // Deploy with max_depositors = 0 (deposits disabled until admin enables)
   logger.info(`Calling deployContract${dryRun ? ' (DRY RUN)' : ''}...`);
@@ -72,6 +78,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
       args: [Buffer.from(resolvedTokenColor, 'hex'), initialNonce, adminKeyHash, 0n],
       privateStateId,
       initialPrivateState,
+      signingKey: maintenanceSigningKey,
     },
     dryRun
   );
@@ -87,6 +94,7 @@ export async function deploy(ctx: AppContext, tokenColor?: string, dryRun = fals
     derivedTokenColor: derivedColor,
     privateStateId,
     adminKeyHash: Buffer.from(adminKeyHash).toString('hex'),
+    maintenanceSigningKey,
   };
 }
 
