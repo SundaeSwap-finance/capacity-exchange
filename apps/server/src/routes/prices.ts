@@ -30,10 +30,7 @@ function offerFeeOverhead(fastify: FastifyInstance): bigint {
   if (!midnight || !fastify.midnightChainStateService) {
     return 0n;
   }
-  const unit = feeUnitSpecks(
-    fastify.midnightChainStateService.ledgerParameters(),
-    midnight.networkId,
-  );
+  const unit = feeUnitSpecks(fastify.midnightChainStateService.ledgerParameters());
   return BigInt(offerFeeOverheadUnits) * unit;
 }
 

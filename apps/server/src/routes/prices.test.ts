@@ -135,7 +135,7 @@ describe('GET /api/midnight/prices - with offer fee overhead', () => {
   });
 
   it('prices and quotes the requested specks plus the overhead at current fee prices', async () => {
-    const overhead = 2n * feeUnitSpecks(params, 'undeployed');
+    const overhead = 2n * feeUnitSpecks(params);
     expect(overhead).toBeGreaterThan(0n);
 
     const res = await app.get().inject({ method: 'GET', url: '/api/midnight/prices?amount=1000' });
