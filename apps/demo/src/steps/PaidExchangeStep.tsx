@@ -9,6 +9,7 @@ import type { WalletData } from '../features/wallet/types';
 import type { UseCesTransactionResult } from '../features/ces/useCesTransaction';
 import type { ExchangePrice, CurrencySelectionResult } from '../features/ces/types';
 import { resolveTokenLabel } from '../utils/tokenLabels';
+import { getTutorialTokenBalance } from '../utils/tokenBalance';
 
 interface PaidExchangeStepProps {
   walletData: WalletData | null;
@@ -20,24 +21,18 @@ interface PaidExchangeStepProps {
   onSkipToPlayground?: () => void;
 }
 
-function getTokenBalance(walletData: WalletData | null): bigint {
-  if (!walletData) {
-    return 0n;
-  }
-  const balances = Object.values(walletData.shieldedBalances);
-  return balances.length > 0 ? balances.reduce((a, b) => a + b, 0n) : 0n;
-}
-
 function InventoryStrip({
   counterValue,
   walletData,
+  mintedTokenColor,
   freeze,
 }: {
   counterValue: string | null;
   walletData: WalletData | null;
+  mintedTokenColor: string | null;
   freeze?: boolean;
 }) {
-  const tokenBalance = getTokenBalance(walletData);
+  const tokenBalance = getTutorialTokenBalance(walletData, mintedTokenColor);
   if (counterValue === null && tokenBalance === 0n) {
     return null;
   }
@@ -146,7 +141,12 @@ function CesCounterAction({
         </p>
       </NarrativeCard>
 
-      <InventoryStrip counterValue={counterValue} walletData={displayWalletData} freeze={isTransacting} />
+      <InventoryStrip
+        counterValue={counterValue}
+        walletData={displayWalletData}
+        mintedTokenColor={mintedTokenColor}
+        freeze={isTransacting}
+      />
 
       {status === 'idle' && (
         <>

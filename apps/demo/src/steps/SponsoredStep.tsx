@@ -5,6 +5,7 @@ import { TokenBalanceCard } from '../components/TokenBalanceCard';
 import { TransactionProgress } from '../components/TransactionProgress';
 import type { WalletData } from '../features/wallet/types';
 import type { UseSponsoredMintResult } from '../hooks/useSponsoredMint';
+import { getTutorialTokenBalance } from '../utils/tokenBalance';
 
 interface SponsoredStepProps {
   walletData: WalletData | null;
@@ -21,19 +22,6 @@ interface SponsoredStepProps {
 
 const MOCK_TOKEN_MINT_ADDRESS = 'mock-token-mint-address';
 
-function getTokenBalance(walletData: WalletData | null, tokenColor: string | null): bigint {
-  if (!walletData) {
-    return 0n;
-  }
-
-  if (tokenColor && tokenColor in walletData.shieldedBalances) {
-    return walletData.shieldedBalances[tokenColor] ?? 0n;
-  }
-
-  const balances = Object.values(walletData.shieldedBalances);
-  return balances.length > 0 ? balances.reduce((sum, value) => sum + value, 0n) : 0n;
-}
-
 export function SponsoredStep({
   walletData,
   sponsoredMint,
@@ -46,7 +34,7 @@ export function SponsoredStep({
   hasGraduated = false,
   onSkipToPlayground,
 }: SponsoredStepProps) {
-  const tokenBalance = getTokenBalance(walletData, mintedTokenColor);
+  const tokenBalance = getTutorialTokenBalance(walletData, mintedTokenColor);
   const alreadyHasTokens = tokenBalance > 0n;
 
   return (
