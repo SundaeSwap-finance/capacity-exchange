@@ -21,6 +21,7 @@ docs/HealthGet200Response.md
 docs/HealthReadyGet200Response.md
 docs/HealthReadyGet200ResponseCardano.md
 docs/HealthReadyGet200ResponseMidnight.md
+docs/HealthReadyGet200ResponseMidnightChainState.md
 docs/HealthReadyGet200ResponseMidnightIndexer.md
 docs/HealthReadyGet200ResponseMidnightWallet.md
 docs/Price.md
@@ -46,6 +47,7 @@ models/HealthGet200Response.ts
 models/HealthReadyGet200Response.ts
 models/HealthReadyGet200ResponseCardano.ts
 models/HealthReadyGet200ResponseMidnight.ts
+models/HealthReadyGet200ResponseMidnightChainState.ts
 models/HealthReadyGet200ResponseMidnightIndexer.ts
 models/HealthReadyGet200ResponseMidnightWallet.ts
 models/Price.ts

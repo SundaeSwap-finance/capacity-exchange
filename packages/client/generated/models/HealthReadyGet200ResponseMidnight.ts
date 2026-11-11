@@ -20,6 +20,13 @@ import {
     HealthReadyGet200ResponseMidnightIndexerToJSON,
     HealthReadyGet200ResponseMidnightIndexerToJSONTyped,
 } from './HealthReadyGet200ResponseMidnightIndexer.js';
+import type { HealthReadyGet200ResponseMidnightChainState } from './HealthReadyGet200ResponseMidnightChainState.js';
+import {
+    HealthReadyGet200ResponseMidnightChainStateFromJSON,
+    HealthReadyGet200ResponseMidnightChainStateFromJSONTyped,
+    HealthReadyGet200ResponseMidnightChainStateToJSON,
+    HealthReadyGet200ResponseMidnightChainStateToJSONTyped,
+} from './HealthReadyGet200ResponseMidnightChainState.js';
 import type { HealthReadyGet200ResponseMidnightWallet } from './HealthReadyGet200ResponseMidnightWallet.js';
 import {
     HealthReadyGet200ResponseMidnightWalletFromJSON,
@@ -46,6 +53,12 @@ export interface HealthReadyGet200ResponseMidnight {
      * @memberof HealthReadyGet200ResponseMidnight
      */
     indexer: HealthReadyGet200ResponseMidnightIndexer;
+    /**
+     * 
+     * @type {HealthReadyGet200ResponseMidnightChainState}
+     * @memberof HealthReadyGet200ResponseMidnight
+     */
+    chainState?: HealthReadyGet200ResponseMidnightChainState;
 }
 
 /**
@@ -69,6 +82,7 @@ export function HealthReadyGet200ResponseMidnightFromJSONTyped(json: any, ignore
         
         'wallet': HealthReadyGet200ResponseMidnightWalletFromJSON(json['wallet']),
         'indexer': HealthReadyGet200ResponseMidnightIndexerFromJSON(json['indexer']),
+        'chainState': json['chainState'] == null ? undefined : HealthReadyGet200ResponseMidnightChainStateFromJSON(json['chainState']),
     };
 }
 
@@ -85,6 +99,7 @@ export function HealthReadyGet200ResponseMidnightToJSONTyped(value?: HealthReady
         
         'wallet': HealthReadyGet200ResponseMidnightWalletToJSON(value['wallet']),
         'indexer': HealthReadyGet200ResponseMidnightIndexerToJSON(value['indexer']),
+        'chainState': HealthReadyGet200ResponseMidnightChainStateToJSON(value['chainState']),
     };
 }
 

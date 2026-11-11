@@ -8,7 +8,7 @@ vi.mock('@sundaeswap/capacity-exchange-core', () => ({
   getLedgerParameters: mockGetLedgerParameters,
 }));
 
-import { MidnightChainStateService } from './chain-state.js';
+import { ChainStateNotReadyError, MidnightChainStateService } from './chain-state.js';
 
 const logger = pino({ level: 'silent' });
 const fakeParams = { dust: { dustGracePeriodSeconds: 10800n } } as never;
@@ -38,15 +38,37 @@ describe('MidnightChainStateService', () => {
     vi.unstubAllGlobals();
   });
 
-  it('primes tip and ledger params on start', async () => {
+  async function startAndLoad(): Promise<MidnightChainStateService> {
+    const s = new MidnightChainStateService('http://indexer.test', logger as never);
+    s.start();
+    await vi.waitFor(() => expect(s.isReady()).toBe(true));
+    return s;
+  }
+
+  it('loads tip and ledger params in the background after start', async () => {
     stubTipFetch({ data: { block: { timestamp: 1_700_000_000_000 } } });
     mockGetLedgerParameters.mockResolvedValue(fakeParams);
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await svc.start();
+    svc = await startAndLoad();
 
     expect(svc.latestBlockTimestamp().getTime()).toBe(1_700_000_000_000);
     expect(svc.ledgerParameters()).toBe(fakeParams);
+    expect(svc.health()).toEqual({ status: 'ok' });
+  });
+
+  it('start() returns without waiting for the indexer', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {})),
+    );
+    mockGetLedgerParameters.mockReturnValue(new Promise(() => {}));
+
+    svc = new MidnightChainStateService('http://indexer.test', logger as never);
+    svc.start();
+
+    expect(svc.isReady()).toBe(false);
+    expect(svc.health()).toEqual({ status: 'syncing' });
+    expect(() => svc!.ledgerParameters()).toThrow(ChainStateNotReadyError);
   });
 
   it('passes an AbortSignal to fetch and to getLedgerParameters', async () => {
@@ -58,8 +80,7 @@ describe('MidnightChainStateService', () => {
     vi.stubGlobal('fetch', fetchSpy);
     mockGetLedgerParameters.mockResolvedValue(fakeParams);
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await svc.start();
+    svc = await startAndLoad();
 
     expect(fetchSpy).toHaveBeenCalledWith(
       'http://indexer.test',
@@ -71,65 +92,93 @@ describe('MidnightChainStateService', () => {
     );
   });
 
-  it('throws when indexer returns non-OK HTTP for tip query', async () => {
-    stubTipFetch({}, false, 503);
-    mockGetLedgerParameters.mockResolvedValue(fakeParams);
+  describe('when the initial load fails', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await expect(svc.start()).rejects.toThrow(/HTTP 503/);
-  });
+    async function startAndExpectSyncing(error: RegExp) {
+      svc = new MidnightChainStateService('http://indexer.test', logger as never);
+      svc.start();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(svc.isReady()).toBe(false);
+      const health = svc.health();
+      expect(health.status).toBe('syncing');
+      expect('error' in health && health.error).toMatch(error);
+    }
 
-  it('throws when block is missing from the response', async () => {
-    stubTipFetch({ data: { block: null } });
-    mockGetLedgerParameters.mockResolvedValue(fakeParams);
+    it('reports syncing on non-OK HTTP for the tip query', async () => {
+      stubTipFetch({}, false, 503);
+      mockGetLedgerParameters.mockResolvedValue(fakeParams);
+      await startAndExpectSyncing(/HTTP 503/);
+    });
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await expect(svc.start()).rejects.toThrow(/no block\.timestamp/);
-  });
+    it('reports syncing when block is missing from the response', async () => {
+      stubTipFetch({ data: { block: null } });
+      mockGetLedgerParameters.mockResolvedValue(fakeParams);
+      await startAndExpectSyncing(/no block\.timestamp/);
+    });
 
-  it('throws when timestamp is not a number', async () => {
-    stubTipFetch({ data: { block: { timestamp: 'not-a-number' } } });
-    mockGetLedgerParameters.mockResolvedValue(fakeParams);
+    it('reports syncing when timestamp is not a number', async () => {
+      stubTipFetch({ data: { block: { timestamp: 'not-a-number' } } });
+      mockGetLedgerParameters.mockResolvedValue(fakeParams);
+      await startAndExpectSyncing(/no block\.timestamp/);
+    });
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await expect(svc.start()).rejects.toThrow(/no block\.timestamp/);
-  });
+    it('reports syncing when fetch rejects (network error / timeout)', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.reject(new Error('network down'))),
+      );
+      mockGetLedgerParameters.mockResolvedValue(fakeParams);
+      await startAndExpectSyncing(/network down/);
+    });
 
-  it('throws when fetch rejects (network error / timeout)', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.reject(new Error('network down'))),
-    );
-    mockGetLedgerParameters.mockResolvedValue(fakeParams);
+    it('retries ledger params on the tip cadence until they load', async () => {
+      stubTipFetch({ data: { block: { timestamp: 1_700_000_000_000 } } });
+      mockGetLedgerParameters
+        .mockRejectedValueOnce(new Error('params unavailable'))
+        .mockResolvedValue(fakeParams);
+      await startAndExpectSyncing(/params unavailable/);
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await expect(svc.start()).rejects.toThrow(/network down/);
-  });
+      await vi.advanceTimersByTimeAsync(2_000);
 
-  it('throws when getLedgerParameters rejects', async () => {
-    stubTipFetch({ data: { block: { timestamp: 1_700_000_000_000 } } });
-    mockGetLedgerParameters.mockRejectedValue(new Error('params unavailable'));
+      expect(svc!.isReady()).toBe(true);
+      expect(svc!.ledgerParameters()).toBe(fakeParams);
+      expect(svc!.health()).toEqual({ status: 'ok' });
+    });
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await expect(svc.start()).rejects.toThrow(/params unavailable/);
+    it('does not start a new poll while one is in flight', async () => {
+      const fetchSpy = vi.fn(() => new Promise(() => {}));
+      vi.stubGlobal('fetch', fetchSpy);
+      mockGetLedgerParameters.mockResolvedValue(fakeParams);
+
+      svc = new MidnightChainStateService('http://indexer.test', logger as never);
+      svc.start();
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('latestBlockTimestamp throws if not primed', () => {
     svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    expect(() => svc!.latestBlockTimestamp()).toThrow(/not started/);
+    expect(() => svc!.latestBlockTimestamp()).toThrow(ChainStateNotReadyError);
   });
 
   it('ledgerParameters throws if not primed', () => {
     svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    expect(() => svc!.ledgerParameters()).toThrow(/not started/);
+    expect(() => svc!.ledgerParameters()).toThrow(ChainStateNotReadyError);
   });
 
   it('returns a defensive copy of the tip (caller mutation does not corrupt cache)', async () => {
     stubTipFetch({ data: { block: { timestamp: 1_700_000_000_000 } } });
     mockGetLedgerParameters.mockResolvedValue(fakeParams);
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await svc.start();
+    svc = await startAndLoad();
 
     const t1 = svc.latestBlockTimestamp();
     t1.setTime(0);
@@ -140,8 +189,7 @@ describe('MidnightChainStateService', () => {
     stubTipFetch({ data: { block: { timestamp: 1_700_000_000_000 } } });
     mockGetLedgerParameters.mockResolvedValue(fakeParams);
 
-    svc = new MidnightChainStateService('http://indexer.test', logger as never);
-    await svc.start();
+    svc = await startAndLoad();
     svc.stop();
     // No further fetch calls expected after stop. Idempotency check:
     expect(() => svc!.stop()).not.toThrow();

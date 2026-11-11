@@ -20,6 +20,7 @@ export * from './HealthGet200Response.js';
 export * from './HealthReadyGet200Response.js';
 export * from './HealthReadyGet200ResponseCardano.js';
 export * from './HealthReadyGet200ResponseMidnight.js';
+export * from './HealthReadyGet200ResponseMidnightChainState.js';
 export * from './HealthReadyGet200ResponseMidnightIndexer.js';
 export * from './HealthReadyGet200ResponseMidnightWallet.js';
 export * from './Price.js';
