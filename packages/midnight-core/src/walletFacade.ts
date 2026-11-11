@@ -1,10 +1,11 @@
-import { InMemoryTransactionHistoryStorage } from '@midnight-ntwrk/wallet-sdk';
+import { InMemoryTransactionHistoryStorage, ProtocolVersion } from '@midnight-ntwrk/wallet-sdk';
 import { ShieldedWallet } from '@midnight-ntwrk/wallet-sdk/shielded';
 import { UnshieldedWallet, PublicKey } from '@midnight-ntwrk/wallet-sdk/unshielded';
 import { DustWallet, type DustKeysByEpoch, type DustWalletAPI } from '@midnight-ntwrk/wallet-sdk/dust';
 import { WalletFacade, WalletEntrySchema, type ResolvedConfiguration } from '@midnight-ntwrk/wallet-sdk/facade';
 import { deriveWalletKeys, type WalletKeys } from './keys.js';
 import { DUST_PARAMS } from './params.js';
+import { indexerQuery } from './indexer.js';
 import type { WalletConfig } from './walletConfig.js';
 import { firstValueFrom } from 'rxjs';
 
@@ -86,7 +87,17 @@ export async function createWallet(options: CreateWalletOptions): Promise<Wallet
       );
     },
     dust: async (config: ResolvedConfiguration<WalletFacadeConfig>) => {
-      const builder = DustWallet({ ...config, dustParameters: DUST_PARAMS });
+      const builder = DustWallet({
+        ...config,
+        dustParameters: DUST_PARAMS,
+        // The SDK's default probe asks for the chain's *genesis* version, so a fresh wallet can replay history from
+        // the start. An inert wallet never syncs, so it would stay at the genesis version forever — on a chain that
+        // forked to ledger-v9 (e.g. preview) that pins the whole facade to ledger-v8, and it then refuses every v9
+        // transaction. It reads no history, so the tip's version is the one it should act at.
+        ...(inert
+          ? { chainVersionProbe: () => tipProtocolVersion(walletConfig.indexerClientConnection.indexerHttpUrl) }
+          : {}),
+      });
       const dust = await restoreOrStart<DustWalletAPI<DustKeysByEpoch>>(
         (saved) => builder.restore(saved),
         () => builder.startWithSeed(keys.seeds.dust, DUST_PARAMS),
@@ -97,6 +108,19 @@ export async function createWallet(options: CreateWalletOptions): Promise<Wallet
   });
 
   return { walletFacade, keys };
+}
+
+/** The protocol version the chain's latest block was produced under. */
+async function tipProtocolVersion(indexerUrl: string): Promise<ProtocolVersion.ProtocolVersion> {
+  const { block } = await indexerQuery<{ block: { protocolVersion: number } | null }>(
+    indexerUrl,
+    '{ block { protocolVersion } }',
+    'block.protocolVersion'
+  );
+  if (!block) {
+    throw new Error('Indexer reports no block, so the chain has named no protocol version');
+  }
+  return ProtocolVersion.ProtocolVersion(BigInt(block.protocolVersion));
 }
 
 /**
