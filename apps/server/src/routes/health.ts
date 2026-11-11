@@ -22,11 +22,14 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       let midnight: typeof ReadyResponse.static.midnight;
       if (fastify.config.midnight && fastify.midnightWalletService) {
         const indexer = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
-        midnight = { wallet: fastify.midnightWalletService.syncState, indexer };
+        const chainState = fastify.midnightChainStateService?.health();
+        midnight = { wallet: fastify.midnightWalletService.syncState, indexer, chainState };
       }
 
       // Cardano is reported but does not gate readiness: no route depends on it.
-      const statuses = midnight ? [midnight.indexer.status, midnight.wallet.status] : [];
+      const statuses = midnight
+        ? [midnight.indexer.status, midnight.wallet.status, midnight.chainState?.status]
+        : [];
       if (statuses.includes('ko')) {
         reply.status(500);
         return { status: 'ko' as const, midnight, cardano };

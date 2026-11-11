@@ -51,6 +51,8 @@ export interface ChainHealth {
 export const MidnightStatus = Type.Object({
   wallet: WalletStatus,
   indexer: IndexerStatus,
+  // The server's cached tip + ledger parameters; 'syncing' until first loaded from the indexer.
+  chainState: Type.Optional(ChainStatus),
 });
 
 export const ReadyResponse = Type.Object({

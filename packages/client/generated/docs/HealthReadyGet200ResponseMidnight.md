@@ -8,6 +8,7 @@ Name | Type
 ------------ | -------------
 `wallet` | [HealthReadyGet200ResponseMidnightWallet](HealthReadyGet200ResponseMidnightWallet.md)
 `indexer` | [HealthReadyGet200ResponseMidnightIndexer](HealthReadyGet200ResponseMidnightIndexer.md)
+`chainState` | [HealthReadyGet200ResponseMidnightChainState](HealthReadyGet200ResponseMidnightChainState.md)
 
 ## Example
 
@@ -18,6 +19,7 @@ import type { HealthReadyGet200ResponseMidnight } from ''
 const example = {
   "wallet": null,
   "indexer": null,
+  "chainState": null,
 } satisfies HealthReadyGet200ResponseMidnight
 
 console.log(example)

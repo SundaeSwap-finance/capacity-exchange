@@ -5,6 +5,7 @@ import type { AppConfig } from '../loadConfig.js';
 import type { CardanoChainStateService } from '../services/cardano/chain-state.js';
 import type { CardanoWalletService } from '../services/cardano/wallet.js';
 import type { MidnightWalletService, WalletSyncState } from '../services/midnight/wallet.js';
+import type { MidnightChainStateService } from '../services/midnight/chain-state.js';
 
 type CardanoHealth = ReturnType<CardanoChainStateService['health']>;
 
@@ -22,7 +23,9 @@ async function appWith({
   wallet,
   cardano,
   cardanoLovelace,
+  chainState = { status: 'ok' },
 }: {
+  chainState?: { status: 'ok' } | { status: 'syncing'; error?: string };
   wallet?: WalletSyncState;
   cardano?: CardanoHealth;
   cardanoLovelace?: bigint;
@@ -33,6 +36,10 @@ async function appWith({
   app.decorate(
     'midnightWalletService',
     wallet ? ({ syncState: wallet } as unknown as MidnightWalletService) : null,
+  );
+  app.decorate(
+    'midnightChainStateService',
+    wallet ? ({ health: () => chainState } as unknown as MidnightChainStateService) : null,
   );
   app.decorate(
     'cardanoChainStateService',
@@ -128,6 +135,21 @@ describe('GET /health/ready', () => {
     expect(res.json()).toMatchObject({
       status: 'syncing',
       midnight: { wallet: { status: 'syncing' } },
+    });
+  });
+
+  it('is a 503 until the Midnight chain state has loaded from the indexer', async () => {
+    stubIndexer();
+    app = await appWith({
+      wallet: { status: 'ok' },
+      chainState: { status: 'syncing', error: 'tip: Indexer returned HTTP 500' },
+    });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'syncing',
+      midnight: { chainState: { status: 'syncing', error: 'tip: Indexer returned HTTP 500' } },
     });
   });
 

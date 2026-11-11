@@ -218,6 +218,45 @@
                               "type": "string"
                             }
                           }
+                        },
+                        "chainState": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "syncing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                }
+                              ]
+                            },
+                            "slot": {
+                              "type": "number"
+                            },
+                            "tipAgeMs": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          }
                         }
                       }
                     },
@@ -372,6 +411,45 @@
                               "type": "string"
                             }
                           }
+                        },
+                        "chainState": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "syncing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                }
+                              ]
+                            },
+                            "slot": {
+                              "type": "number"
+                            },
+                            "tipAgeMs": {
+                              "type": "number"
+                            },
+                            "error": {
+                              "type": "string"
+                            }
+                          }
                         }
                       }
                     },
@@ -523,6 +601,45 @@
                               "type": "string"
                             },
                             "details": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "chainState": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "syncing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ko"
+                                  ]
+                                }
+                              ]
+                            },
+                            "slot": {
+                              "type": "number"
+                            },
+                            "tipAgeMs": {
+                              "type": "number"
+                            },
+                            "error": {
                               "type": "string"
                             }
                           }
