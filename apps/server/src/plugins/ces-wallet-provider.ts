@@ -4,6 +4,7 @@ import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { indexerChainStateProvider } from '@sundaeswap/capacity-exchange-providers';
 import { buildCesWalletProvider } from '../config/cesWalletProvider.js';
 import { createAutoSelectCurrency } from '../config/peerCurrencySelector.js';
+import { peerChainStateProvider } from '../config/peerChainStateProvider.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -24,8 +25,15 @@ export default fp(async (fastify: FastifyInstance) => {
     return;
   }
 
+  if (!fastify.midnightChainStateService) {
+    throw new Error("CES wallet provider requires MidnightChainStateService to be init'd first");
+  }
+
   const { indexerHttpUrl, indexerWsUrl } = fastify.config.midnight.endpoints;
-  const chainStateProvider = indexerChainStateProvider(indexerHttpUrl, indexerWsUrl);
+  const chainStateProvider = peerChainStateProvider(
+    indexerChainStateProvider(indexerHttpUrl, indexerWsUrl),
+    fastify.midnightChainStateService,
+  );
   fastify.addHook('onClose', async () => {
     await chainStateProvider.dispose();
   });
