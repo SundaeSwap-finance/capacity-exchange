@@ -153,6 +153,33 @@ describe('GET /health/ready', () => {
     });
   });
 
+  it('is a 503 when the indexer is unreachable', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('connect ECONNREFUSED'))),
+    );
+    app = await appWith({ wallet: { status: 'ok' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'ko',
+      midnight: { indexer: { status: 'ko', error: 'Unreachable: connect ECONNREFUSED' } },
+    });
+  });
+
+  it('is a 503 when the indexer returns a 500', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 500, statusText: 'Internal Server Error' })),
+    );
+    app = await appWith({ wallet: { status: 'ok' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({ status: 'ko', midnight: { indexer: { status: 'ko' } } });
+  });
+
   it('is a 500 when the Midnight wallet fails', async () => {
     stubIndexer();
     app = await appWith({ wallet: { status: 'ko', error: 'sync failed' } });
