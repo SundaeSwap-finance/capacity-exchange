@@ -143,7 +143,11 @@ function MockFlow() {
   // They don't need DUST, but may need to send or receive shielded or unshielded tokens.
   const wallet: ConnectedAPI = useMockWallet();
 
-  const zkConfigProvider = useMemo(() => new FetchZkConfigProvider(window.location.origin), []);
+  // Bound fetch: the provider's default calls fetch with the wrong `this` ("Illegal invocation").
+  const zkConfigProvider = useMemo(
+    () => new FetchZkConfigProvider(window.location.origin, { fetchFunc: window.fetch.bind(window) }),
+    []
+  );
 
   // NB: fetching information from a wallet is asynchronous,
   // and will prompt the user for permission. Wrap this component in suspense.

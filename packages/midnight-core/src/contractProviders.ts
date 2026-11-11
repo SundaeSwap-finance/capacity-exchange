@@ -26,7 +26,11 @@ export function buildMidnightProviders<CircuitId extends string>(
 ): MidnightProviders<CircuitId> & { dispose: () => Promise<void> } {
   // FetchZkConfigProvider rejects SPA index.html fallbacks and checks artifacts against the
   // compiler's integrity manifest, so missing or stale artifacts fail here rather than at the prover.
-  const zkConfigProvider = new FetchZkConfigProvider<CircuitId>(window.location.origin + zkConfigPath);
+  // midnight-js-fetch-zk-config-provider 5.0.0 calls its default fetch as a method of the
+  // provider, which browsers reject with "Illegal invocation". Pass one bound to window.
+  const zkConfigProvider = new FetchZkConfigProvider<CircuitId>(window.location.origin + zkConfigPath, {
+    fetchFunc: window.fetch.bind(window),
+  });
   const publicDataProvider = indexerPublicDataProvider({
     queryURL: config.indexerUrl,
     subscriptionURL: config.indexerWsUrl,
