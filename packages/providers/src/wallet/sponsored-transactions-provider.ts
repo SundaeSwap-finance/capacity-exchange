@@ -1,4 +1,5 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { createLedger9WalletProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { toUnbound } from '@sundaeswap/capacity-exchange-core';
 import type { SponsoredTransactionsConfig } from './types.js';
 import { createCesApi } from './exchangeApi.js';
 import { requestSponsorship } from './sponsored-transactions-steps.js';
@@ -20,13 +21,13 @@ export function sponsoredTransactionsWalletProvider({
 }: SponsoredTransactionsConfig): WalletProvider {
   const exchangeApi = createCesApi(capacityExchangeUrl);
 
-  return {
+  return createLedger9WalletProvider({
     getCoinPublicKey: () => coinPublicKey,
     getEncryptionPublicKey: () => encryptionPublicKey,
 
-    async balanceTx(tx, _ttl?) {
+    async balanceTx(tx) {
       console.debug('[SponsoredTransactions] balanceTx called');
-      return requestSponsorship(tx, exchangeApi);
+      return requestSponsorship(toUnbound(tx), exchangeApi);
     },
-  };
+  });
 }

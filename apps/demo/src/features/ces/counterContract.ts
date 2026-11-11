@@ -9,7 +9,7 @@ import {
   type PromptForCurrency,
   type ConfirmOffer,
 } from '@sundaeswap/capacity-exchange-providers';
-import { buildMidnightProviders, getLedgerParameters } from '@sundaeswap/capacity-exchange-core';
+import { buildMidnightProviders, getLedgerParameters, queryContractState } from '@sundaeswap/capacity-exchange-core';
 import type { NetworkConfig } from '../../config';
 import * as Counter from '../../../contracts/counter/out/contract/index.js';
 
@@ -27,8 +27,13 @@ export interface GetCounterValueResult {
 }
 
 export async function getCounterValue(contractAddress: string, config: NetworkConfig): Promise<GetCounterValueResult> {
-  const publicDataProvider = indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl);
-  const contractState = await publicDataProvider.queryContractState(contractAddress);
+  const publicDataProvider = indexerPublicDataProvider({
+    queryURL: config.indexerUrl,
+    subscriptionURL: config.indexerWsUrl,
+  });
+  const contractState = await queryContractState(publicDataProvider, contractAddress).finally(() =>
+    publicDataProvider.dispose()
+  );
 
   if (!contractState) {
     throw new Error(`Contract not found at address: ${contractAddress}`);
@@ -58,15 +63,19 @@ export async function incrementCounter(
     config
   );
 
-  await findDeployedContract(contractProviders, {
-    compiledContract: compiledCounterContract,
-    contractAddress,
-  });
-  await submitCallTx(contractProviders, {
-    compiledContract: compiledCounterContract,
-    contractAddress,
-    circuitId: 'increment' as CounterCircuitId,
-  });
+  try {
+    await findDeployedContract(contractProviders, {
+      compiledContract: compiledCounterContract,
+      contractAddress,
+    });
+    await submitCallTx(contractProviders, {
+      compiledContract: compiledCounterContract,
+      contractAddress,
+      circuitId: 'increment' as CounterCircuitId,
+    });
+  } finally {
+    contractProviders.dispose();
+  }
 }
 
 /**
@@ -82,36 +91,46 @@ export async function findAndIncrementCounter(
   confirmOffer: ConfirmOffer,
   config: NetworkConfig
 ) {
-  const publicData = indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl);
-  const cesWalletProvider = capacityExchangeWalletProvider({
-    networkId: config.networkId,
-    coinPublicKey: walletProvider.getCoinPublicKey(),
-    encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
-    balanceUnsealedTransaction,
-    balanceSealedTransaction,
-    chainStateProvider: {
-      queryContractState: (addr, cfg) => publicData.queryContractState(addr, cfg),
-      getLedgerParameters: () => getLedgerParameters(config.indexerUrl),
-    },
-    additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
-    promptForCurrency,
-    confirmOffer,
+  const publicData = indexerPublicDataProvider({
+    queryURL: config.indexerUrl,
+    subscriptionURL: config.indexerWsUrl,
   });
+  const disposeTasks = [() => publicData.dispose()];
+  try {
+    const cesWalletProvider = capacityExchangeWalletProvider({
+      networkId: config.networkId,
+      coinPublicKey: walletProvider.getCoinPublicKey(),
+      encryptionPublicKey: walletProvider.getEncryptionPublicKey(),
+      balanceUnsealedTransaction,
+      balanceSealedTransaction,
+      chainStateProvider: {
+        queryContractState: (addr, cfg) => publicData.queryContractState(addr, cfg),
+        getLedgerParameters: () => getLedgerParameters(config.indexerUrl),
+        dispose: async () => {},
+      },
+      additionalCapacityExchangeUrls: [config.capacityExchangeUrl],
+      promptForCurrency,
+      confirmOffer,
+    });
 
-  const contractProviders = buildMidnightProviders<CounterCircuitId>(
-    cesWalletProvider,
-    midnightProvider,
-    '/midnight/counter',
-    config
-  );
+    const contractProviders = buildMidnightProviders<CounterCircuitId>(
+      cesWalletProvider,
+      midnightProvider,
+      '/midnight/counter',
+      config
+    );
+    disposeTasks.push(() => contractProviders.dispose());
 
-  await findDeployedContract(contractProviders, {
-    compiledContract: compiledCounterContract,
-    contractAddress,
-  });
-  await submitCallTx(contractProviders, {
-    compiledContract: compiledCounterContract,
-    contractAddress,
-    circuitId: 'increment' as CounterCircuitId,
-  });
+    await findDeployedContract(contractProviders, {
+      compiledContract: compiledCounterContract,
+      contractAddress,
+    });
+    await submitCallTx(contractProviders, {
+      compiledContract: compiledCounterContract,
+      contractAddress,
+      circuitId: 'increment' as CounterCircuitId,
+    });
+  } finally {
+    await Promise.all(disposeTasks.map((dispose) => dispose()));
+  }
 }

@@ -7,6 +7,7 @@ import {
   runCli,
 } from '@sundaeswap/capacity-exchange-nodejs';
 import type { PublicDataProvider } from '@midnight-ntwrk/midnight-js/types';
+import { queryContractState } from '@sundaeswap/capacity-exchange-core';
 import { program } from 'commander';
 
 import {
@@ -24,7 +25,7 @@ async function listRegisteredServers(
 ): Promise<RegistryMapping> {
   logger.info(`Querying registered servers from registry ${contractAddress}...`);
 
-  const contractState = await publicDataProvider.queryContractState(contractAddress);
+  const contractState = await queryContractState(publicDataProvider, contractAddress);
   if (!contractState) {
     throw new Error(`Contract not found at address: ${contractAddress}`);
   }
@@ -54,7 +55,9 @@ async function main(): Promise<void> {
   const network = buildNetworkConfig(networkId, env);
   const publicDataProvider = createPublicDataProvider(network);
 
-  const entries = await listRegisteredServers(publicDataProvider, contractAddress);
+  const entries = await listRegisteredServers(publicDataProvider, contractAddress).finally(() =>
+    publicDataProvider.dispose()
+  );
 
   for (const [key, entry] of entries) {
     const details = {

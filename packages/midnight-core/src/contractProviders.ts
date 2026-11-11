@@ -1,35 +1,21 @@
+import './graphqlFirst.js';
 import type { MidnightProvider, WalletProvider, MidnightProviders } from '@midnight-ntwrk/midnight-js/types';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { inMemoryPrivateStateProvider } from './inMemoryPrivateStateProvider.js';
 
-/**
- * Fetch wrapper that rejects HTML responses as 404.
- *
- * SPA hosts (Vite dev, Netlify, nginx, etc.) serve index.html for missing
- * files. FetchZkConfigProvider doesn't validate Content-Type, so HTML bytes
- * get treated as valid ZK key material, causing proof server 400 errors.
- *
- * @see https://github.com/midnightntwrk/midnight-js/issues/536
- */
-async function binaryFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const response = await fetch(input, init);
-  if (!response.ok) {
-    return response;
-  }
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('text/html')) {
-    return response;
-  }
-  return new Response(null, { status: 404, statusText: 'Not Found' });
-}
-
 export interface BrowserProviderConfig {
+  networkId: string;
   indexerUrl: string;
   indexerWsUrl: string;
   proofServerUrl: string;
+  /** How long built transactions stay valid. Defaults to {@link DEFAULT_TX_TTL_SECONDS}. */
+  ttlSeconds?: number;
 }
+
+/** Default lifetime of transactions built through midnight-js. */
+export const DEFAULT_TX_TTL_SECONDS = 5 * 60;
 
 /** Assemble MidnightProviders for browser-based contract interaction. */
 export function buildMidnightProviders<CircuitId extends string>(
@@ -37,15 +23,26 @@ export function buildMidnightProviders<CircuitId extends string>(
   midnightProvider: MidnightProvider,
   zkConfigPath: string,
   config: BrowserProviderConfig
-): MidnightProviders<CircuitId> {
-  const zkConfigProvider = new FetchZkConfigProvider<CircuitId>(window.location.origin + zkConfigPath, binaryFetch);
+): MidnightProviders<CircuitId> & { dispose: () => Promise<void> } {
+  // FetchZkConfigProvider rejects SPA index.html fallbacks and checks artifacts against the
+  // compiler's integrity manifest, so missing or stale artifacts fail here rather than at the prover.
+  const zkConfigProvider = new FetchZkConfigProvider<CircuitId>(window.location.origin + zkConfigPath);
+  const publicDataProvider = indexerPublicDataProvider({
+    queryURL: config.indexerUrl,
+    subscriptionURL: config.indexerWsUrl,
+  });
 
   return {
     privateStateProvider: inMemoryPrivateStateProvider(),
-    publicDataProvider: indexerPublicDataProvider(config.indexerUrl, config.indexerWsUrl),
+    publicDataProvider,
     zkConfigProvider,
-    proofProvider: httpClientProofProvider(config.proofServerUrl, zkConfigProvider),
+    proofProvider: httpClientProofProvider({
+      url: config.proofServerUrl,
+      zkConfigProvider,
+    }),
     walletProvider,
     midnightProvider,
+    config: { networkId: config.networkId, ttlSeconds: config.ttlSeconds ?? DEFAULT_TX_TTL_SECONDS },
+    dispose: () => publicDataProvider.dispose(),
   };
 }

@@ -5,14 +5,16 @@ import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
 /** A store that records what was written, standing in for whatever the SDK supplies. */
 function recordingStore() {
   const written = new Map<string, unknown>();
-  const store = {
-    setContractAddress: vi.fn(),
+  const contractStates = {
     set: vi.fn(async (key: string, value: unknown) => {
       written.set(key, value);
     }),
     get: vi.fn(async (key: string) => written.get(key)),
+  };
+  const store = {
+    forContract: vi.fn(() => contractStates),
   } as unknown as PrivateStateProvider;
-  return { store, written };
+  return { store, written, contractStates };
 }
 
 describe("s' must outlive the pay call", () => {
@@ -29,7 +31,7 @@ describe("s' must outlive the pay call", () => {
 
     expect(written.has('swap-1')).toBe(true);
     // The caller still holds the store after the call, which is the whole point.
-    expect(await (store as unknown as { get(k: string): Promise<unknown> }).get('swap-1')).toBeDefined();
+    expect(await store.forContract('coupler-addr').get('swap-1')).toBeDefined();
   });
 
   it('keys each swap separately, so concurrent swaps do not clobber each other', async () => {

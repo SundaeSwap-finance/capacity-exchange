@@ -5,10 +5,9 @@ export type {
   PureCircuits,
   Circuits,
   Ledger,
-  ContractReferenceLocations,
 } from '../contract/out/contract/index.js';
 
-export { Contract, contractReferenceLocations, ledger, pureCircuits } from '../contract/out/contract/index.js';
+export { Contract, ledger, pureCircuits } from '../contract/out/contract/index.js';
 
 export {
   CompiledRegistryContract,

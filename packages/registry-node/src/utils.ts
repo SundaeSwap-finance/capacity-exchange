@@ -36,11 +36,10 @@ export async function getProviders(
   logger.debug(`generated private state id: ${privateStateId}`);
 
   const providers = buildProviders<RegistryContract>(ctx, getContractOutDir(logger));
-  providers.privateStateProvider.setContractAddress(contractAddress);
 
   // Load the secret key into the private state provider so the `secretKey()` witness
   // has a value to read during circuit execution.
-  await providers.privateStateProvider.set(privateStateId, createPrivateState(secretKey));
+  await providers.privateStateProvider.forContract(contractAddress).set(privateStateId, createPrivateState(secretKey));
 
   return { providers, privateStateId };
 }

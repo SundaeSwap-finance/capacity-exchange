@@ -3,12 +3,13 @@ import {
   CoreWallet,
   type UnprovenDustSpend,
   type DustFullInfo,
-} from '@midnight-ntwrk/wallet-sdk/dust/v1';
+} from '@midnight-ntwrk/wallet-sdk/dust/v2';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { FastifyBaseLogger } from 'fastify';
-import { nativeToken } from '@midnight-ntwrk/ledger-v8';
+import { nativeToken } from '@midnightntwrk/ledger-v9';
 
 import {
+  dustCoreState,
   makeTokenOnlyBalanceFunctions,
   WalletConnection,
   type WalletStateStore,
@@ -68,7 +69,7 @@ export class MidnightWalletService {
     });
 
     // Start the wallet
-    await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
+    await walletFacade.start(keys.seeds);
 
     // Background sync — transitions to 'ok' or 'ko'.
     // Awaits all sub-wallets (dust + shielded + unshielded) so the server can
@@ -108,7 +109,7 @@ export class MidnightWalletService {
       throw new Error('dust wallet not synced');
     }
     const [spends] = CoreWallet.spendCoins(
-      state.state,
+      dustCoreState(state),
       this.walletConnection.keys.dustSecretKey,
       [{ token: utxo.token, value: amount }],
       ctime,

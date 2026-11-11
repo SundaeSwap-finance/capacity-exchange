@@ -1,6 +1,6 @@
 const DEFAULT_REGISTRY_ADDRESSES: Record<string, string | undefined> = {
-  preview: 'e5e6b7df948c16d7bcd7d5c982e1be3636b08d0d3aa9bd9c710a204714d59aae',
-  preprod: '4dd6a6b6b859606f72607de4d1aaeac6196f3b1eb778d0fd5e252c0a68d712bc',
+  preview: '4d0b6d84d14ba0e9eae766a1c6ea95d487a40c67dc9bb9925e56fb0872f67ecb',
+  preprod: '892007f66343fe9a9867607d8448fe47ccde964c1dc8021bccaaf97c0bebb0ec',
   mainnet: 'e1c688c297ef5787b08d8f0078932bba8c091bd5873b155d9793e10bd9a22fd7',
 };
 

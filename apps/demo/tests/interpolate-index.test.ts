@@ -53,7 +53,8 @@ function inlined(index: string): unknown {
 // Restated so the cases are static. The drift test at the end holds it to the CLI.
 const NETWORK_IDS = ['undeployed', 'preview', 'preprod', 'mainnet'];
 
-describe('interpolate-index.ts', () => {
+// Each case spawns the script, and loading its imports alone takes about 5s, the default timeout.
+describe('interpolate-index.ts', { timeout: 30_000 }, () => {
   it.each(NETWORK_IDS)('inlines a config carrying just the network id for %s', (networkId) => {
     const r = run(networkId);
     expect(r.status).toBe(0);

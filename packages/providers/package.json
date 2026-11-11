@@ -35,12 +35,13 @@
     "@sundaeswap/capacity-exchange-registry": "workspace:^",
     "@sundaeswap/capacity-exchange-client": "workspace:^",
     "@sundaeswap/capacity-exchange-core": "workspace:^",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
-    "@midnight-ntwrk/midnight-js": "4.1.1"
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "5.0.0",
+    "@midnight-ntwrk/midnight-js": "5.0.0",
+    "graphql": "^17.0.1"
   },
   "peerDependencies": {
-    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
-    "@midnight-ntwrk/ledger-v8": "8.1.0"
+    "@midnight-ntwrk/dapp-connector-api": "4.1.0",
+    "@midnightntwrk/ledger-v9": "1.0.1"
   },
   "devDependencies": {
     "commander": "^14.0.2",

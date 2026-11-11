@@ -7,10 +7,12 @@ import {
   type Leg,
   type LegProviders,
 } from '@sundaeswap/capacity-exchange-core';
-import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
-import { ZswapOutput, sampleEncryptionPublicKey } from '@midnight-ntwrk/ledger-v8';
+import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
+import { ZswapOutput, sampleEncryptionPublicKey } from '@midnightntwrk/ledger-v9';
 import { CouplerRawContract } from './contract.js';
 import { createPrivateState, witnesses } from './witnesses.js';
+
+const Bytes32Descriptor = new CompactTypeBytes(32);
 
 function runCouplerCircuit(
   providers: LegProviders,
@@ -54,9 +56,8 @@ export async function buildAbsorbLeg(
   nonce: Uint8Array
 ): Promise<Leg> {
   const privateStateProvider = inMemoryPrivateStateProvider();
-  privateStateProvider.setContractAddress(couplerAddress);
   const privateStateId = randomHex(32);
-  await privateStateProvider.set(privateStateId, createPrivateState(new Uint8Array(32)));
+  await privateStateProvider.forContract(couplerAddress).set(privateStateId, createPrivateState(new Uint8Array(32)));
   const providers: LegProviders = { walletProvider, publicDataProvider, privateStateProvider };
   return runCouplerCircuit(providers, couplerAddress, privateStateId, 'absorb', [h, hPrime, nonce]);
 }

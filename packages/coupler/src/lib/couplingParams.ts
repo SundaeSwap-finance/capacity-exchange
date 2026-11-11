@@ -1,4 +1,4 @@
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
 
 /** The deal terms the user asks the LP to fund. */
 export interface CouplingRequest {

@@ -1,10 +1,12 @@
-import { DustSecretKey, ZswapSecretKeys } from '@midnight-ntwrk/ledger-v8';
+import { DustSecretKey, ZswapSecretKeys } from '@midnightntwrk/ledger-v9';
 import { NetworkId } from '@midnight-ntwrk/wallet-sdk';
-import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk/hd';
+import { HDWallet, Roles, WalletSeeds } from '@midnight-ntwrk/wallet-sdk/hd';
 import { createKeystore, UnshieldedKeystore } from '@midnight-ntwrk/wallet-sdk/unshielded';
 import { hexToBytes } from './hex.js';
 
 export interface WalletKeys {
+  /** Per-wallet seeds the WalletFacade is started from. Each ledger version derives its own keys from them. */
+  seeds: WalletSeeds;
   shieldedSecretKeys: ZswapSecretKeys;
   dustSecretKey: DustSecretKey;
   unshieldedKeystore: UnshieldedKeystore;
@@ -28,9 +30,16 @@ export function deriveWalletKeys(seedHex: string, networkId: NetworkId.NetworkId
 
   hdWallet.hdWallet.clear();
 
+  const seeds: WalletSeeds = {
+    shielded: derivationResult.keys[Roles.Zswap],
+    unshielded: derivationResult.keys[Roles.NightExternal],
+    dust: derivationResult.keys[Roles.Dust],
+  };
+
   return {
-    shieldedSecretKeys: ZswapSecretKeys.fromSeed(derivationResult.keys[Roles.Zswap]),
-    dustSecretKey: DustSecretKey.fromSeed(derivationResult.keys[Roles.Dust]),
-    unshieldedKeystore: createKeystore(derivationResult.keys[Roles.NightExternal], networkId),
+    seeds,
+    shieldedSecretKeys: ZswapSecretKeys.fromSeed(seeds.shielded),
+    dustSecretKey: DustSecretKey.fromSeed(seeds.dust),
+    unshieldedKeystore: createKeystore({ kind: 'schnorr', secret: seeds.unshielded }, networkId),
   };
 }

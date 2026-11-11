@@ -5,7 +5,7 @@ import {
   type Proof,
   type ContractCall,
   type SignatureEnabled,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import { persistentHash, CompactTypeBytes, CompactTypeVector } from '@midnight-ntwrk/compact-runtime';
 import {
   callsTo,

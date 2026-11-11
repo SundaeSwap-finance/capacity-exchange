@@ -1,11 +1,15 @@
 import * as path from 'path';
 import { createRequire } from 'module';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
-import { inMemoryPrivateStateProvider, buildUnprovenCallTx } from '@sundaeswap/capacity-exchange-core';
+import {
+  inMemoryPrivateStateProvider,
+  buildUnprovenCallTx,
+  queryContractState,
+  toUnbound,
+} from '@sundaeswap/capacity-exchange-core';
 import { AppContext, buildProviders } from '@sundaeswap/capacity-exchange-nodejs';
 import { Counter, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
-
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 /**
  * Demo op for the coupler e2e: an increment of the pre-deployed counter contract.
  * This module is the only place the e2e touches demo-contracts.
@@ -39,12 +43,12 @@ export async function buildCounterIncrementTx(ctx: AppContext, counterAddress: s
     contractAddress: counterAddress,
     circuitId: 'increment',
   });
-  return providers.proofProvider.proveTx(unproven.private.unprovenTx);
+  return toUnbound(await providers.proofProvider.proveTx(unproven.private.unprovenTx));
 }
 
 /** Read the counter's round value. */
 export async function readCounterRound(ctx: AppContext, counterAddress: string): Promise<bigint> {
-  const state = await ctx.publicDataProvider.queryContractState(counterAddress);
+  const state = await queryContractState(ctx.publicDataProvider, counterAddress);
   if (!state) {
     throw new Error(`Counter not found at ${counterAddress}`);
   }

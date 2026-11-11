@@ -7,7 +7,7 @@ import {
   type ContractAction,
   type ContractCall,
   type Transcript,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import { mergeCellWrites } from './cellWrites.js';
 
 /** A transaction that has been signed, proved, and bound. */

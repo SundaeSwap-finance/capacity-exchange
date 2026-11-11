@@ -16,17 +16,12 @@ async function executeTransfer(
   transfers: (ShieldedTokenTransfer | UnshieldedTokenTransfer)[],
   sign: boolean
 ): Promise<string> {
-  const { shieldedSecretKeys, dustSecretKey } = keys;
   const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
 
-  let recipe: BalancingRecipe = await walletFacade.transferTransaction(
-    transfers,
-    { shieldedSecretKeys, dustSecretKey },
-    { ttl }
-  );
+  let recipe: BalancingRecipe = await walletFacade.transferTransaction(transfers, { ttl });
 
   if (sign) {
-    recipe = await walletFacade.signRecipe(recipe, (payload: Uint8Array) => keys.unshieldedKeystore.signData(payload));
+    recipe = await walletFacade.signRecipe(recipe, keys.unshieldedKeystore.signDataAsync);
   }
 
   const finalizedTx = await walletFacade.finalizeRecipe(recipe);

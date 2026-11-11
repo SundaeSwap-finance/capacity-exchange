@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { Transaction, type SignatureEnabled, type Proof, type Binding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction, type SignatureEnabled, type Proof, type Binding } from '@midnightntwrk/ledger-v9';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 import { extractDisclosed } from '@sundaeswap/capacity-exchange-coupler/operations';
 import { captureCoupling, type CaptureDeps } from '../../src/capture/run.js';

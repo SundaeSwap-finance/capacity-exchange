@@ -1,4 +1,3 @@
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import {
   Intent,
   Proof,
@@ -6,7 +5,7 @@ import {
   Transaction,
   type Binding,
   type FinalizedTransaction,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import type { ExchangePrice, Offer, BalanceSealedTransaction, BalanceUnsealedTransaction } from './types.js';
 import type { ChainStateProvider } from './chainStateProvider.js';
 import { isOfferExpired } from './utils.js';
@@ -21,7 +20,7 @@ import {
   CapacityExchangeOfferExpiredError,
   CapacityExchangeOfferTransactionInvalidError,
 } from './errors.js';
-
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 function deserializeTx(hex: Uint8Array): Transaction<SignatureEnabled, Proof, Binding> {
   return Transaction.deserialize<SignatureEnabled, Proof, Binding>('signature', 'proof', 'binding', hex);
 }

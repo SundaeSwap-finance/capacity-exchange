@@ -18,10 +18,13 @@ const past = new Date(Date.now() - 1);
 
 const d = (s: string) => s as DomainName;
 
+/** A provider whose read returns `state` as a decoded ledger-v9 contract state, or nothing. */
 function makeProvider(state: unknown) {
+  const read = state === null ? null : { contractState: { era: 'v9', deserialize: () => state } };
   return {
-    queryContractState: vi.fn().mockResolvedValue(state),
+    queryContractState: vi.fn().mockResolvedValue(read),
     getLedgerParameters: vi.fn(),
+    dispose: vi.fn(),
   };
 }
 

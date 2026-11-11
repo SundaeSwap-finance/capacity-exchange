@@ -1,5 +1,7 @@
-import { type Op, type AlignedValue } from '@midnight-ntwrk/ledger-v8';
-import { Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
+import { type Op, type AlignedValue } from '@midnightntwrk/ledger-v9';
+import { CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
+
+const Bytes32Descriptor = new CompactTypeBytes(32);
 
 /** A cell's value, as the ledger represents it. */
 export type CellValue = AlignedValue['value'];

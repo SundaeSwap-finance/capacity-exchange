@@ -1,5 +1,5 @@
 import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
 import type { CapacityFragment } from './capacity.js';
 import type { CouplingRequest } from './couplingParams.js';
 

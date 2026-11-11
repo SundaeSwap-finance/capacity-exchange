@@ -38,3 +38,21 @@ export {
   waitForDustBalance,
 } from './dust-registration.js';
 export { splitAndRegister, type SplitNightOutput } from './split-night.js';
+export {
+  rotateVerifierKeys,
+  parseSigningKey,
+  readLocalVerifierKeys,
+  type RotateVerifierKeysOptions,
+  type RotateVerifierKeysResult,
+  type RotationMode,
+  type CircuitKeyStatus,
+} from './rotateVerifierKeys.js';
+export {
+  sampleMaintenanceKey,
+  recordDeployment,
+  shouldStoreMaintenanceKey,
+  fetchSecretString,
+  findMaintenanceKeySecret,
+  type MaintenanceKey,
+  type SampleMaintenanceKeyOptions,
+} from './maintenanceKeySecret.js';

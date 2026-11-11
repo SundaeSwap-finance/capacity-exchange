@@ -1,7 +1,7 @@
 import { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { useMemo } from 'react';
 import { MOCK_PRICE_1 } from './constants';
-import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
+import { PreBinding, Proof, SignatureEnabled, Transaction } from '@midnightntwrk/ledger-v9';
 
 function hexToBytes(hex: string): Uint8Array {
   const cleaned = hex.replace(/^0x/, '');

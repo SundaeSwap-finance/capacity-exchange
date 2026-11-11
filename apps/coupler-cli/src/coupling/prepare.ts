@@ -2,10 +2,10 @@ import { createLogger, AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { getLedgerParameters, inMemoryPrivateStateProvider, type Logger } from '@sundaeswap/capacity-exchange-core';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction, ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
+import { LedgerTransaction, type ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
 import {
-  indexerChainStateProvider,
+  type ChainStateProvider,
   type CapacityExchangeConfig,
   type CurrencySelectionResult,
 } from '@sundaeswap/capacity-exchange-providers';
@@ -20,6 +20,7 @@ import {
   type ForeignCapacity,
 } from '@sundaeswap/capacity-exchange-coupler/operations';
 import { COUPLER_OUT_DIR } from '../chain/contract.js';
+import { toFinalized, type UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 
 const logger = createLogger(import.meta);
 
@@ -30,10 +31,14 @@ export function couplerContextFromAppContext(
   logger: Logger
 ): CouplerContext {
   return {
+    networkId: ctx.config.network.networkId,
     coinPublicKey: ctx.walletContext.walletProvider.getCoinPublicKey(),
     publicDataProvider: ctx.publicDataProvider,
     midnightProvider: ctx.midnightProvider,
-    proofProvider: httpClientProofProvider(ctx.config.network.endpoints.proofServerUrl, zkConfigProvider),
+    proofProvider: httpClientProofProvider({
+      url: ctx.config.network.endpoints.proofServerUrl,
+      zkConfigProvider,
+    }),
     getLedgerParameters: () => getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl),
     logger,
   };
@@ -54,6 +59,23 @@ export interface CouplingDeps {
   resolver: CesApiResolver;
 }
 
+/** Fee margin, in blocks, for sizing the dust a coupling funds. The provider prices only the user
+ *  tx, but the coupler submits it merged with the reveal and absorb calls, a dust spend and an
+ *  offer, which on ledger 9 costs about 8x as much. Each block of margin is a factor of about
+ *  1.046 (the ledger's max price adjustment), so 55 blocks is about 12x. A stopgap so e2e and
+ *  capture runs fund enough. The proper fix prices the coupling overhead into the quote. */
+const COUPLING_FEE_MARGIN_BLOCKS = 55;
+
+/** Chain reads over the app's own public-data provider, so a coupling opens no indexer client of
+ *  its own. The app owns that provider's lifecycle, so dispose is a no-op here. */
+function appChainStateProvider(userApp: AppContext, context: CouplerContext): ChainStateProvider {
+  return {
+    queryContractState: (addr, cfg) => userApp.publicDataProvider.queryContractState(addr, cfg),
+    getLedgerParameters: context.getLedgerParameters,
+    dispose: async () => {},
+  };
+}
+
 /** The real capacityExchangeWalletProvider, wired so the only foreign currency is the quoted ADA
  *  and the bridgeless payer runs the coupler against the injected escrow and capacity. */
 function buildWalletProvider(deps: CouplingDeps) {
@@ -68,7 +90,6 @@ function buildWalletProvider(deps: CouplingDeps) {
     capacity,
     privateStateProvider: inMemoryPrivateStateProvider(),
   });
-  const endpoints = userApp.config.network.endpoints;
   const config: CapacityExchangeConfig = {
     networkId: userApp.config.network.networkName,
     coinPublicKey: userApp.walletContext.walletProvider.getCoinPublicKey(),
@@ -79,7 +100,8 @@ function buildWalletProvider(deps: CouplingDeps) {
     balanceSealedTransaction: async () => {
       throw new Error('native balance unused on the cardano path');
     },
-    chainStateProvider: indexerChainStateProvider(endpoints.indexerHttpUrl, endpoints.indexerWsUrl),
+    chainStateProvider: appChainStateProvider(userApp, context),
+    margin: COUPLING_FEE_MARGIN_BLOCKS,
     promptForCurrency: async (prices): Promise<CurrencySelectionResult> => {
       const ada = prices.find((p) => p.price.currency.type === CARDANO_ADA);
       return ada ? { status: 'selected', exchangePrice: ada } : { status: 'no-eligible' };
@@ -93,5 +115,6 @@ function buildWalletProvider(deps: CouplingDeps) {
 /** Fund one transaction by coupling, exactly as a dapp would: hand a normal op to `balanceTx` and
  *  get a bound tx back. Returns the bound tx so the caller decides when and how to submit. */
 export async function prepareCoupling(deps: CouplingDeps, userTx: UnboundTransaction): Promise<FinalizedTransaction> {
-  return buildWalletProvider(deps).balanceTx(userTx);
+  const balanced = await buildWalletProvider(deps).balanceTx(LedgerTransaction.seal('v9', 'Unbound', userTx));
+  return toFinalized(balanced);
 }

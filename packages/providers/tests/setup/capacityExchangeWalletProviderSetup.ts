@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { LedgerParameters } from '@midnight-ntwrk/ledger-v8';
+import type { LedgerParameters } from '@midnightntwrk/ledger-v9';
 import type {
   CapacityExchangeConfig,
   ExchangePrice,
@@ -100,6 +100,7 @@ export function createTestConfig(ctx: TestContext): CapacityExchangeConfig {
     chainStateProvider: {
       queryContractState: async () => null,
       getLedgerParameters: async () => ({}) as LedgerParameters,
+      dispose: async () => {},
     } satisfies ChainStateProvider,
     additionalCapacityExchangeUrls: ['http://localhost:3000'],
     promptForCurrency: ctx.promptForCurrency,

@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { capacityExchangeWalletProvider } from '../src/wallet/capacityExchangeWalletProvider.js';
+import {
+  capacityExchangeBalancer,
+  capacityExchangeWalletProvider,
+} from '../src/wallet/capacityExchangeWalletProvider.js';
 import { CapacityExchangeOfferMismatchError } from '../src/wallet/errors.js';
 import { createMockUnboundTransaction } from './mocks/mockProviders.js';
 import {
@@ -9,8 +12,8 @@ import {
   type TestContext,
 } from './setup/capacityExchangeWalletProviderSetup.js';
 
-vi.mock('@midnight-ntwrk/ledger-v8', async () => {
-  const actual = await vi.importActual('@midnight-ntwrk/ledger-v8');
+vi.mock('@midnightntwrk/ledger-v9', async () => {
+  const actual = await vi.importActual('@midnightntwrk/ledger-v9');
   return {
     ...actual,
     Transaction: {
@@ -42,10 +45,10 @@ describe('capacityExchangeWalletProvider', () => {
   });
 
   it('should complete the full Capacity Exchange flow successfully', async () => {
-    const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
+    const balance = capacityExchangeBalancer(createTestConfig(ctx));
     const mockTx = createMockUnboundTransaction(50000n);
 
-    const result = await provider.balanceTx(mockTx, new Date(Date.now() + 60000));
+    const result = await balance(mockTx);
 
     expect(result).toBeDefined();
 
@@ -63,10 +66,10 @@ describe('capacityExchangeWalletProvider', () => {
 
   it('should calculate DUST requirements correctly', async () => {
     const dustRequired = 75000n;
-    const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
+    const balance = capacityExchangeBalancer(createTestConfig(ctx));
     const mockTx = createMockUnboundTransaction(dustRequired);
 
-    await provider.balanceTx(mockTx, new Date(Date.now() + 60000));
+    await balance(mockTx);
 
     expect(ctx.promptForCurrency).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
     expect(ctx.confirmOffer).toHaveBeenCalledWith(expect.anything(), dustRequired, expect.any(String));
@@ -109,10 +112,8 @@ describe('capacityExchangeWalletProvider', () => {
     offerCurrencyId?: string;
   }): Promise<CapacityExchangeOfferMismatchError> {
     setupMismatchedOfferFetch(overrides);
-    const provider = capacityExchangeWalletProvider(createTestConfig(ctx));
-    const error = await provider
-      .balanceTx(createMockUnboundTransaction(50000n), new Date(Date.now() + 60000))
-      .catch((e) => e);
+    const balance = capacityExchangeBalancer(createTestConfig(ctx));
+    const error = await balance(createMockUnboundTransaction(50000n)).catch((e) => e);
     expect(error).toBeInstanceOf(CapacityExchangeOfferMismatchError);
     expect(error.quotePrice).toEqual(QUOTED_PRICE);
     return error;

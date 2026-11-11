@@ -46,6 +46,8 @@ export interface AppConfig {
   port: number;
   quoteTtlSeconds: number;
   offerTtlSeconds: number;
+  // Fees an offer adds to the client's tx, in units of one shielded output's fee
+  offerFeeOverheadUnits: number;
   otelServiceName?: string;
   otelEndpoint?: string;
   otelMetricExportIntervalMs?: number;
@@ -136,6 +138,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     port: env.PORT,
     quoteTtlSeconds: env.QUOTE_TTL_SECONDS,
     offerTtlSeconds: env.OFFER_TTL_SECONDS,
+    offerFeeOverheadUnits: env.OFFER_FEE_OVERHEAD_UNITS ?? 6,
     otelServiceName: env.OTEL_SERVICE_NAME,
     otelEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
     otelMetricExportIntervalMs: env.OTEL_METRIC_EXPORT_INTERVAL_MS,
