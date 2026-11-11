@@ -180,6 +180,26 @@ describe('GET /health/ready', () => {
     expect(res.json()).toMatchObject({ status: 'ko', midnight: { indexer: { status: 'ko' } } });
   });
 
+  it.each([
+    ['null', null, 'not a JSON object'],
+    ['a string', 'oops', 'not a JSON object'],
+    ['a non-numeric height', { data: { block: { height: '42' } } }, 'no block height'],
+    ['a null block', { data: { block: null } }, 'no block height'],
+  ])('is a 503 when the indexer answers 200 with %s', async (_label, body, error) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, status: 200, json: async () => body })),
+    );
+    app = await appWith({ wallet: { status: 'ok' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'ko',
+      midnight: { indexer: { status: 'ko', error: `Unexpected Indexer response: ${error}` } },
+    });
+  });
+
   it('is a 500 when the Midnight wallet fails', async () => {
     stubIndexer();
     app = await appWith({ wallet: { status: 'ko', error: 'sync failed' } });

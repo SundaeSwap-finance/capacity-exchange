@@ -31,9 +31,9 @@ export async function checkIndexer(url: string): Promise<IndexerStatus> {
     return { status: 'ko', error: `Unreachable: HTTP ${response.status} ${response.statusText}` };
   }
 
-  let data: { data?: { block?: { height: number } }; errors?: unknown[] };
+  let body: unknown;
   try {
-    data = (await response.json()) as typeof data;
+    body = await response.json();
   } catch (err) {
     return {
       status: 'ko',
@@ -41,6 +41,16 @@ export async function checkIndexer(url: string): Promise<IndexerStatus> {
       details: err instanceof Error ? err.message : String(err),
     };
   }
+
+  // Valid JSON need not be an object (e.g. `null`); reading fields off it would throw.
+  if (typeof body !== 'object' || body === null) {
+    return {
+      status: 'ko',
+      error: 'Unexpected Indexer response: not a JSON object',
+      details: JSON.stringify(body),
+    };
+  }
+  const data = body as { data?: { block?: { height?: unknown } | null } | null; errors?: unknown };
 
   if (data.errors) {
     return {
@@ -50,9 +60,10 @@ export async function checkIndexer(url: string): Promise<IndexerStatus> {
     };
   }
 
-  if (!data.data || !data.data.block || !data.data.block.height) {
+  const height = data.data?.block?.height;
+  if (typeof height !== 'number' || !height) {
     return { status: 'ko', error: 'Unexpected Indexer response: no block height' };
   }
 
-  return { status: 'ok', height: data.data.block.height };
+  return { status: 'ok', height };
 }
