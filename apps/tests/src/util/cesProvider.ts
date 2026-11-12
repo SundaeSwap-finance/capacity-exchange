@@ -19,6 +19,7 @@ export function createTestCesProvider(ctx: AppContext, networkId: string, cesUrl
     chainStateProvider: {
       queryContractState: (addr, cfg) => ctx.publicDataProvider.queryContractState(addr, cfg),
       getLedgerParameters: () => getLedgerParameters(ctx.config.network.endpoints.indexerHttpUrl),
+      dispose: async () => {},
     },
     additionalCapacityExchangeUrls: [cesUrl],
     promptForCurrency: (prices) => selectCurrency(prices, tokenRawId, cesUrl),

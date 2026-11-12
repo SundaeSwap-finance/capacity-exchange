@@ -1,4 +1,6 @@
-import type { WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { createLedger9WalletProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { toUnbound, type UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import type { BridgelessPayers } from './bridgelessPayer.js';
 import type { CapacityExchangeConfig, ExchangePrice, Offer, PromptForCurrency, ConfirmOffer } from './types.js';
 import { isOfferExpired } from './utils.js';
@@ -79,13 +81,16 @@ function payableCurrencyTypes(payers: BridgelessPayers | undefined): ReadonlySet
   return new Set(['midnight:shielded', 'midnight:unshielded', ...Object.keys(payers ?? {})]);
 }
 
-export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
-  const resolveCesApis = registryCesApiResolver(
+function defaultCesApiResolver(config: CapacityExchangeConfig): CesApiResolver {
+  return registryCesApiResolver(
     config.networkId,
     config.chainStateProvider,
     config.additionalCapacityExchangeUrls ?? []
   );
-  return createCapacityExchangeWalletProvider(config, resolveCesApis);
+}
+
+export function capacityExchangeWalletProvider(config: CapacityExchangeConfig): WalletProvider {
+  return createCapacityExchangeWalletProvider(config, defaultCesApiResolver(config));
 }
 
 /** The same provider, with the exchange resolver injected rather than built from the registry.
@@ -94,9 +99,23 @@ export function createCapacityExchangeWalletProvider(
   config: CapacityExchangeConfig,
   resolveCesApis: CesApiResolver
 ): WalletProvider {
+  const balance = capacityExchangeBalancer(config, resolveCesApis);
+  return createLedger9WalletProvider({
+    getCoinPublicKey: () => config.coinPublicKey,
+    getEncryptionPublicKey: () => config.encryptionPublicKey,
+    balanceTx: (tx) => balance(toUnbound(tx)),
+  });
+}
+
+/**
+ * The balancing a Capacity Exchange WalletProvider does, over ledger-v9 transactions: acquires
+ * DUST through an exchange (or a bridgeless payer) and returns the bound, funded transaction.
+ */
+export function capacityExchangeBalancer(
+  config: CapacityExchangeConfig,
+  resolveCesApis: CesApiResolver = defaultCesApiResolver(config)
+): (tx: UnboundTransaction) => Promise<FinalizedTransaction> {
   const {
-    coinPublicKey,
-    encryptionPublicKey,
     balanceUnsealedTransaction,
     balanceSealedTransaction,
     chainStateProvider,
@@ -106,42 +125,37 @@ export function createCapacityExchangeWalletProvider(
     bridgelessPayers,
   } = config;
 
-  return {
-    getCoinPublicKey: () => coinPublicKey,
-    getEncryptionPublicKey: () => encryptionPublicKey,
+  return async (tx) => {
+    console.debug('[CapacityExchange] balanceTx called');
 
-    async balanceTx(tx, _ttl?) {
-      console.debug('[CapacityExchange] balanceTx called');
+    const { prices, specksRequired } = await fetchCesPrices(tx, {
+      chainStateProvider,
+      margin,
+      resolveCesApis,
+      payableCurrencyTypes: payableCurrencyTypes(bridgelessPayers),
+    });
 
-      const { prices, specksRequired } = await fetchCesPrices(tx, {
-        chainStateProvider,
-        margin,
-        resolveCesApis,
-        payableCurrencyTypes: payableCurrencyTypes(bridgelessPayers),
-      });
+    while (true) {
+      const requestId = crypto.randomUUID();
+      const exchangePrice = await selectCurrency(prices, specksRequired, requestId, promptForCurrency);
+      const currencyType = exchangePrice.price.currency.type;
 
-      while (true) {
-        const requestId = crypto.randomUUID();
-        const exchangePrice = await selectCurrency(prices, specksRequired, requestId, promptForCurrency);
-        const currencyType = exchangePrice.price.currency.type;
-
-        const payer = bridgelessPayers?.[currencyType];
-        if (payer) {
-          // Foreign-chain payment. Selecting the currency commits: the payer locks the escrow.
-          return payer.pay(tx, bridgelessQuoteFromPrice(exchangePrice), specksRequired);
-        }
-        // TODO: replace these hardcoded native types with a parsed currency type plus a known-types
-        // list in core, so foreign-vs-native is decided by a value, not a string compare.
-        if (currencyType !== 'midnight:shielded' && currencyType !== 'midnight:unshielded') {
-          throw new CapacityExchangeUnsupportedCurrencyError(currencyType);
-        }
-
-        const offer = await requestCesOffer(exchangePrice);
-        const result = await confirmOfferWithUser(offer, specksRequired, requestId, confirmOffer);
-        if (result === 'confirmed') {
-          return processTransactionWithOffer(tx, offer, balanceUnsealedTransaction, balanceSealedTransaction);
-        }
+      const payer = bridgelessPayers?.[currencyType];
+      if (payer) {
+        // Foreign-chain payment. Selecting the currency commits: the payer locks the escrow.
+        return payer.pay(tx, bridgelessQuoteFromPrice(exchangePrice), specksRequired);
       }
-    },
+      // TODO: replace these hardcoded native types with a parsed currency type plus a known-types
+      // list in core, so foreign-vs-native is decided by a value, not a string compare.
+      if (currencyType !== 'midnight:shielded' && currencyType !== 'midnight:unshielded') {
+        throw new CapacityExchangeUnsupportedCurrencyError(currencyType);
+      }
+
+      const offer = await requestCesOffer(exchangePrice);
+      const result = await confirmOfferWithUser(offer, specksRequired, requestId, confirmOffer);
+      if (result === 'confirmed') {
+        return processTransactionWithOffer(tx, offer, balanceUnsealedTransaction, balanceSealedTransaction);
+      }
+    }
   };
 }

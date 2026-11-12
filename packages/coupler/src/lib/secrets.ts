@@ -1,7 +1,9 @@
 import { randomBytes } from './random.js';
 import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
-import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
+import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { createPrivateState } from './witnesses.js';
+
+const Bytes32Descriptor = new CompactTypeBytes(32);
 
 /** The User's per-swap secrets and their commitments (h, h'). */
 export interface SwapSecrets {
@@ -25,8 +27,8 @@ export function generateSwapSecrets(): SwapSecrets {
   };
 }
 
-/** Store s' in a witness store (keyed by swapId) so mintReveal can read it. setContractAddress
- *  is required, the provider scopes keys by contract address. The bridgeless payment method passes
+/** Store s' in a witness store (keyed by swapId) so mintReveal can read it. The provider scopes
+ *  keys by contract address, so it is written under the coupler's. The bridgeless payment method passes
  *  a fresh in-memory provider per call (ephemeral s'). A dapp may pass a durable one. */
 export async function writeSPrimeWitness(
   privateStateProvider: PrivateStateProvider,
@@ -34,6 +36,5 @@ export async function writeSPrimeWitness(
   swapId: string,
   sPrime: Uint8Array
 ): Promise<void> {
-  privateStateProvider.setContractAddress(couplerAddress);
-  await privateStateProvider.set(swapId, createPrivateState(sPrime));
+  await privateStateProvider.forContract(couplerAddress).set(swapId, createPrivateState(sPrime));
 }

@@ -1,4 +1,4 @@
-import type { CoinPublicKey, EncPublicKey } from '@midnight-ntwrk/ledger-v8';
+import type { CoinPublicKey, EncPublicKey } from '@midnightntwrk/ledger-v9';
 import type { CesApi } from './exchangeApi.js';
 import type { ChainStateProvider } from './chainStateProvider.js';
 import type { BridgelessPayers } from './bridgelessPayer.js';

@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { persistentHash, Bytes32Descriptor } from '@midnight-ntwrk/compact-runtime';
+import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { inMemoryPrivateStateProvider } from '@sundaeswap/capacity-exchange-core';
 import { generateSwapSecrets, writeSPrimeWitness } from '../src/lib/secrets.js';
 import { createPrivateState } from '../src/lib/witnesses.js';
+
+const Bytes32Descriptor = new CompactTypeBytes(32);
 
 describe('generateSwapSecrets', () => {
   it('returns 32-byte secrets and commitments', () => {
@@ -34,7 +36,7 @@ describe('writeSPrimeWitness', () => {
     const privateStateProvider = inMemoryPrivateStateProvider();
     const { sPrime } = generateSwapSecrets();
     await writeSPrimeWitness(privateStateProvider, COUPLER, 'swap-1', sPrime);
-    expect(await privateStateProvider.get('swap-1')).toEqual(createPrivateState(sPrime));
+    expect(await privateStateProvider.forContract(COUPLER).get('swap-1')).toEqual(createPrivateState(sPrime));
   });
 
   it('keeps distinct swaps under distinct ids without overwriting', async () => {
@@ -43,7 +45,7 @@ describe('writeSPrimeWitness', () => {
     const b = generateSwapSecrets();
     await writeSPrimeWitness(privateStateProvider, COUPLER, 'swap-a', a.sPrime);
     await writeSPrimeWitness(privateStateProvider, COUPLER, 'swap-b', b.sPrime);
-    expect(await privateStateProvider.get('swap-a')).toEqual(createPrivateState(a.sPrime));
-    expect(await privateStateProvider.get('swap-b')).toEqual(createPrivateState(b.sPrime));
+    expect(await privateStateProvider.forContract(COUPLER).get('swap-a')).toEqual(createPrivateState(a.sPrime));
+    expect(await privateStateProvider.forContract(COUPLER).get('swap-b')).toEqual(createPrivateState(b.sPrime));
   });
 });

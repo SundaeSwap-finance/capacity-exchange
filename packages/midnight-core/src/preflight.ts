@@ -3,10 +3,11 @@ import {
   createUnprovenCallTx,
   verifyContractState,
   type UnprovenCallTxProvidersBase,
-  type UnprovenCallTxProvidersWithPrivateState,
+  type Ledger9UnprovenCallTxProvidersWithPrivateState,
+  type Ledger9CallTxOptionsBase,
+  type Ledger9CallTxOptionsWithPrivateStateId,
+  type Ledger9UnsubmittedCallTxData,
 } from '@midnight-ntwrk/midnight-js/contracts';
-import type { CallTxOptionsBase, CallTxOptionsWithPrivateStateId } from '@midnight-ntwrk/midnight-js/contracts';
-import type { UnsubmittedCallTxData } from '@midnight-ntwrk/midnight-js/contracts';
 
 /**
  * Fetches the on-chain contract state and verifies that the local verifier key
@@ -19,14 +20,14 @@ export async function verifyCircuitVerifierKey(
   contractAddress: string,
   circuitId: string
 ): Promise<void> {
-  const contractState = await providers.publicDataProvider.queryContractState(contractAddress);
-  if (!contractState) {
+  const read = await providers.publicDataProvider.queryContractState(contractAddress);
+  if (!read) {
     throw new Error(
       `Contract not found at address ${contractAddress} — cannot verify circuit verifier key before call`
     );
   }
   const localVerifierKey = await providers.zkConfigProvider.getVerifierKey(circuitId);
-  verifyContractState([[circuitId, localVerifierKey]], contractState);
+  await verifyContractState([[circuitId, localVerifierKey]], read.contractState, contractAddress);
 }
 
 /**
@@ -37,12 +38,12 @@ export async function verifyCircuitVerifierKey(
  */
 export async function buildUnprovenCallTx<C extends Contract<undefined>, PCK extends Contract.ProvableCircuitId<C>>(
   providers: UnprovenCallTxProvidersBase,
-  options: CallTxOptionsBase<C, PCK>
-): Promise<UnsubmittedCallTxData<C, PCK>>;
+  options: Ledger9CallTxOptionsBase<C, PCK>
+): Promise<Ledger9UnsubmittedCallTxData<C, PCK>>;
 export async function buildUnprovenCallTx<C extends Contract.Any, PCK extends Contract.ProvableCircuitId<C>>(
-  providers: UnprovenCallTxProvidersWithPrivateState<C>,
-  options: CallTxOptionsWithPrivateStateId<C, PCK>
-): Promise<UnsubmittedCallTxData<C, PCK>>;
+  providers: Ledger9UnprovenCallTxProvidersWithPrivateState<C>,
+  options: Ledger9CallTxOptionsWithPrivateStateId<C, PCK>
+): Promise<Ledger9UnsubmittedCallTxData<C, PCK>>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function buildUnprovenCallTx(providers: any, options: any): Promise<any> {
   await verifyCircuitVerifierKey(providers, options.contractAddress, options.circuitId);

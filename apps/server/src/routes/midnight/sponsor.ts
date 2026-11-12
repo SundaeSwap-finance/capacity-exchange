@@ -1,5 +1,5 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
-import { Transaction, SignatureEnabled, Proof, PreBinding } from '@midnight-ntwrk/ledger-v8';
+import { Transaction, SignatureEnabled, Proof, PreBinding } from '@midnightntwrk/ledger-v9';
 import { SponsorRequest, SponsorReply, SponsorSchema } from '../../models/sponsor.js';
 
 const sponsorRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {

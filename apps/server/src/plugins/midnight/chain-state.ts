@@ -19,7 +19,9 @@ export default fp(async (fastify: FastifyInstance) => {
     fastify.config.midnight.endpoints.indexerHttpUrl,
     fastify.log,
   );
-  await service.start();
+  // Not awaited on the indexer: the service loads in the background and reports
+  // 'syncing' on /health/ready until it has, so a slow indexer can't fail boot.
+  service.start();
 
   fastify.decorate('midnightChainStateService', service);
 
@@ -28,5 +30,5 @@ export default fp(async (fastify: FastifyInstance) => {
     done();
   });
 
-  fastify.log.info("MidnightChainStateService init'd and started");
+  fastify.log.info("MidnightChainStateService init'd; loading chain state in the background");
 });

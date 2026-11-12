@@ -5,6 +5,7 @@ import type { AppConfig } from '../loadConfig.js';
 import type { CardanoChainStateService } from '../services/cardano/chain-state.js';
 import type { CardanoWalletService } from '../services/cardano/wallet.js';
 import type { MidnightWalletService, WalletSyncState } from '../services/midnight/wallet.js';
+import type { MidnightChainStateService } from '../services/midnight/chain-state.js';
 
 type CardanoHealth = ReturnType<CardanoChainStateService['health']>;
 
@@ -22,7 +23,9 @@ async function appWith({
   wallet,
   cardano,
   cardanoLovelace,
+  chainState = { status: 'ok' },
 }: {
+  chainState?: { status: 'ok' } | { status: 'syncing'; error?: string };
   wallet?: WalletSyncState;
   cardano?: CardanoHealth;
   cardanoLovelace?: bigint;
@@ -33,6 +36,10 @@ async function appWith({
   app.decorate(
     'midnightWalletService',
     wallet ? ({ syncState: wallet } as unknown as MidnightWalletService) : null,
+  );
+  app.decorate(
+    'midnightChainStateService',
+    wallet ? ({ health: () => chainState } as unknown as MidnightChainStateService) : null,
   );
   app.decorate(
     'cardanoChainStateService',
@@ -128,6 +135,68 @@ describe('GET /health/ready', () => {
     expect(res.json()).toMatchObject({
       status: 'syncing',
       midnight: { wallet: { status: 'syncing' } },
+    });
+  });
+
+  it('is a 503 until the Midnight chain state has loaded from the indexer', async () => {
+    stubIndexer();
+    app = await appWith({
+      wallet: { status: 'ok' },
+      chainState: { status: 'syncing', error: 'tip: Indexer returned HTTP 500' },
+    });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'syncing',
+      midnight: { chainState: { status: 'syncing', error: 'tip: Indexer returned HTTP 500' } },
+    });
+  });
+
+  it('is a 503 when the indexer is unreachable', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('connect ECONNREFUSED'))),
+    );
+    app = await appWith({ wallet: { status: 'ok' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'ko',
+      midnight: { indexer: { status: 'ko', error: 'Unreachable: connect ECONNREFUSED' } },
+    });
+  });
+
+  it('is a 503 when the indexer returns a 500', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 500, statusText: 'Internal Server Error' })),
+    );
+    app = await appWith({ wallet: { status: 'ok' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({ status: 'ko', midnight: { indexer: { status: 'ko' } } });
+  });
+
+  it.each([
+    ['null', null, 'not a JSON object'],
+    ['a string', 'oops', 'not a JSON object'],
+    ['a non-numeric height', { data: { block: { height: '42' } } }, 'no block height'],
+    ['a null block', { data: { block: null } }, 'no block height'],
+  ])('is a 503 when the indexer answers 200 with %s', async (_label, body, error) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, status: 200, json: async () => body })),
+    );
+    app = await appWith({ wallet: { status: 'ok' } });
+    const res = await ready();
+
+    expect(res.statusCode).toBe(503);
+    expect(res.json()).toMatchObject({
+      status: 'ko',
+      midnight: { indexer: { status: 'ko', error: `Unexpected Indexer response: ${error}` } },
     });
   });
 

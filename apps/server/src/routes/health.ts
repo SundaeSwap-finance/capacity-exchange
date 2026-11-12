@@ -22,15 +22,22 @@ const healthRoutes: FastifyPluginAsyncTypebox = async (fastify, _opts) => {
       let midnight: typeof ReadyResponse.static.midnight;
       if (fastify.config.midnight && fastify.midnightWalletService) {
         const indexer = await checkIndexer(fastify.config.midnight.endpoints.indexerHttpUrl);
-        midnight = { wallet: fastify.midnightWalletService.syncState, indexer };
+        const chainState = fastify.midnightChainStateService?.health();
+        midnight = { wallet: fastify.midnightWalletService.syncState, indexer, chainState };
       }
 
       // Cardano is reported but does not gate readiness: no route depends on it.
-      const statuses = midnight ? [midnight.indexer.status, midnight.wallet.status] : [];
-      if (statuses.includes('ko')) {
+      if (midnight?.wallet.status === 'ko') {
         reply.status(500);
         return { status: 'ko' as const, midnight, cardano };
       }
+      // An unreachable indexer is 'ko' but a 503, not a 500: it is an upstream outage this
+      // server rides out (its cached chain state keeps serving), so callers should retry.
+      if (midnight?.indexer.status === 'ko') {
+        reply.status(503);
+        return { status: 'ko' as const, midnight, cardano };
+      }
+      const statuses = midnight ? [midnight.wallet.status, midnight.chainState?.status] : [];
       if (statuses.includes('syncing')) {
         reply.status(503);
         return { status: 'syncing' as const, midnight, cardano };

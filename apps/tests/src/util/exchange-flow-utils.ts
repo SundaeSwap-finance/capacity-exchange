@@ -1,6 +1,6 @@
 import type { AppContext } from '@sundaeswap/capacity-exchange-nodejs';
 import { buildProviders, createLogger } from '@sundaeswap/capacity-exchange-nodejs';
-import { toRawTokenType } from '@sundaeswap/capacity-exchange-core';
+import { queryContractState, toRawTokenType } from '@sundaeswap/capacity-exchange-core';
 import { submitCallTx, findDeployedContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { CompiledCounterContract, Counter, type CounterContract } from '@capacity-exchange/demo-contracts/counter';
@@ -38,50 +38,53 @@ export async function runExchangeFlowCore(
   ]);
   logger.info({ tokenRawId, counterAddress, cesUrl }, `Starting ${tokenKind} exchange flow`);
 
-  const pre = await snapshot(tokenKind, userCtx, serverCtx, tokenRawId, counterAddress);
-  logger.info(stringify(pre), 'Pre');
+  try {
+    const pre = await snapshot(tokenKind, userCtx, serverCtx, tokenRawId, counterAddress);
+    logger.info(stringify(pre), 'Pre');
 
-  if (pre.userDust !== 0n) {
-    throw new Error(`pre-condition: user dust must be 0, got ${pre.userDust}`);
+    if (pre.userDust !== 0n) {
+      throw new Error(`pre-condition: user dust must be 0, got ${pre.userDust}`);
+    }
+
+    const providers = {
+      ...buildProviders<CounterContract>(userCtx, CompiledContract.getCompiledAssetsPath(CompiledCounterContract)),
+      walletProvider: createTestCesProvider(userCtx, networkId, cesUrl, tokenRawId),
+    };
+    await findDeployedContract(providers, {
+      compiledContract: CompiledCounterContract,
+      contractAddress: counterAddress,
+    });
+
+    logger.info(`Submitting counter increment via CES ${tokenKind} exchange flow`);
+    const result = await submitCallTx(providers, {
+      compiledContract: CompiledCounterContract,
+      contractAddress: counterAddress,
+      circuitId: 'increment' as const,
+    });
+    logger.info({ status: result.public.status }, 'Submitted, waiting for state to settle');
+    await new Promise((r) => setTimeout(r, 8_000));
+
+    const post = await snapshot(tokenKind, userCtx, serverCtx, tokenRawId, counterAddress);
+    logger.info(stringify(post), 'Post');
+
+    const failures: string[] = [];
+    if (post.userToken >= pre.userToken) {
+      failures.push(`user token did not decrease: pre=${pre.userToken} post=${post.userToken}`);
+    }
+    if (post.serverToken <= pre.serverToken) {
+      failures.push(`server token did not increase: pre=${pre.serverToken} post=${post.serverToken}`);
+    }
+    if (post.counter !== pre.counter + 1n) {
+      failures.push(`counter did not +1: pre=${pre.counter} post=${post.counter}`);
+    }
+    if (failures.length > 0) {
+      throw new Error(`post-condition:\n  - ${failures.join('\n  - ')}`);
+    }
+
+    return { status: result.public.status, pre: stringify(pre), post: stringify(post) };
+  } finally {
+    await Promise.all([userCtx.dispose(), serverCtx.dispose()]);
   }
-
-  const providers = {
-    ...buildProviders<CounterContract>(userCtx, CompiledContract.getCompiledAssetsPath(CompiledCounterContract)),
-    walletProvider: createTestCesProvider(userCtx, networkId, cesUrl, tokenRawId),
-  };
-  await findDeployedContract(providers, {
-    compiledContract: CompiledCounterContract,
-    contractAddress: counterAddress,
-  });
-
-  logger.info(`Submitting counter increment via CES ${tokenKind} exchange flow`);
-  const result = await submitCallTx(providers, {
-    compiledContract: CompiledCounterContract,
-    contractAddress: counterAddress,
-    circuitId: 'increment' as const,
-    args: [],
-  });
-  logger.info({ status: result.public.status }, 'Submitted, waiting for state to settle');
-  await new Promise((r) => setTimeout(r, 8_000));
-
-  const post = await snapshot(tokenKind, userCtx, serverCtx, tokenRawId, counterAddress);
-  logger.info(stringify(post), 'Post');
-
-  const failures: string[] = [];
-  if (post.userToken >= pre.userToken) {
-    failures.push(`user token did not decrease: pre=${pre.userToken} post=${post.userToken}`);
-  }
-  if (post.serverToken <= pre.serverToken) {
-    failures.push(`server token did not increase: pre=${pre.serverToken} post=${post.serverToken}`);
-  }
-  if (post.counter !== pre.counter + 1n) {
-    failures.push(`counter did not +1: pre=${pre.counter} post=${post.counter}`);
-  }
-  if (failures.length > 0) {
-    throw new Error(`post-condition:\n  - ${failures.join('\n  - ')}`);
-  }
-
-  return { status: result.public.status, pre: stringify(pre), post: stringify(post) };
 }
 
 async function snapshot(
@@ -115,7 +118,7 @@ async function walletState(
 }
 
 async function counterRound(ctx: AppContext, counterAddress: string): Promise<bigint> {
-  const state = await ctx.publicDataProvider.queryContractState(counterAddress);
+  const state = await queryContractState(ctx.publicDataProvider, counterAddress);
   if (!state) {
     throw new Error(`counter contract not found at ${counterAddress}`);
   }

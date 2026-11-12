@@ -1,6 +1,7 @@
-import type { DustSecretKey } from '@midnight-ntwrk/ledger-v8';
+import type { DustSecretKey } from '@midnightntwrk/ledger-v9';
 import type { DustWalletState } from '@midnight-ntwrk/wallet-sdk/dust';
-import { CoreWallet, type UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
+import { CoreWallet, type UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v2';
+import { availableDustCoins, dustCoreState } from '@sundaeswap/capacity-exchange-core';
 
 /** Identifies one dust output, stable for as long as it stays unspent. */
 export function dustUtxoId(utxo: { token: { backingNight: unknown; mtIndex: bigint } }): string {
@@ -29,13 +30,13 @@ export function createDustSpend(
   ctime: Date,
   exclude: ReadonlySet<string> = new Set()
 ): DustSpend {
-  const utxos = dustState.capabilities.coinsAndBalances.getAvailableCoins(dustState.state, ctime);
+  const utxos = availableDustCoins(dustState, ctime);
   const utxo = utxos.find((u) => u.generatedNow >= vFeeSpecks && !exclude.has(dustUtxoId(u)));
   if (!utxo) {
     throw new Error(`No dust UTXO with ${vFeeSpecks} specks available`);
   }
   const [spends] = CoreWallet.spendCoins(
-    dustState.state,
+    dustCoreState(dustState),
     dustSecretKey,
     [{ token: utxo.token, value: vFeeSpecks }],
     ctime

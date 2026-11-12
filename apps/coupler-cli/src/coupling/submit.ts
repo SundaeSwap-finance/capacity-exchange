@@ -1,4 +1,4 @@
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import type { DisclosureResult } from '@sundaeswap/capacity-exchange-coupler/operations';
 import { couplingOutcome, type CouplingCommitment, type CouplingOutcome, type DisclosureRead } from './commitments.js';
 

@@ -1,5 +1,5 @@
 import { AppContext, createLogger, WalletContext } from '@sundaeswap/capacity-exchange-nodejs';
-import { buildUnprovenCallTx, DEFAULT_TTL_MS, toTxResult } from '@sundaeswap/capacity-exchange-core';
+import { buildUnprovenCallTx, DEFAULT_TTL_MS, toTxResult, toWalletTx } from '@sundaeswap/capacity-exchange-core';
 import {
   entryToContract,
   RegistryEntry,
@@ -8,7 +8,7 @@ import {
 } from '@sundaeswap/capacity-exchange-registry';
 import { getProviders } from '../utils.js';
 
-import { SucceedEntirely, UnboundTransaction, type MidnightProviders } from '@midnight-ntwrk/midnight-js/types';
+import { SucceedEntirely, type MidnightProviders, type UnboundTx } from '@midnight-ntwrk/midnight-js/types';
 
 const logger = createLogger(import.meta);
 
@@ -90,22 +90,16 @@ async function provenCallTx(providers: RegisterServerProvider, params: RegisterI
  *
  * @returns The submitted transaction ID as string.
  */
-async function submitUnboundTransaction(walletContext: WalletContext, tx: UnboundTransaction) {
+async function submitUnboundTransaction(walletContext: WalletContext, tx: UnboundTx) {
   const { walletFacade, keys } = walletContext;
 
   const ttl = new Date(Date.now() + DEFAULT_TTL_MS);
 
   logger.info('Balancing transaction...');
-  const recipe = await walletFacade.balanceUnboundTransaction(
-    tx,
-    { shieldedSecretKeys: keys.shieldedSecretKeys, dustSecretKey: keys.dustSecretKey },
-    { ttl }
-  );
+  const recipe = await walletFacade.balanceUnboundTransaction(toWalletTx(walletFacade, 'Unbound', tx), { ttl });
 
   logger.info('Signing unshielded offer...');
-  const signedRecipe = await walletFacade.signRecipe(recipe, (payload: Uint8Array) =>
-    keys.unshieldedKeystore.signData(payload)
-  );
+  const signedRecipe = await walletFacade.signRecipe(recipe, keys.unshieldedKeystore.signDataAsync);
 
   logger.info('Finalizing transaction...');
   const finalizedTx = await walletFacade.finalizeRecipe(signedRecipe);

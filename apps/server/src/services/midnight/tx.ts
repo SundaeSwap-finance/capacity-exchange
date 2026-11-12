@@ -1,6 +1,7 @@
 import {
   DustActions,
   Intent,
+  type LedgerParameters,
   PreProof,
   createShieldedCoinInfo,
   SignatureEnabled,
@@ -13,14 +14,11 @@ import {
   ZswapOffer,
   ZswapOutput,
   ZswapSecretKeys,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import {
-  ProofProvider,
-  ZKConfigProvider,
-  type UnboundTransaction,
-} from '@midnight-ntwrk/midnight-js/types';
-import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
+import { ProofProvider, ZKConfigProvider } from '@midnight-ntwrk/midnight-js/types';
+import { proveV9, type UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
+import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v2';
 
 // The server's dust-spend txs don't take zk config / circuit artifacts.
 class EmptyZKConfigProvider extends ZKConfigProvider<never> {
@@ -49,7 +47,10 @@ export class MidnightTxService {
   ) {
     this.#networkId = networkId;
     this.#zswap = zswap;
-    this.#proofProvider = httpClientProofProvider(proofProviderUrl, new EmptyZKConfigProvider());
+    this.#proofProvider = httpClientProofProvider({
+      url: proofProviderUrl,
+      zkConfigProvider: new EmptyZKConfigProvider(),
+    });
     this.#unshieldedAddress = unshieldedAddress;
   }
 
@@ -64,8 +65,31 @@ export class MidnightTxService {
     return intent;
   }
 
+  /**
+   * Estimates the fee (with margin) of `userTx` once merged with a dust-only tx spending `dust`.
+   * Unlike `userTx.feesWithMargin`, this includes the cost of the dust spend itself. Proofs are
+   * erased rather than generated, so this is cheap and synchronous.
+   */
+  estimateFeeWithDustSpend(
+    userTx: UnboundTransaction,
+    dust: UnprovenDustSpend,
+    ctime: Date,
+    ttl: Date,
+    ledgerParams: LedgerParameters,
+    margin: number,
+  ): bigint {
+    const intent = this.buildDustIntent(dust, ctime, ttl);
+    const dustTx = Transaction.fromPartsRandomized(
+      this.#networkId,
+      undefined,
+      undefined,
+      intent,
+    ).eraseProofs();
+    return userTx.eraseProofs().merge(dustTx).feesWithMargin(ledgerParams, margin);
+  }
+
   async proveTx(tx: UnprovenTransaction): Promise<UnboundTransaction> {
-    return this.#proofProvider.proveTx(tx);
+    return proveV9(this.#proofProvider, tx);
   }
 
   async createDustOnlyTx(

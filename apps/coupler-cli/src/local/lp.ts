@@ -4,6 +4,7 @@ import {
   getLatestBlockTimestamp,
   getLedgerParameters,
   buildFragmentTx,
+  proveV9,
   type DustAttachment,
 } from '@sundaeswap/capacity-exchange-core';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
@@ -53,13 +54,13 @@ export async function buildCapacityFragment(
     priced.nonce
   );
 
-  const fragment = buildFragmentTx([absorbLeg], priced.ttl, ledgerParameters, { dust });
+  const fragment = buildFragmentTx(ctx.config.network.networkId, [absorbLeg], priced.ttl, ledgerParameters, { dust });
   logger.info(`Proving capacity fragment (absorb and ${priced.vFeeSpecks} specks dust)...`);
-  const proofProvider = httpClientProofProvider(
-    ctx.config.network.endpoints.proofServerUrl,
-    new NodeZkConfigProvider<string>(COUPLER_OUT_DIR)
-  );
-  const proven = await proofProvider.proveTx(fragment);
+  const proofProvider = httpClientProofProvider({
+    url: ctx.config.network.endpoints.proofServerUrl,
+    zkConfigProvider: new NodeZkConfigProvider<string>(COUPLER_OUT_DIR),
+  });
+  const proven = await proveV9(proofProvider, fragment);
   return { proven, priced };
 }
 

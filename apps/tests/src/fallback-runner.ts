@@ -23,8 +23,6 @@ import {
   loadChainSnapshot,
   createLogger,
 } from '@sundaeswap/capacity-exchange-nodejs';
-import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
-import { setNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { runSponsorFlow } from './flows/sponsor-flow.js';
 import { requireEnvSeed, type FlowCtxConfig } from './util/testUtils.js';
 
@@ -36,8 +34,6 @@ async function main() {
   const noDustCesUrl = requireEnvVar(env, 'NO_DUST_CES_URL');
   const tokenMintAddress = requireEnvVar(env, 'TOKEN_MINT_ADDRESS');
   const chainSnapshotDir = requireEnvVar(env, 'CHAIN_SNAPSHOT_DIR');
-
-  setNetworkId(toNetworkIdEnum(networkId));
 
   const chainSnapshot = loadChainSnapshot(networkId, chainSnapshotDir);
   if (!chainSnapshot) {

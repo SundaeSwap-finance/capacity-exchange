@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyError } from 'fastify';
 import fp from 'fastify-plugin';
+import { ChainStateNotReadyError } from '../services/midnight/chain-state.js';
 
 // Extend the global fastify context obj with error response helpers
 declare module 'fastify' {
@@ -18,6 +19,9 @@ const errorHandler: FastifyPluginAsync = async (fastify: FastifyInstance, _opts)
   fastify.setErrorHandler((error: FastifyError | Error, _request, reply) => {
     if ('statusCode' in error && error.statusCode && error.statusCode < 500) {
       return reply.send(error);
+    }
+    if (error instanceof ChainStateNotReadyError) {
+      return reply.serviceUnavailable(error.message);
     }
     // Global error handler to catch "unknown" errors
     fastify.log.error(error, 'Unhandled error');

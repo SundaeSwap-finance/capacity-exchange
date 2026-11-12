@@ -9,15 +9,15 @@ import {
   type Bindingish,
   type Transaction,
   Intent,
-} from '@midnight-ntwrk/ledger-v8';
-import type { UnboundTransaction, WalletProvider } from '@midnight-ntwrk/midnight-js/types';
-import { MidnightUtxoService, type WalletUnavailableResult } from './utxo.js';
+} from '@midnightntwrk/ledger-v9';
+import { LedgerTransaction, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { MidnightUtxoService, type LockUtxoResult, type WalletUnavailableResult } from './utxo.js';
 import { MidnightTxService } from './tx.js';
 import { MetricsService } from '../metrics.js';
 import { MidnightChainStateService } from './chain-state.js';
 import type { SponsoredContract } from '../../config/prices.js';
 import { isCapacityExchangeError } from '@sundaeswap/capacity-exchange-providers';
-
+import { toFinalized, type UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 export type SponsorTxResult =
   | { status: 'ok'; tx: FinalizedTransaction; specksCommitted: bigint }
   | { status: 'ineligible' }
@@ -80,21 +80,16 @@ export class MidnightSponsorService {
       return { status: 'ineligible' };
     }
 
-    const ledgerParams = this.chainStateService.ledgerParameters();
-    const estimatedSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS);
-    this.logger.debug(
-      { estimatedSpecks: estimatedSpecks.toString() },
-      'Estimated dust cost for sponsored tx',
-    );
-
-    const lockResult = this.utxoService.lockUtxo(estimatedSpecks);
+    const { lockResult, estimatedSpecks } = this.lockDustForTx(userTx);
     // ask other capacity exchange services to sponsor the transaction
     if (lockResult.status === 'insufficient-funds' && this.cesWalletProvider) {
       this.logger.info(
         'Insufficient dust funds; fallback to other CES peers for dust sponsorship...',
       );
       try {
-        const tx = await this.cesWalletProvider.balanceTx(userTx);
+        const tx = toFinalized(
+          await this.cesWalletProvider.balanceTx(LedgerTransaction.seal('v9', 'Unbound', userTx)),
+        );
         return { status: 'ok', tx, specksCommitted: estimatedSpecks };
       } catch (err) {
         if (!isCapacityExchangeError(err)) {
@@ -138,6 +133,50 @@ export class MidnightSponsorService {
     this.metricsService.recordCapacityUsage('DUST', estimatedSpecks);
 
     return { status: 'ok', tx: boundTx, specksCommitted: estimatedSpecks };
+  }
+
+  /**
+   * Locks a DUST UTxO large enough to pay the fee of `userTx` merged with our dust spend.
+   *
+   * The dust spend adds its own cost to the merged tx, so sizing it to `userTx`'s fee alone
+   * underpays (the node rejects it with BalanceCheckOverspend). We lock a coin for the user tx's
+   * fee, dry-run the merged fee using that coin's spend, then re-lock for the full amount.
+   */
+  private lockDustForTx(userTx: UnboundTransaction): {
+    lockResult: LockUtxoResult;
+    estimatedSpecks: bigint;
+  } {
+    const ledgerParams = this.chainStateService.ledgerParameters();
+    const userTxSpecks = userTx.feesWithMargin(ledgerParams, FEE_MARGIN_BLOCKS);
+
+    const initialLock = this.utxoService.lockUtxo(userTxSpecks);
+    if (initialLock.status !== 'ok') {
+      return { lockResult: initialLock, estimatedSpecks: userTxSpecks };
+    }
+
+    const { id, spend, ctime, expiresAtMillis } = initialLock.value;
+    let estimatedSpecks: bigint;
+    try {
+      estimatedSpecks = this.txService.estimateFeeWithDustSpend(
+        userTx,
+        spend,
+        ctime,
+        new Date(expiresAtMillis),
+        ledgerParams,
+        FEE_MARGIN_BLOCKS,
+      );
+    } finally {
+      this.utxoService.unlock(id);
+    }
+    this.logger.debug(
+      {
+        userTxSpecks: userTxSpecks.toString(),
+        estimatedSpecks: estimatedSpecks.toString(),
+      },
+      'Estimated dust cost for sponsored tx',
+    );
+
+    return { lockResult: this.utxoService.lockUtxo(estimatedSpecks), estimatedSpecks };
   }
 
   /**

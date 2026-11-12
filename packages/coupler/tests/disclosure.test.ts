@@ -11,7 +11,7 @@ import {
   type ContractCall,
   type Op,
   type AlignedValue,
-} from '@midnight-ntwrk/ledger-v8';
+} from '@midnightntwrk/ledger-v9';
 import { persistentHash, CompactTypeBytes } from '@midnight-ntwrk/compact-runtime';
 import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import { extractDisclosed, couplingDomainSep, findCoupling, type Disclosure } from '../src/lib/disclosure.js';
@@ -488,5 +488,64 @@ describe('extractDisclosed: degenerate shapes stay discriminated errors', () => 
       return;
     }
     expect(result.error.kind).toBe('decodeFailed');
+  });
+});
+
+/** The same reveal, but disclosing `s` in place of its real secret, stored the way the ledger
+ *  stores a field-aligned value: with its trailing zeros trimmed. The minted token is re-derived
+ *  from `s`, so the reveal stays self-consistent and only the trimming is under test. */
+function revealWithSecret(call: ContractCall<Proof>, realS: Uint8Array, hsp: Uint8Array, s: Uint8Array): unknown {
+  const transcript = call.guaranteedTranscript;
+  const realHex = uint8ArrayToHex(realS);
+  let end = s.length;
+  while (end > 0 && s[end - 1] === 0) {
+    end--;
+  }
+  let replaced = 0;
+  const program = (transcript?.program ?? []).map((op) => {
+    if (typeof op !== 'object' || !('push' in op) || op.push.value.tag !== 'cell') {
+      return op;
+    }
+    const { value, alignment } = op.push.value.content;
+    if (value.length !== 1 || uint8ArrayToHex(value[0]) !== realHex) {
+      return op;
+    }
+    replaced++;
+    return {
+      push: { ...op.push, value: { tag: 'cell', content: { value: [s.slice(0, end)], alignment } } },
+    };
+  });
+  expect(replaced).toBe(1);
+
+  const domainSep = couplingDomainSep(persistentHash(new CompactTypeBytes(32), s), hsp);
+  return {
+    address: call.address,
+    entryPoint: call.entryPoint,
+    guaranteedTranscript: {
+      ...transcript,
+      program,
+      effects: { ...transcript?.effects, shieldedMints: new Map([[uint8ArrayToHex(domainSep), 1n]]) },
+    },
+    fallibleTranscript: call.fallibleTranscript,
+  };
+}
+
+// The ledger trims every trailing zero from a field-aligned value, so a secret ending in a zero
+// byte reaches the reader short, about once in 256 couplings. Dropping that write would lose
+// the secret the user paid to reveal. cellWrites.test.ts in midnight-core pins the cell read;
+// this pins the whole reveal decode on a real transaction, which a recorded coupling only covers
+// when its secret happens to end in zero.
+describe('extractDisclosed: a secret ending in zero bytes', () => {
+  it.each([1, 2])('recovers the full secret when its last %i byte(s) are zero', (zeros) => {
+    const source = byLabel('coupling1');
+    const tx = deserialize(source.raw);
+    const [reveal] = couplerCalls(tx, 'mintReveal');
+    const realS = Buffer.from(source.expectedS!, 'hex');
+    const hsp = Buffer.from(source.expectedHsp!, 'hex');
+    const s = Uint8Array.from([...realS.subarray(0, 32 - zeros), ...new Uint8Array(zeros)]);
+
+    const [coupling] = ok(txWithCalls(tx, [revealWithSecret(reveal, realS, hsp, s), ...couplerCalls(tx, 'absorb')]));
+    expect(uint8ArrayToHex(coupling.s)).toBe(uint8ArrayToHex(s));
+    expect(uint8ArrayToHex(coupling.hsp)).toBe(source.expectedHsp);
   });
 });

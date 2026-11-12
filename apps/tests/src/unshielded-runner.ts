@@ -13,8 +13,6 @@
  *   UNSHIELDED_TOKEN_COLOR                      unshielded token rawId the user is paying with
  */
 import { runCli, resolveEnv, createLogger, requireEnvVar } from '@sundaeswap/capacity-exchange-nodejs';
-import { toNetworkIdEnum } from '@sundaeswap/capacity-exchange-core';
-import { setNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { getBaseTestConfig } from './config.js';
 import { runUnshieldedExchangeFlow, type UnshieldedExchangeFlowResult } from './flows/exchange-flow.js';
 
@@ -25,7 +23,6 @@ async function main(): Promise<UnshieldedExchangeFlowResult> {
   const config = getBaseTestConfig(env);
   const tokenRawId = requireEnvVar(env, 'UNSHIELDED_TOKEN_COLOR');
 
-  setNetworkId(toNetworkIdEnum(config.networkId));
   if (!config.chainSnapshot) {
     logger.info(
       { chainSnapshotDir: config.chainSnapshotDir },

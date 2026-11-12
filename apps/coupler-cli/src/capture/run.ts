@@ -1,4 +1,4 @@
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import { uint8ArrayToHex } from '@sundaeswap/capacity-exchange-core';
 import type { DisclosureResult } from '@sundaeswap/capacity-exchange-coupler/operations';
 import type { CapturedCoupling } from './fixtures.js';

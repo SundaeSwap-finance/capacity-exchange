@@ -4,6 +4,12 @@ import type { MidnightWalletService } from './wallet.js';
 import type { MidnightChainStateService } from './chain-state.js';
 import pino from 'pino';
 
+// The service reads coins through core's ledger-level helper; the mock state carries them directly.
+vi.mock('@sundaeswap/capacity-exchange-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@sundaeswap/capacity-exchange-core')>()),
+  availableDustCoins: (state: { coins: unknown[] }) => state.coins,
+}));
+
 const mockChainStateService = {
   latestBlockTimestamp: () => new Date(),
 } as unknown as MidnightChainStateService;
@@ -13,13 +19,8 @@ const logger = pino({ level: 'silent' });
 function createMockWalletService(opts: { balance?: bigint; coins?: any[] } = {}) {
   return {
     state: {
-      capabilities: {
-        coinsAndBalances: {
-          getAvailableCoins: () => opts.coins ?? [],
-        },
-      },
+      coins: opts.coins ?? [],
       balance: () => opts.balance ?? 0n,
-      state: { state: { syncTime: new Date() } },
     },
     syncState: { status: 'ok' as const },
     spend: vi.fn(),

@@ -1,16 +1,13 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
-import type { WalletProvider, MidnightProvider } from '@midnight-ntwrk/midnight-js/types';
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
-import type {
-  CoinPublicKey,
-  EncPublicKey,
-  FinalizedTransaction,
-  SignatureEnabled,
-  Proof,
-  Binding,
-} from '@midnight-ntwrk/ledger-v8';
-import { Transaction } from '@midnight-ntwrk/ledger-v8';
+import {
+  createLedger9MidnightProvider,
+  createLedger9WalletProvider,
+  type WalletProvider,
+  type MidnightProvider,
+} from '@midnight-ntwrk/midnight-js/types';
+import type { CoinPublicKey, EncPublicKey } from '@midnightntwrk/ledger-v9';
 import { uint8ArrayToHex, hexToBytes } from './hex.js';
+import { toFinalized } from './walletTx.js';
 
 export interface BaseProviders {
   walletProvider: WalletProvider;
@@ -27,34 +24,24 @@ export interface WalletIdentity {
  *
  * ConnectedAPI is the dapp-connector protocol used by browser extension wallets.
  * midnight-js contracts require WalletProvider/MidnightProvider, so this adapter
- * bridges the two.
+ * bridges the two. Transactions cross the connector as hex, so both serve ledger-v9 only.
  */
 export function connectedApiProvidersAdapter(connectedAPI: ConnectedAPI, identity: WalletIdentity): BaseProviders {
-  const walletProvider: WalletProvider = {
-    getCoinPublicKey(): CoinPublicKey {
-      return identity.coinPublicKey;
+  const walletProvider = createLedger9WalletProvider({
+    getCoinPublicKey: () => identity.coinPublicKey,
+    getEncryptionPublicKey: () => identity.encryptionPublicKey,
+    async balanceTx(tx) {
+      const result = await connectedAPI.balanceUnsealedTransaction(uint8ArrayToHex(tx.serialize()), {
+        payFees: false,
+      });
+      return hexToBytes(result.tx);
     },
-    getEncryptionPublicKey(): EncPublicKey {
-      return identity.encryptionPublicKey;
-    },
-    async balanceTx(tx: UnboundTransaction): Promise<FinalizedTransaction> {
-      const serialized = uint8ArrayToHex(tx.serialize());
-      const result = await connectedAPI.balanceUnsealedTransaction(serialized, { payFees: false });
-      return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-        'signature',
-        'proof',
-        'binding',
-        hexToBytes(result.tx)
-      ) as unknown as FinalizedTransaction;
-    },
-  };
+  });
 
-  const midnightProvider: MidnightProvider = {
-    async submitTx(tx: FinalizedTransaction): Promise<string> {
-      await connectedAPI.submitTransaction(uint8ArrayToHex(tx.serialize()));
-      return tx.identifiers()[0];
-    },
-  };
+  const midnightProvider = createLedger9MidnightProvider(async (tx) => {
+    await connectedAPI.submitTransaction(uint8ArrayToHex(tx.serialize()));
+    return toFinalized(tx).identifiers()[0];
+  });
 
   return { walletProvider, midnightProvider };
 }

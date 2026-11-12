@@ -1,4 +1,5 @@
 import {
+  ContractState,
   createCircuitContext,
   type CircuitContext,
   type CircuitResults,
@@ -20,7 +21,7 @@ export interface LegProviders {
 export interface CircuitRunner {
   impureCircuits: Record<
     string,
-    (ctx: CircuitContext<unknown>, ...args: unknown[]) => CircuitResults<unknown, unknown>
+    (ctx: CircuitContext<unknown>, ...args: unknown[]) => Promise<CircuitResults<unknown, unknown>>
   >;
 }
 
@@ -30,7 +31,7 @@ export interface Leg {
   contractAddress: string;
   circuitName: string;
   proofData: ProofData;
-  /** Pre-state the circuit ran against, re-deserialized into ledger-v8 at combine time. */
+  /** Pre-state the circuit ran against, re-deserialized into ledger-v9 at combine time. */
   contractState: { serialize(): Uint8Array };
   /** Coins this circuit produced, in Compact byte form. */
   zswapOutputs: EncodedOutput[];
@@ -54,19 +55,31 @@ export async function runCircuit(
     contractAddress,
     privateStateId
   );
-  const ctx = createCircuitContext(contractAddress, coinPublicKey, states.contractState, states.privateState);
+  const contractState = states.contractState.deserialize({ v9: ContractState });
+  const ctx = createCircuitContext({
+    circuitId: circuitName,
+    contractAddress,
+    coinPublicKeyOrZswapState: coinPublicKey,
+    contractState,
+    privateState: states.privateState,
+  });
   const circuit = contract.impureCircuits[circuitName];
   if (!circuit) {
     throw new Error(`runCircuit: contract has no circuit '${circuitName}'`);
   }
-  const r = circuit(ctx, ...args);
-  const ls = r.context.currentZswapLocalState;
+  const r = await circuit(ctx, ...args);
+  // The trace is in completion order, so the root call (this circuit) is last.
+  const trace = r.context.callProofDataTrace;
+  const call = trace[trace.length - 1];
+  if (!call || call.contractAddress !== contractAddress || call.circuitId !== circuitName) {
+    throw new Error(`runCircuit: '${circuitName}' left no proof data for its own call`);
+  }
   return {
     contractAddress,
     circuitName,
-    proofData: r.proofData,
-    contractState: states.contractState,
-    zswapOutputs: ls.outputs ?? [],
-    zswapInputs: ls.inputs ?? [],
+    proofData: call,
+    contractState,
+    zswapOutputs: call.zswapLocalState.outputs ?? [],
+    zswapInputs: call.zswapLocalState.inputs ?? [],
   };
 }

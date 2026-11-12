@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CLIENT, getQuoteId } from '../utils.js';
 import { CreateOfferResponse } from '../client.js';
-import { Binding, Proof, SignatureEnabled, Transaction } from '@midnight-ntwrk/ledger-v8';
+import { Binding, Proof, SignatureEnabled, Transaction } from '@midnightntwrk/ledger-v9';
 import { hexToBytes } from '@sundaeswap/capacity-exchange-core';
 
 async function assertValidOfferResponse(quoteId: string, currency: string) {

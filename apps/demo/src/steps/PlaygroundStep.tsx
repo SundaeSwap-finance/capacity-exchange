@@ -9,6 +9,7 @@ import type { UseCesTransactionResult } from '../features/ces/useCesTransaction'
 import type { UseSponsoredTransactionResult } from '../features/ces/useSponsoredTransaction';
 import { resolveTokenLabel } from '../utils/tokenLabels';
 import { formatUnits } from '../utils/format';
+import { getTutorialTokenBalance } from '../utils/tokenBalance';
 import { DevAccessForm } from './DevAccessStep';
 import { ExchangePrice } from '../features/ces/types';
 
@@ -70,9 +71,7 @@ export function PlaygroundStep({
       <div className="ces-inventory-grid">
         <CounterCard value={counterValue} freeze={anyTransacting} />
         <TokenBalanceCard
-          balance={
-            displayWalletData ? Object.values(displayWalletData.shieldedBalances).reduce((a, b) => a + b, 0n) : 0n
-          }
+          balance={getTutorialTokenBalance(displayWalletData, mintedTokenColor)}
           tokenLabel="Tutorial Tokens"
         />
       </div>

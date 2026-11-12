@@ -15,6 +15,7 @@ const AppEnvSchema = Type.Object({
   QUOTE_TTL_SECONDS: Type.Number(),
   QUOTE_SECRET_FILE: Type.String(),
   OFFER_TTL_SECONDS: Type.Number(),
+  OFFER_FEE_OVERHEAD_UNITS: Type.Optional(Type.Integer({ minimum: 0 })),
   MIDNIGHT_PROOF_SERVER_URL: Type.Optional(Type.String()),
   // Set both or neither; see resolveEndpoints.
   MIDNIGHT_INDEXER_URL: Type.Optional(Type.String()),
@@ -70,6 +71,9 @@ export function parseAppEnv(): AppEnv {
     QUOTE_SECRET_FILE: process.env.QUOTE_SECRET_FILE,
     OFFER_TTL_SECONDS: process.env.OFFER_TTL_SECONDS
       ? Number(process.env.OFFER_TTL_SECONDS)
+      : undefined,
+    OFFER_FEE_OVERHEAD_UNITS: process.env.OFFER_FEE_OVERHEAD_UNITS
+      ? Number(process.env.OFFER_FEE_OVERHEAD_UNITS)
       : undefined,
     MIDNIGHT_PROOF_SERVER_URL: process.env.MIDNIGHT_PROOF_SERVER_URL,
     MIDNIGHT_INDEXER_URL: process.env.MIDNIGHT_INDEXER_URL,

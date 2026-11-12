@@ -56,30 +56,34 @@ export async function findAndMintTokens(
     config
   );
 
-  const privateStateId = generatePrivateStateId();
-  const initialPrivateState = createPrivateState();
+  try {
+    const privateStateId = generatePrivateStateId();
+    const initialPrivateState = createPrivateState();
 
-  await findDeployedContract(contractProviders, {
-    compiledContract: compiledTokenMintContract,
-    contractAddress,
-    privateStateId,
-    initialPrivateState,
-  });
+    await findDeployedContract(contractProviders, {
+      compiledContract: compiledTokenMintContract,
+      contractAddress,
+      privateStateId,
+      initialPrivateState,
+    });
 
-  const callTxData = await buildUnprovenCallTx(contractProviders, {
-    compiledContract: compiledTokenMintContract,
-    contractAddress,
-    circuitId: 'mint_test_tokens' as const,
-    args: [amount] as [bigint],
-    privateStateId,
-  });
+    const callTxData = await buildUnprovenCallTx(contractProviders, {
+      compiledContract: compiledTokenMintContract,
+      contractAddress,
+      circuitId: 'mint_test_tokens' as const,
+      args: [amount] as [bigint],
+      privateStateId,
+    });
 
-  const provenTx = await contractProviders.proofProvider.proveTx(callTxData.private.unprovenTx);
-  const balancedTx = await contractProviders.walletProvider.balanceTx(provenTx);
-  const txId = await contractProviders.midnightProvider.submitTx(balancedTx);
-  const result = await contractProviders.publicDataProvider.watchForTxData(txId);
+    const provenTx = await contractProviders.proofProvider.proveTx(callTxData.private.unprovenTx);
+    const balancedTx = await contractProviders.walletProvider.balanceTx(provenTx);
+    const txId = await contractProviders.midnightProvider.submitTx(balancedTx);
+    const result = await contractProviders.publicDataProvider.watchForTxData(txId);
 
-  if (result.status !== SucceedEntirely) {
-    throw new Error(`Mint transaction failed with status: ${result.status}`);
+    if (result.status !== SucceedEntirely) {
+      throw new Error(`Mint transaction failed with status: ${result.status}`);
+    }
+  } finally {
+    await contractProviders.dispose();
   }
 }

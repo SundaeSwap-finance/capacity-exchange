@@ -5,9 +5,8 @@ import {
   type UnprovenTransaction,
   type UnprovenOffer,
   type LedgerParameters,
-} from '@midnight-ntwrk/ledger-v8';
-import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v1';
-import { getNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
+} from '@midnightntwrk/ledger-v9';
+import type { UnprovenDustSpend } from '@midnight-ntwrk/wallet-sdk/dust/v2';
 import { buildIntent } from './combine.js';
 import type { Leg } from './leg.js';
 
@@ -38,6 +37,7 @@ function attachDust(intent: ReturnType<typeof Intent.new>, dust: DustAttachment)
  * bind-finalized transactions.
  */
 export function buildFragmentTx(
+  networkId: string,
   legs: Leg[],
   ttl: Date,
   ledgerParameters: LedgerParameters,
@@ -47,7 +47,7 @@ export function buildFragmentTx(
   if (options.dust) {
     attachDust(intent, options.dust);
   }
-  return Transaction.fromPartsRandomized(getNetworkId(), options.offer, undefined, intent);
+  return Transaction.fromPartsRandomized(networkId, options.offer, undefined, intent);
 }
 
 /** A calls-free intent carrying only a dust payment. */
@@ -58,6 +58,6 @@ export function buildDustIntent(dust: DustAttachment, ttl: Date): ReturnType<typ
 }
 
 /** A dust-only fragment (no calls), the CES sponsorship shape. */
-export function buildDustFragmentTx(dust: DustAttachment, ttl: Date): UnprovenTransaction {
-  return Transaction.fromPartsRandomized(getNetworkId(), undefined, undefined, buildDustIntent(dust, ttl));
+export function buildDustFragmentTx(networkId: string, dust: DustAttachment, ttl: Date): UnprovenTransaction {
+  return Transaction.fromPartsRandomized(networkId, undefined, undefined, buildDustIntent(dust, ttl));
 }

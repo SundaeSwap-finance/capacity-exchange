@@ -1,8 +1,7 @@
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
 import type { BridgelessQuote } from '@sundaeswap/capacity-exchange-providers';
 import type { CouplingRequest, PricedCoupling } from './couplingParams.js';
 import type { EscrowRef } from './escrow.js';
-
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 export interface CapacityFragment {
   proven: UnboundTransaction;
   /** The LP's fixed terms, the inputs this capacity fragment is built from. */

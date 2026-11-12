@@ -1,12 +1,12 @@
 import { randomBytes } from './random.js';
-import type { UnboundTransaction, PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
+import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js/types';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import { prepareUserFragment } from './userCoupling.js';
 import type { CapacityProvider } from './capacity.js';
 import type { CouplingRequest } from './couplingParams.js';
 import type { CouplerContext } from './context.js';
 import { assertFundsThisSwap, assertDustCoversFee } from './validateCapacity.js';
-
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 /** Reveal ttl when the caller gives none. Sized to outlast the capacity round-trip. */
 const REVEAL_TTL_MS = 10 * 60_000;
 

@@ -132,7 +132,7 @@ export async function connectSeedWallet(
   });
 
   console.debug('[WalletService] Calling walletFacade.start()...');
-  await walletFacade.start(keys.shieldedSecretKeys, keys.dustSecretKey);
+  await walletFacade.start(keys.seeds);
   console.debug('[WalletService] Wallet started, waiting for sync...');
   // Skip unshielded — we don't use unshielded balances in the demo — and DUST, which never syncs
   await walletFacade.shielded.waitForSyncedState();

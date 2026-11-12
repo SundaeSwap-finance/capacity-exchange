@@ -1,7 +1,6 @@
-import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js/types';
-import type { FinalizedTransaction } from '@midnight-ntwrk/ledger-v8';
+import type { FinalizedTransaction } from '@midnightntwrk/ledger-v9';
 import type { ExchangePrice } from './types.js';
-
+import type { UnboundTransaction } from '@sundaeswap/capacity-exchange-core';
 // Bridgeless payment: pay for a Midnight tx with a foreign-chain asset escrowed against a
 // hashlock, with an LP fronting the DUST. The Midnight coupling is chain-agnostic, only the
 // foreign escrow differs per chain. The provider speaks one chain-agnostic payer interface and the
