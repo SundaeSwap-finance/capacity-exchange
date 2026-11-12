@@ -206,6 +206,12 @@ export class CardanoWalletService implements ChainFollower {
     const confirmed = this.#tracker.currentValue();
     const dependsOn = inputTxoIds.filter((k) => confirmed.has(k) || this.#pending.has(k));
 
+    if (inputTxoIds.some((txoId) => this.#isReserved(txoId))) {
+      return {
+        status: 'error',
+        reason: 'transaction input is already reserved',
+      };
+    }
     for (const txoId of inputTxoIds) {
       this.#reserved.set(txoId, until);
     }

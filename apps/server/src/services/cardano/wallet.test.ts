@@ -645,6 +645,23 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(funding)]);
   });
 
+  it('does not free previously-reserved inputs', async () => {
+    const { wallet, funding } = await fundedWallet(undefined, [5_000_000n]);
+
+    const spentTxInId = `${funding.getId()}#0`;
+    expect(refs(wallet)).toContain(spentTxInId);
+
+    const r1 = await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+    expect(r1).toMatchObject({ status: 'ok' });
+    // the one input is reserved
+    expect(refs(wallet)).not.toContain(spentTxInId);
+
+    const r2 = await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+    expect(r2).toMatchObject({ status: 'error' });
+    // the one input is still reserved
+    expect(refs(wallet)).not.toContain(spentTxInId);
+  });
+
   it('keeps the inputs reserved until the TTL when submission may have reached the mempool', async () => {
     const { wallet, funding } = await fundedWallet(async () => ({
       status: 'error',
