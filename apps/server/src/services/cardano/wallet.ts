@@ -31,12 +31,12 @@ interface OwnedOutput {
 }
 type UtxoSet = Map<string, OwnedOutput>;
 
-const txInKey = (txIn: TransactionInput): string => {
+const txInId = (txIn: TransactionInput): string => {
   return `${txIn.transactionId()}:${txIn.index()}`;
 };
 
-const markSpent = (value: UtxoSet, input: TransactionInput) => {
-  value.delete(txInKey(input));
+const markSpent = (utxos: UtxoSet, input: TransactionInput) => {
+  utxos.delete(txInId(input));
 };
 
 interface PendingOutputDetails {
@@ -45,7 +45,7 @@ interface PendingOutputDetails {
 }
 
 const markCreated = (
-  value: UtxoSet,
+  utxos: UtxoSet,
   paymentCredential: Credential,
   output: TransactionOutput,
   txId: TransactionId,
@@ -57,7 +57,7 @@ const markCreated = (
     return;
   }
   const input = new TransactionInput(txId, index);
-  value.set(txInKey(input), {
+  utxos.set(txInId(input), {
     input,
     output,
     ...(details || { validBefore: null, dependsOn: [] }),
@@ -65,7 +65,7 @@ const markCreated = (
 };
 
 const markOutputsCreated = (
-  value: UtxoSet,
+  utxos: UtxoSet,
   paymentCredential: Credential,
   txBody: TransactionBody | SubTransactionBody,
   txId: TransactionId,
@@ -73,7 +73,7 @@ const markOutputsCreated = (
 ) => {
   let index = 0n;
   for (const output of txBody.outputs()) {
-    markCreated(value, paymentCredential, output, txId, index, details);
+    markCreated(utxos, paymentCredential, output, txId, index, details);
     index += 1n;
   }
 };
@@ -150,26 +150,26 @@ export class CardanoWalletService implements ChainFollower {
     // these entries appeared on chain or expired, they're not pending any more.
     // Match on the landed tx ids too: an output created and spent within the
     // same block never shows up in the tracker.
-    for (const [key, value] of this.#pending) {
+    for (const [txoId, txo] of this.#pending) {
       if (
-        (value.validBefore !== null && value.validBefore <= this.#slot) ||
-        landed.has(value.input.transactionId()) ||
-        this.#tracker.currentValue().has(key)
+        (txo.validBefore !== null && txo.validBefore <= this.#slot) ||
+        landed.has(txo.input.transactionId()) ||
+        this.#tracker.currentValue().has(txoId)
       ) {
-        this.#pending.delete(key);
+        this.#pending.delete(txoId);
       }
     }
     // prune any TXOs which have been reserved for longer than tracked history
     const oldestSlot = this.#tracker.oldestSlot();
-    for (const [key, until] of this.#reserved) {
+    for (const [txoId, until] of this.#reserved) {
       if (until <= oldestSlot) {
-        this.#reserved.delete(key);
+        this.#reserved.delete(txoId);
       }
     }
   }
 
-  #isReserved(key: string): boolean {
-    const until = this.#reserved.get(key);
+  #isReserved(txoId: string): boolean {
+    const until = this.#reserved.get(txoId);
     return until !== undefined && until > this.#slot;
   }
 
@@ -198,16 +198,16 @@ export class CardanoWalletService implements ChainFollower {
     }
     const subTxs = [...(txBody.subTransactions()?.values() ?? [])];
     // Every input the transaction consumes, sub-transactions included.
-    const inputKeys = [txBody, ...subTxs.map((subTx) => subTx.body())].flatMap((body) =>
-      [...body.inputs().values()].map(txInKey),
+    const inputTxoIds = [txBody, ...subTxs.map((subTx) => subTx.body())].flatMap((body) =>
+      [...body.inputs().values()].map(txInId),
     );
 
     // Track all UTXOs this depends on, in case they get rolled back or otherwise disappear
     const confirmed = this.#tracker.currentValue();
-    const dependsOn = inputKeys.filter((k) => confirmed.has(k) || this.#pending.has(k));
+    const dependsOn = inputTxoIds.filter((k) => confirmed.has(k) || this.#pending.has(k));
 
-    for (const key of inputKeys) {
-      this.#reserved.set(key, until);
+    for (const txoId of inputTxoIds) {
+      this.#reserved.set(txoId, until);
     }
     const result = await this.#chainState.submit(tx);
     if (result.status === 'ok') {
@@ -228,8 +228,8 @@ export class CardanoWalletService implements ChainFollower {
       // spending them again; we'll stop tracking them once they
       // appear on-chain, and this way we don't accidentally lock
       // them for no reason until the TTL expires
-      for (const key of inputKeys) {
-        this.#reserved.delete(key);
+      for (const txoId of inputTxoIds) {
+        this.#reserved.delete(txoId);
       }
     }
     return result;
@@ -249,7 +249,7 @@ class WalletTracker extends ChainIndex<UtxoSet> {
         startUtxos.map(
           (utxo) =>
             [
-              txInKey(utxo.input()),
+              txInId(utxo.input()),
               {
                 input: utxo.input(),
                 output: utxo.output(),
@@ -263,12 +263,12 @@ class WalletTracker extends ChainIndex<UtxoSet> {
     this.#paymentCredential = paymentCredential;
   }
 
-  protected doApplyTransaction(tx: Transaction, value: UtxoSet) {
+  protected doApplyTransaction(tx: Transaction, utxos: UtxoSet) {
     const applyTx = (txId: TransactionId, txBody: TransactionBody | SubTransactionBody) => {
       for (const input of txBody.inputs().values()) {
-        markSpent(value, input);
+        markSpent(utxos, input);
       }
-      markOutputsCreated(value, this.#paymentCredential, txBody, txId, null);
+      markOutputsCreated(utxos, this.#paymentCredential, txBody, txId, null);
     };
 
     const txBody = tx.body();
@@ -277,12 +277,12 @@ class WalletTracker extends ChainIndex<UtxoSet> {
       // only spends its collateral and creates its collateral return, which
       // follows the regular outputs.
       for (const input of txBody.collateral()?.values() ?? []) {
-        markSpent(value, input);
+        markSpent(utxos, input);
       }
       const collateralReturn = txBody.collateralReturn();
       if (collateralReturn) {
         markCreated(
-          value,
+          utxos,
           this.#paymentCredential,
           collateralReturn,
           tx.getId(),
@@ -298,7 +298,7 @@ class WalletTracker extends ChainIndex<UtxoSet> {
     applyTx(tx.getId(), txBody);
   }
 
-  protected copyValue(value: UtxoSet): UtxoSet {
-    return new Map(value);
+  protected copyValue(utxos: UtxoSet): UtxoSet {
+    return new Map(utxos);
   }
 }
