@@ -222,12 +222,12 @@ export class CardanoWalletService implements ChainFollower {
           details,
         );
       }
-    } else {
+    } else if (result.reachedMempool === false) {
       // If submission returned an error, the TX may or may not
-      // have reached the mempool. Free the inputs so we can try
-      // spending them again; we'll stop tracking them once they
-      // appear on-chain, and this way we don't accidentally lock
-      // them for no reason until the TTL expires
+      // have reached the mempool. If we _know_ it didn't, free the inputs so we
+      // can try spending them again. If not, keep them reserved so we don't
+      // accidentally double-spend. Worst-case scenario, the inputs are unavailable
+      // until the TTL expires.
       for (const txoId of inputTxoIds) {
         this.#reserved.delete(txoId);
       }

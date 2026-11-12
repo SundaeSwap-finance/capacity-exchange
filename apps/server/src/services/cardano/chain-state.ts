@@ -1,5 +1,5 @@
 import { FastifyBaseLogger } from 'fastify';
-import { ConnectError, createClient, type Client } from '@connectrpc/connect';
+import { Code, ConnectError, createClient, type Client } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect, submitConnect, syncConnect, type cardano, type sync } from '@utxorpc/spec';
 import type { Static } from '@sinclair/typebox';
@@ -44,6 +44,19 @@ const PING_INTERVAL_MS = 10_000;
 const PING_TIMEOUT_MS = 5_000;
 // The gRPC status Dolos returns when none of the intersect points is on its chain.
 const GRPC_NOT_FOUND = 5;
+// Codes that mean the source answered and refused the tx, so it never reached the
+// mempool. Dolos validates and inserts in one step, and reports every refusal as
+// InvalidArgument. Other codes (Unavailable, Internal, Unknown, DeadlineExceeded,
+// ...) can follow a tx the source accepted, so they say nothing either way.
+const SUBMIT_REJECTED_CODES: ReadonlySet<Code> = new Set([
+  Code.InvalidArgument,
+  Code.FailedPrecondition,
+  Code.OutOfRange,
+  Code.ResourceExhausted,
+  Code.Unimplemented,
+  Code.Unauthenticated,
+  Code.PermissionDenied,
+]);
 
 type TipAction = sync.FollowTipResponse['action'];
 
@@ -78,7 +91,9 @@ export interface CardanoChainStateServiceArgs {
   logger: FastifyBaseLogger;
 }
 
-export type SubmitTxResult = { status: 'ok' } | { status: 'error'; reason: string };
+export type SubmitTxResult =
+  | { status: 'ok'; reachedMempool: true }
+  | { status: 'error'; reason: string; reachedMempool?: false };
 
 /**
  * Follows the Cardano tip and reads the protocol parameters over UTxO RPC.
@@ -198,15 +213,20 @@ export class CardanoChainStateService implements ChainHealth {
         { signal },
       );
     } catch (err) {
-      if (err instanceof ConnectError) {
-        return { status: 'error', reason: err.rawMessage };
-      }
+      // A timeout may fire after the source received the tx.
       if (signal.aborted) {
         return { status: 'error', reason: 'submission timed out' };
       }
+      if (err instanceof ConnectError) {
+        return {
+          status: 'error',
+          reason: err.rawMessage,
+          ...(SUBMIT_REJECTED_CODES.has(err.code) && { reachedMempool: false }),
+        };
+      }
       return { status: 'error', reason: err instanceof Error ? err.message : String(err) };
     }
-    return { status: 'ok' };
+    return { status: 'ok', reachedMempool: true };
   }
 
   health(): Static<typeof ChainStatus> {

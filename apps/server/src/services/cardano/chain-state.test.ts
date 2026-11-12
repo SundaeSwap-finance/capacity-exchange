@@ -1,22 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import pino from 'pino';
 
-const { mockReadTip, mockReadParams, mockFollowTip, mockCreateTransport } = vi.hoisted(() => ({
-  mockReadTip: vi.fn(),
-  mockReadParams: vi.fn(),
-  mockFollowTip: vi.fn(),
-  mockCreateTransport: vi.fn(() => ({})),
-}));
+const { mockReadTip, mockReadParams, mockFollowTip, mockSubmitTx, mockCreateTransport } =
+  vi.hoisted(() => ({
+    mockReadTip: vi.fn(),
+    mockReadParams: vi.fn(),
+    mockFollowTip: vi.fn(),
+    mockSubmitTx: vi.fn(),
+    mockCreateTransport: vi.fn(() => ({})),
+  }));
 vi.mock('@connectrpc/connect-node', () => ({ createGrpcTransport: mockCreateTransport }));
-vi.mock('@connectrpc/connect', () => ({
+vi.mock('@connectrpc/connect', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@connectrpc/connect')>()),
   createClient: (service: { typeName: string }) =>
     service.typeName.endsWith('QueryService')
       ? { readParams: mockReadParams }
-      : { readTip: mockReadTip, followTip: mockFollowTip },
+      : service.typeName.endsWith('SubmitService')
+        ? { submitTx: mockSubmitTx }
+        : { readTip: mockReadTip, followTip: mockFollowTip },
 }));
 
+import { Code, ConnectError } from '@connectrpc/connect';
 import { CardanoChainStateService, fromU5CBigInt } from './chain-state.js';
-import { BlockId, Slot, type Point } from '@capacity-exchange/cardano-core';
+import { BlockId, Slot, type Point, type Transaction } from '@capacity-exchange/cardano-core';
 
 const logger = pino({ level: 'silent' });
 
@@ -583,5 +589,43 @@ describe('fromU5CBigInt', () => {
 
   it('throws when the field is missing', () => {
     expect(() => fromU5CBigInt(undefined, 'minFeeConstant')).toThrow(/missing minFeeConstant/);
+  });
+});
+
+describe('CardanoChainStateService.submit', () => {
+  const tx = { toCbor: () => '84a0' } as unknown as Transaction;
+  const service = () => new CardanoChainStateService({ url: 'http://dolos', logger });
+
+  beforeEach(() => {
+    mockSubmitTx.mockReset();
+  });
+
+  it('reports a submitted tx as in the mempool', async () => {
+    mockSubmitTx.mockResolvedValue({});
+    expect(await service().submit(tx)).toEqual({ status: 'ok', reachedMempool: true });
+  });
+
+  it('reports a tx the source refused as not in the mempool', async () => {
+    mockSubmitTx.mockRejectedValue(new ConnectError('could not process tx', Code.InvalidArgument));
+    expect(await service().submit(tx)).toEqual({
+      status: 'error',
+      reason: 'could not process tx',
+      reachedMempool: false,
+    });
+  });
+
+  it.each([Code.Unavailable, Code.Internal, Code.Unknown, Code.DeadlineExceeded, Code.Canceled])(
+    'cannot tell whether the tx reached the mempool after code %i',
+    async (code) => {
+      mockSubmitTx.mockRejectedValue(new ConnectError('lost', code));
+      const result = await service().submit(tx);
+      expect(result).toEqual({ status: 'error', reason: 'lost' });
+      expect(result).not.toHaveProperty('reachedMempool');
+    },
+  );
+
+  it('cannot tell whether the tx reached the mempool after a non-RPC error', async () => {
+    mockSubmitTx.mockRejectedValue(new Error('boom'));
+    expect(await service().submit(tx)).not.toHaveProperty('reachedMempool');
   });
 });

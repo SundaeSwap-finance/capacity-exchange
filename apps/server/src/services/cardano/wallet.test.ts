@@ -111,7 +111,10 @@ const ref = (tx: { getId(): Cardano.TransactionId }, index = 0) => `${tx.getId()
 const walletKeyPair = seedToSigningKey(new Uint8Array(32).fill(7));
 
 const newWallet = (
-  submit: (tx: Transaction) => Promise<SubmitTxResult> = async () => ({ status: 'ok' }),
+  submit: (tx: Transaction) => Promise<SubmitTxResult> = async () => ({
+    status: 'ok',
+    reachedMempool: true,
+  }),
 ) =>
   new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS), walletKeyPair, {
     addFollower() {
@@ -528,7 +531,7 @@ describe('CardanoWalletService submitting transactions', () => {
     let submitted: Transaction | undefined;
     const { wallet, funding } = await fundedWallet(async (t) => {
       submitted = t;
-      return { status: 'ok' };
+      return { status: 'ok', reachedMempool: true };
     });
 
     await wallet.signAndSubmitTx(payment([spend(funding)], 100));
@@ -549,7 +552,7 @@ describe('CardanoWalletService submitting transactions', () => {
     const submitting = wallet.signAndSubmitTx(payment([spend(funding, 0)], 100));
     expect(refs(wallet)).toEqual([ref(funding, 1)]);
 
-    finish({ status: 'ok' });
+    finish({ status: 'ok', reachedMempool: true });
     await submitting;
   });
 
@@ -559,7 +562,7 @@ describe('CardanoWalletService submitting transactions', () => {
 
     const result = await wallet.signAndSubmitTx(t);
 
-    expect(result).toEqual({ status: 'ok' });
+    expect(result).toEqual({ status: 'ok', reachedMempool: true });
     expect(refs(wallet)).toEqual([ref(t, 1)]);
   });
 
@@ -600,7 +603,7 @@ describe('CardanoWalletService submitting transactions', () => {
 
   it('frees wallet UTxOs spent by a sub-transaction when submission fails', async () => {
     const { wallet, funding } = await fundedWallet(
-      async () => ({ status: 'error', reason: 'rejected' }),
+      async () => ({ status: 'error', reason: 'rejected', reachedMempool: false }),
       [5_000_000n, 5_000_000n],
     );
     const t = tx({ inputs: [spend(funding, 0)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
@@ -629,26 +632,29 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(funding, 0)]);
   });
 
-  it('frees the inputs and tracks nothing when submission fails', async () => {
+  it('frees the inputs and tracks nothing when submission is rejected', async () => {
     const { wallet, funding } = await fundedWallet(async () => ({
       status: 'error',
       reason: 'rejected',
+      reachedMempool: false,
     }));
 
     const result = await wallet.signAndSubmitTx(payment([spend(funding)], 100));
 
-    expect(result).toEqual({ status: 'error', reason: 'rejected' });
+    expect(result).toEqual({ status: 'error', reason: 'rejected', reachedMempool: false });
     expect(refs(wallet)).toEqual([ref(funding)]);
   });
 
-  it('frees the inputs when submission times out', async () => {
+  it('keeps the inputs reserved until the TTL when submission may have reached the mempool', async () => {
     const { wallet, funding } = await fundedWallet(async () => ({
       status: 'error',
       reason: 'submission timed out',
     }));
 
     await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+    expect(refs(wallet)).toEqual([]);
 
+    await wallet.onRollForward(header(100), []);
     expect(refs(wallet)).toEqual([ref(funding)]);
   });
 
@@ -827,7 +833,7 @@ describe('CardanoWalletService submitting transactions', () => {
       let deferNextSubmit = false;
       const { wallet, funding } = await fundedWallet(async () => {
         if (!deferNextSubmit) {
-          return { status: 'ok' };
+          return { status: 'ok', reachedMempool: true };
         }
         return new Promise((resolve) => (finish = resolve));
       });
@@ -838,7 +844,7 @@ describe('CardanoWalletService submitting transactions', () => {
       const child = payment([spend(parent, 1)], 110);
       const submitting = wallet.signAndSubmitTx(child);
       await wallet.onRollForward(header(20), [parent]);
-      finish!({ status: 'ok' });
+      finish!({ status: 'ok', reachedMempool: true });
       await submitting;
       expect(refs(wallet)).toEqual([ref(child, 1)]);
 
