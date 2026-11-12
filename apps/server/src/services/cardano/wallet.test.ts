@@ -563,7 +563,7 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(t, 1)]);
   });
 
-  it('counts pending change, and not reserved inputs, in its lovelace', async () => {
+  it('counts reserved inputs, and not pending change, in its lovelace', async () => {
     const { wallet, funding } = await fundedWallet();
     const t = tx({
       inputs: [spend(funding)],
@@ -573,7 +573,7 @@ describe('CardanoWalletService submitting transactions', () => {
 
     await wallet.signAndSubmitTx(t);
 
-    expect(wallet.lovelace()).toBe(3_000_000n);
+    expect(wallet.lovelace()).toBe(10_000_000n);
   });
 
   it('tracks pending outputs of sub-transactions under their own ids', async () => {

@@ -131,8 +131,8 @@ export class CardanoWalletService implements ChainFollower {
   /** The ADA held across the wallet's UTxOs, in lovelace. */
   lovelace(): bigint {
     let total = 0n;
-    for (const utxo of this.utxos()) {
-      total += utxo.output().amount().coin();
+    for (const utxo of this.#tracker.currentValue().values()) {
+      total += utxo.output.amount().coin();
     }
     return total;
   }
