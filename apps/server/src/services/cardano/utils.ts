@@ -15,6 +15,11 @@ export abstract class ChainIndex<T> {
     this.#states.push({ slot: startSlot, value: startValue });
   }
 
+  /** The slot of the oldest state kept: no rollback can reach further back than this. */
+  oldestSlot(): Slot {
+    return this.#states[0].slot;
+  }
+
   currentValue(): T {
     return this.#states[this.#states.length - 1].value;
   }

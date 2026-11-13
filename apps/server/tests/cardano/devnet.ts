@@ -2,6 +2,7 @@ import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
 import { expect, vi } from 'vitest';
+import { TransactionId, TxIn } from '@capacity-exchange/cardano-core';
 import { ReadyResponse } from '../../src/models/health.js';
 import { CLIENT } from '../utils.js';
 
@@ -24,11 +25,12 @@ function cardanoCli(...args: string[]): string {
 }
 
 /**
- * Pays `lovelace` to `address` from the funded key and returns the transaction id.
- * The next payment must wait until this one is on chain: both spend the funded
+ * Builds a transaction spending the funded key's UTxO, with `args` added to the
+ * build, signs it with the funded key, submits it and returns its id.
+ * The next transaction must wait until this one is on chain: both spend the funded
  * key's change.
  */
-export function fund(address: string, lovelace: bigint): string {
+function submitFromFunded(...args: string[]): string {
   const utxos = JSON.parse(
     cardanoCli('query', 'utxo', '--address', FUNDED_ADDRESS, '--output-json'),
   );
@@ -43,8 +45,7 @@ export function fund(address: string, lovelace: bigint): string {
     'build',
     '--tx-in',
     txIn,
-    '--tx-out',
-    `${address}+${lovelace}`,
+    ...args,
     '--change-address',
     FUNDED_ADDRESS,
     '--out-file',
@@ -62,6 +63,93 @@ export function fund(address: string, lovelace: bigint): string {
   );
   cardanoCli('transaction', 'submit', '--tx-file', `${file}.signed`);
   return JSON.parse(cardanoCli('transaction', 'txid', '--tx-file', `${file}.signed`)).txhash;
+}
+
+/**
+ * Pays `lovelace` to `address` from the funded key and returns the transaction id.
+ * The next payment must wait until this one is on chain: both spend the funded
+ * key's change.
+ */
+export function fund(address: string, lovelace: bigint): string {
+  return submitFromFunded('--tx-out', `${address}+${lovelace}`);
+}
+
+/**
+ * The policy of the tokens `mintTokens` mints: a native script that only needs the
+ * funded key's signature (testnet/cardano/token.policy.json). The funded key is
+ * checked in, so the id is the same on every devnet.
+ */
+export const TEST_TOKEN_POLICY_ID = '9c8399adf0897796faeaac794629cf7edd4960daa593366243fb1e6c';
+
+export interface TestWallet {
+  address: string;
+  /** The 32-byte Ed25519 payment signing key, hex. */
+  signingKey: string;
+  /** The 32-byte Ed25519 payment verification key, hex. */
+  verificationKey: string;
+}
+
+/** Generates a fresh payment key and its enterprise address. It holds nothing until funded. */
+export function createTestWallet(): TestWallet {
+  const file = `/tmp/wallet-${randomUUID()}`;
+  cardanoCli(
+    'address',
+    'key-gen',
+    '--verification-key-file',
+    `${file}.vkey`,
+    '--signing-key-file',
+    `${file}.skey`,
+  );
+  const address = cardanoCli(
+    'address',
+    'build',
+    '--payment-verification-key-file',
+    `${file}.vkey`,
+  ).trim();
+  const keyHex = (path: string): string => {
+    const { cborHex } = JSON.parse(
+      execFileSync('docker', ['exec', NODE_CONTAINER, 'cat', path], { encoding: 'utf8' }),
+    );
+    // A CBOR byte string of 32 bytes: 0x58 0x20, then the key.
+    return cborHex.slice(4);
+  };
+  return { address, signingKey: keyHex(`${file}.skey`), verificationKey: keyHex(`${file}.vkey`) };
+}
+
+/**
+ * Mints `quantity` of the token `assetName` (UTF-8) under `TEST_TOKEN_POLICY_ID`,
+ * pays it with `lovelace` to `address`, and waits until the output is on chain.
+ * Returns the output, so a test can spend it.
+ */
+export async function mintTokens(
+  address: string,
+  assetName: string,
+  quantity: bigint,
+  lovelace = 2_000_000n,
+): Promise<TxIn> {
+  const asset = `${TEST_TOKEN_POLICY_ID}.${Buffer.from(assetName, 'utf8').toString('hex')}`;
+  const txId = submitFromFunded(
+    // `transaction build` puts the change after the given outputs, so this is output 0.
+    '--tx-out',
+    `${address}+${lovelace}+${quantity} ${asset}`,
+    '--mint',
+    `${quantity} ${asset}`,
+    '--mint-script-file',
+    `${KEYS_DIR}/token.policy.json`,
+  );
+  const txIn: TxIn = { txId: TransactionId(txId), index: 0 };
+
+  await vi.waitFor(
+    () => {
+      const utxos = JSON.parse(
+        cardanoCli('query', 'utxo', '--tx-in', `${txId}#0`, '--output-json'),
+      );
+      expect(Object.keys(utxos)).toHaveLength(1);
+    },
+    { timeout: 30_000 },
+  );
+  await new Promise((resolve) => setTimeout(resolve, 10_000));
+  return txIn;
 }
 
 type CardanoStatus = NonNullable<typeof ReadyResponse.static.cardano>;

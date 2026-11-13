@@ -2,7 +2,7 @@ name: cardano-devnet
 
 services:
   genesis:
-    image: &node-image 'ghcr.io/input-output-hk/ouroboros-leios/cardano-node-testnet:rc-2026w41'
+    image: &node-image 'ghcr.io/input-output-hk/ouroboros-leios/cardano-node-testnet:rc-2026w44'
     command: ['bash', '/keys/genesis.sh']
     volumes:
       - './cardano:/keys:ro'
@@ -44,7 +44,7 @@ services:
         condition: service_completed_successfully
 
   dolos:
-    image: 'ghcr.io/sundaeswap-finance/dolos:leios-musashi-2026-10-12'
+    image: 'ghcr.io/sundaeswap-finance/dolos:leios-musashi-2026-10-29'
     container_name: 'cardano-devnet-dolos'
     command: ['-c', '/devnet/dolos/dolos.toml', 'daemon']
     working_dir: '/devnet/dolos'
