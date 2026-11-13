@@ -1,5 +1,23 @@
 # @capacity-exchange/tests
 
+## 1.0.6
+
+### Patch Changes
+
+- 7080f1a: Upgrade all Midnight dependencies to support ledger v9. This is now compatible with all environments.
+- Updated dependencies [283704b]
+- Updated dependencies [060c019]
+- Updated dependencies [457074c]
+- Updated dependencies [faacd24]
+- Updated dependencies [7080f1a]
+  - @sundaeswap/capacity-exchange-client@3.0.0
+  - @capacity-exchange/demo-contracts@1.0.4
+  - @sundaeswap/capacity-exchange-core@3.0.0
+  - @sundaeswap/capacity-exchange-nodejs@3.0.0
+  - @sundaeswap/capacity-exchange-providers@5.0.0
+  - @sundaeswap/capacity-exchange-registry@4.0.0
+  - @sundaeswap/capacity-exchange-registry-nodejs@4.0.0
+
 ## 1.0.5
 
 ### Patch Changes
