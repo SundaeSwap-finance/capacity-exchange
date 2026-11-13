@@ -1,5 +1,15 @@
 # @capacity-exchange/demo-contracts
 
+## 1.0.4
+
+### Patch Changes
+
+- faacd24: Add an endpoint to accept user offers
+- 7080f1a: Upgrade all Midnight dependencies to support ledger v9. This is now compatible with all environments.
+- Updated dependencies [7080f1a]
+  - @sundaeswap/capacity-exchange-core@3.0.0
+  - @sundaeswap/capacity-exchange-nodejs@3.0.0
+
 ## 1.0.3
 
 ### Patch Changes

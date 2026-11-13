@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/funder-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Funds a Cardano transaction with ADA bought from a Capacity Exchange, using Dijkstra nested transactions",
   "type": "module",
