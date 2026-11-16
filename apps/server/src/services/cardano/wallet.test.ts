@@ -115,13 +115,16 @@ const newWallet = (
     status: 'ok',
     reachedMempool: true,
   }),
-) =>
-  new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS), walletKeyPair, {
+) => {
+  const wallet = new CardanoWalletService(Address.fromBech32(WALLET_ADDRESS), walletKeyPair, {
     addFollower() {
       // do nothing. it's simpler to manually call the roll forward/back methods.
     },
     submit: vi.fn(submit),
   } as any);
+  wallet.initState(Slot(0));
+  return wallet;
+};
 
 describe('CardanoWalletService chain following', () => {
   it('starts with no UTxOs', () => {

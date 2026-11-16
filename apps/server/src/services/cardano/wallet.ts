@@ -1,6 +1,8 @@
 import {
   Address,
+  CborReader,
   CborSet,
+  CborWriter,
   Credential,
   Ed25519PublicKeyHex,
   Ed25519SignatureHex,
@@ -78,15 +80,19 @@ const markOutputsCreated = (
   }
 };
 
+interface WalletState {
+  tracker: WalletTracker;
+  reserved: Map<string, Slot>;
+  pending: Map<string, OwnedOutput>;
+  slot: Slot;
+}
+
 export class CardanoWalletService implements ChainFollower {
   #address: Address;
   #paymentCredential: Credential;
   #keys: Ed25519KeyPair;
   #chainState: CardanoChainStateService;
-  #tracker: WalletTracker;
-  #reserved: Map<string, Slot>;
-  #pending: Map<string, OwnedOutput>;
-  #slot: Slot;
+  #state: WalletState | null;
 
   constructor(address: Address, keys: Ed25519KeyPair, chainState: CardanoChainStateService) {
     const paymentCredential = address.getProps().paymentPart;
@@ -96,11 +102,8 @@ export class CardanoWalletService implements ChainFollower {
     this.#address = address;
     this.#paymentCredential = paymentCredential;
     this.#keys = keys;
-    this.#tracker = new WalletTracker(paymentCredential, Slot(0), []);
-    this.#reserved = new Map();
-    this.#pending = new Map();
-    this.#slot = Slot(0);
     this.#chainState = chainState;
+    this.#state = null;
     chainState.addFollower(this);
   }
 
@@ -113,9 +116,13 @@ export class CardanoWalletService implements ChainFollower {
   }
 
   utxos(): TransactionUnspentOutput[] {
-    const slot = this.#slot;
-    const live = new Map(this.#tracker.currentValue());
-    for (const [k, v] of this.#pending) {
+    const state = this.#state;
+    if (!state) {
+      return [];
+    }
+    const slot = state.slot;
+    const live = new Map(state.tracker.currentValue());
+    for (const [k, v] of state.pending) {
       if (
         (v.validBefore === null || v.validBefore > slot) &&
         v.dependsOn.every((i) => live.has(i))
@@ -124,24 +131,58 @@ export class CardanoWalletService implements ChainFollower {
       }
     }
     return [...live]
-      .filter(([k, _]) => !this.#isReserved(k))
+      .filter(([k, _]) => !this.#isReserved(k, state))
       .map(([_, v]) => new TransactionUnspentOutput(v.input, v.output));
   }
 
   /** The ADA held across the wallet's UTxOs, in lovelace. */
   lovelace(): bigint {
+    const state = this.#state;
+    if (!state) {
+      return 0n;
+    }
     let total = 0n;
-    for (const utxo of this.#tracker.currentValue().values()) {
+    for (const utxo of state.tracker.currentValue().values()) {
       total += utxo.output.amount().coin();
     }
     return total;
   }
 
+  followerName(): string {
+    return 'wallet';
+  }
+
+  initState(slot: Slot): void {
+    this.#state = {
+      tracker: new WalletTracker(this.#paymentCredential, slot, []),
+      reserved: new Map(),
+      pending: new Map(),
+      slot,
+    };
+  }
+
+  loadState(reader: CborReader) {
+    // TODO
+    const slot = Slot(Number(reader.readInt()));
+    this.#state = {
+      tracker: new WalletTracker(this.#paymentCredential, slot, []),
+      reserved: new Map(),
+      pending: new Map(),
+      slot,
+    };
+  }
+
+  saveState(writer: CborWriter) {
+    const state = this.#requireState();
+    writer.writeInt(state.slot);
+  }
+
   async onRollForward(header: PartialBlockHeader, txs: Transaction[]) {
-    this.#slot = header.slot;
+    const state = this.#requireState();
+    state.slot = header.slot;
     const landed = new Set<string>();
     for (const tx of txs) {
-      this.#tracker.applyTransaction(header.slot, tx);
+      state.tracker.applyTransaction(header.slot, tx);
       landed.add(tx.getId());
       for (const subTx of tx.body().subTransactions()?.values() ?? []) {
         landed.add(subTx.getId());
@@ -150,32 +191,33 @@ export class CardanoWalletService implements ChainFollower {
     // these entries appeared on chain or expired, they're not pending any more.
     // Match on the landed tx ids too: an output created and spent within the
     // same block never shows up in the tracker.
-    for (const [txoId, txo] of this.#pending) {
+    for (const [txoId, txo] of state.pending) {
       if (
-        (txo.validBefore !== null && txo.validBefore <= this.#slot) ||
+        (txo.validBefore !== null && txo.validBefore <= state.slot) ||
         landed.has(txo.input.transactionId()) ||
-        this.#tracker.currentValue().has(txoId)
+        state.tracker.currentValue().has(txoId)
       ) {
-        this.#pending.delete(txoId);
+        state.pending.delete(txoId);
       }
     }
     // prune any TXOs which have been reserved for longer than tracked history
-    const oldestSlot = this.#tracker.oldestSlot();
-    for (const [txoId, until] of this.#reserved) {
+    const oldestSlot = state.tracker.oldestSlot();
+    for (const [txoId, until] of state.reserved) {
       if (until <= oldestSlot) {
-        this.#reserved.delete(txoId);
+        state.reserved.delete(txoId);
       }
     }
   }
 
-  #isReserved(txoId: string): boolean {
-    const until = this.#reserved.get(txoId);
-    return until !== undefined && until > this.#slot;
+  #isReserved(txoId: string, state: WalletState): boolean {
+    const until = state.reserved.get(txoId);
+    return until !== undefined && until > state.slot;
   }
 
   async onRollBackward(header: PartialBlockHeader) {
-    this.#slot = header.slot;
-    this.#tracker.rollBack(header.slot);
+    const state = this.#requireState();
+    state.slot = header.slot;
+    state.tracker.rollBack(header.slot);
   }
 
   async signAndSubmitTx(tx: Transaction): Promise<SubmitTxResult> {
@@ -203,25 +245,26 @@ export class CardanoWalletService implements ChainFollower {
     );
 
     // Track all UTXOs this depends on, in case they get rolled back or otherwise disappear
-    const confirmed = this.#tracker.currentValue();
-    const dependsOn = inputTxoIds.filter((k) => confirmed.has(k) || this.#pending.has(k));
+    const state = this.#requireState();
+    const confirmed = state.tracker.currentValue();
+    const dependsOn = inputTxoIds.filter((k) => confirmed.has(k) || state.pending.has(k));
 
-    if (inputTxoIds.some((txoId) => this.#isReserved(txoId))) {
+    if (inputTxoIds.some((txoId) => this.#isReserved(txoId, state))) {
       return {
         status: 'error',
         reason: 'transaction input is already reserved',
       };
     }
     for (const txoId of inputTxoIds) {
-      this.#reserved.set(txoId, until);
+      state.reserved.set(txoId, until);
     }
     const result = await this.#chainState.submit(tx);
     if (result.status === 'ok') {
       const details = { validBefore: until, dependsOn };
-      markOutputsCreated(this.#pending, this.#paymentCredential, txBody, tx.getId(), details);
+      markOutputsCreated(state.pending, this.#paymentCredential, txBody, tx.getId(), details);
       for (const subTx of subTxs) {
         markOutputsCreated(
-          this.#pending,
+          state.pending,
           this.#paymentCredential,
           subTx.body(),
           subTx.getId(),
@@ -235,10 +278,17 @@ export class CardanoWalletService implements ChainFollower {
       // accidentally double-spend. Worst-case scenario, the inputs are unavailable
       // until the TTL expires.
       for (const txoId of inputTxoIds) {
-        this.#reserved.delete(txoId);
+        state.reserved.delete(txoId);
       }
     }
     return result;
+  }
+
+  #requireState(): WalletState {
+    if (!this.#state) {
+      throw new Error('WalletState not initialized');
+    }
+    return this.#state;
   }
 }
 

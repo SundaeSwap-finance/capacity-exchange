@@ -35,6 +35,7 @@ export interface CardanoConfig {
   startingPoint?: Point;
   walletAddress: Address;
   walletKeyPair: Ed25519KeyPair;
+  walletStateDir: string;
   /** Signs the CIP-0198 price hints */
   registrationKeyPair?: Ed25519KeyPair;
   transactionTtl: number;
@@ -104,6 +105,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       'CARDANO_WALLET_ADDRESS',
       'CARDANO_WALLET_SKEY_FILE',
       'CARDANO_REGISTRATION_SKEY_FILE',
+      'CARDANO_WALLET_STATE_DIR',
     ] as const) {
       if (!env[name]) {
         throw new Error(`${name} is required because priceFormulas.ADA is configured`);
@@ -122,7 +124,12 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   }
 
   let cardano: CardanoConfig | undefined;
-  if (env.CARDANO_UTXORPC_URL && env.CARDANO_WALLET_ADDRESS && env.CARDANO_WALLET_SKEY_FILE) {
+  if (
+    env.CARDANO_UTXORPC_URL &&
+    env.CARDANO_WALLET_ADDRESS &&
+    env.CARDANO_WALLET_SKEY_FILE &&
+    env.CARDANO_WALLET_STATE_DIR
+  ) {
     const walletAddress = Address.fromBech32(env.CARDANO_WALLET_ADDRESS);
     const startingPoint = parsePoint(env.CARDANO_STARTING_POINT);
     cardano = {
@@ -130,6 +137,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
       startingPoint,
       walletAddress,
       walletKeyPair: readSigningKeyFile(env.CARDANO_WALLET_SKEY_FILE),
+      walletStateDir: env.CARDANO_WALLET_STATE_DIR,
       registrationKeyPair: env.CARDANO_REGISTRATION_SKEY_FILE
         ? readSigningKeyFile(env.CARDANO_REGISTRATION_SKEY_FILE)
         : undefined,

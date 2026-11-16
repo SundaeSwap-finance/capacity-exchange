@@ -57,6 +57,7 @@ const CARDANO_ENV: Record<string, string> = {
   CARDANO_REGISTRATION_SKEY_FILE: fileURLToPath(
     new URL('../../../testnet/cardano/server.skey', import.meta.url),
   ),
+  CARDANO_WALLET_STATE_DIR: 'unused',
 };
 
 const DUST_PRICED = priceConfigFor({
@@ -152,6 +153,7 @@ describe('loadConfig — cardano', () => {
     'CARDANO_WALLET_ADDRESS',
     'CARDANO_WALLET_SKEY_FILE',
     'CARDANO_REGISTRATION_SKEY_FILE',
+    'CARDANO_WALLET_STATE_DIR',
   ])('throws if ADA is priced but %s is not set', async (name) => {
     delete process.env[name];
     await expect(loadConfig()).rejects.toThrow(`${name} is required`);
