@@ -278,7 +278,10 @@ export class CardanoChainStateService implements ChainHealth {
       if (!this.recent.length) {
         try {
           await this.initFollow(startingPoint);
-        } catch (err) {
+           if (stopped.aborted) {
+             return;
+           }
+          } catch (err) {
           this.streamError = err instanceof Error ? err.message : String(err);
           this.logger.error({ err }, 'could not initialize chain');
           await pause(RECONNECT_DELAY_MS, stopped);
