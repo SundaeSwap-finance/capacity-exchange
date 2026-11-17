@@ -406,6 +406,9 @@ export class CardanoChainStateService implements ChainHealth {
         this.rollbackDepth = 0;
         this.followersHoldState ||= this.followers.length > 0;
         this.recent.push(blockTip(action.value));
+        if (this.recent.length > TRACKED_BLOCKS) {
+          this.recent.shift();
+        }
         // TODO: some blocks are not parsable with the current cardano-sdk version.
         // Once that's updated, remove this try/catch
         let header: PartialBlockHeader;
@@ -418,9 +421,6 @@ export class CardanoChainStateService implements ChainHealth {
         }
         for (const follower of this.followers) {
           await follower.onRollForward(header, transactions);
-        }
-        if (this.recent.length > TRACKED_BLOCKS) {
-          this.recent.shift();
         }
         return;
       }
