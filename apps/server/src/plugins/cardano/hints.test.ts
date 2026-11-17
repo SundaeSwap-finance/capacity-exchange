@@ -15,6 +15,7 @@ async function startWith(walletAddress: string) {
   const app = Fastify({ logger: false });
   const config: Partial<AppConfig> = {
     cardano: {
+      networkId: 'preview',
       utxorpcUrl: 'unused',
       walletAddress: Address.fromBech32(walletAddress),
       registrationKeyPair: readSigningKeyFile(keyFile('server.skey')),

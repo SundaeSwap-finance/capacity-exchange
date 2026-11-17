@@ -31,6 +31,7 @@ export interface MidnightConfig {
 }
 
 export interface CardanoConfig {
+  networkId: string;
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
@@ -101,6 +102,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   // ADA sells only through the hints, which follow the Cardano wallet and are signed with the registration key.
   if (pricedAssets(priceConfig.priceFormulas).includes('ADA')) {
     for (const name of [
+      'CARDANO_NETWORK',
       'CARDANO_UTXORPC_URL',
       'CARDANO_WALLET_ADDRESS',
       'CARDANO_WALLET_SKEY_FILE',
@@ -125,6 +127,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
 
   let cardano: CardanoConfig | undefined;
   if (
+    env.CARDANO_NETWORK &&
     env.CARDANO_UTXORPC_URL &&
     env.CARDANO_WALLET_ADDRESS &&
     env.CARDANO_WALLET_SKEY_FILE &&
@@ -133,6 +136,7 @@ export async function loadConfig(): Promise<ServerBootstrap> {
     const walletAddress = Address.fromBech32(env.CARDANO_WALLET_ADDRESS);
     const startingPoint = parsePoint(env.CARDANO_STARTING_POINT);
     cardano = {
+      networkId: env.CARDANO_NETWORK,
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,

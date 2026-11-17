@@ -48,6 +48,7 @@ const ADA_ONLY = priceConfigFor({
 });
 
 const CARDANO_ENV: Record<string, string> = {
+  CARDANO_NETWORK: 'preview',
   CARDANO_UTXORPC_URL: 'https://poop.bike',
   CARDANO_WALLET_ADDRESS:
     'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy',
@@ -149,6 +150,7 @@ describe('loadConfig — cardano', () => {
   });
 
   it.each([
+    'CARDANO_NETWORK',
     'CARDANO_UTXORPC_URL',
     'CARDANO_WALLET_ADDRESS',
     'CARDANO_WALLET_SKEY_FILE',

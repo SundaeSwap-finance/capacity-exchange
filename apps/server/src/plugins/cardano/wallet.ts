@@ -18,6 +18,7 @@ export default fp(async (fastify: FastifyInstance) => {
   }
 
   const service = new CardanoWalletService(
+    cardano.networkId,
     cardano.walletAddress,
     cardano.walletKeyPair,
     chainStateService,

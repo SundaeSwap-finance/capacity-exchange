@@ -17,6 +17,46 @@ export interface PersistedCardanoState {
 
 const STATE_VERSION = 1n;
 
+export function readArray<I>(reader: CborReader, readItem: (r: CborReader) => I): I[] {
+  const result: I[] = [];
+  reader.readStartArray();
+  while (reader.peekState() !== CborReaderState.EndArray) {
+    const item = readItem(reader);
+    result.push(item);
+  }
+  reader.readEndArray();
+  return result;
+}
+
+export function readMap<K, V>(
+  reader: CborReader,
+  readKey: (r: CborReader) => K,
+  readValue: (r: CborReader) => V,
+): Map<K, V> {
+  const result = new Map<K, V>();
+  reader.readStartMap();
+  while (reader.peekState() !== CborReaderState.EndMap) {
+    const key = readKey(reader);
+    const value = readValue(reader);
+    result.set(key, value);
+  }
+  reader.readEndMap();
+  return result;
+}
+
+export function readNullable<T>(reader: CborReader, readValue: (r: CborReader) => T): T | null {
+  if (reader.peekState() == CborReaderState.Null) {
+    reader.readNull();
+    return null;
+  } else {
+    return readValue(reader);
+  }
+}
+
+export function readSlot(reader: CborReader): Slot {
+  return Slot(Number(reader.readInt()));
+}
+
 export function readPersistedCardanoState(reader: CborReader): PersistedCardanoState {
   reader.readStartArray();
 
@@ -24,24 +64,13 @@ export function readPersistedCardanoState(reader: CborReader): PersistedCardanoS
   if (version !== STATE_VERSION) {
     throw new Error(`unexpected state version (expected ${STATE_VERSION}, got ${version})`);
   }
-
   const start = readCardanoPoint(reader);
-
-  const recent: CardanoTip[] = [];
-  reader.readStartArray();
-  while (reader.peekState() !== CborReaderState.EndArray) {
-    recent.push(readCardanoTip(reader));
-  }
-  reader.readEndArray();
-
-  const followers = new Map<string, Uint8Array>();
-  reader.readStartMap();
-  while (reader.peekState() !== CborReaderState.EndMap) {
-    const key = reader.readTextString();
-    const value = reader.readEncodedValue();
-    followers.set(key, value);
-  }
-  reader.readEndMap();
+  const recent = readArray(reader, readCardanoTip);
+  const followers = readMap(
+    reader,
+    (r) => r.readTextString(),
+    (r) => r.readEncodedValue(),
+  );
 
   reader.readEndArray();
   return {
@@ -81,7 +110,7 @@ export function readCardanoPoint(reader: CborReader): Point {
   };
   reader.readStartArray();
   const result: Point = {
-    slot: readField('slot', (r) => Slot(Number(r.readInt()))),
+    slot: readField('slot', readSlot),
     hash: readField('hash', (r) => BlockId(Buffer.from(r.readByteString()).toString('hex'))),
   };
   reader.readEndArray();
