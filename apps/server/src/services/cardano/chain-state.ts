@@ -400,18 +400,21 @@ export class CardanoChainStateService implements ChainHealth {
         this.rollbackDepth = 0;
         this.followersHoldState ||= this.followers.length > 0;
         this.recent.push(blockTip(action.value));
-        if (this.recent.length > TRACKED_BLOCKS) {
-          this.recent.shift();
-        }
         // TODO: some blocks are not parsable with the current cardano-sdk version.
-        // Once that's updated, don't swallow errors here
+        // Once that's updated, remove this try/catch
+        let header: PartialBlockHeader;
+        let transactions: Transaction[];
         try {
-          const [header, transactions] = parseBlock(action.value.nativeBytes);
-          for (const follower of this.followers) {
-            await follower.onRollForward(header, transactions);
-          }
+          [header, transactions] = parseBlock(action.value.nativeBytes);
         } catch (err) {
           this.logger.error({ err }, 'CardanoChainStateService could not parse a block');
+          return;
+        }
+        for (const follower of this.followers) {
+          await follower.onRollForward(header, transactions);
+        }
+        if (this.recent.length > TRACKED_BLOCKS) {
+          this.recent.shift();
         }
         return;
       }
