@@ -606,6 +606,24 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([]);
   });
 
+  it('refuses a transaction spending an input it does not own that is already reserved', async () => {
+    const { wallet, funding } = await fundedWallet(undefined, [5_000_000n, 5_000_000n]);
+    const offer = (fundingIndex: number) =>
+      tx({ inputs: [spend(funding, fundingIndex)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
+        { inputs: [externalInput(20)], outputs: [output(SOMEONE_ELSE)] },
+      ]);
+    await wallet.signAndSubmitTx(offer(0));
+
+    const result = await wallet.signAndSubmitTx(offer(1));
+
+    expect(result).toMatchObject({
+      status: 'error',
+      reason: 'transaction input is already reserved',
+    });
+    // The rejected transaction's own wallet input is left free.
+    expect(refs(wallet)).toEqual([ref(funding, 1)]);
+  });
+
   it('frees wallet UTxOs spent by a sub-transaction when submission fails', async () => {
     const { wallet, funding } = await fundedWallet(
       async () => ({ status: 'error', reason: 'rejected', reachedMempool: false }),
@@ -980,6 +998,23 @@ describe('CardanoWalletService saving and loading state', () => {
     await loaded.onRollForward(header(11), [funding]);
     expect(refs(loaded)).toEqual([ref(t, 1)]);
     const result = await loaded.signAndSubmitTx(payment([spend(funding)], 100));
+    expect(result).toMatchObject({
+      status: 'error',
+      reason: 'transaction input is already reserved',
+    });
+  });
+
+  it('keeps reservations of inputs it does not own', async () => {
+    const { wallet, funding } = await fundedWallet(undefined, [5_000_000n, 5_000_000n]);
+    const offer = (fundingIndex: number) =>
+      tx({ inputs: [spend(funding, fundingIndex)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
+        { inputs: [externalInput(20)], outputs: [output(SOMEONE_ELSE)] },
+      ]);
+    await wallet.signAndSubmitTx(offer(0));
+
+    const loaded = reload(wallet);
+    const result = await loaded.signAndSubmitTx(offer(1));
+
     expect(result).toMatchObject({
       status: 'error',
       reason: 'transaction input is already reserved',

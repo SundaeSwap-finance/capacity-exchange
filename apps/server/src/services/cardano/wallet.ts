@@ -448,18 +448,19 @@ export class CardanoWalletService implements ChainFollower {
     );
 
     // Track all UTXOs this depends on, in case they get rolled back or otherwise disappear.
-    // These are also the only inputs we reserve: guarding inputs we don't own is the caller's job.
     const state = this.#requireState();
     const confirmed = state.tracker.currentValue();
     const dependsOn = inputTxoIds.filter((k) => confirmed.has(k) || state.pending.has(k));
 
-    if (dependsOn.some((txoId) => this.#isReserved(txoId, state))) {
+    // Reserve every input, including ones we don't own, so concurrent transactions
+    // spending the same client UTxO can't both be submitted.
+    if (inputTxoIds.some((txoId) => this.#isReserved(txoId, state))) {
       return {
         status: 'error',
         reason: 'transaction input is already reserved',
       };
     }
-    for (const txoId of dependsOn) {
+    for (const txoId of inputTxoIds) {
       state.reserved.set(txoId, until);
     }
     const result = await this.#chainState.submit(tx);
@@ -481,7 +482,7 @@ export class CardanoWalletService implements ChainFollower {
       // can try spending them again. If not, keep them reserved so we don't
       // accidentally double-spend. Worst-case scenario, the inputs are unavailable
       // until the TTL expires.
-      for (const txoId of dependsOn) {
+      for (const txoId of inputTxoIds) {
         state.reserved.delete(txoId);
       }
     }
