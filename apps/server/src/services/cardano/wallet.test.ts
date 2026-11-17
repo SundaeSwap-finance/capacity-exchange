@@ -981,6 +981,29 @@ describe('CardanoWalletService saving and loading state', () => {
     expect(refs(loaded)).toEqual([ref(t, 1)]);
   });
 
+  it('keeps reservations and pending change through a reload while their funding is rolled back', async () => {
+    const wallet = newWallet();
+    const funding = tx({ inputs: [externalInput(10)], outputs: [output(WALLET_ADDRESS)] });
+    await wallet.onRollForward(header(10), [funding]);
+    const t = payment([spend(funding)], 100);
+    await wallet.signAndSubmitTx(t);
+    // Undoing the funding block leaves its output in no snapshot.
+    await wallet.onRollBackward(header(5));
+    expect(refs(wallet)).toEqual([]);
+
+    const loaded = reload(wallet);
+    expect(refs(loaded)).toEqual([]);
+
+    // The funding lands again: it is still reserved, and the change comes back.
+    await loaded.onRollForward(header(11), [funding]);
+    expect(refs(loaded)).toEqual([ref(t, 1)]);
+    const result = await loaded.signAndSubmitTx(payment([spend(funding)], 100));
+    expect(result).toMatchObject({
+      status: 'error',
+      reason: 'transaction input is already reserved',
+    });
+  });
+
   it('keeps pending outputs of sub-transactions with inputs it does not own', async () => {
     const { wallet, funding } = await fundedWallet();
     const t = tx({ inputs: [spend(funding)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [

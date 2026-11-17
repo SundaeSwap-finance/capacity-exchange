@@ -34,12 +34,22 @@ interface OwnedOutput {
   validBefore: Slot | null;
   dependsOn: string[];
 }
-type RawOwnedOutput = Omit<OwnedOutput, 'dependsOn'> & { dependsOn: number[] };
 type UtxoSet = Map<string, OwnedOutput>;
 
 const txInId = (txIn: TransactionInput): string => {
   return `${txIn.transactionId()}:${txIn.index()}`;
 };
+
+/** Writes a txo reference (a `txInId`) as an encoded TransactionInput. */
+const writeTxoRef = (writer: CborWriter, id: string) => {
+  const [txId, index] = id.split(':');
+  const input = new TransactionInput(TransactionId(txId), BigInt(index));
+  writer.writeEncodedValue(Buffer.from(input.toCbor(), 'hex'));
+};
+
+/** Reads a txo reference written by `writeTxoRef`, as a `txInId`. */
+const readTxoRef = (reader: CborReader): string =>
+  txInId(TransactionInput.fromCbor(HexBlob.fromBytes(reader.readEncodedValue())));
 
 const markSpent = (utxos: UtxoSet, input: TransactionInput) => {
   utxos.delete(txInId(input));
@@ -179,14 +189,14 @@ export class CardanoWalletService implements ChainFollower {
      - utxoSetHistory (map<slot, index>)
      - utxoSets (array<array<index>>)
      - pendingUtxos (array<index>)
-     - reservedUtxos (map<index, slot>)
+     - reservedUtxos (map<input, slot>)
      - txos (array<txo>)
 
     txo structure: CBOR array with
      - input (bytestring)
      - output (bytestring)
      - validBefore (slot | null)
-     - dependsOn (array<index>)
+     - dependsOn (array<input>)
   */
 
   loadState(reader: CborReader) {
@@ -212,18 +222,14 @@ export class CardanoWalletService implements ChainFollower {
     const pendingUtxos = readArray(reader, readIndex);
 
     // index 5: reserved utxos
-    const reservedUtxos = readMap(reader, readIndex, readSlot);
+    const reserved = readMap(reader, readTxoRef, readSlot);
 
     // index 6: txos
-    const rawTxos = readArray<RawOwnedOutput>(reader, (r) => this.#readTxo(r));
+    const txos = readArray(reader, (r) => this.#readTxo(r));
 
     reader.readEndArray();
 
     // all raw data is parsed, now reconstruct history
-    const txos = rawTxos.map((raw) => ({
-      ...raw,
-      dependsOn: raw.dependsOn.map((index) => txInId(rawTxos[index].input)),
-    }));
 
     const utxoSets = rawUtxoSets.map((txoIndices) => {
       const utxoSet = new Map<string, OwnedOutput>();
@@ -237,12 +243,6 @@ export class CardanoWalletService implements ChainFollower {
     const history: [Slot, UtxoSet][] = [];
     for (const [slot, index] of utxoSetHistory) {
       history.push([slot, new Map(utxoSets[index])]);
-    }
-
-    const reserved = new Map<string, Slot>();
-    for (const [index, slot] of reservedUtxos) {
-      const txo = txos[index];
-      reserved.set(txInId(txo.input), slot);
     }
 
     const pending = new Map<string, OwnedOutput>();
@@ -259,13 +259,13 @@ export class CardanoWalletService implements ChainFollower {
     };
   }
 
-  #readTxo(reader: CborReader): RawOwnedOutput {
+  #readTxo(reader: CborReader): OwnedOutput {
     reader.readStartArray();
 
     const input = TransactionInput.fromCbor(HexBlob.fromBytes(reader.readEncodedValue()));
     const output = TransactionOutput.fromCbor(HexBlob.fromBytes(reader.readEncodedValue()));
     const validBefore = readNullable(reader, readSlot);
-    const dependsOn = readArray(reader, (r) => Number(r.readInt()));
+    const dependsOn = readArray(reader, readTxoRef);
 
     reader.readEndArray();
 
@@ -338,25 +338,14 @@ export class CardanoWalletService implements ChainFollower {
         // output if a rollback undoes the landing, and its inputs stay reserved.
         continue;
       }
-      if (pending.dependsOn.some((dep) => txoIndex(dep) === undefined)) {
-        // this pending TXO depends on some other TXO which doesn't exist.
-        // that means it can never reach the chain, so we can skip it.
-        continue;
-      }
       writer.writeInt(addTxo(pending));
     }
     writer.writeEndArray();
 
-    // index 5: indices of the reserved utxos (and when they are reserved until)
+    // index 5: the reserved utxos (and when they are reserved until)
     writer.writeStartMap();
-    for (const [txInId, until] of state.reserved) {
-      const index = txoIndex(txInId);
-      if (index === undefined) {
-        // We only reserve our own TXOs. If one is in no tracked snapshot and no longer
-        // pending, it was spent beyond rollback range or expired, so can never be live again.
-        continue;
-      }
-      writer.writeInt(index);
+    for (const [txoId, until] of state.reserved) {
+      writeTxoRef(writer, txoId);
       writer.writeInt(until);
     }
     writer.writeEndMap();
@@ -364,7 +353,7 @@ export class CardanoWalletService implements ChainFollower {
     // index 6: interned txo bodies
     writer.writeStartArray();
     for (const txo of txos) {
-      this.#writeTxo(writer, txo, txoIndex);
+      this.#writeTxo(writer, txo);
     }
     writer.writeEndArray();
 
@@ -372,7 +361,7 @@ export class CardanoWalletService implements ChainFollower {
     writer.writeEndArray();
   }
 
-  #writeTxo(writer: CborWriter, txo: OwnedOutput, txoIndex: (id: string) => number | undefined) {
+  #writeTxo(writer: CborWriter, txo: OwnedOutput) {
     writer.writeStartArray();
 
     // index 0: encoded input
@@ -390,13 +379,8 @@ export class CardanoWalletService implements ChainFollower {
 
     // index 3: dependsOn
     writer.writeStartArray();
-    for (const dependsOn of txo.dependsOn) {
-      const index = txoIndex(dependsOn);
-      if (index === undefined) {
-        // this should never happen
-        throw new Error("TXO depends on another TXO we didn't track");
-      }
-      writer.writeInt(index);
+    for (const dep of txo.dependsOn) {
+      writeTxoRef(writer, dep);
     }
     writer.writeEndArray();
 
