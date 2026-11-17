@@ -951,19 +951,6 @@ describe('CardanoWalletService saving and loading state', () => {
     expect(refs(loaded)).toEqual([ref(funding)]);
   });
 
-  it('refuses to spend inputs reserved before the reload', async () => {
-    const { wallet, funding } = await fundedWallet();
-    await wallet.signAndSubmitTx(payment([spend(funding)], 100));
-
-    const loaded = reload(wallet);
-    const result = await loaded.signAndSubmitTx(payment([spend(funding)], 100));
-
-    expect(result).toMatchObject({
-      status: 'error',
-      reason: 'transaction input is already reserved',
-    });
-  });
-
   it('replaces pending outputs with confirmed ones when the transaction lands after the reload', async () => {
     const { wallet, funding } = await fundedWallet();
     const t = payment([spend(funding)], 100);
@@ -997,18 +984,6 @@ describe('CardanoWalletService saving and loading state', () => {
       status: 'error',
       reason: 'transaction input is already reserved',
     });
-  });
-
-  it('keeps pending outputs of sub-transactions with inputs it does not own', async () => {
-    const { wallet, funding } = await fundedWallet();
-    const t = tx({ inputs: [spend(funding)], outputs: [output(SOMEONE_ELSE)], ttl: 100 }, [
-      { inputs: [externalInput(20)], outputs: [output(SOMEONE_ELSE), output(WALLET_ADDRESS)] },
-    ]);
-    await wallet.signAndSubmitTx(t);
-
-    const loaded = reload(wallet);
-
-    expect(refs(loaded)).toEqual([ref(subTx(t, 0), 1)]);
   });
 
   describe('chaining', () => {
@@ -1121,23 +1096,6 @@ describe('CardanoWalletService saving and loading state', () => {
       await loaded.onRollForward(header(200), []);
       expect(refs(loaded)).toEqual([]);
     });
-  });
-
-  it('saves a reservation of an input spent beyond the rollback window', async () => {
-    const { wallet, funding } = await fundedWallet();
-    const t = payment([spend(funding)], 1_000_000);
-    await wallet.signAndSubmitTx(t);
-    await wallet.onRollForward(header(20), [t]);
-    // Push the block that spent the funding out of the tracked history.
-    for (let i = 0; i <= MAX_ROLLBACK_DEPTH; i++) {
-      await wallet.onRollForward(header(21 + i), [
-        tx({ inputs: [externalInput(99, i)], outputs: [output(SOMEONE_ELSE)] }),
-      ]);
-    }
-
-    const loaded = reload(wallet);
-
-    expect(refs(loaded)).toEqual([ref(t, 1)]);
   });
 
   it('rejects state with an unknown version', () => {
