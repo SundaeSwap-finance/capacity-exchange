@@ -122,7 +122,7 @@ export class CardanoChainStateService implements ChainHealth {
   readonly #sync: Client<typeof syncConnect.SyncService>;
   readonly #submit: Client<typeof submitConnect.SubmitService>;
   readonly #store: StateStore;
-  readonly #stateFile: string;
+  readonly #stateKey: string;
   private readonly logger: FastifyBaseLogger;
   private readonly followers: ChainFollower[] = [];
   // Applied blocks, oldest first, so an undo can step back to the one before.
@@ -150,7 +150,7 @@ export class CardanoChainStateService implements ChainHealth {
     this.#sync = createClient(syncConnect.SyncService, transport);
     this.#submit = createClient(submitConnect.SubmitService, transport);
     this.#store = store;
-    this.#stateFile = `cardano.${networkId}.cbor`;
+    this.#stateKey = `cardano.${networkId}.cbor`;
     this.logger = logger;
     this.startingPoint = null;
   }
@@ -338,7 +338,7 @@ export class CardanoChainStateService implements ChainHealth {
               'None of the recent blocks is on the source chain, so followers cannot roll back to a common block';
             this.logger.error(
               { err },
-              `CardanoChainStateService stopped following; delete ${this.#stateFile} and restart to resume`,
+              `CardanoChainStateService stopped following; delete ${this.#stateKey}.data and restart to resume`,
             );
             return;
           }
@@ -362,7 +362,7 @@ export class CardanoChainStateService implements ChainHealth {
   private async initFollow(startingPoint?: Point) {
     let start = startingPoint ?? null;
     try {
-      const stateBytes = await this.#store.load(this.#stateFile);
+      const stateBytes = await this.#store.load(this.#stateKey);
       const state = this.#readState(stateBytes);
       if (
         state &&
@@ -483,7 +483,7 @@ export class CardanoChainStateService implements ChainHealth {
 
   async #saveState(start: Point): Promise<void> {
     this.#lastSaveAt = Date.now();
-    await this.#store.save(this.#stateFile, this.#writeState(start));
+    await this.#store.save(this.#stateKey, this.#writeState(start));
   }
 
   #writeState(start: Point): Uint8Array {
