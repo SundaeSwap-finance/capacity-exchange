@@ -332,6 +332,12 @@ export class CardanoWalletService implements ChainFollower {
     // index 4: the indices of the pending utxos
     writer.writeStartArray();
     for (const pending of state.pending.values()) {
+      if (txoIndex(txInId(pending.input)) !== undefined) {
+        // This output already landed within tracked history, while its submission was
+        // in flight. The confirmed copy wins; dropping the pending one only hides the
+        // output if a rollback undoes the landing, and its inputs stay reserved.
+        continue;
+      }
       if (pending.dependsOn.some((dep) => txoIndex(dep) === undefined)) {
         // this pending TXO depends on some other TXO which doesn't exist.
         // that means it can never reach the chain, so we can skip it.

@@ -1059,6 +1059,52 @@ describe('CardanoWalletService saving and loading state', () => {
     });
   });
 
+  describe('when a transaction lands while its submission is in flight', () => {
+    /** Submits `t`, landing it in block 20 before the submission returns. */
+    async function landWhileSubmitting() {
+      let finish: ((result: SubmitTxResult) => void) | undefined;
+      const { wallet, funding } = await fundedWallet(
+        () => new Promise((resolve) => (finish = resolve)),
+      );
+      const t = payment([spend(funding)], 100);
+      const submitting = wallet.signAndSubmitTx(t);
+      await wallet.onRollForward(header(20), [t]);
+      finish!({ status: 'ok', reachedMempool: true });
+      await submitting;
+      return { wallet, funding, t };
+    }
+
+    it('hides its change after a reload and a rollback undoing the landing, until the TTL', async () => {
+      const { wallet, funding, t } = await landWhileSubmitting();
+
+      const loaded = reload(wallet);
+      expect(refs(loaded)).toEqual([ref(t, 1)]);
+
+      // Only the confirmed copy was saved, so undoing the block hides the change
+      // (in memory, the pending copy would keep it visible). The funding stays reserved.
+      await loaded.onRollBackward(header(10));
+      expect(refs(loaded)).toEqual([]);
+
+      await loaded.onRollForward(header(100), []);
+      expect(refs(loaded)).toEqual([ref(funding)]);
+    });
+
+    it('keeps hiding its change once spent on chain, through a reload', async () => {
+      const { wallet, t } = await landWhileSubmitting();
+      // The change is spent before any cleanup can drop its pending copy.
+      await wallet.onRollForward(header(21), [
+        tx({ inputs: [spend(t, 1)], outputs: [output(SOMEONE_ELSE)] }),
+      ]);
+      expect(refs(wallet)).toEqual([]);
+
+      const loaded = reload(wallet);
+      expect(refs(loaded)).toEqual([]);
+
+      await loaded.onRollForward(header(200), []);
+      expect(refs(loaded)).toEqual([]);
+    });
+  });
+
   it('saves a reservation of an input spent beyond the rollback window', async () => {
     const { wallet, funding } = await fundedWallet();
     const t = payment([spend(funding)], 1_000_000);
