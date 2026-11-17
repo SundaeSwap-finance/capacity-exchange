@@ -17,7 +17,7 @@ export interface DeployOutput {
   contractAddress: string;
   txHash: string;
   /** The contract maintenance authority's key, needed to rotate verifier keys. */
-  maintenanceSigningKey: SigningKey;
+  maintenanceSigningKey: SigningKey | '<redacted>';
   /** The Secrets Manager secret holding `maintenanceSigningKey`, for rotate-verifier-keys
    *  --signing-key-secret. Absent when it was not stored. */
   maintenanceKeySecretArn?: string;
@@ -56,7 +56,7 @@ export async function deploy(ctx: AppContext, dryRun = false, storeMaintenanceKe
   return {
     contractAddress,
     txHash,
-    maintenanceSigningKey: maintenanceKey.signingKey,
+    maintenanceSigningKey: maintenanceKey.secretArn ? '<redacted>' : maintenanceKey.signingKey,
     maintenanceKeySecretArn: maintenanceKey.secretArn,
   };
 }

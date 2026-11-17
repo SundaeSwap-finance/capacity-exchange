@@ -10,7 +10,7 @@ const logger = createLogger(import.meta);
 
 interface MaintenanceKeyOutput {
   contractAddress: string;
-  signingKey: SigningKey;
+  signingKey: SigningKey | '<redacted>';
   /** Absent when the key was not stored in Secrets Manager. */
   secretArn?: string;
 }
@@ -85,12 +85,12 @@ async function main(): Promise<DeployAllOutput> {
     maintenanceKeys: {
       tokenMint: {
         contractAddress: tokenMintResult.contractAddress,
-        signingKey: tokenMintResult.maintenanceSigningKey,
+        signingKey: tokenMintResult.maintenanceKeySecretArn ? '<redacted>' : tokenMintResult.maintenanceSigningKey,
         secretArn: tokenMintResult.maintenanceKeySecretArn,
       },
       counter: {
         contractAddress: counterResult.contractAddress,
-        signingKey: counterResult.maintenanceSigningKey,
+        signingKey: counterResult.maintenanceKeySecretArn ? '<redacted>' : counterResult.maintenanceSigningKey,
         secretArn: counterResult.maintenanceKeySecretArn,
       },
     },
