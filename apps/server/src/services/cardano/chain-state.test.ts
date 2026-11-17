@@ -180,6 +180,7 @@ describe('CardanoChainStateService', () => {
   async function started(expectedStreams = 1) {
     svc = new CardanoChainStateService({
       url: 'http://dolos.test',
+      networkId: 'preview',
       store: new InMemoryStateStore(),
       logger: logger as never,
     });
@@ -379,6 +380,7 @@ describe('CardanoChainStateService', () => {
       };
       svc = new CardanoChainStateService({
         url: 'http://dolos.test',
+        networkId: 'preview',
         store,
         logger: logger as never,
       });
@@ -639,6 +641,7 @@ describe('CardanoChainStateService', () => {
     mockReadTip.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
     svc = new CardanoChainStateService({
       url: 'http://dolos.test',
+      networkId: 'preview',
       store: new InMemoryStateStore(),
       logger: logger as never,
     });
@@ -683,7 +686,12 @@ describe('fromU5CBigInt', () => {
 describe('CardanoChainStateService.submit', () => {
   const tx = { toCbor: () => '84a0' } as unknown as Transaction;
   const service = () =>
-    new CardanoChainStateService({ url: 'http://dolos', store: new InMemoryStateStore(), logger });
+    new CardanoChainStateService({
+      url: 'http://dolos',
+      networkId: 'preview',
+      store: new InMemoryStateStore(),
+      logger,
+    });
 
   beforeEach(() => {
     mockSubmitTx.mockReset();

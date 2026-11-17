@@ -20,6 +20,7 @@ export default fp(async (fastify: FastifyInstance) => {
   const stateStore = new FileStateStore(cardano.walletStateDir, fastify.log);
   const service = new CardanoChainStateService({
     url: cardano.utxorpcUrl,
+    networkId: cardano.networkId,
     store: stateStore,
     logger: fastify.log,
   });

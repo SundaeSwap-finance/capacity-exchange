@@ -102,24 +102,17 @@ interface WalletState {
 }
 
 export class CardanoWalletService implements ChainFollower {
-  #network: string;
   #address: Address;
   #paymentCredential: Credential;
   #keys: Ed25519KeyPair;
   #chainState: CardanoChainStateService;
   #state: WalletState | null;
 
-  constructor(
-    network: string,
-    address: Address,
-    keys: Ed25519KeyPair,
-    chainState: CardanoChainStateService,
-  ) {
+  constructor(address: Address, keys: Ed25519KeyPair, chainState: CardanoChainStateService) {
     const paymentCredential = address.getProps().paymentPart;
     if (!paymentCredential) {
       throw new Error('Address must contain payment credential');
     }
-    this.#network = network;
     this.#address = address;
     this.#paymentCredential = paymentCredential;
     this.#keys = keys;
@@ -170,7 +163,7 @@ export class CardanoWalletService implements ChainFollower {
   }
 
   followerName(): string {
-    return `wallet-${this.#network}-${this.#paymentCredential.hash}`;
+    return `wallet-${this.#paymentCredential.hash}`;
   }
 
   initState(slot: Slot): void {

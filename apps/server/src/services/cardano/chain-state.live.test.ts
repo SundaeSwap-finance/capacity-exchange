@@ -22,6 +22,7 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
   beforeAll(async () => {
     svc = new CardanoChainStateService({
       url: url!,
+      networkId: 'preview',
       store: new InMemoryStateStore(),
       logger: pino({ level: 'silent' }) as never,
     });

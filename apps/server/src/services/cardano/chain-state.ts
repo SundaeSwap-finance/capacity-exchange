@@ -103,6 +103,7 @@ export interface ChainFollower {
 
 export interface CardanoChainStateServiceArgs {
   url: string;
+  networkId: string;
   store: StateStore;
   logger: FastifyBaseLogger;
 }
@@ -121,6 +122,7 @@ export class CardanoChainStateService implements ChainHealth {
   readonly #sync: Client<typeof syncConnect.SyncService>;
   readonly #submit: Client<typeof submitConnect.SubmitService>;
   readonly #store: StateStore;
+  readonly #stateFile: string;
   private readonly logger: FastifyBaseLogger;
   private readonly followers: ChainFollower[] = [];
   // Applied blocks, oldest first, so an undo can step back to the one before.
@@ -137,7 +139,7 @@ export class CardanoChainStateService implements ChainHealth {
   // When state was last saved, so the follow loop saves at most every SAVE_INTERVAL_MS.
   #lastSaveAt = Number.NEGATIVE_INFINITY;
 
-  constructor({ url, store, logger }: CardanoChainStateServiceArgs) {
+  constructor({ url, networkId, store, logger }: CardanoChainStateServiceArgs) {
     const transport = createGrpcTransport({
       httpVersion: '2',
       baseUrl: url,
@@ -148,6 +150,7 @@ export class CardanoChainStateService implements ChainHealth {
     this.#sync = createClient(syncConnect.SyncService, transport);
     this.#submit = createClient(submitConnect.SubmitService, transport);
     this.#store = store;
+    this.#stateFile = `cardano.${networkId}.cbor`;
     this.logger = logger;
     this.startingPoint = null;
   }
@@ -332,7 +335,7 @@ export class CardanoChainStateService implements ChainHealth {
               'None of the recent blocks is on the source chain, so followers cannot roll back to a common block';
             this.logger.error(
               { err },
-              'CardanoChainStateService stopped following; delete cardano.cbor and restart to resume',
+              `CardanoChainStateService stopped following; delete ${this.#stateFile} and restart to resume`,
             );
             return;
           }
@@ -356,7 +359,7 @@ export class CardanoChainStateService implements ChainHealth {
   private async initFollow(startingPoint?: Point) {
     let start = startingPoint ?? null;
     try {
-      const stateBytes = await this.#store.load('cardano.cbor');
+      const stateBytes = await this.#store.load(this.#stateFile);
       const state = this.#readState(stateBytes);
       if (
         state &&
@@ -477,7 +480,7 @@ export class CardanoChainStateService implements ChainHealth {
 
   async #saveState(start: Point): Promise<void> {
     this.#lastSaveAt = Date.now();
-    await this.#store.save('cardano.cbor', this.#writeState(start));
+    await this.#store.save(this.#stateFile, this.#writeState(start));
   }
 
   #writeState(start: Point): Uint8Array {
