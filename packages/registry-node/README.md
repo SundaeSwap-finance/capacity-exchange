@@ -16,7 +16,7 @@ For live environments, the `contractAddress` argument is optional — the CLI de
 |---------|---------|
 | `preview` | `4d0b6d84d14ba0e9eae766a1c6ea95d487a40c67dc9bb9925e56fb0872f67ecb` |
 | `preprod` | `892007f66343fe9a9867607d8448fe47ccde964c1dc8021bccaaf97c0bebb0ec` |
-| `mainnet` | `e1c688c297ef5787b08d8f0078932bba8c091bd5873b155d9793e10bd9a22fd7` |
+| `mainnet` | `5454ecdb483b8f5d3bab1149a296bf04aea00f1ee3395d4d2dbc66702f05aabe` |
 
 Pass a contract address explicitly to target a different deployment (e.g. a locally deployed registry).
 
