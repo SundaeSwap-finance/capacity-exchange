@@ -2,9 +2,9 @@
 
 Funds a Cardano transfer with ADA bought from a Capacity Exchange, using a Dijkstra sub-transaction ([CIP-0118](https://github.com/cardano-foundation/CIPs/pull/862)) as a babel-fee offer, loosely following [CIP-0198](https://github.com/input-output-hk/babel-fees-aggregator/tree/main/CIP-0198).
 
-The caller holds a token and only the ADA pinned as its UTxO's minimum, so it can't pay a fee. It signs an **offer**: a sub-transaction that pays the recipient and leaves some tokens behind in exchange for the ADA it's short. The exchange puts the offer in a **batch** (the top-level transaction), pays the fee, and submits it. The exchange owns the top-level transaction because sub-transactions can't carry a fee or collateral.
+The caller holds a token and only the ADA pinned as its UTxO's minimum, so it can't pay a fee. It signs an **offer**: a sub-transaction that pays the recipient and leaves some tokens behind in exchange for the ADA it's short. The exchange (the capacity-exchange server, live at `https://babel-fees.musashi.sundae.fi`) puts the offer in a **batch** (the top-level transaction), pays the fee, and submits it. The exchange owns the top-level transaction because sub-transactions can't carry a fee or collateral.
 
-`cardano-cli` can sign, hash and submit Dijkstra transactions but can't build a sub-transaction, so this tool builds offers and splices them into batches, and wraps `cardano-cli` for everything else.
+`cardano-cli` can't build a sub-transaction, so this tool builds and signs offers itself, and wraps `cardano-cli` for chain queries and for minting.
 
 ## Setup
 
@@ -18,17 +18,21 @@ The caller holds a token and only the ADA pinned as its UTxO's minimum, so it ca
 
 Each has a matching flag (`--cardano-cli`, `--socket-path`, …), which takes precedence.
 
+`cardano-cli` must understand Dijkstra (11.x). Without a local Musashi node, forward a remote node's socket over SSH, e.g. `ssh -fN -L ./node.sock:/opt/musashi/data/node.socket musashi-aws`. Socket paths are limited to about 100 bytes, so bind it somewhere short. Address queries can take a minute over a tunnel; raise `CES_FUND_CLI_TIMEOUT` if they time out.
+
+Wallet signing keys may be plain (`PaymentSigningKeyShelley_ed25519`) or HD-derived (`PaymentExtendedSigningKeyShelley_ed25519_bip32`).
+
 ## Flow
 
-Each command prints the next one with its paths filled in. Only the caller needs a faucet drop; `mint` funds the stand-in exchange from it. Run `init` and `mint` well before recording, since both wait on a block.
+Each command prints the next one with its paths filled in. Only the caller needs a faucet drop. Run `init` and `mint` well before recording, since `mint` waits on a block. The caller can also be any wallet that already holds a token the exchange accepts; skip steps 1 and 2 then.
 
 ```bash
 # 1. wallets (existing ones are left alone)
-bun src/cli.ts init --caller-wallet ./caller --simulated-ces-wallet ./simulated-ces --recipient-wallet ./recipient
+bun src/cli.ts init --caller-wallet ./caller --recipient-wallet ./recipient
 
 # 2. after a faucet drop to the caller: mint the token, leaving the caller exactly its min-UTxO,
-#    and sweep the spare ADA to the exchange
-bun src/cli.ts mint --caller-wallet ./caller --sweep-to $(cat ./simulated-ces/payment.addr)
+#    and sweep the spare ADA to the recipient
+bun src/cli.ts mint --caller-wallet ./caller --sweep-to $(cat ./recipient/payment.addr)
 
 # 3. show the caller can't pay a fee                            -> selection.json
 bun src/cli.ts balance --caller-wallet ./caller
@@ -38,55 +42,47 @@ bun src/cli.ts balance --caller-wallet ./caller
 bun src/cli.ts build --selection .ces-fund/selection.json \
   --send 900000:<policyid><hexname> --to $(cat ./recipient/payment.addr)
 
-# 5. price that ADA in tokens — a real call to GET /api/cardano/prices -> quote.json
-bun src/cli.ts quote --selection .ces-fund/selection.json --ces-url <url> --capacity <lovelace, from step 4>
+# 5. price that ADA in tokens from the exchange's signed hints  -> quote.json
+#    (GET /api/cardano/hints; the caller works the ladder out itself)
+bun src/cli.ts quote --selection .ces-fund/selection.json \
+  --ces-url https://babel-fees.musashi.sundae.fi --capacity <lovelace, from step 4>
 
 # 6. put the price into the offer (it comes out of the change),  -> offer.json
 #    then sign; only now is the offer final
 bun src/cli.ts commit --draft .ces-fund/offer.draft.json --quote .ces-fund/quote.json --caller-wallet ./caller
 
-# 7. hand the offer to the exchange, which batches and submits   -> submission.json
-bun src/cli.ts fund .ces-fund/offer.json --quote .ces-fund/quote.json \
-  --simulate-ces --simulated-ces-wallet ./simulated-ces --wait
+# 7. hand the offer to the exchange that priced it, which         -> submission.json
+#    batches and submits it; then follow the chain until it lands
+bun src/cli.ts fund .ces-fund/offer.json --quote .ces-fund/quote.json --wait
 
 # 8. balances
-bun src/cli.ts status --address $(cat ./recipient/payment.addr) --address $(cat ./simulated-ces/payment.addr)
+bun src/cli.ts status --address $(cat ./recipient/payment.addr) --address $(cat ./caller/payment.addr)
 ```
 
-Quotes expire (the server's `QUOTE_TTL_SECONDS`, 300 by default), so run steps 5–7 back to back.
+Hints are not a firm quote: the exchange reprices as its balance moves, so run steps 5–7 back to back.
 
 `show-offer .ces-fund/offer.draft.json` (after step 4) or `show-offer .ces-fund/offer.json` (after step 6) renders the offer and its imbalance: what it leaves for the batch, and the ADA it needs from it. For the draft it also splits the capacity into the ADA needed and the fee share.
 
-`show .ces-fund/simulated-ces/batch.tx.signed` renders the batch, including the sub-transaction that `cardano-cli debug transaction view` omits. Run it before the batch lands; afterwards its inputs are spent and can't be resolved.
-
 ## Acceptance vs inclusion
 
-As in CIP-0198, handing over an offer is asynchronous: a `202` only means the exchange will look at it. `fund` reports each stage using CIP-0198's names (received, verified, included-in-batch, submitted, or rejected with a reason code). With `--simulate-ces` they all happen within the one command; with `--ces-url` it polls.
+CIP-0198 lets handing over an offer be asynchronous. The server is not: `POST /api/cardano/offers` takes the envelope's raw bytes as `application/cbor`, builds, signs and submits the batch, and only then answers `202 {offerId}`, or `400`/`500` with `{error, message}`, where `error` is a CIP-0198 reason code. It does not name the batch, and has no route to ask about an offer afterwards. `fund` reports what it learns using CIP-0198's names (submitted, or rejected with a reason code).
 
 The chain has the final say. An offer's ID is its own TxId, and the ledger stores its outputs under that ID, so `--wait` (or `status --offer <id> --wait`) watches for `<offer id>#0` directly.
 
-## Real vs simulated
+## Trust
 
-The offer route doesn't exist on the server yet, so `fund` requires exactly one of `--simulate-ces` or `--ces-url`, with no default. `--ces-url` would call `POST /api/cardano/offers` and `GET /api/cardano/offers/{id}`.
-
-| Real                                         | Simulated by `--simulate-ces`               |
-| -------------------------------------------- | ------------------------------------------- |
-| `GET /api/cardano/prices` and its quote      | the exchange receiving the offer over HTTP  |
-| the offer and the caller's signature         | choosing to carry it, and which UTxO to use |
-| the batch, its fee, and everything submitted | quote settlement (expiry isn't checked)     |
+`quote` checks the hints' signature against the issuer key they carry. That proves they are intact, not who issued them: hints here are unregistered, so trust in the key comes from the URL. The server does not yet check that an offer pays what its hints ask.
 
 ## How it works
 
 - **The offer doesn't balance.** It sends more tokens in than out (the price) and more lovelace out than in (the change output's minimum, which the caller can't fund). Dijkstra only checks conservation over the whole batch, so the exchange's input covers the lovelace and its change output collects the tokens.
 - **The price goes in after the capacity is worked out.** The price only lowers the token amount in the change output, which can't make the offer bigger, so the ADA worked out from the draft still covers the signed offer. `commit` checks this before signing.
-- **Capacity is the caller's own arithmetic:** the change output's minimum plus the ledger fee formula applied to the offer's signed size. The exchange covers the rest of the batch's fee from its margin, and `fund` prints the split.
-- **The offer goes into the batch verbatim.** The caller's witness signs the offer's own body hash, so the exchange can build and sign the batch without breaking it, but re-encoding the offer could change that hash.
-- **The batch lists the offer's inputs as reference inputs**, because the node only fetches UTxOs named at the top level.
+- **Capacity is the caller's own arithmetic:** the change output's minimum plus the ledger fee formula applied to the offer's signed size. The exchange covers the rest of the batch's fee from its margin. `quote` prices that capacity up the hints' ladder: the price's base, plus each rung's rate for the lovelace it supplies, rounded up once.
+- **The offer must reach the batch verbatim.** The caller's witness signs the offer's own body hash, so the exchange can build and sign the batch around it, but re-encoding the offer could change that hash. `fund` sends the envelope's exact bytes.
 
 ## Open questions
 
 - **Validity bound.** CIP-0198 requires offers to expire. Without a bound, anyone holding the offer can complete it, and the caller's UTxO stays committed until they spend it. It's untested whether Musashi accepts a validity interval in a sub-transaction, so offers here have none.
-- **Tech stack.** This code is implementing the server side of the exchange via CLI scripts, we still need to determine how the real (TypeScript) implementation reads from and writes to the chain.
 
 ## Development
 

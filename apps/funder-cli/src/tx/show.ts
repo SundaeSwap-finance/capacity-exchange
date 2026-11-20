@@ -1,16 +1,9 @@
 import { assetLabel, formatValue } from '../cardano/value.js';
 import { formatAda, formatAsset, plain, short, shortAddress } from '../log.js';
 import type { Value } from '../cardano/value.js';
-import { outputValue, type Transaction, type TxInput, type TxOutput } from './codec.js';
-import { computeBalance, type ResolveInput } from './batch.js';
-import { imbalance, type SubTransaction, subTransactionSigners } from './subtx.js';
-
-export interface ShowLabels {
-  /** Bech32 address -> a human label such as "caller" or "CES". */
-  addresses?: Map<string, string>;
-  /** Who built the batch. Omitted when the source was never recorded. */
-  batchLabel?: string;
-}
+import { outputValue, type TxInput, type TxOutput } from './codec.js';
+import type { ResolveInput } from './fees.js';
+import { imbalance, type SubTransaction } from './subtx.js';
 
 function outputLine(output: TxOutput, labels?: Map<string, string>): string {
   const address = output.address().toBech32();
@@ -91,50 +84,4 @@ export function showImbalance(sub: SubTransaction, resolve: ResolveInput | undef
   };
   plain(`  offers   ${render(offeredValue)}   what the batch keeps`);
   plain(`  needs    ${render(neededValue)}   what the batch supplies`);
-}
-
-/**
- * Renders a nested transaction. `cardano-cli debug transaction view` silently omits body key
- * 23, so without this the sub-transaction is invisible in every stock tool.
- */
-export function showTransaction(tx: Transaction, resolve: ResolveInput | undefined, labels: ShowLabels = {}): void {
-  const body = tx.body();
-  const inputs = body.inputs().values();
-  const outputs = body.outputs();
-  const fee = body.fee();
-  const subs = [...(body.subTransactions()?.values() ?? [])];
-
-  const lookup = resolveOrUndefined(resolve);
-
-  plain(`TOP-LEVEL${labels.batchLabel ? `   ${labels.batchLabel}` : ''}`);
-  plain('  inputs');
-  for (const input of inputs) {
-    plain(inputLine(input, lookup(input), 'CES'));
-  }
-  plain('  outputs');
-  for (const output of outputs) {
-    plain(outputLine(output, labels.addresses));
-  }
-  plain(`  fee${' '.repeat(18)}${formatAda(fee)} ADA`);
-
-  subs.forEach((sub: SubTransaction, i: number) => {
-    const signers = subTransactionSigners(sub).map((k) => short(k, 4));
-    plain('');
-    showSubTransaction(
-      `SUB-TRANSACTION ${i + 1}/${subs.length}   offer ${short(sub.getId(), 6)}    ` +
-        `signed by ${signers.join(', ') || '(none)'}`,
-      sub,
-      resolve,
-      labels.addresses
-    );
-  });
-
-  if (resolve) {
-    const balance = computeBalance(inputs, outputs, subs, fee, resolve);
-    plain('');
-    plain('BALANCE');
-    plain(`  consumed        ${formatValue(balance.consumed)}`);
-    plain(`  produced        ${formatValue(balance.produced)}`);
-    plain(balance.balances ? '  ✓ batch balances' : '  ✗ BATCH DOES NOT BALANCE');
-  }
 }

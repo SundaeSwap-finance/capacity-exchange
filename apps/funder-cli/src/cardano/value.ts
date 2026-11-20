@@ -13,10 +13,6 @@ export function emptyValue(): Value {
   return { lovelace: 0n, assets: new Map() };
 }
 
-export function lovelaceValue(lovelace: bigint): Value {
-  return { lovelace, assets: new Map() };
-}
-
 export function cloneValue(value: Value): Value {
   return { lovelace: value.lovelace, assets: new Map(value.assets) };
 }
@@ -44,19 +40,6 @@ export function subValue(a: Value, b: Value): Value {
 
 export function sumValues(values: Value[]): Value {
   return values.reduce(addValue, emptyValue());
-}
-
-export function valuesEqual(a: Value, b: Value): boolean {
-  if (a.lovelace !== b.lovelace) {
-    return false;
-  }
-  const units = new Set([...a.assets.keys(), ...b.assets.keys()]);
-  for (const unit of units) {
-    if ((a.assets.get(unit) ?? 0n) !== (b.assets.get(unit) ?? 0n)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 /** Splits a unit into its policy id and hex asset name. */

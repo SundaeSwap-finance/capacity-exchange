@@ -1,19 +1,20 @@
 /**
- * The offer protocol, after CIP-0198's HTTPS binding. The server has no such route yet, so
- * this is the shape the real client speaks and the stand-in exchange reports in. CIP-0198
- * names the states and rejection codes but not their wire spelling; kebab-case is ours.
+ * The offer protocol, after CIP-0198's HTTPS binding, as the server speaks it. CIP-0198 names
+ * the states and rejection codes but not their wire spelling; kebab-case is the server's.
  */
 
-/** Where the route will live. Offer routes are prefixed by the chain the capacity is for. */
+/** Signed price hints, a JSON array of hex CBOR. Routes are prefixed by the chain the capacity is for. */
+export const HINTS_PATH = '/api/cardano/hints';
+
+/** Takes the raw envelope as `application/cbor`. */
 export const OFFERS_PATH = '/api/cardano/offers';
 
 /**
- * An offer's state at a service. The first five are the service's own view; the last three
- * are settled by the chain. None of them is authoritative about inclusion — CIP-0198 has the
- * publisher follow the chain for that.
+ * What the exchange said about an offer, in CIP-0198's terms. The server answers only once it
+ * has submitted the batch or refused, so these are the only two a caller sees. Neither is
+ * authoritative about inclusion — CIP-0198 has the publisher follow the chain for that.
  */
-export type OfferState =
-  'received' | 'verified' | 'included-in-batch' | 'submitted' | 'rejected' | 'confirmed' | 'expired' | 'invalidated';
+export type OfferState = 'submitted' | 'rejected';
 
 /** CIP-0198's closed set of refusal reasons. */
 export type RejectionCode =
@@ -43,33 +44,10 @@ export class OfferRejected extends Error {
   }
 }
 
-/** `POST {OFFERS_PATH}`. CIP-0198 has a firm quote travel alongside the envelope. */
-export interface SubmitOfferRequest {
-  /** Hex of `[envelope_version, era_tag, #6.24(subtx_bytes)]`. */
-  envelope: string;
-  quoteId: string;
-}
-
-/** The `202` body. Acceptance is for verification, not a promise to batch. */
+/**
+ * The `202` body. The server has built and submitted the batch by the time it answers, but
+ * does not say which batch, and has no route to ask about an offer afterwards.
+ */
 export interface SubmitOfferAccepted {
   offerId: string;
-  state: OfferState;
-}
-
-/** `GET {OFFERS_PATH}/{offerId}`. */
-export interface OfferStatus {
-  offerId: string;
-  state: OfferState;
-  /** Present once the offer has gone into a submitted batch. */
-  batchTxId?: string;
-  /** Present when the state is `rejected`. */
-  reason?: Rejection;
-}
-
-/**
- * States after which the caller stops asking the service. From `submitted` on, the chain is
- * the better source; before it, the service is the only one that knows anything.
- */
-export function stopsPolling(state: OfferState): boolean {
-  return ['submitted', 'rejected', 'confirmed', 'expired', 'invalidated'].includes(state);
 }

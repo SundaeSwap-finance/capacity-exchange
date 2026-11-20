@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Config } from '../config.js';
-import type { OfferState } from '../ces/protocol.js';
+import type { OfferState, Rejection } from '../ces/protocol.js';
 
 /** Files the commands hand to one another, all under the work directory. */
 export const ARTIFACTS = {
@@ -11,10 +11,6 @@ export const ARTIFACTS = {
   quote: 'quote.json',
   offer: 'offer.json',
   submission: 'submission.json',
-  /** The stand-in exchange's own files. A real exchange keeps these to itself. */
-  batchDraft: 'simulated-ces/batch.draft.tx',
-  batch: 'simulated-ces/batch.tx',
-  batchSigned: 'simulated-ces/batch.tx.signed',
 } as const;
 
 export function workPath(config: Config, name: string): string {
@@ -41,42 +37,6 @@ export function signingKeyPath(wallet: string): string {
 
 export function walletDir(wallet: string): string {
   return wallet.endsWith('.skey') ? dirname(wallet) : wallet;
-}
-
-/**
- * Who built a batch. Nothing in the transaction says whether a real exchange was involved, so
- * it is recorded when the batch is built and carried in its envelope description, which
- * travels with the file.
- */
-export type BatchSource = { simulated: true } | { simulated: false; url: string };
-
-const SOURCE_PREFIX = 'batch built by ';
-const SOURCE_SEPARATOR = ' · ';
-
-export function describeBatchSource(source: BatchSource): string {
-  return `${SOURCE_PREFIX}${source.simulated ? 'simulated CES' : source.url}`;
-}
-
-export function parseBatchSource(description: string | undefined): BatchSource | undefined {
-  const part = description?.split(SOURCE_SEPARATOR).find((p) => p.startsWith(SOURCE_PREFIX));
-  if (!part) {
-    return undefined;
-  }
-  const value = part.slice(SOURCE_PREFIX.length).trim();
-  return value === 'simulated CES' ? { simulated: true } : { simulated: false, url: value };
-}
-
-/** Appends the provenance note to an envelope description without discarding what was there. */
-export function withBatchSource(description: string, source: BatchSource | undefined): string {
-  return source ? [description, describeBatchSource(source)].filter(Boolean).join(SOURCE_SEPARATOR) : description;
-}
-
-/** The tag `show` prints beside the top-level transaction. Absent when provenance was never recorded. */
-export function batchSourceLabel(source: BatchSource | undefined): string | undefined {
-  if (!source) {
-    return undefined;
-  }
-  return source.simulated ? '[simulated CES]' : `[CES ${source.url}]`;
 }
 
 /** Records which UTxO `balance`/`build` selected so later steps need not re-choose. */
@@ -109,17 +69,32 @@ export interface StoredOffer {
 /** `submission.json`: what `fund` learned, so `status` can pick up where it left off. */
 export interface StoredSubmission {
   offerId: string;
-  source: BatchSource;
+  /** The exchange the offer went to. */
+  url: string;
   state: OfferState;
-  batchTxId?: string;
+  /** Present when the state is `rejected`. */
+  reason?: Rejection;
 }
 
+/**
+ * `quote.json`: a price worked out from an exchange's signed hints. CIP-0198 hints are not a
+ * firm quote and carry no id; the signed set is kept so the price can be checked later.
+ */
 export interface StoredQuote {
   url: string;
-  quoteId: string;
-  /** The lovelace the price was quoted for. */
+  /** The lovelace the price was worked out for. */
   capacity: string;
   priceAmount: string;
   priceUnit: string;
-  currency: { id: string; type: string; rawId: string };
+  /** When the exchange signed the hints, POSIX milliseconds. */
+  producedAt: string;
+  /** Hex of the issuer's verification key. */
+  issuerVkey: string;
+  /** Hex of the signed hint set the price came from. */
+  hints: string;
+}
+
+/** How a quote is named in output, in place of the id CIP-0198 hints do not have. */
+export function quoteLabel(quote: StoredQuote): string {
+  return `hints signed ${new Date(Number(quote.producedAt)).toISOString()} by ${quote.issuerVkey.slice(0, 8)}…`;
 }

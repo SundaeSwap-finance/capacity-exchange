@@ -1,13 +1,12 @@
-import { ed25519 } from '@noble/curves/ed25519.js';
 import { serializeEnvelope } from '@capacity-exchange/cardano-core';
 import { Cardano } from '@cardano-sdk/core';
 import { CardanoCli } from '../cardano/cli.js';
 import { assetLabel } from '../cardano/value.js';
 import type { Config } from '../config.js';
 import { formatAsset, step, wrote } from '../log.js';
-import { deductPrice, offerFee } from '../tx/batch.js';
+import { deductPrice, offerFee } from '../tx/fees.js';
 import { bytesToHex, cborSize, outputValue, parseSubTransactionBody, paymentKeyHash } from '../tx/codec.js';
-import { keyHash, readSigningKey, signSubTransaction } from '../tx/subtx.js';
+import { keyHash, readSigningKey, type Signer, signSubTransaction } from '../tx/subtx.js';
 import {
   ARTIFACTS,
   readJson,
@@ -80,10 +79,7 @@ export function runCommit(config: Config, options: CommitOptions): void {
   const offer: StoredOffer = { offerId: sub.getId(), envelope: bytesToHex(serializeEnvelope(sub)) };
   writeJson(offerPath, offer);
   wrote('commit', offerPath);
-  step(
-    'commit',
-    `next: ces-fund fund ${offerPath} --quote ${options.quote} --simulate-ces --simulated-ces-wallet <dir>`
-  );
+  step('commit', `next: ces-fund fund ${offerPath} --quote ${options.quote} --ces-url ${quote.url} --wait`);
 }
 
 /**
@@ -91,8 +87,8 @@ export function runCommit(config: Config, options: CommitOptions): void {
  * key produces an offer that verifies on its own terms and is rejected on chain, which is a
  * confusing way to learn the wrong wallet was named.
  */
-function assertKeyOwnsAddress(signingKey: Uint8Array, address: Cardano.Address, keyFile: string, bech32: string): void {
-  if (keyHash(bytesToHex(ed25519.getPublicKey(signingKey))) !== paymentKeyHash(address)) {
+function assertKeyOwnsAddress(signingKey: Signer, address: Cardano.Address, keyFile: string, bech32: string): void {
+  if (keyHash(bytesToHex(signingKey.publicKey)) !== paymentKeyHash(address)) {
     throw new Error(`${keyFile} is not the key behind ${bech32}, which the offer spends from`);
   }
 }

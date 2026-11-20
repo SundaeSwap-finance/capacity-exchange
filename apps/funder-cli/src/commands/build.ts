@@ -3,7 +3,7 @@ import { CardanoCli } from '../cardano/cli.js';
 import type { Config } from '../config.js';
 import { assetLabel, formatValue } from '../cardano/value.js';
 import { formatAsset, step, wrote } from '../log.js';
-import { offerFee, vkeyWitnessBytes } from '../tx/batch.js';
+import { offerFee, vkeyWitnessBytes } from '../tx/fees.js';
 import { cborSize, makeInput, makeOutput } from '../tx/codec.js';
 import { buildOfferBody, minUtxoLovelace, SubTransaction } from '../tx/subtx.js';
 import { ARTIFACTS, readJson, type Selection, type StoredDraft, workPath, writeJson } from './state.js';
