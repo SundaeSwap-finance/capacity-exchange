@@ -338,7 +338,7 @@ export class CardanoChainStateService implements ChainHealth {
               'None of the recent blocks is on the source chain, so followers cannot roll back to a common block';
             this.logger.error(
               { err },
-              `CardanoChainStateService stopped following; delete ${this.#stateKey}.data and restart to resume`,
+              `CardanoChainStateService stopped following; stop the service, delete ${this.#stateKey}.data, and start to resume`,
             );
             return;
           }
