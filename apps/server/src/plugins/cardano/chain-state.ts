@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 import { CardanoChainStateService } from '../../services/cardano/chain-state.js';
+import { FileStateStore } from '../../services/cardano/store.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -16,16 +17,18 @@ export default fp(async (fastify: FastifyInstance) => {
     return;
   }
 
+  const stateStore = new FileStateStore(cardano.walletStateDir, fastify.log);
   const service = new CardanoChainStateService({
     url: cardano.utxorpcUrl,
-    startingPoint: cardano.startingPoint,
+    networkId: cardano.networkId,
+    store: stateStore,
     logger: fastify.log,
   });
 
   fastify.decorate('cardanoChainStateService', service);
 
   fastify.addHook('onReady', async () => {
-    service.start();
+    service.start(cardano.startingPoint);
     fastify.log.info('CardanoChainStateService started');
   });
 

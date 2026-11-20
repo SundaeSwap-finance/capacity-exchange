@@ -35,9 +35,14 @@ export const isRewardAccount = (address: string): address is RewardAccount => {
   return Cardano.isRewardAccount(address);
 };
 
+export type CborReader = Serialization.CborReader;
+export const CborReader = Serialization.CborReader;
+export type CborReaderState = Serialization.CborReaderState;
+export const CborReaderState = Serialization.CborReaderState;
 export const CborSet = Serialization.CborSet;
-export type CborWriter = Serialization.CborWriter;
-export const CborWriter = Serialization.CborWriter;
+export type CborTag = Serialization.CborTag;
+export const CborTag = Serialization.CborTag;
+export { CborWriter } from './cbor-writer.js';
 export type SubTransaction = Serialization.SubTransaction;
 export const SubTransaction = Serialization.SubTransaction;
 export type SubTransactionBody = Serialization.SubTransactionBody;

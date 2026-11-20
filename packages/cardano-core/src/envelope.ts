@@ -1,7 +1,8 @@
 import { SubTransaction } from './types.js';
 import { Serialization } from '@cardano-sdk/core';
 import { HexBlob } from '@cardano-sdk/util';
-const { CborReader, CborTag, CborWriter } = Serialization;
+import { CborWriter } from './cbor-writer.js';
+const { CborReader, CborTag } = Serialization;
 
 export const ENVELOPE_VERSION_TAG = 1n;
 export const DIJKSTRA_ERA_TAG = 7n;

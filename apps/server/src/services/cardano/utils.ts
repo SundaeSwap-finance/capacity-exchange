@@ -11,8 +11,22 @@ interface State<T> {
 export abstract class ChainIndex<T> {
   #states: State<T>[] = [];
 
-  constructor(startSlot: Slot, startValue: T) {
-    this.#states.push({ slot: startSlot, value: startValue });
+  constructor(history: [Slot, T][]) {
+    if (!history.length) {
+      throw new Error('cannot construct empty chain index');
+    }
+    let maxSlot: Slot | null = null;
+    for (const [slot, value] of history) {
+      if (maxSlot !== null && maxSlot >= slot) {
+        throw new Error('history must be monotonically increasing');
+      }
+      maxSlot = slot;
+      this.#states.push({ slot, value });
+    }
+  }
+
+  history(): [Slot, T][] {
+    return [...this.#states].map((s) => [s.slot, s.value]);
   }
 
   /** The slot of the oldest state kept: no rollback can reach further back than this. */

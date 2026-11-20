@@ -31,10 +31,12 @@ export interface MidnightConfig {
 }
 
 export interface CardanoConfig {
+  networkId: string;
   utxorpcUrl: string;
   startingPoint?: Point;
   walletAddress: Address;
   walletKeyPair: Ed25519KeyPair;
+  walletStateDir: string;
   /** Signs the CIP-0198 price hints */
   registrationKeyPair?: Ed25519KeyPair;
   transactionTtl: number;
@@ -100,10 +102,12 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   // ADA sells only through the hints, which follow the Cardano wallet and are signed with the registration key.
   if (pricedAssets(priceConfig.priceFormulas).includes('ADA')) {
     for (const name of [
+      'CARDANO_NETWORK',
       'CARDANO_UTXORPC_URL',
       'CARDANO_WALLET_ADDRESS',
       'CARDANO_WALLET_SKEY_FILE',
       'CARDANO_REGISTRATION_SKEY_FILE',
+      'CARDANO_WALLET_STATE_DIR',
     ] as const) {
       if (!env[name]) {
         throw new Error(`${name} is required because priceFormulas.ADA is configured`);
@@ -122,14 +126,22 @@ export async function loadConfig(): Promise<ServerBootstrap> {
   }
 
   let cardano: CardanoConfig | undefined;
-  if (env.CARDANO_UTXORPC_URL && env.CARDANO_WALLET_ADDRESS && env.CARDANO_WALLET_SKEY_FILE) {
+  if (
+    env.CARDANO_NETWORK &&
+    env.CARDANO_UTXORPC_URL &&
+    env.CARDANO_WALLET_ADDRESS &&
+    env.CARDANO_WALLET_SKEY_FILE &&
+    env.CARDANO_WALLET_STATE_DIR
+  ) {
     const walletAddress = Address.fromBech32(env.CARDANO_WALLET_ADDRESS);
     const startingPoint = parsePoint(env.CARDANO_STARTING_POINT);
     cardano = {
+      networkId: env.CARDANO_NETWORK,
       utxorpcUrl: env.CARDANO_UTXORPC_URL,
       startingPoint,
       walletAddress,
       walletKeyPair: readSigningKeyFile(env.CARDANO_WALLET_SKEY_FILE),
+      walletStateDir: env.CARDANO_WALLET_STATE_DIR,
       registrationKeyPair: env.CARDANO_REGISTRATION_SKEY_FILE
         ? readSigningKeyFile(env.CARDANO_REGISTRATION_SKEY_FILE)
         : undefined,

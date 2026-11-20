@@ -48,6 +48,7 @@ const ADA_ONLY = priceConfigFor({
 });
 
 const CARDANO_ENV: Record<string, string> = {
+  CARDANO_NETWORK: 'preview',
   CARDANO_UTXORPC_URL: 'https://poop.bike',
   CARDANO_WALLET_ADDRESS:
     'addr_test1qzerv7hu9zv53jhq0w60aw4ldzh0qzrs50zfd4qhf8g3ur35gfnvuyz36lyxa6675ajt3sw3csjsd4valwzxngd4k6dqszmjqy',
@@ -57,6 +58,7 @@ const CARDANO_ENV: Record<string, string> = {
   CARDANO_REGISTRATION_SKEY_FILE: fileURLToPath(
     new URL('../../../testnet/cardano/server.skey', import.meta.url),
   ),
+  CARDANO_WALLET_STATE_DIR: 'unused',
 };
 
 const DUST_PRICED = priceConfigFor({
@@ -148,10 +150,12 @@ describe('loadConfig — cardano', () => {
   });
 
   it.each([
+    'CARDANO_NETWORK',
     'CARDANO_UTXORPC_URL',
     'CARDANO_WALLET_ADDRESS',
     'CARDANO_WALLET_SKEY_FILE',
     'CARDANO_REGISTRATION_SKEY_FILE',
+    'CARDANO_WALLET_STATE_DIR',
   ])('throws if ADA is priced but %s is not set', async (name) => {
     delete process.env[name];
     await expect(loadConfig()).rejects.toThrow(`${name} is required`);

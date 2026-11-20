@@ -7,6 +7,8 @@ import type { ChainHealth, ChainStatus } from '../../models/health.js';
 import {
   BlockId,
   BlockNo,
+  CborReader,
+  CborWriter,
   HexBlob,
   parseBlock,
   PartialBlockHeader,
@@ -20,6 +22,12 @@ import {
   Utxo,
 } from '@capacity-exchange/cardano-core';
 import { MAX_ROLLBACK_DEPTH } from './utils.js';
+import { StateStore } from './store.js';
+import {
+  PersistedCardanoState,
+  readPersistedCardanoState,
+  writePersistedCardanoState,
+} from './cbor.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const RECONNECT_DELAY_MS = 5_000;
@@ -38,6 +46,10 @@ const FIRST_MESSAGE_TIMEOUT_MS = 15_000;
 // Pings catch a dead connection; this catches a stream the source stops serving
 // on a live one.
 const STREAM_IDLE_TIMEOUT_MS = MAX_TIP_AGE_MS;
+// Each save rewrites the whole state, so catching up thousands of blocks would
+// spend most of its time saving. At the tip a block arrives every ~20 s, so this
+// still saves after nearly every block; stop() saves whatever is left.
+const SAVE_INTERVAL_MS = 5_000;
 // Without pings a dead HTTP/2 connection is never noticed, and every retry is
 // sent down it again.
 const PING_INTERVAL_MS = 10_000;
@@ -81,13 +93,18 @@ export type CardanoProtocolParams = Pick<
 >;
 
 export interface ChainFollower {
+  followerName(): string;
+  initState(slot: Slot): void;
+  loadState(reader: CborReader): void;
+  saveState(writer: CborWriter): void;
   onRollForward(header: PartialBlockHeader, txs: Transaction[]): Promise<void>;
   onRollBackward(header: PartialBlockHeader): Promise<void>;
 }
 
 export interface CardanoChainStateServiceArgs {
   url: string;
-  startingPoint?: Point;
+  networkId: string;
+  store: StateStore;
   logger: FastifyBaseLogger;
 }
 
@@ -104,11 +121,13 @@ export class CardanoChainStateService implements ChainHealth {
   readonly #query: Client<typeof queryConnect.QueryService>;
   readonly #sync: Client<typeof syncConnect.SyncService>;
   readonly #submit: Client<typeof submitConnect.SubmitService>;
+  readonly #store: StateStore;
+  readonly #stateKey: string;
   private readonly logger: FastifyBaseLogger;
   private readonly followers: ChainFollower[] = [];
   // Applied blocks, oldest first, so an undo can step back to the one before.
   private recent: CardanoTip[] = [];
-  private startingPoint?: Point;
+  private startingPoint: Point | null;
   // Blocks rolled back since the last apply.
   private rollbackDepth = 0;
   // Set once a block reaches followers: from then on, starting again from another
@@ -117,8 +136,10 @@ export class CardanoChainStateService implements ChainHealth {
   private streamError: string | null = null;
   private readonly abort = new AbortController();
   private following?: Promise<void>;
+  // When state was last saved, so the follow loop saves at most every SAVE_INTERVAL_MS.
+  #lastSaveAt = Number.NEGATIVE_INFINITY;
 
-  constructor({ url, startingPoint, logger }: CardanoChainStateServiceArgs) {
+  constructor({ url, networkId, store, logger }: CardanoChainStateServiceArgs) {
     const transport = createGrpcTransport({
       httpVersion: '2',
       baseUrl: url,
@@ -128,8 +149,10 @@ export class CardanoChainStateService implements ChainHealth {
     this.#query = createClient(queryConnect.QueryService, transport);
     this.#sync = createClient(syncConnect.SyncService, transport);
     this.#submit = createClient(submitConnect.SubmitService, transport);
+    this.#store = store;
+    this.#stateKey = `cardano.${networkId}.cbor`;
     this.logger = logger;
-    this.startingPoint = startingPoint;
+    this.startingPoint = null;
   }
 
   addFollower(follower: ChainFollower) {
@@ -140,13 +163,20 @@ export class CardanoChainStateService implements ChainHealth {
   }
 
   /** Follows the tip; an unreachable source shows as `ko`. */
-  start(): void {
-    this.following = this.follow();
+  start(startingPoint?: Point): void {
+    this.following = this.follow(startingPoint);
   }
 
   async stop(): Promise<void> {
     this.abort.abort();
     await this.following;
+    if (this.startingPoint) {
+      try {
+        await this.#saveState(this.startingPoint);
+      } catch (err) {
+        this.logger.warn({ err }, 'could not save state');
+      }
+    }
   }
 
   tip(): CardanoTip {
@@ -241,9 +271,24 @@ export class CardanoChainStateService implements ChainHealth {
     return { status: position.tipAgeMs > MAX_TIP_AGE_MS ? 'syncing' : 'ok', ...position };
   }
 
-  private async follow(): Promise<void> {
+  private async follow(startingPoint?: Point): Promise<void> {
     const stopped = this.abort.signal;
+
     while (!stopped.aborted) {
+      if (!this.recent.length) {
+        try {
+          await this.initFollow(startingPoint);
+          if (stopped.aborted) {
+            return;
+          }
+        } catch (err) {
+          this.streamError = err instanceof Error ? err.message : String(err);
+          this.logger.error({ err }, 'could not initialize chain');
+          await pause(RECONNECT_DELAY_MS, stopped);
+          continue;
+        }
+      }
+
       const attempt = new AbortController();
       const stopAttempt = () => attempt.abort();
       stopped.addEventListener('abort', stopAttempt, { once: true });
@@ -258,19 +303,6 @@ export class CardanoChainStateService implements ChainHealth {
       };
       try {
         const intersect = intersectPoints(this.recent).map(toBlockRef);
-        if (!intersect.length) {
-          if (this.startingPoint) {
-            intersect.push({
-              slot: BigInt(this.startingPoint.slot),
-              hash: Buffer.from(this.startingPoint.hash, 'hex'),
-            });
-          } else {
-            const tip = await this.readTip();
-            this.recent.push(tip);
-            intersect.push(toBlockRef(tip));
-          }
-          this.rollbackDepth = 0;
-        }
         expectMessageWithin(FIRST_MESSAGE_TIMEOUT_MS, 'FollowTip sent nothing after connecting');
         const stream = this.#sync.followTip({ intersect }, { signal: attempt.signal });
         for await (const response of stream) {
@@ -285,6 +317,15 @@ export class CardanoChainStateService implements ChainHealth {
             );
             return;
           }
+          // Saved here, between messages, so `recent` and every follower's
+          // state describe the same block.
+          if (Date.now() - this.#lastSaveAt >= SAVE_INTERVAL_MS && this.followersHoldState) {
+            try {
+              await this.#saveState(this.startingPoint!);
+            } catch (err) {
+              this.logger.warn({ err }, 'could not save state');
+            }
+          }
         }
         throw new Error('FollowTip stream ended');
       } catch (err) {
@@ -297,17 +338,18 @@ export class CardanoChainStateService implements ChainHealth {
               'None of the recent blocks is on the source chain, so followers cannot roll back to a common block';
             this.logger.error(
               { err },
-              'CardanoChainStateService stopped following; restart to resume',
+              `CardanoChainStateService stopped following; stop the service, delete ${this.#stateKey}.data, and start to resume`,
             );
             return;
           }
           // Clearing makes the next attempt start from the source's tip.
+          this.startingPoint = null;
           this.recent = [];
         }
         this.streamError = silence ?? String(err);
         this.logger.warn(
           { err, reason: this.streamError },
-          'CardanoChainStateService lost the FollowTip stream; reconnecting',
+          'CardanoChainStateService encountered an error while syncing; reconnecting',
         );
         await pause(RECONNECT_DELAY_MS, stopped);
       } finally {
@@ -317,25 +359,71 @@ export class CardanoChainStateService implements ChainHealth {
     }
   }
 
+  private async initFollow(startingPoint?: Point) {
+    let start = startingPoint ?? null;
+    try {
+      const stateBytes = await this.#store.load(this.#stateKey);
+      const state = this.#readState(stateBytes);
+      if (
+        state &&
+        (!start || (state.start.slot === start.slot && state.start.hash === start.hash))
+      ) {
+        start = state.start;
+        for (const follower of this.followers) {
+          const name = follower.followerName();
+          const stateBytes = state.followers.get(name);
+          if (!stateBytes) {
+            throw new Error(`state missing for follower ${name}`);
+          }
+          const reader = new CborReader(HexBlob.fromBytes(stateBytes));
+          follower.loadState(reader);
+        }
+        this.startingPoint = state.start;
+        this.recent = state.recent;
+        this.followersHoldState = state.recent.length > 0;
+      }
+    } catch (err) {
+      this.logger.warn({ err }, 'could not load state, syncing from start');
+    }
+
+    if (!this.recent.length) {
+      const tip = start ? await this.readBlock(start) : await this.readTip();
+      this.startingPoint = {
+        slot: Slot(Number(tip.slot)),
+        hash: BlockId(tip.hash),
+      };
+      this.recent = [tip];
+      const slot = Slot(Number(tip.slot));
+      for (const follower of this.followers) {
+        follower.initState(slot);
+      }
+    }
+  }
+
   private async onAction(action: TipAction): Promise<void> {
     switch (action.case) {
       case 'apply': {
         this.rollbackDepth = 0;
         this.followersHoldState ||= this.followers.length > 0;
-        this.recent.push(blockTip(action.value));
-        if (this.recent.length > TRACKED_BLOCKS) {
-          this.recent.shift();
-        }
+        const tip = blockTip(action.value);
         // TODO: some blocks are not parsable with the current cardano-sdk version.
-        // Once that's updated, don't swallow errors here
+        // Once that's updated, remove this try/catch
+        let header: PartialBlockHeader;
+        let transactions: Transaction[];
         try {
-          const [header, transactions] = parseBlock(action.value.nativeBytes);
-          for (const follower of this.followers) {
-            await follower.onRollForward(header, transactions);
-          }
+          [header, transactions] = parseBlock(action.value.nativeBytes);
         } catch (err) {
           this.logger.error({ err }, 'CardanoChainStateService could not parse a block');
+          // If we couldn't _parse_ the block, don't call the followers, just track we saw it.
+          this.#track(tip);
+          return;
         }
+        for (const follower of this.followers) {
+          await follower.onRollForward(header, transactions);
+        }
+        // If we _could_ parse the block, only advance the tip if the followers
+        // can all apply it.
+        this.#track(tip);
         return;
       }
       case 'undo': {
@@ -385,6 +473,58 @@ export class CardanoChainStateService implements ChainHealth {
         return;
       }
     }
+  }
+
+  #track(tip: CardanoTip): void {
+    this.recent.push(tip);
+    if (this.recent.length > TRACKED_BLOCKS) {
+      this.recent.shift();
+    }
+  }
+
+  #readState(bytes: Uint8Array | undefined): PersistedCardanoState | null {
+    if (!bytes) {
+      return null;
+    }
+    const reader = new CborReader(HexBlob.fromBytes(bytes));
+    return readPersistedCardanoState(reader);
+  }
+
+  async #saveState(start: Point): Promise<void> {
+    this.#lastSaveAt = Date.now();
+    await this.#store.save(this.#stateKey, this.#writeState(start));
+  }
+
+  #writeState(start: Point): Uint8Array {
+    const followers = new Map<string, Uint8Array>();
+    for (const follower of this.followers) {
+      const name = follower.followerName();
+      const writer = new CborWriter();
+      follower.saveState(writer);
+      followers.set(name, writer.encode());
+    }
+    const state: PersistedCardanoState = {
+      start,
+      recent: this.recent,
+      followers,
+    };
+    const writer = new CborWriter();
+    writePersistedCardanoState(writer, state);
+    return writer.encode();
+  }
+
+  private async readBlock(point: Point): Promise<CardanoTip> {
+    const {
+      block: [block],
+    } = await this.#sync.fetchBlock(
+      {
+        ref: [{ slot: BigInt(point.slot), hash: Buffer.from(point.hash, 'hex') }],
+      },
+      {
+        signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
+      },
+    );
+    return blockTip(block);
   }
 
   private async readTip(): Promise<CardanoTip> {

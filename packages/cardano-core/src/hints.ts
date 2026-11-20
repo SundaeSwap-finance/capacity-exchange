@@ -1,9 +1,7 @@
 /** CIP-0198 price hints: the CBOR a service signs and publishes. */
 
-import { Serialization } from '@cardano-sdk/core';
 import { Ed25519PublicKey } from '@cardano-sdk/crypto';
-const { CborWriter } = Serialization;
-type CborWriter = Serialization.CborWriter;
+import { CborWriter } from './cbor-writer.js';
 
 /** A Cardano asset: ADA, or a native asset by its unit, the policy id followed by the hex asset name. */
 export type Asset = { type: 'ada' } | { type: 'native'; unit: string };

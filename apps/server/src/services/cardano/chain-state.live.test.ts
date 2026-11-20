@@ -4,6 +4,7 @@ import { createClient } from '@connectrpc/connect';
 import { createGrpcTransport } from '@connectrpc/connect-node';
 import { queryConnect } from '@utxorpc/spec';
 import { CardanoChainStateService, fromU5CBigInt } from './chain-state.js';
+import { InMemoryStateStore } from './store.js';
 
 /**
  * Runs against a live UTxO RPC source such as Dolos, and is skipped without one:
@@ -21,6 +22,8 @@ describe.skipIf(!url)('CardanoChainStateService against a live UTxO RPC source',
   beforeAll(async () => {
     svc = new CardanoChainStateService({
       url: url!,
+      networkId: 'preview',
+      store: new InMemoryStateStore(),
       logger: pino({ level: 'silent' }) as never,
     });
     svc.start();

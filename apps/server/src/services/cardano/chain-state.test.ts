@@ -1,14 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import pino from 'pino';
 
-const { mockReadTip, mockReadParams, mockFollowTip, mockSubmitTx, mockCreateTransport } =
-  vi.hoisted(() => ({
-    mockReadTip: vi.fn(),
-    mockReadParams: vi.fn(),
-    mockFollowTip: vi.fn(),
-    mockSubmitTx: vi.fn(),
-    mockCreateTransport: vi.fn(() => ({})),
-  }));
+const {
+  mockReadTip,
+  mockFetchBlock,
+  mockReadParams,
+  mockFollowTip,
+  mockSubmitTx,
+  mockCreateTransport,
+} = vi.hoisted(() => ({
+  mockReadTip: vi.fn(),
+  mockFetchBlock: vi.fn(),
+  mockReadParams: vi.fn(),
+  mockFollowTip: vi.fn(),
+  mockSubmitTx: vi.fn(),
+  mockCreateTransport: vi.fn(() => ({})),
+}));
 vi.mock('@connectrpc/connect-node', () => ({ createGrpcTransport: mockCreateTransport }));
 vi.mock('@connectrpc/connect', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@connectrpc/connect')>()),
@@ -17,12 +24,25 @@ vi.mock('@connectrpc/connect', async (importOriginal) => ({
       ? { readParams: mockReadParams }
       : service.typeName.endsWith('SubmitService')
         ? { submitTx: mockSubmitTx }
-        : { readTip: mockReadTip, followTip: mockFollowTip },
+        : { readTip: mockReadTip, fetchBlock: mockFetchBlock, followTip: mockFollowTip },
+}));
+// Test blocks carry no CBOR, so every one parses as an empty block.
+vi.mock('@capacity-exchange/cardano-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@capacity-exchange/cardano-core')>()),
+  parseBlock: () => [{}, []],
 }));
 
 import { Code, ConnectError } from '@connectrpc/connect';
 import { CardanoChainStateService, fromU5CBigInt } from './chain-state.js';
-import { BlockId, Slot, type Point, type Transaction } from '@capacity-exchange/cardano-core';
+import {
+  BlockId,
+  Slot,
+  type CborReader,
+  type CborWriter,
+  type Point,
+  type Transaction,
+} from '@capacity-exchange/cardano-core';
+import { InMemoryStateStore } from './store.js';
 
 const logger = pino({ level: 'silent' });
 
@@ -144,6 +164,10 @@ describe('CardanoChainStateService', () => {
   beforeEach(() => {
     streams = [];
     mockReadTip.mockReset().mockResolvedValue(tipResponse(100));
+    mockFetchBlock.mockReset().mockImplementation((req) => {
+      const blocks = req.ref.map((r: any) => block(Number(r.slot)));
+      return Promise.resolve({ block: blocks });
+    });
     mockReadParams.mockReset().mockResolvedValue(PARAMS_RESPONSE);
     mockFollowTip.mockReset().mockImplementation((_req, { signal }) => {
       const stream = new FakeStream();
@@ -159,7 +183,12 @@ describe('CardanoChainStateService', () => {
   });
 
   async function started(expectedStreams = 1) {
-    svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
+    svc = new CardanoChainStateService({
+      url: 'http://dolos.test',
+      networkId: 'preview',
+      store: new InMemoryStateStore(),
+      logger: logger as never,
+    });
     svc.start();
     await vi.waitFor(() => expect(streams).toHaveLength(expectedStreams));
     return svc;
@@ -341,16 +370,29 @@ describe('CardanoChainStateService', () => {
   describe('followers', () => {
     const header = (slot: number) => ({ blockNo: slot, slot, hash: hex(slot) });
 
-    async function followed(startingPoint?: Point) {
-      const follower = { onRollForward: vi.fn(), onRollBackward: vi.fn() };
+    async function followed(
+      startingPoint?: Point,
+      store = new InMemoryStateStore(),
+      name = 'mock',
+    ) {
+      const follower = {
+        followerName: () => name,
+        initState: vi.fn(),
+        saveState: vi.fn((writer: CborWriter) => writer.writeInt(0)),
+        loadState: vi.fn((reader: CborReader) => reader.readInt()),
+        onRollForward: vi.fn(),
+        onRollBackward: vi.fn(),
+      };
       svc = new CardanoChainStateService({
         url: 'http://dolos.test',
-        startingPoint,
+        networkId: 'preview',
+        store,
         logger: logger as never,
       });
       svc.addFollower(follower);
-      svc.start();
-      await vi.waitFor(() => expect(streams).toHaveLength(1));
+      const before = streams.length;
+      svc.start(startingPoint);
+      await vi.waitFor(() => expect(streams).toHaveLength(before + 1));
       return { s: svc, follower };
     }
 
@@ -408,18 +450,6 @@ describe('CardanoChainStateService', () => {
       expect(mockReadTip).toHaveBeenCalledTimes(1);
     });
 
-    it('starts again from the source tip when no block has reached followers', async () => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-      await followed();
-      mockReadTip.mockResolvedValue(tipResponse(500));
-
-      streams[0].push(notFound());
-      await vi.advanceTimersByTimeAsync(5_000);
-
-      await vi.waitFor(() => expect(streams).toHaveLength(2));
-      expect(intersectSlots(1)).toEqual([500n]);
-    });
-
     it('reconnects from an older tracked block and rolls followers back to it', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       const { s, follower } = await followed();
@@ -458,12 +488,113 @@ describe('CardanoChainStateService', () => {
       expect(s.health().status).toBe('ok');
     });
 
+    it('retries a block a follower failed to apply until it succeeds', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { s, follower } = await followed();
+      streams[0].push(apply(101));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      follower.onRollForward.mockRejectedValueOnce(new Error('follower failed'));
+      streams[0].push(apply(102));
+      await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko', slot: 101 }));
+      expect(follower.onRollForward).toHaveBeenCalledTimes(2);
+
+      await vi.advanceTimersByTimeAsync(5_000);
+      await vi.waitFor(() => expect(streams).toHaveLength(2));
+      // The failed block is not tracked, so the stream resumes from the one before it.
+      expect(intersectSlots(1)).toEqual([101n, 100n]);
+
+      streams[1].push(reset(101), apply(102));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(102n));
+      // The reset undoes whatever the failed apply left behind before the retry.
+      expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+      expect(follower.onRollForward).toHaveBeenCalledTimes(3);
+      expect(s.health().status).toBe('ok');
+    });
+
     it('does not roll followers back for blocks they never saw', async () => {
       const { s, follower } = await followed();
       streams[0].push(undo(100), undo(99));
       await vi.waitFor(() => expect(() => s.tip()).toThrow(/no tip/));
 
       expect(follower.onRollBackward).not.toHaveBeenCalled();
+    });
+
+    describe('after a restart', () => {
+      /** Runs a service on `store` until it has applied `slots`, then stops it. */
+      async function runThenStop(store: InMemoryStateStore, slots: number[], name = 'mock') {
+        const { s, follower } = await followed(undefined, store, name);
+        follower.saveState.mockImplementation((writer) => writer.writeInt(BigInt(slots.at(-1)!)));
+        streams.at(-1)!.push(...slots.map(apply));
+        await vi.waitFor(() => expect(s.tip().slot).toBe(BigInt(slots.at(-1)!)));
+        await s.stop();
+        svc = undefined;
+      }
+
+      it('resumes from the saved blocks and hands followers their saved state', async () => {
+        const store = new InMemoryStateStore();
+        await runThenStop(store, [101, 102]);
+
+        const { s, follower } = await followed(undefined, store);
+
+        expect(intersectSlots(1)).toEqual([102n, 101n, 100n]);
+        expect(follower.initState).not.toHaveBeenCalled();
+        expect(follower.loadState).toHaveBeenCalledOnce();
+        expect(follower.loadState.mock.results[0].value).toBe(102n);
+        expect(s.tip()).toMatchObject({ slot: 102n, hash: hex(102) });
+        expect(mockReadTip).toHaveBeenCalledTimes(1);
+        expect(mockFetchBlock).not.toHaveBeenCalled();
+      });
+
+      it('keeps saving after resuming', async () => {
+        const store = new InMemoryStateStore();
+        await runThenStop(store, [101, 102]);
+        await runThenStop(store, [103]);
+
+        await followed(undefined, store);
+
+        expect(intersectSlots(2)).toEqual([103n, 102n, 101n, 100n]);
+        expect(mockReadTip).toHaveBeenCalledTimes(1);
+      });
+
+      it('stops on a saved chain the source does not have, rather than starting over', async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const store = new InMemoryStateStore();
+        await runThenStop(store, [101]);
+
+        const { s } = await followed(undefined, store);
+        streams[1].push(notFound());
+
+        await vi.waitFor(() =>
+          expect(s.health()).toMatchObject({ status: 'ko', error: /common block/ }),
+        );
+        await vi.advanceTimersByTimeAsync(5_000);
+        expect(streams).toHaveLength(2);
+      });
+
+      it('ignores saved state from a different starting point', async () => {
+        const store = new InMemoryStateStore();
+        await runThenStop(store, [101, 102]);
+
+        const { follower } = await followed({ slot: Slot(90), hash: BlockId(hex(90)) }, store);
+
+        expect(intersectSlots(1)).toEqual([90n]);
+        expect(follower.loadState).not.toHaveBeenCalled();
+        expect(follower.initState).toHaveBeenCalledExactlyOnceWith(90);
+      });
+
+      it('syncs again from the saved start when a follower has no saved state', async () => {
+        const store = new InMemoryStateStore();
+        await runThenStop(store, [101, 102], 'old');
+
+        const { follower } = await followed(undefined, store, 'new');
+
+        // From the saved start (the first run's tip), not the source's tip now.
+        expect(intersectSlots(1)).toEqual([100n]);
+        expect(mockFetchBlock).toHaveBeenCalledOnce();
+        expect(mockReadTip).toHaveBeenCalledTimes(1);
+        expect(follower.initState).toHaveBeenCalledExactlyOnceWith(100);
+      });
     });
   });
 
@@ -506,22 +637,6 @@ describe('CardanoChainStateService', () => {
     expect(intersectSlots(1)).toEqual([101n, 100n]);
   });
 
-  it('starts again from the source tip when no recent block intersects', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const s = await started();
-    streams[0].push(apply(101), apply(102));
-    await vi.waitFor(() => expect(s.tip().slot).toBe(102n));
-    mockReadTip.mockResolvedValue(tipResponse(500));
-
-    streams[0].push(notFound());
-    await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko', error: /not_found/ }));
-    await vi.advanceTimersByTimeAsync(5_000);
-
-    await vi.waitFor(() => expect(streams).toHaveLength(2));
-    expect(mockReadTip).toHaveBeenCalledTimes(2);
-    expect(intersectSlots(1)).toEqual([500n]);
-  });
-
   it('reconnects when a connection sends nothing after opening', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const s = await started();
@@ -553,7 +668,12 @@ describe('CardanoChainStateService', () => {
   it('does not throw on start when the source is down, and recovers when it returns', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockReadTip.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:50151'));
-    svc = new CardanoChainStateService({ url: 'http://dolos.test', logger: logger as never });
+    svc = new CardanoChainStateService({
+      url: 'http://dolos.test',
+      networkId: 'preview',
+      store: new InMemoryStateStore(),
+      logger: logger as never,
+    });
     svc.start();
 
     await vi.waitFor(() =>
@@ -594,7 +714,13 @@ describe('fromU5CBigInt', () => {
 
 describe('CardanoChainStateService.submit', () => {
   const tx = { toCbor: () => '84a0' } as unknown as Transaction;
-  const service = () => new CardanoChainStateService({ url: 'http://dolos', logger });
+  const service = () =>
+    new CardanoChainStateService({
+      url: 'http://dolos',
+      networkId: 'preview',
+      store: new InMemoryStateStore(),
+      logger,
+    });
 
   beforeEach(() => {
     mockSubmitTx.mockReset();
