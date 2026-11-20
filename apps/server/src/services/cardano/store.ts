@@ -37,7 +37,7 @@ export class FileStateStore implements StateStore {
     await mkdir(this.#dir, { recursive: true });
     const filePath = this.#filePath(name);
     const tempPath = `${filePath}.${Date.now()}.tmp`;
-    await writeFile(tempPath, data);
+    await writeFile(tempPath, data, { flush: true });
     await rename(tempPath, filePath);
     this.#logger.debug(`Saved state '${name}'`);
   }
