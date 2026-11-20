@@ -19,9 +19,8 @@ export interface MintOptions {
  * Mints the demo token and puts the caller into the state the demo is about: one UTxO holding
  * the token and *exactly* its minimum lovelace, with every spare lovelace swept away.
  *
- * Both halves happen in one transaction, so a single faucet drop sets up both parties: the
- * caller ends up unable to pay a fee, and the sweep target (the stand-in exchange) ends up
- * with the ADA it will later sell back.
+ * Both halves happen in one transaction: the caller ends up unable to pay a fee, and the spare
+ * ADA goes to the sweep target, such as the recipient.
  */
 export function runMint(config: Config, options: MintOptions): void {
   const cli = new CardanoCli(config);

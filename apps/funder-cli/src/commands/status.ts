@@ -3,7 +3,6 @@ import { CardanoCli } from '../cardano/cli.js';
 import { checkInclusion, formatDuration, waitForInclusion } from '../cardano/inclusion.js';
 import { assetLabel } from '../cardano/value.js';
 import type { Config } from '../config.js';
-import { getOfferStatus } from '../ces/client.js';
 import { formatAsset, plain, step, warn } from '../log.js';
 import { ARTIFACTS, readJson, type StoredSubmission, workPath } from './state.js';
 
@@ -19,7 +18,7 @@ export interface StatusOptions {
 /**
  * Reports what each named address holds, and/or whether a transaction or offer has been
  * included. An offer is followed on chain by its own id, since its outputs land under it;
- * the exchange's view is shown alongside when there is one, but only as its view.
+ * what the exchange said when it took the offer is shown alongside, but only as its view.
  */
 export async function runStatus(config: Config, options: StatusOptions): Promise<void> {
   const cli = new CardanoCli(config);
@@ -30,17 +29,11 @@ export async function runStatus(config: Config, options: StatusOptions): Promise
 
   if (options.offer) {
     const submission = readSubmission(config, options.offer);
-    if (submission && !submission.source.simulated) {
-      try {
-        const status = await getOfferStatus(submission.source.url, options.offer);
-        step('status', `exchange says: ${status.state}${status.batchTxId ? `  batch ${status.batchTxId}` : ''}`);
-      } catch (err) {
-        warn(`exchange did not answer: ${(err as Error).message}`);
-      }
-    } else if (submission) {
-      step('status', `simulated CES submitted it in batch ${submission.batchTxId ?? '(none)'}`);
+    if (submission) {
+      // The server has no status route; the chain is the only place to look.
+      step('status', `${submission.url} said ${submission.state}`);
     }
-    await report(cli, options.offer, { ...options, mempoolTxid: submission?.batchTxId });
+    await report(cli, options.offer, options);
   }
 
   for (const address of options.address ?? []) {

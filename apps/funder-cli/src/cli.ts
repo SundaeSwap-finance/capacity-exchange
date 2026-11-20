@@ -8,7 +8,6 @@ import { runBuild } from './commands/build.js';
 import { runQuote } from './commands/quote.js';
 import { runCommit } from './commands/commit.js';
 import { runFund } from './commands/fund.js';
-import { runShow } from './commands/show.js';
 import { runShowOffer } from './commands/showOffer.js';
 import { runStatus } from './commands/status.js';
 
@@ -31,9 +30,8 @@ const config = () => resolveConfig(program.opts<GlobalOptions>());
 
 program
   .command('init')
-  .description('create the caller, stand-in exchange, and recipient wallets')
+  .description('create the caller and recipient wallets')
   .requiredOption('--caller-wallet <dir>')
-  .requiredOption('--simulated-ces-wallet <dir>')
   .requiredOption('--recipient-wallet <dir>')
   .option(
     '--faucet-url <url>',
@@ -48,7 +46,7 @@ program
   .requiredOption('--caller-wallet <dir>')
   .option('--asset-name <name>', 'token name', 'tokenA')
   .option('--quantity <n>', 'how many units to mint', '100000000')
-  .option('--sweep-to <address>', "where the caller's spare ADA goes (use the stand-in exchange)")
+  .option('--sweep-to <address>', "where the caller's spare ADA goes (such as the recipient)")
   .action((opts) => runMint(config(), opts));
 
 program
@@ -67,7 +65,7 @@ program
 
 program
   .command('quote')
-  .description('ask one or more exchanges what they charge for that capacity')
+  .description("read one or more exchanges' signed price hints and work out what they charge for that capacity")
   .requiredOption('--ces-url <url...>', 'exchange base URL (repeatable)')
   .requiredOption('--capacity <lovelace>', 'the capacity `build` printed')
   .requiredOption('--selection <path>', 'selection.json written by `balance`')
@@ -83,23 +81,14 @@ program
 
 program
   .command('fund')
-  .description('hand the offer to an exchange, which batches and submits it (exactly one mode must be chosen)')
+  .description('hand the offer to an exchange, which batches and submits it')
   .argument('<offer>', 'offer.json written by `commit`')
   .requiredOption('--quote <path>', 'quote.json written by `quote`')
-  .option('--simulate-ces', 'run the exchange side locally instead of calling one')
-  .option('--simulated-ces-wallet <dir>', 'stand-in exchange wallet')
-  .option('--ces-url <url>', 'exchange to submit the offer to')
+  .option('--ces-url <url>', 'exchange to submit the offer to (default: the one that priced it)')
   .option('--wait', 'then follow the chain until the offer is included')
-  .option('--timeout <seconds>', 'how long polling runs before giving up', '3600')
+  .option('--timeout <seconds>', 'how long --wait polls before giving up', '3600')
   .option('--poll-interval <seconds>', 'seconds between polls', '10')
   .action((offer, opts) => runFund(config(), offer, opts));
-
-program
-  .command('show')
-  .description('render a batch, including the sub-transactions stock tooling hides')
-  .argument('<file>', 'transaction file')
-  .option('--offline', 'skip resolving inputs (no balance proof)')
-  .action((file, opts) => runShow(config(), file, opts));
 
 program
   .command('show-offer')

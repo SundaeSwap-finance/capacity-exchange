@@ -24,16 +24,6 @@ export function wrote(tag: string, path: string): void {
   console.log(`[${tag}] wrote ${path}`);
 }
 
-/** A boxed notice, used to make the simulated CES step impossible to miss. */
-export function banner(title: string, lines: string[]): void {
-  const width = Math.max(title.length + 4, ...lines.map((l) => l.length + 2));
-  console.log(`╭─ ${title} ${'─'.repeat(Math.max(0, width - title.length - 3))}╮`);
-  for (const line of lines) {
-    console.log(`│ ${line.padEnd(width - 1)}│`);
-  }
-  console.log(`╰${'─'.repeat(width + 1)}╯`);
-}
-
 /** 1180000 -> "1.180000". Always six decimal places so columns line up. */
 export function formatAda(value: bigint | number): string {
   const lovelace = BigInt(value);
