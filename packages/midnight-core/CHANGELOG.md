@@ -1,5 +1,11 @@
 # @sundaeswap/capacity-exchange-core
 
+## 3.0.0
+
+### Major Changes
+
+- 7080f1a: Upgrade all Midnight dependencies to support ledger v9. This is now compatible with all environments.
+
 ## 2.1.0
 
 ### Minor Changes

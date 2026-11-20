@@ -1,5 +1,20 @@
 # @capacity-exchange/demo
 
+## 1.0.7
+
+### Patch Changes
+
+- 7080f1a: Upgrade all Midnight dependencies to support ledger v9. This is now compatible with all environments.
+- Updated dependencies [283704b]
+- Updated dependencies [060c019]
+- Updated dependencies [457074c]
+- Updated dependencies [faacd24]
+- Updated dependencies [7080f1a]
+  - @sundaeswap/capacity-exchange-client@3.0.0
+  - @sundaeswap/capacity-exchange-core@3.0.0
+  - @sundaeswap/capacity-exchange-providers@5.0.0
+  - @capacity-exchange/archive-tools@1.0.1
+
 ## 1.0.6
 
 ### Patch Changes

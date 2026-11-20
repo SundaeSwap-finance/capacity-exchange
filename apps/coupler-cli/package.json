@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/coupler-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Nodejs e2e and deploy harness for the Commitment Coupler",
   "type": "module",

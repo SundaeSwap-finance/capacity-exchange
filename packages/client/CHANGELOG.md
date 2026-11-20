@@ -1,5 +1,20 @@
 # @sundaeswap/capacity-exchange-client
 
+## 3.0.0
+
+### Major Changes
+
+- 283704b: Serve CIP-0198 price hints at `GET /api/cardano/hints`, replacing `GET /api/cardano/prices`. Hints are signed price ladders built from `priceFormulas.ADA`, whose formulas now take `tiers: [{ above, rateNumerator, rateDenominator }]` instead of a flat rate: each tier's rate applies while the Cardano wallet holds more lovelace than its `above`, and nothing is offered below the lowest. Hints are signed with the key in `CARDANO_REGISTRATION_SKEY_FILE`; a server that prices ADA refuses to start without it, `CARDANO_UTXORPC_URL` and `CARDANO_WALLET_ADDRESS`. ADA is no longer quotable through `GET /api/prices`.
+
+### Minor Changes
+
+- 060c019: Handle various issues relating to instability/slowness from the Blockfrost indexer. The health endpoint now returns 503 until the indexer has given a healthy response. When polling, the service no longer calls the indexer if an earlier call is still in flight.
+- faacd24: Add an endpoint to accept user offers
+
+### Patch Changes
+
+- 457074c: The server tracks cardano UTXOs, and exposes them in the health endpoint
+
 ## 2.0.0
 
 ### Major Changes

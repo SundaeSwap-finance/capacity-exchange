@@ -1,6 +1,6 @@
 {
   "name": "@capacity-exchange/demo-contracts",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "description": "Midnight contracts for capacity exchange demos",
   "type": "module",
