@@ -26,6 +26,11 @@ vi.mock('@connectrpc/connect', async (importOriginal) => ({
         ? { submitTx: mockSubmitTx }
         : { readTip: mockReadTip, fetchBlock: mockFetchBlock, followTip: mockFollowTip },
 }));
+// Test blocks carry no CBOR, so every one parses as an empty block.
+vi.mock('@capacity-exchange/cardano-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@capacity-exchange/cardano-core')>()),
+  parseBlock: () => [{}, []],
+}));
 
 import { Code, ConnectError } from '@connectrpc/connect';
 import { CardanoChainStateService, fromU5CBigInt } from './chain-state.js';
@@ -480,6 +485,30 @@ describe('CardanoChainStateService', () => {
 
       await vi.waitFor(() => expect(s.tip().slot).toBe(117n));
       expect(follower.onRollBackward).toHaveBeenLastCalledWith(header(117));
+      expect(s.health().status).toBe('ok');
+    });
+
+    it('retries a block a follower failed to apply until it succeeds', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { s, follower } = await followed();
+      streams[0].push(apply(101));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(101n));
+
+      follower.onRollForward.mockRejectedValueOnce(new Error('follower failed'));
+      streams[0].push(apply(102));
+      await vi.waitFor(() => expect(s.health()).toMatchObject({ status: 'ko', slot: 101 }));
+      expect(follower.onRollForward).toHaveBeenCalledTimes(2);
+
+      await vi.advanceTimersByTimeAsync(5_000);
+      await vi.waitFor(() => expect(streams).toHaveLength(2));
+      // The failed block is not tracked, so the stream resumes from the one before it.
+      expect(intersectSlots(1)).toEqual([101n, 100n]);
+
+      streams[1].push(reset(101), apply(102));
+      await vi.waitFor(() => expect(s.tip().slot).toBe(102n));
+      // The reset undoes whatever the failed apply left behind before the retry.
+      expect(follower.onRollBackward).toHaveBeenCalledExactlyOnceWith(header(101));
+      expect(follower.onRollForward).toHaveBeenCalledTimes(3);
       expect(s.health().status).toBe('ok');
     });
 

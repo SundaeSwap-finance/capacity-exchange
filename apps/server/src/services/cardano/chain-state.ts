@@ -349,7 +349,7 @@ export class CardanoChainStateService implements ChainHealth {
         this.streamError = silence ?? String(err);
         this.logger.warn(
           { err, reason: this.streamError },
-          'CardanoChainStateService lost the FollowTip stream; reconnecting',
+          'CardanoChainStateService encountered an error while syncing; reconnecting',
         );
         await pause(RECONNECT_DELAY_MS, stopped);
       } finally {
@@ -405,10 +405,7 @@ export class CardanoChainStateService implements ChainHealth {
       case 'apply': {
         this.rollbackDepth = 0;
         this.followersHoldState ||= this.followers.length > 0;
-        this.recent.push(blockTip(action.value));
-        if (this.recent.length > TRACKED_BLOCKS) {
-          this.recent.shift();
-        }
+        const tip = blockTip(action.value);
         // TODO: some blocks are not parsable with the current cardano-sdk version.
         // Once that's updated, remove this try/catch
         let header: PartialBlockHeader;
@@ -417,11 +414,16 @@ export class CardanoChainStateService implements ChainHealth {
           [header, transactions] = parseBlock(action.value.nativeBytes);
         } catch (err) {
           this.logger.error({ err }, 'CardanoChainStateService could not parse a block');
+          // If we couldn't _parse_ the block, don't call the followers, just track we saw it.
+          this.#track(tip);
           return;
         }
         for (const follower of this.followers) {
           await follower.onRollForward(header, transactions);
         }
+        // If we _could_ parse the block, only advance the tip if the followers
+        // can all apply it.
+        this.#track(tip);
         return;
       }
       case 'undo': {
@@ -470,6 +472,13 @@ export class CardanoChainStateService implements ChainHealth {
         this.recent = this.recent.slice(0, at + 1);
         return;
       }
+    }
+  }
+
+  #track(tip: CardanoTip): void {
+    this.recent.push(tip);
+    if (this.recent.length > TRACKED_BLOCKS) {
+      this.recent.shift();
     }
   }
 
