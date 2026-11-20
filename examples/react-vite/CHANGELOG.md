@@ -1,5 +1,13 @@
 # @capacity-exchange/example-react-vite
 
+## 1.0.5
+
+### Patch Changes
+
+- 7080f1a: Upgrade all Midnight dependencies to support ledger v9. This is now compatible with all environments.
+- Updated dependencies [7080f1a]
+  - @sundaeswap/capacity-exchange-react-sdk@3.0.0
+
 ## 1.0.4
 
 ### Patch Changes

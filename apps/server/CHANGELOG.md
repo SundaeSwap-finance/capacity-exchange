@@ -1,5 +1,32 @@
 # @capacity-exchange/server
 
+## 3.0.0
+
+### Major Changes
+
+- 283704b: Serve CIP-0198 price hints at `GET /api/cardano/hints`, replacing `GET /api/cardano/prices`. Hints are signed price ladders built from `priceFormulas.ADA`, whose formulas now take `tiers: [{ above, rateNumerator, rateDenominator }]` instead of a flat rate: each tier's rate applies while the Cardano wallet holds more lovelace than its `above`, and nothing is offered below the lowest. Hints are signed with the key in `CARDANO_REGISTRATION_SKEY_FILE`; a server that prices ADA refuses to start without it, `CARDANO_UTXORPC_URL` and `CARDANO_WALLET_ADDRESS`. ADA is no longer quotable through `GET /api/prices`.
+
+### Minor Changes
+
+- faacd24: Add an endpoint to accept user offers
+
+### Patch Changes
+
+- 060c019: Handle various issues relating to instability/slowness from the Blockfrost indexer. The health endpoint now returns 503 until the indexer has given a healthy response. When polling, the service no longer calls the indexer if an earlier call is still in flight.
+- 457074c: The server tracks cardano UTXOs, and exposes them in the health endpoint
+- dcd3ecb: Build transactions containing a single subtx in the server as needed
+- 7080f1a: Upgrade all Midnight dependencies to support ledger v9. This is now compatible with all environments.
+- a8c12fe: Fund the full fee of sponsored and exchanged transactions. Sponsorship now sizes its dust spend to cover the cost of the dust spend itself. DUST quotes now add an overhead for the fees an offer adds to the client's transaction, so clients without their own DUST can submit. The overhead is configured as `OFFER_FEE_OVERHEAD_UNITS` (default 6) multiples of the current fee of one shielded output, so it follows fee prices.
+- Updated dependencies [283704b]
+- Updated dependencies [457074c]
+- Updated dependencies [dcd3ecb]
+- Updated dependencies [faacd24]
+- Updated dependencies [7080f1a]
+  - @capacity-exchange/cardano-core@1.0.1
+  - @sundaeswap/capacity-exchange-core@3.0.0
+  - @sundaeswap/capacity-exchange-nodejs@3.0.0
+  - @sundaeswap/capacity-exchange-providers@5.0.0
+
 ## 2.0.0
 
 ### Major Changes
