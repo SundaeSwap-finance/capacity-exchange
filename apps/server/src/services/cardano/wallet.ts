@@ -460,6 +460,11 @@ export class CardanoWalletService implements ChainFollower {
         reason: 'transaction input is already reserved',
       };
     }
+    // An input may still carry an earlier transaction's expired reservation, which
+    // holds it again after a rollback to before that TTL.
+    const earlierReservations = new Map(
+      inputTxoIds.map((txoId) => [txoId, state.reserved.get(txoId)]),
+    );
     for (const txoId of inputTxoIds) {
       state.reserved.set(txoId, until);
     }
@@ -483,7 +488,12 @@ export class CardanoWalletService implements ChainFollower {
       // accidentally double-spend. Worst-case scenario, the inputs are unavailable
       // until the TTL expires.
       for (const txoId of inputTxoIds) {
-        state.reserved.delete(txoId);
+        const earlier = earlierReservations.get(txoId);
+        if (earlier === undefined) {
+          state.reserved.delete(txoId);
+        } else {
+          state.reserved.set(txoId, earlier);
+        }
       }
     }
     return result;

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, type Mock } from 'vitest';
 import { MidnightOfferService } from './offer.js';
 import type { MidnightUtxoService } from './utxo.js';
 import type { MidnightTxService } from './tx.js';
@@ -94,7 +94,7 @@ describe('MidnightOfferService', () => {
   it('coalesces concurrent requests into a single build', async () => {
     deps = createMockDeps();
     let resolveProve!: () => void;
-    (deps.txService.createShieldedOfferTx as ReturnType<typeof vi.fn>).mockImplementation(
+    (deps.txService.createShieldedOfferTx as Mock<() => Promise<unknown>>).mockImplementation(
       () =>
         new Promise((resolve) => {
           resolveProve = () =>

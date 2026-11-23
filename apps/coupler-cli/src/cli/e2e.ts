@@ -1,11 +1,11 @@
 import { program } from 'commander';
-import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { runE2e } from '../e2e/run.js';
 import { SCENARIOS, requireScenario, scenarioNames } from '../e2e/scenarios.js';
 
 /** A required env var, or throw with a hint. */
 function requireEnv(name: string, hint: string): string {
-  const value = process.env[name];
+  const value = resolveEnv()[name];
   if (!value) {
     throw new Error(`Set ${name} (${hint})`);
   }

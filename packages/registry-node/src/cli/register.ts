@@ -38,7 +38,7 @@ function main(): Promise<TxResult> {
   const days = periodArg ? parsePositiveNumber('period', periodArg) : defaultDays;
 
   const expiry = new Date(Date.now() + days * DAYS_TO_MS);
-  console.log(`expiry date: ${expiry}`);
+  console.log(`expiry date: ${expiry.toISOString()}`);
 
   const entry: RegistryEntry = {
     domainName: toDomainName(domainname),

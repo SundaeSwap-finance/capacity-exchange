@@ -77,6 +77,7 @@ export function loadWalletSeedFromEnv(env: Env): Uint8Array {
 /** Loads a seed from env vars; falls back to walking up from `startDir`. */
 // TODO: remove walk-up once `apps/demo` and `apps/server` set env explicitly.
 // TODO: unify with `apps/server/src/config/wallet.ts` resolveWalletSeedHex.
+// eslint-disable-next-line no-restricted-properties -- the default for callers that have not resolved an env
 export function loadWalletSeed(network: string, env: Env = process.env, startDir: string = process.cwd()): Uint8Array {
   if (env.WALLET_SEED_FILE) {
     return loadSeedFromFile(env.WALLET_SEED_FILE);

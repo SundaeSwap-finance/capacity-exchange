@@ -36,6 +36,7 @@ export class CardanoCli {
    * having frozen.
    */
   run(args: string[], opts: { needsNode?: boolean } = {}): string {
+    // eslint-disable-next-line no-restricted-properties -- cardano-cli inherits this process's environment
     const env = { ...process.env };
     if (opts.needsNode) {
       env.CARDANO_NODE_SOCKET_PATH = requireSocket(this.config);

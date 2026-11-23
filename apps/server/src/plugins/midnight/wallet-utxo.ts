@@ -44,9 +44,8 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.decorate('midnightWalletService', midnightWalletService);
   fastify.decorate('midnightUtxoService', midnightUtxoService);
 
-  fastify.addHook('onClose', (instance, done) => {
-    instance.midnightWalletService?.stop();
-    done();
+  fastify.addHook('onClose', async (instance) => {
+    await instance.midnightWalletService?.stop();
   });
 
   fastify.log.info("MidnightWalletService and MidnightUtxoService init'd and started");

@@ -1,3 +1,4 @@
+import { format } from 'node:util';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
@@ -14,17 +15,12 @@ export interface Telemetry {
 
 /** Bridges OTel's DiagLogger to pino. */
 function pinoToDiagLogger(log: Logger) {
-  function format(msg: string, args: unknown[]): string {
-    let i = 0;
-    return String(msg).replace(/%s/g, () => String(args[i++] ?? ''));
-  }
-
   return {
-    error: (msg: string, ...args: unknown[]) => log.error(format(msg, args)),
-    warn: (msg: string, ...args: unknown[]) => log.warn(format(msg, args)),
-    info: (msg: string, ...args: unknown[]) => log.info(format(msg, args)),
-    debug: (msg: string, ...args: unknown[]) => log.debug(format(msg, args)),
-    verbose: (msg: string, ...args: unknown[]) => log.trace(format(msg, args)),
+    error: (msg: string, ...args: unknown[]) => log.error(format(msg, ...args)),
+    warn: (msg: string, ...args: unknown[]) => log.warn(format(msg, ...args)),
+    info: (msg: string, ...args: unknown[]) => log.info(format(msg, ...args)),
+    debug: (msg: string, ...args: unknown[]) => log.debug(format(msg, ...args)),
+    verbose: (msg: string, ...args: unknown[]) => log.trace(format(msg, ...args)),
   };
 }
 
