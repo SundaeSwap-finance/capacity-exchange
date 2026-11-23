@@ -472,6 +472,9 @@ export class CardanoChainStateService implements ChainHealth {
         this.recent = this.recent.slice(0, at + 1);
         return;
       }
+      case undefined:
+        // A message with no action carries no tip change.
+        return;
     }
   }
 

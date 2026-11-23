@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "build:watch": "tsc -b --watch tsconfig.build.json",
-    "check": "eslint . && prettier --check .",
-    "fix": "prettier --write . && eslint . --fix",
+    "check": "NODE_OPTIONS=--max-old-space-size=8192 eslint . && prettier --check .",
+    "fix": "prettier --write . && NODE_OPTIONS=--max-old-space-size=8192 eslint . --fix",
     "check-client": "bun scripts/check-openapi-schema.ts",
     "check-release": "bun scripts/check-release.ts",
     "regenerate-client": "bun scripts/regenerate-openapi-schema.ts && bun run --filter '@sundaeswap/capacity-exchange-client' regenerate-client",

@@ -15,8 +15,14 @@ const start = async () => {
     process.exit(0);
   };
 
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  const onSignal = () => {
+    shutdown().catch((err) => {
+      console.error('Failed to shut down cleanly:', err);
+      process.exit(1);
+    });
+  };
+  process.on('SIGTERM', onSignal);
+  process.on('SIGINT', onSignal);
 };
 
 start().catch((err) => {

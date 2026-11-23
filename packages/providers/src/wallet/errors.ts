@@ -45,7 +45,7 @@ export class CapacityExchangeNoEligibleOfferError extends CapacityExchangeError 
 /** Thrown when an offer expires before the transaction can be completed. */
 export class CapacityExchangeOfferExpiredError extends CapacityExchangeError {
   constructor(readonly offer: Offer) {
-    super('offer-expired', `Offer ${offer.offerId} expired at ${offer.expiresAt}`);
+    super('offer-expired', `Offer ${offer.offerId} expired at ${offer.expiresAt.toISOString()}`);
     this.name = 'CapacityExchangeOfferExpiredError';
   }
 }

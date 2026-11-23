@@ -1,10 +1,10 @@
 import { program } from 'commander';
-import { runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
+import { resolveEnv, runCli, withAppContextFromEnv } from '@sundaeswap/capacity-exchange-nodejs';
 import { runCapture } from '../capture/chain.js';
 
 /** A required env var, or throw with a hint. */
 function requireEnv(name: string, hint: string): string {
-  const value = process.env[name];
+  const value = resolveEnv()[name];
   if (!value) {
     throw new Error(`Set ${name} (${hint})`);
   }

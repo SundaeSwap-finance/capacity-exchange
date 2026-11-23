@@ -177,7 +177,7 @@ export function loadPriceConfig(filePath: string): PriceConfig {
     config = Value.Decode(PriceConfigSchema, JSON.parse(raw));
   } catch (err) {
     throw new Error(
-      `Invalid price config in ${filePath}: ${err instanceof Error ? err.message : err}`,
+      `Invalid price config in ${filePath}: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
   // A server with no formulas can quote nothing, which is never what an operator meant.

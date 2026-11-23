@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import {
   buildSyntheticWalletState,
   createAndSyncWallet,
@@ -62,7 +63,7 @@ async function syncOnDiskWallet(
 
 /** Wraps a wallet sync failure with the endpoints used, to aid diagnosis. */
 function wrapSyncError(err: unknown, endpoints: NetworkEndpoints): Error {
-  const msg = err instanceof Error ? err.message : String(err);
+  const msg = err instanceof Error ? err.message : inspect(err);
   return new Error(
     `Wallet sync failed: ${msg}\n` +
       `  node:       ${redactUrl(endpoints.nodeUrl)}\n` +
@@ -84,7 +85,7 @@ async function syncWallet(
       return syncOnDiskWallet(seedHex, walletConfig, source.walletStateDir, timeoutMs);
     default: {
       const _exhaustive: never = source;
-      throw new Error(`Unrecognized wallet state source kind: ${String((_exhaustive as { kind: unknown }).kind)}`);
+      throw new Error(`Unrecognized wallet state source kind: ${inspect((_exhaustive as { kind: unknown }).kind)}`);
     }
   }
 }
