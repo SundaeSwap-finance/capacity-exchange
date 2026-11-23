@@ -69,6 +69,7 @@
     "@midnight-ntwrk/wallet-sdk-shielded": "4.0.0",
     "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "4.0.0",
     "@types/node": "22.10.7",
+    "fast-check": "^4.11.0",
     "typescript": "^5.9.3",
     "unplugin-swc": "^1.6.0",
     "vitest": "^4.1.11"
