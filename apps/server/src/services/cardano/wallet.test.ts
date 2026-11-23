@@ -781,6 +781,21 @@ describe('CardanoWalletService submitting transactions', () => {
     expect(refs(wallet)).toEqual([ref(funding)]);
   });
 
+  it('reserves inputs again after a rollback even if a later payment spending them was rejected', async () => {
+    let result: SubmitTxResult = { status: 'ok', reachedMempool: true };
+    const { wallet, funding } = await fundedWallet(async () => result);
+    await wallet.signAndSubmitTx(payment([spend(funding)], 100));
+    await wallet.onRollForward(header(100), []);
+
+    result = { status: 'error', reason: 'rejected', reachedMempool: false };
+    await wallet.signAndSubmitTx(payment([spend(funding)], 200));
+    expect(refs(wallet)).toEqual([ref(funding)]);
+
+    // The first payment could still land on the new fork.
+    await wallet.onRollBackward(header(10));
+    expect(refs(wallet)).toEqual([]);
+  });
+
   it('does not let a restored reservation hide inputs once the payment lands', async () => {
     const { wallet, funding } = await fundedWallet();
     const t = payment([spend(funding)], 100);
